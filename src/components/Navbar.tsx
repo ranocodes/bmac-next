@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -11,7 +12,6 @@ const navLinks = [
   { name: "Programs", href: "/programs" },
   { name: "Gallery", href: "/gallery" },
   { name: "News", href: "/news" },
-  { name: "Get Involved", href: "/get-involved" },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -22,7 +22,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      setScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -37,57 +37,125 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
-        <div className="nav-logo">BMAC</div>
-        <div className="nav-menu">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={pathname === link.href ? "active" : ""}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </div>
-        <Link href="/get-involved" className="btn btn-green">
-          Join BMAC <ArrowRight size={20} />
-        </Link>
-        <button className="hamburger" onClick={() => toggleMenu(true)}>
-          <Menu size={24} />
-        </button>
-      </nav>
-
-      {/* Mobile Sheet */}
-      <div
-        className={`sheet-mask ${isOpen ? "open" : ""}`}
-        onClick={() => toggleMenu(false)}
-      />
-      <div className={`sheet ${isOpen ? "open" : ""}`}>
-        <button className="sheet-close" onClick={() => toggleMenu(false)}>
-          <X size={24} />
-        </button>
-        <div className="sheet-links">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              onClick={() => toggleMenu(false)}
-              className={pathname === link.href ? "active" : ""}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </div>
-        <Link
-          href="/get-involved"
-          className="btn btn-green"
-          style={{ marginTop: "50px" }}
-          onClick={() => toggleMenu(false)}
+      {/* Centered Pill Navbar */}
+      <div className="fixed top-6 left-0 right-0 z-[1000] flex justify-center px-6 pointer-events-none">
+        <header 
+          className={`pointer-events-auto transition-all duration-500 rounded-full border flex items-center justify-between gap-8 px-8 py-2.5 ${
+            scrolled 
+              ? "bg-white/70 backdrop-blur-xl border-slate-200/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
+              : "bg-white/10 backdrop-blur-md border-white/20 shadow-none"
+          }`}
+          style={{ width: 'auto', maxWidth: '95vw' }}
         >
-          Join BMAC <ArrowRight size={18} />
-        </Link>
+          <Link href="/" className={`font-display font-bold text-xl tracking-tighter transition-colors ${scrolled ? 'text-deep' : 'text-deep'}`}>
+            BMAC<span className="text-green">.</span>
+          </Link>
+          
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={`text-[13px] px-4 py-2 rounded-full transition-all duration-300 font-medium ${
+                  pathname === link.href 
+                    ? scrolled ? "bg-deep text-white shadow-sm" : "bg-white/20 text-deep"
+                    : scrolled ? "text-slate-500 hover:text-deep hover:bg-slate-100" : "text-deep/70 hover:text-deep hover:bg-white/10"
+                }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-4">
+             <Link 
+                href="/get-involved" 
+                className={`hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold transition-all shadow-lg ${
+                  scrolled 
+                    ? "bg-green text-white hover:bg-deep shadow-green/10" 
+                    : "bg-white text-deep hover:bg-gold shadow-white/10"
+                }`}
+              >
+                Join BMAC
+             </Link>
+             
+             <button 
+                className={`lg:hidden w-10 h-10 flex items-center justify-center rounded-full border transition-all ${
+                  scrolled ? "bg-white border-slate-200" : "bg-white/20 border-white/20 text-deep"
+                }`} 
+                onClick={() => toggleMenu(true)}
+              >
+                <Menu size={20} />
+             </button>
+          </div>
+        </header>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => toggleMenu(false)}
+              className="fixed inset-0 z-[1001] bg-deep/40 backdrop-blur-sm lg:hidden"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white z-[1002] shadow-2xl lg:hidden p-8 flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-12">
+                <span className="font-display font-bold text-2xl text-deep">BMAC.</span>
+                <button 
+                  className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full" 
+                  onClick={() => toggleMenu(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => toggleMenu(false)}
+                    className={`text-2xl font-display font-bold tracking-tight ${
+                      pathname === link.href ? "text-green" : "text-slate-400"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/get-involved"
+                  onClick={() => toggleMenu(false)}
+                  className={`text-2xl font-display font-bold tracking-tight ${
+                    pathname === "/get-involved" ? "text-green" : "text-slate-400"
+                  }`}
+                >
+                  Get Involved
+                </Link>
+              </div>
+
+              <div className="mt-auto">
+                <Link
+                  href="/get-involved"
+                  className="w-full flex items-center justify-center gap-3 bg-green text-white py-5 rounded-3xl font-bold"
+                  onClick={() => toggleMenu(false)}
+                >
+                  Join the Movement <ArrowRight size={20} />
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

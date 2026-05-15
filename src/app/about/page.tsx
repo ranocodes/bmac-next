@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Target, Eye, Heart, ArrowRight } from "lucide-react";
+import { Target, Eye, Heart, ArrowRight, ShieldCheck, Zap, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
+import { BentoCard } from "@/components/ui/BentoCard";
 
 const team = [
   {
@@ -11,167 +13,203 @@ const team = [
     role: "Founder & Director",
     img: "/images/jagsba.jpg",
   },
-  { name: "Amina Bello", role: "Programs Director", img: "/images/jagsba.jpg" },
+  { 
+    name: "Amina Bello", 
+    role: "Programs Director", 
+    img: "/images/maryam.jpg",
+  },
   {
     name: "Chinedu Okonkwo",
     role: "Head of Communications",
-    img: "/images/jagsba.jpg",
+    img: "/images/anu.jpg",
   },
   {
     name: "Fatima Abdullahi",
     role: "Mentorship Coordinator",
-    img: "/images/jagsba.jpg",
+    img: "/images/maryam1.jpg",
   },
 ];
 
 const impact = [
-  { num: "350+", label: "Members Trained" },
-  { num: "48", label: "Events Hosted" },
-  { num: "12", label: "Community Partners" },
-  { num: "8", label: "Awards Won" },
+  { num: "350+", label: "Members Trained", icon: <ShieldCheck size={20}/> },
+  { num: "48", label: "Events Hosted", icon: <Zap size={20}/> },
+  { num: "12", label: "Community Partners", icon: <Sparkles size={20}/> },
+  { num: "8", label: "Awards Won", icon: <Target size={20}/> },
 ];
 
 export default function About() {
   return (
-    <main suppressHydrationWarning>
-      <section className="page-hero">
+    <main suppressHydrationWarning className="bg-[#fafbf9]">
+      <section className="relative min-h-[60dvh] flex items-center justify-center overflow-hidden pt-20">
         <Image
           src="/images/about-hero.jpg"
           alt="BMAC Jos team"
           fill
           priority
-          className="hero-bg"
-          style={{ objectFit: "cover" }}
+          className="object-cover"
         />
-        <div className="hero-content">
-          <h1>About Us</h1>
+        <div className="absolute inset-0 bg-[#0a2e1c]/80 backdrop-blur-[2px]" />
+        
+        <div className="relative z-10 text-center px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+             <span className="text-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
+              Our Identity
+            </span>
+            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-white tracking-tighter leading-none">
+              Building <span className="text-gold">Ambassadors</span>.
+            </h1>
+          </motion.div>
         </div>
       </section>
 
-      <section className="story">
-        <FadeIn className="story-inner">
-          <div className="section-eyebrow" style={{ textAlign: "center" }}>
-            Our Story
+      {/* Story Section */}
+      <section className="py-24 px-6 overflow-hidden">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+          <div>
+             <div className="section-eyebrow">Our Story</div>
+             <h2 className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold text-deep tracking-tighter leading-[1.1] mb-8">
+               From a Local Hub <br/> to a <span className="text-green">National Movement</span>.
+             </h2>
+             <div className="space-y-6 text-slate-500 text-lg leading-relaxed">
+                <p>
+                  Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
+                  State by Suleiman Peace Jagaban — a visionary who saw the
+                  untapped potential in the youth around him.
+                </p>
+                <p>
+                  What began with five members meeting in a community hall has become
+                  a movement of over 350 trained young people. Our ambassadors are now 
+                  winning regional championships and leading change across Nigeria.
+                </p>
+             </div>
           </div>
-          <h2 className="section-title" style={{ textAlign: "center" }}>
-            Where It All Began
-          </h2>
-          <p>
-            Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
-            State by Suleiman Peace Jagaban — a young leader who saw the
-            untapped potential in the youth around him. Starting as a small
-            weekly gathering focused on building confidence through public
-            speaking, BMAC has grown into one of the most active youth
-            development organizations in northern Nigeria.
-          </p>
-          <p>
-            What began with five members meeting in a community hall has become
-            a movement of over 350 trained young people across Plateau State.
-            Our members have gone on to win regional debate championships,
-            publish their creative writing, lead school clubs, and launch
-            community initiatives that reach thousands.
-          </p>
-          <p>
-            BMAC's long-term vision is to establish a network of youth
-            empowerment centers across every major city in northern Nigeria —
-            each one serving as a launchpad for young people to discover their
-            voice, develop their skills, and lead meaningful change in their
-            communities.
-          </p>
-        </FadeIn>
-      </section>
-
-      <section className="programs">
-        <div
-          className="section-header"
-          style={{ maxWidth: "var(--max-w)", margin: "0 auto 48px" }}
-        >
-          <FadeIn>
-            <h2 className="section-title" style={{ textAlign: "center" }}>
-              Mission, Vision & Values
-            </h2>
-          </FadeIn>
-        </div>
-        <div className="mv-grid">
-          <FadeIn delay={0.1} className="mv-card">
-            <div className="icon-box green">
-              <Target size={24} />
-            </div>
-            <h3>Our Mission</h3>
-            <p>
-              To identify, train, and empower young people in Jos and beyond
-              with the communication, creative, and critical thinking skills
-              they need to lead with confidence and impact their communities
-              positively.
-            </p>
-          </FadeIn>
-          <FadeIn delay={0.2} className="mv-card">
-            <div className="icon-box gold">
-              <Eye size={24} />
-            </div>
-            <h3>Our Vision</h3>
-            <p>
-              A generation of young African leaders who speak boldly, think
-              critically, create fearlessly, and build communities where every
-              voice matters.
-            </p>
-          </FadeIn>
-          <FadeIn delay={0.3} className="mv-card">
-            <div className="icon-box green">
-              <Heart size={24} />
-            </div>
-            <h3>Our Values</h3>
-            <p>
-              Excellence in every session. Inclusivity — no one is turned away
-              for inability to pay. Integrity in how we mentor. Impact measured
-              by real outcomes, not just attendance numbers.
-            </p>
-          </FadeIn>
+          
+          <div className="grid grid-cols-2 gap-4">
+             <div className="space-y-4 pt-12">
+                <div className="relative h-64 rounded-[2rem] overflow-hidden">
+                   <Image src="/images/ws.jpg" alt="Outreach" fill className="object-cover" />
+                </div>
+                <div className="relative h-48 rounded-[2rem] overflow-hidden bg-gold p-8 flex flex-col justify-end">
+                   <h4 className="text-deep font-display font-bold text-xl leading-tight">100% Youth Led.</h4>
+                </div>
+             </div>
+             <div className="space-y-4">
+                <div className="relative h-48 rounded-[2rem] overflow-hidden bg-deep p-8 flex flex-col justify-end">
+                   <h4 className="text-white font-display font-bold text-xl leading-tight">Community Rooted.</h4>
+                </div>
+                <div className="relative h-64 rounded-[2rem] overflow-hidden">
+                   <Image src="/images/ws1.jpg" alt="Workshop" fill className="object-cover" />
+                </div>
+             </div>
+          </div>
         </div>
       </section>
 
-      <section className="story">
-        <div className="story-inner" style={{ maxWidth: "var(--max-w)" }}>
-          <FadeIn>
-            <h2 className="section-title" style={{ textAlign: "center" }}>
-              Meet Our Team
-            </h2>
-          </FadeIn>
-          <div className="team-grid">
+      {/* Foundation Section */}
+      <section className="py-24 px-6 bg-slate-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="section-title">Core Foundation</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            <BentoCard className="bg-white">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
+                <Target size={24} />
+              </div>
+              <h3 className="font-display text-2xl font-bold mb-3">Our Mission</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                To identify, train, and empower young people with communication, creative, and critical thinking skills needed to lead with confidence.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="bg-white">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6">
+                <Eye size={24} />
+              </div>
+              <h3 className="font-display text-2xl font-bold mb-3">Our Vision</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                A generation of young African leaders who speak boldly, think critically, and build communities where every voice matters.
+              </p>
+            </BentoCard>
+
+            <BentoCard className="bg-white">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6">
+                <Heart size={24} />
+              </div>
+              <h3 className="font-display text-2xl font-bold mb-3">Our Values</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Excellence in every session. Inclusivity for all. Integrity in mentorship. Impact measured by real member outcomes.
+              </p>
+            </BentoCard>
+          </div>
+        </div>
+      </section>
+
+      {/* CMS-READY UNIFORM TEAM GRID */}
+      <section className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+            <div className="max-w-xl">
+               <span className="section-eyebrow">The Leadership</span>
+               <h2 className="section-title">Meet the Minds Behind BMAC</h2>
+            </div>
+            <p className="text-slate-400 text-sm max-w-xs pb-2">
+               Our team consists of dedicated professionals and alumni committed to youth development.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {team.map((member, i) => (
-              <FadeIn key={i} delay={i * 0.1} className="team-card">
+              <motion.div 
+                key={i} 
+                className="group relative aspect-[3/4] rounded-[2rem] overflow-hidden bg-white border border-slate-100 shadow-sm"
+                whileHover={{ y: -5 }}
+              >
                 <Image
                   src={member.img}
                   alt={member.name}
-                  width={300}
-                  height={300}
-                  className="team-portrait"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <h3>{member.name}</h3>
-                <p>{member.role}</p>
-              </FadeIn>
+                <div className="absolute inset-0 bg-gradient-to-t from-deep via-deep/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                
+                <div className="absolute bottom-8 left-8 right-8">
+                  <h3 className="text-white font-display text-xl font-bold tracking-tight mb-1">{member.name}</h3>
+                  <p className="text-gold font-bold text-[9px] uppercase tracking-[0.2em]">{member.role}</p>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="impact-numbers">
-        <FadeIn className="impact-grid">
-          {impact.map((stat, i) => (
-            <div key={i} className="impact-stat">
-              <h3>{stat.num}</h3>
-              <p>{stat.label}</p>
-            </div>
-          ))}
-        </FadeIn>
+      {/* Impact Numbers */}
+      <section className="py-20 bg-deep text-white overflow-hidden relative">
+         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center relative z-10">
+            {impact.map((stat, i) => (
+              <div key={i} className="space-y-3">
+                <div className="mx-auto w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gold">
+                   {stat.icon}
+                </div>
+                <h3 className="font-display text-4xl font-extrabold tracking-tighter text-white">{stat.num}</h3>
+                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
+              </div>
+            ))}
+         </div>
       </section>
 
-      <section className="cta-banner">
-        <FadeIn className="cta-banner-inner">
-          <div className="section-eyebrow">Join the Movement</div>
-          <h2>Join Our Growing Community</h2>
-          <Link href="/get-involved" className="btn btn-outline">
-            Learn More <ArrowRight size={18} />
+      <section className="py-24 px-6 bg-gold">
+        <FadeIn className="max-w-4xl mx-auto text-center">
+          <h2 className="font-display text-4xl md:text-6xl font-extrabold text-deep tracking-tighter mb-10 leading-none">
+            Join the Network of <br/> <span className="text-white">Future Leaders</span>.
+          </h2>
+          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-deep text-white px-10 py-5 rounded-full font-bold hover:bg-white hover:text-deep transition-all duration-300">
+            Learn How to Participate <ArrowRight size={20} />
           </Link>
         </FadeIn>
       </section>
