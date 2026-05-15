@@ -37,17 +37,17 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Centered Pill Navbar */}
+      {/* Floating Island Navbar - Centered Pill */}
       <div className="fixed top-6 left-0 right-0 z-[1000] flex justify-center px-6 pointer-events-none">
         <header 
-          className={`pointer-events-auto transition-all duration-500 rounded-full border flex items-center justify-between gap-8 px-8 py-2.5 ${
+          className={`pointer-events-auto transition-all duration-500 rounded-full border flex items-center justify-between gap-4 md:gap-8 px-6 md:px-8 py-2.5 ${
             scrolled 
               ? "bg-white/70 backdrop-blur-xl border-slate-200/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
               : "bg-white/10 backdrop-blur-md border-white/20 shadow-none"
           }`}
           style={{ width: 'auto', maxWidth: '95vw' }}
         >
-          <Link href="/" className={`font-display font-bold text-xl tracking-tighter transition-colors ${scrolled ? 'text-deep' : 'text-deep'}`}>
+          <Link href="/" className="font-display font-bold text-xl tracking-tighter text-deep flex-shrink-0">
             BMAC<span className="text-green">.</span>
           </Link>
           
@@ -76,7 +76,7 @@ export default function Navbar() {
                     : "bg-white text-deep hover:bg-gold shadow-white/10"
                 }`}
               >
-                Join BMAC
+                Join Us
              </Link>
              
              <button 
@@ -91,7 +91,7 @@ export default function Navbar() {
         </header>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -107,7 +107,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm bg-white z-[1002] shadow-2xl lg:hidden p-8 flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-[1002] shadow-2xl lg:hidden p-8 flex flex-col"
             >
               <div className="flex items-center justify-between mb-12">
                 <span className="font-display font-bold text-2xl text-deep">BMAC.</span>

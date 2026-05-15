@@ -66,15 +66,15 @@ export default function About() {
         </div>
       </section>
 
-      {/* Story Section */}
-      <section className="py-24 px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
-          <div>
+      {/* Story Section - Responsive Fix */}
+      <section className="py-24 px-6 relative">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center text-center lg:text-left">
+          <FadeIn>
              <div className="section-eyebrow">Our Story</div>
              <h2 className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold text-deep tracking-tighter leading-[1.1] mb-8">
                From a Local Hub <br/> to a <span className="text-green">National Movement</span>.
              </h2>
-             <div className="space-y-6 text-slate-500 text-lg leading-relaxed">
+             <div className="space-y-6 text-slate-500 text-base lg:text-lg leading-relaxed">
                 <p>
                   Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
                   State by Suleiman Peace Jagaban — a visionary who saw the
@@ -86,24 +86,24 @@ export default function About() {
                   winning regional championships and leading change across Nigeria.
                 </p>
              </div>
-          </div>
+          </FadeIn>
           
           <div className="grid grid-cols-2 gap-4">
-             <div className="space-y-4 pt-12">
-                <div className="relative h-64 rounded-[2rem] overflow-hidden">
+             <div className="space-y-4 pt-6 lg:pt-12">
+                <FadeIn delay={0.2} className="relative h-48 lg:h-64 rounded-[2rem] overflow-hidden shadow-sm">
                    <Image src="/images/ws.jpg" alt="Outreach" fill className="object-cover" />
-                </div>
-                <div className="relative h-48 rounded-[2rem] overflow-hidden bg-gold p-8 flex flex-col justify-end">
-                   <h4 className="text-deep font-display font-bold text-xl leading-tight">100% Youth Led.</h4>
-                </div>
+                </FadeIn>
+                <FadeIn delay={0.3} className="relative h-40 lg:h-48 rounded-[2rem] overflow-hidden bg-gold p-6 lg:p-8 flex flex-col justify-end shadow-sm">
+                   <h4 className="text-deep font-display font-bold text-lg lg:text-xl leading-tight text-left">100% Youth Led.</h4>
+                </FadeIn>
              </div>
              <div className="space-y-4">
-                <div className="relative h-48 rounded-[2rem] overflow-hidden bg-deep p-8 flex flex-col justify-end">
-                   <h4 className="text-white font-display font-bold text-xl leading-tight">Community Rooted.</h4>
-                </div>
-                <div className="relative h-64 rounded-[2rem] overflow-hidden">
+                <FadeIn delay={0.4} className="relative h-40 lg:h-48 rounded-[2rem] overflow-hidden bg-deep p-6 lg:p-8 flex flex-col justify-end shadow-sm text-left">
+                   <h4 className="text-white font-display font-bold text-lg lg:text-xl leading-tight">Community Rooted.</h4>
+                </FadeIn>
+                <FadeIn delay={0.5} className="relative h-48 lg:h-64 rounded-[2rem] overflow-hidden shadow-sm">
                    <Image src="/images/ws1.jpg" alt="Workshop" fill className="object-cover" />
-                </div>
+                </FadeIn>
              </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function About() {
             <h2 className="section-title">Core Foundation</h2>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             <BentoCard className="bg-white">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
                 <Target size={24} />
@@ -150,10 +150,10 @@ export default function About() {
         </div>
       </section>
 
-      {/* CMS-READY UNIFORM TEAM GRID */}
+      {/* Team Grid - Responsive Fix */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 gap-6 text-center md:text-left">
             <div className="max-w-xl">
                <span className="section-eyebrow">The Leadership</span>
                <h2 className="section-title">Meet the Minds Behind BMAC</h2>
@@ -163,7 +163,7 @@ export default function About() {
             </p>
           </div>
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {team.map((member, i) => (
               <motion.div 
                 key={i} 
@@ -178,7 +178,7 @@ export default function About() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-deep via-deep/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                 
-                <div className="absolute bottom-8 left-8 right-8">
+                <div className="absolute bottom-8 left-8 right-8 text-left">
                   <h3 className="text-white font-display text-xl font-bold tracking-tight mb-1">{member.name}</h3>
                   <p className="text-gold font-bold text-[9px] uppercase tracking-[0.2em]">{member.role}</p>
                 </div>
@@ -190,25 +190,25 @@ export default function About() {
 
       {/* Impact Numbers */}
       <section className="py-20 bg-deep text-white overflow-hidden relative">
-         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 text-center relative z-10">
+         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 lg:gap-16 text-center relative z-10">
             {impact.map((stat, i) => (
               <div key={i} className="space-y-3">
                 <div className="mx-auto w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gold">
                    {stat.icon}
                 </div>
-                <h3 className="font-display text-4xl font-extrabold tracking-tighter text-white">{stat.num}</h3>
-                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
+                <h3 className="font-display text-4xl lg:text-5xl font-extrabold tracking-tighter text-white">{stat.num}</h3>
+                <p className="text-white/40 text-[10px] lg:text-xs font-bold uppercase tracking-widest">{stat.label}</p>
               </div>
             ))}
          </div>
       </section>
 
       <section className="py-24 px-6 bg-gold">
-        <FadeIn className="max-w-4xl mx-auto text-center">
-          <h2 className="font-display text-4xl md:text-6xl font-extrabold text-deep tracking-tighter mb-10 leading-none">
-            Join the Network of <br/> <span className="text-white">Future Leaders</span>.
+        <FadeIn className="max-w-4xl mx-auto text-center px-4">
+          <h2 className="font-display text-[clamp(2rem,6vw,4rem)] font-extrabold text-deep tracking-tighter mb-10 leading-none">
+            Join the Network of <br className="hidden sm:block"/> <span className="text-white">Future Leaders</span>.
           </h2>
-          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-deep text-white px-10 py-5 rounded-full font-bold hover:bg-white hover:text-deep transition-all duration-300">
+          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-deep text-white px-8 lg:px-12 py-4 lg:py-6 rounded-full font-bold hover:bg-white hover:text-deep transition-all duration-300 shadow-xl shadow-deep/10 text-sm lg:text-base">
             Learn How to Participate <ArrowRight size={20} />
           </Link>
         </FadeIn>
