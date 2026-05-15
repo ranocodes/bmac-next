@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useActionState } from "react";
 import Image from "next/image";
 import {
   MapPin,
   Phone,
   Mail,
-  Clock,
-  Send,
   ChevronDown,
-  Facebook,
-  Instagram,
-  Twitter,
 } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
+import { ContactCard } from "@/components/ui/contact-card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { sendContactMessage } from "./actions";
 
 const faqs = [
   {
@@ -40,6 +41,7 @@ const faqs = [
 
 export default function Contact() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [state, formAction, pending] = useActionState(sendContactMessage, null);
 
   return (
     <main suppressHydrationWarning>
@@ -58,143 +60,44 @@ export default function Contact() {
       </section>
 
       <section className="section">
-        <FadeIn className="contact-layout">
-          <div className="contact-side">
-            <h2>Send Us a Message</h2>
-            <form
-              className="form-grid"
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Message sent!");
-              }}
-            >
-              <div className="form-group">
-                <label htmlFor="cname">Full Name</label>
-                <input
-                  type="text"
-                  id="cname"
-                  placeholder="Enter your full name"
-                  required
-                />
+        <FadeIn>
+          <ContactCard
+            title="Get in Touch"
+            description="If you have any questions regarding our Services or need help, please fill out the form here. We do our best to respond within 1 business day."
+            contactInfo={[
+              { icon: Mail, label: "Email", value: "hello@bmacjos.org" },
+              { icon: Phone, label: "Phone", value: "+234 803 456 7891" },
+              { icon: MapPin, label: "Address", value: "Nalado Street, Jos, Plateau State, Nigeria" },
+            ]}
+          >
+            <form action={formAction} className="w-full space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" type="text" required />
               </div>
-              <div className="form-group">
-                <label htmlFor="cemail">Email Address</label>
-                <input
-                  type="email"
-                  id="cemail"
-                  placeholder="your@email.com"
-                  required
-                />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" required />
               </div>
-              <div className="form-group">
-                <label htmlFor="cphone">
-                  Phone{" "}
-                  <span style={{ fontWeight: 400, color: "var(--muted)" }}>
-                    (optional)
-                  </span>
-                </label>
-                <input type="tel" id="cphone" placeholder="+234 ..." />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input id="phone" name="phone" type="tel" />
               </div>
-              <div className="form-group">
-                <label htmlFor="csubject">Subject</label>
-                <select id="csubject">
-                  <option>General Inquiry</option>
-                  <option>Programs</option>
-                  <option>Partnerships</option>
-                  <option>Donations</option>
-                  <option>Other</option>
-                </select>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="message">Message</Label>
+                <Textarea id="message" name="message" required />
               </div>
-              <div className="form-group" style={{ gridColumn: "1/-1" }}>
-                <label htmlFor="cmsg">Message</label>
-                <textarea
-                  id="cmsg"
-                  placeholder="Tell us how we can help..."
-                  required
-                ></textarea>
-              </div>
-              <div className="form-group" style={{ gridColumn: "1/-1" }}>
-                <button
-                  className="btn btn-green"
-                  type="submit"
-                  style={{ width: "100%", justifyContent: "center" }}
-                >
-                  Send Message <Send size={18} />
-                </button>
-              </div>
+              <Button className="w-full" type="submit" disabled={pending}>
+                {pending ? "Sending..." : "Submit"}
+              </Button>
+              {state?.success && (
+                <p className="text-sm text-green-600">Message sent successfully!</p>
+              )}
+              {state?.error && (
+                <p className="text-sm text-red-600">{state.error}</p>
+              )}
             </form>
-          </div>
-          <div className="info-side">
-            <h2>Get in Touch</h2>
-            <div className="info-card">
-              <div className="ic">
-                <MapPin size={20} />
-              </div>
-              <div>
-                <h4>Address</h4>
-                <p>Nalado Street, Jos, Plateau State, Nigeria</p>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="ic">
-                <Phone size={20} />
-              </div>
-              <div>
-                <h4>Phone</h4>
-                <p>
-                  +234 803 456 7891
-                  <br />
-                  +234 902 123 4567
-                </p>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="ic">
-                <Mail size={20} />
-              </div>
-              <div>
-                <h4>Email</h4>
-                <p>
-                  hello@bmacjos.org
-                  <br />
-                  info@bmacjos.org
-                </p>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="ic">
-                <Clock size={20} />
-              </div>
-              <div>
-                <h4>Office Hours</h4>
-                <p>
-                  Mon - Fri: 9:00 AM - 5:00 PM
-                  <br />
-                  Saturday: 10:00 AM - 2:00 PM
-                </p>
-              </div>
-            </div>
-            <h4 style={{ marginTop: "24px", marginBottom: "12px" }}>
-              Follow Us
-            </h4>
-            <div className="social-row">
-              <a href="#" className="social-btn" aria-label="Facebook">
-                <Facebook size={20} />
-              </a>
-              {/* TikTok placeholder */}
-              <a href="#" className="social-btn" aria-label="TikTok">
-                <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
-                  d
-                </span>
-              </a>
-              <a href="#" className="social-btn" aria-label="Instagram">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="social-btn" aria-label="Twitter">
-                <Twitter size={20} />
-              </a>
-            </div>
-          </div>
+          </ContactCard>
         </FadeIn>
       </section>
 

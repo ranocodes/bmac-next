@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Mic, BookOpen, Users, Send } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
+import { CircularTestimonials } from "@/components/ui/circular-testimonials";
 
 const stats = [
   { num: "350+", label: "Members Trained" },
@@ -41,6 +42,30 @@ const programs = [
     img: "/images/mentorship.jpg",
     details:
       "Monthly 1-on-1 sessions|Matched by interest area|Career development focus|6-month minimum commitment",
+  },
+];
+
+const testimonialData = [
+  {
+    quote:
+      "Before BMAC, I could barely stand in front of five people. Now I moderate panel discussions and speak at school assemblies across Jos. This club changed the trajectory of my life.",
+    name: "Ifeoma Nwosu",
+    designation: "2025 Cohort Member, Public Speaking Lead",
+    src: "/images/unknown.jpg",
+  },
+  {
+    quote:
+      "The mentorship program paired me with a professional who helped me navigate my career path in digital arts. BMAC isn't just a club; it's a family that pushes you to be your best.",
+    name: "Anu Bello",
+    designation: "Creative Arts Lead",
+    src: "/images/anu.jpg",
+  },
+  {
+    quote:
+      "Joining the Literary and Spoken Word workshops gave me the confidence to share my poetry with the world. I've found my voice and a community that truly understands me.",
+    name: "Maryam Sani",
+    designation: "Spoken Word Poet",
+    src: "/images/maryam.jpg",
   },
 ];
 
@@ -129,29 +154,31 @@ export default function Home() {
 
       {/* Testimonial Section */}
       <section className="testimonial">
-        <div className="testi-wrap">
-          <FadeIn className="testi-img">
-            <Image
-              src="/images/unknown.jpg"
-              alt="Member Story"
-              width={500}
-              height={200}
-              style={{ objectFit: "cover", width: "100%", height: "100%" }}
-            />
-          </FadeIn>
-          <FadeIn delay={0.2}>
-            <div className="section-eyebrow">Member Story</div>
-            <p className="testi-quote">
-              Before BMAC, I could barely stand in front of five people. Now I
-              moderate panel discussions and speak at school assemblies across
-              Jos. This club changed the trajectory of my life.
-            </p>
-            <div className="testi-attr">Ifeoma Nwosu</div>
-            <div className="testi-role">
-              2025 Cohort Member, Public Speaking Lead
-            </div>
+        <div className="section-header" style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <FadeIn>
+            <div className="section-eyebrow">Impact Stories</div>
+            <h2 className="section-title">Voices of Our Ambassadors</h2>
           </FadeIn>
         </div>
+        <FadeIn>
+          <CircularTestimonials
+            testimonials={testimonialData}
+            autoplay={true}
+            colors={{
+              name: "#0a2e1c",
+              designation: "#6b7280",
+              testimony: "#111827",
+              arrowBackground: "#0f6b3e",
+              arrowForeground: "#ffffff",
+              arrowHoverBackground: "#d4a843",
+            }}
+            fontSizes={{
+              name: "1.75rem",
+              designation: "1rem",
+              quote: "1.1rem",
+            }}
+          />
+        </FadeIn>
       </section>
 
       {/* CTA Section */}
