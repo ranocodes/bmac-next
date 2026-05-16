@@ -119,7 +119,7 @@ export default function Navbar() {
                 </button>
               </div>
 
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
@@ -132,21 +132,13 @@ export default function Navbar() {
                     {link.name}
                   </Link>
                 ))}
-                <Link
-                  href="/get-involved"
-                  onClick={() => toggleMenu(false)}
-                  className={`text-2xl font-display font-bold tracking-tight ${
-                    pathname === "/get-involved" ? "text-green" : "text-slate-400"
-                  }`}
-                >
-                  Get Involved
-                </Link>
+               
               </div>
 
               <div className="mt-auto">
                 <Link
                   href="/get-involved"
-                  className="w-full flex items-center justify-center gap-3 bg-green text-white py-5 rounded-3xl font-bold"
+                  className="w-full flex items-center justify-center gap-2 bg-green text-white py-5 rounded-3xl font-bold"
                   onClick={() => toggleMenu(false)}
                 >
                   Join the Movement <ArrowRight size={20} />

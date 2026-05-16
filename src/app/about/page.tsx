@@ -8,28 +8,7 @@ import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-const team = [
-  {
-    name: "Suleiman Peace Jagaban",
-    role: "Founder & Director",
-    img: "/images/jagsba.jpg",
-  },
-  { 
-    name: "Amina Bello", 
-    role: "Programs Director", 
-    img: "/images/maryam.jpg",
-  },
-  {
-    name: "Chinedu Okonkwo",
-    role: "Head of Communications",
-    img: "/images/anu.jpg",
-  },
-  {
-    name: "Fatima Abdullahi",
-    role: "Mentorship Coordinator",
-    img: "/images/maryam1.jpg",
-  },
-];
+const team: any[] = [];
 
 const impact = [
   { num: "350+", label: "Members Trained", icon: <ShieldCheck size={20}/> },

@@ -10,58 +10,7 @@ import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 // Exported for dynamic routes
-export const allPrograms = [
-  {
-    id: "public-speaking",
-    title: "Public Speaking",
-    desc: "Build confidence and master the art of compelling delivery through live practice.",
-    longDesc: "Our Public Speaking workshop is the cornerstone of the BMAC experience. We take members through a journey from overcoming stage fright to mastering the nuances of rhetorical persuasion. Weekly sessions involve impromptu speaking drills, prepared speech feedback, and workshops on vocal projection and body language.",
-    img: "/images/public-speaking.jpg",
-    icon: <Mic className="w-6 h-6" />,
-    color: "bg-emerald-50 text-emerald-600",
-    details: "Every Saturday, 9am-12pm|BMAC Hall, Jos|Open to all members|Facilitated by experts",
-  },
-  {
-    id: "literary-arts",
-    title: "Literary & Spoken Word",
-    desc: "Explore creative writing and performance in a space that celebrates expression.",
-    longDesc: "The Literary Arts program is where pens meet performance. Members explore various forms of creative writing, from traditional poetry and prose to modern spoken word. We focus on storytelling techniques, rhythmic flow, and emotional connection, culminating in regular performance showcases and published anthologies.",
-    img: "/images/literary-arts.jpg",
-    icon: <BookOpen className="w-6 h-6" />,
-    color: "bg-amber-50 text-amber-600",
-    details: "Biweekly Wednesdays, 4pm|Monthly open mics|Quarterly showcases|Annual anthology",
-  },
-  {
-    id: "mentorship",
-    title: "Mentorship",
-    desc: "Connect with professionals who guide your personal and career development.",
-    longDesc: "Our Mentorship program bridges the gap between ambition and experience. We pair members with professionals and BMAC alumni who provide one-on-one guidance on career planning, leadership development, and personal growth. This 6-month commitment ensures meaningful, life-changing connections.",
-    img: "/images/mentorship.jpg",
-    icon: <Users className="w-6 h-6" />,
-    color: "bg-blue-50 text-blue-600",
-    details: "Monthly 1-on-1 sessions|Matched by interest|Career focus|6-month minimum",
-  },
-  {
-    id: "competitions",
-    title: "Competitions",
-    desc: "Test your skills in debates, writing contests, and academic challenges.",
-    longDesc: "BMAC Ambassadors are known for their competitive spirit. We organize and participate in regional and national debate championships, creative writing contests, and academic quiz tournaments. These competitions provide high-stakes environments for members to apply the skills they've learned in our workshops.",
-    img: "/images/digital-literacy.jpg",
-    icon: <Trophy className="w-6 h-6" />,
-    color: "bg-rose-50 text-rose-600",
-    details: "Inter-school debates|Writing contests|Regional travel|Medals and trophies",
-  },
-  {
-    id: "digital-literacy",
-    title: "Digital Literacy",
-    desc: "Develop essential digital skills and analytical thinking for the modern world.",
-    longDesc: "Our Digital Literacy program ensures that ambassadors are not just confident speakers, but technically proficient leaders. We cover essential tools for research, productivity, and online safety, ensuring our members can navigate the digital landscape with integrity and skill.",
-    img: "/images/gallery-hero.jpg",
-    icon: <Cpu className="w-6 h-6" />,
-    color: "bg-indigo-50 text-indigo-600",
-    details: "6-week curriculum|Research tools|Online safety|Tech partnerships",
-  },
-];
+export const allPrograms: any[] = [];
 
 export default function Programs() {
   return (
