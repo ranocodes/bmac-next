@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Expand, X, Camera } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import { motion, AnimatePresence } from "framer-motion";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const galleryItems = [
   { img: "/images/public-speaking.jpg", category: "workshops", alt: "Public speaking workshop session" },
@@ -72,40 +73,49 @@ export default function Gallery() {
 
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* UNIFORM CMS-READY GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredItems.map((item, i) => (
-                <motion.div
-                  key={item.img}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.4 }}
-                  className="group relative aspect-[4/5] rounded-[2rem] overflow-hidden cursor-pointer shadow-sm bg-white"
-                  onClick={() => setSelectedImg(item)}
-                >
-                  <Image
-                    src={item.img}
-                    alt={item.alt}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-deep/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-deep">
-                        <Expand size={20} />
-                     </div>
-                  </div>
-                  <div className="absolute bottom-6 left-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                     <span className="bg-gold text-deep text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                        {item.category}
-                     </span>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          {filteredItems.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <AnimatePresence mode="popLayout">
+                {filteredItems.map((item, i) => (
+                  <motion.div
+                    key={item.img}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.4 }}
+                    className="group relative aspect-[4/5] rounded-[2rem] overflow-hidden cursor-pointer shadow-sm bg-white"
+                    onClick={() => setSelectedImg(item)}
+                  >
+                    <Image
+                      src={item.img}
+                      alt={item.alt}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-deep/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                       <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-deep">
+                          <Expand size={20} />
+                       </div>
+                    </div>
+                    <div className="absolute bottom-6 left-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                       <span className="bg-gold text-deep text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                          {item.category}
+                       </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <EmptyState 
+              icon={Camera}
+              title="Moments in the Making"
+              description="We haven't uploaded any photos to this category yet. Our media team is busy documenting our latest sessions."
+              ctaText="View All Photos"
+              ctaHref="#" // In a real app, this would reset the filter
+            />
+          )}
         </div>
       </section>
 

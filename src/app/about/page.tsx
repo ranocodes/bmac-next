@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Target, Eye, Heart, ArrowRight, ShieldCheck, Zap, Sparkles } from "lucide-react";
+import { Target, Eye, Heart, ArrowRight, ShieldCheck, Zap, Sparkles, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const team = [
   {
@@ -66,7 +67,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Story Section - Responsive Fix */}
+      {/* Story Section */}
       <section className="py-24 px-6 relative">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center text-center lg:text-left">
           <FadeIn>
@@ -150,7 +151,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Team Grid - Responsive Fix */}
+      {/* Team Grid */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 gap-6 text-center md:text-left">
@@ -163,28 +164,38 @@ export default function About() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {team.map((member, i) => (
-              <motion.div 
-                key={i} 
-                className="group relative aspect-[3/4] rounded-[2rem] overflow-hidden bg-white border border-slate-100 shadow-sm"
-                whileHover={{ y: -5 }}
-              >
-                <Image
-                  src={member.img}
-                  alt={member.name}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-deep via-deep/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                
-                <div className="absolute bottom-8 left-8 right-8 text-left">
-                  <h3 className="text-white font-display text-xl font-bold tracking-tight mb-1">{member.name}</h3>
-                  <p className="text-gold font-bold text-[9px] uppercase tracking-[0.2em]">{member.role}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {team.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+              {team.map((member, i) => (
+                <motion.div 
+                  key={i} 
+                  className="group relative aspect-[3/4] rounded-[2rem] overflow-hidden bg-white border border-slate-100 shadow-sm"
+                  whileHover={{ y: -5 }}
+                >
+                  <Image
+                    src={member.img}
+                    alt={member.name}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-deep via-deep/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                  
+                  <div className="absolute bottom-8 left-8 right-8 text-left">
+                    <h3 className="text-white font-display text-xl font-bold tracking-tight mb-1">{member.name}</h3>
+                    <p className="text-gold font-bold text-[9px] uppercase tracking-[0.2em]">{member.role}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState 
+              icon={Users}
+              title="Building Our Team"
+              description="We're currently finalizing our leadership roster for the 2026 academic year. Professional opportunities will be posted here."
+              ctaText="Join the Board"
+              ctaHref="/get-involved"
+            />
+          )}
         </div>
       </section>
 
@@ -205,10 +216,10 @@ export default function About() {
 
       <section className="py-24 px-6 bg-gold">
         <FadeIn className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="font-display text-[clamp(2rem,6vw,4rem)] font-extrabold text-deep tracking-tighter mb-10 leading-none">
+          <h2 className="font-display text-4xl lg:text-6xl font-extrabold text-deep tracking-tighter mb-10 leading-none">
             Join the Network of <br className="hidden sm:block"/> <span className="text-white">Future Leaders</span>.
           </h2>
-          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-deep text-white px-8 lg:px-12 py-4 lg:py-6 rounded-full font-bold hover:bg-white hover:text-deep transition-all duration-300 shadow-xl shadow-deep/10 text-sm lg:text-base">
+          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-deep text-white px-8 lg:px-10 py-4 lg:py-5 rounded-full font-bold hover:bg-white hover:text-deep transition-all duration-300 shadow-xl shadow-deep/10 text-sm lg:text-base">
             Learn How to Participate <ArrowRight size={20} />
           </Link>
         </FadeIn>

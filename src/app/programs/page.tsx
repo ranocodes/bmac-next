@@ -7,6 +7,7 @@ import { ArrowRight, Send, Mic, BookOpen, Users, Trophy, Cpu } from "lucide-reac
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // Exported for dynamic routes
 export const allPrograms = [
@@ -85,44 +86,53 @@ export default function Programs() {
 
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* UNIFORM GRID FOR CMS SCALABILITY */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {allPrograms.map((prog, i) => (
-              <FadeIn key={prog.id} delay={i * 0.1}>
-                <Link href={`/programs/${prog.id}`} className="group flex flex-col h-full">
-                  <BentoCard className="p-0 overflow-hidden flex flex-col h-full border-none shadow-sm group-hover:shadow-xl transition-all bg-white">
-                    <div className="relative h-48 w-full shrink-0">
-                      <Image
-                        src={prog.img}
-                        alt={prog.title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                      <div className="absolute top-4 left-4 p-2.5 rounded-xl bg-white/90 backdrop-blur-md shadow-sm">
-                        <div className={prog.color}>{prog.icon}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-8 flex flex-col flex-grow bg-white">
-                      <h3 className="font-display text-xl font-bold text-deep mb-3 tracking-tight">
-                        {prog.title}
-                      </h3>
-                      <p className="text-slate-500 text-sm leading-relaxed mb-8 line-clamp-2">
-                        {prog.desc}
-                      </p>
-                      
-                      <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">View Workshop</span>
-                        <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-green group-hover:text-white transition-colors">
-                          <ArrowRight size={16} />
+          {allPrograms.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {allPrograms.map((prog, i) => (
+                <FadeIn key={prog.id} delay={i * 0.1}>
+                  <Link href={`/programs/${prog.id}`} className="group flex flex-col h-full">
+                    <BentoCard className="p-0 overflow-hidden flex flex-col h-full border-none shadow-sm group-hover:shadow-xl transition-all bg-white">
+                      <div className="relative h-48 w-full shrink-0">
+                        <Image
+                          src={prog.img}
+                          alt={prog.title}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute top-4 left-4 p-2.5 rounded-xl bg-white/90 backdrop-blur-md shadow-sm">
+                          <div className={prog.color}>{prog.icon}</div>
                         </div>
                       </div>
-                    </div>
-                  </BentoCard>
-                </Link>
-              </FadeIn>
-            ))}
-          </div>
+                      
+                      <div className="p-8 flex flex-col flex-grow bg-white">
+                        <h3 className="font-display text-xl font-bold text-deep mb-3 tracking-tight">
+                          {prog.title}
+                        </h3>
+                        <p className="text-slate-500 text-sm leading-relaxed mb-8 line-clamp-2">
+                          {prog.desc}
+                        </p>
+                        
+                        <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">View Workshop</span>
+                          <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-green group-hover:text-white transition-colors">
+                            <ArrowRight size={16} />
+                          </div>
+                        </div>
+                      </div>
+                    </BentoCard>
+                  </Link>
+                </FadeIn>
+              ))}
+            </div>
+          ) : (
+            <EmptyState 
+              icon={Mic}
+              title="Workshops in Development"
+              description="We're currently designing new leadership and creative workshops for our next cohort. Secure your place on the waitlist to be notified."
+              ctaText="Get Waitlisted"
+              ctaHref="/get-involved"
+            />
+          )}
         </div>
       </section>
 
