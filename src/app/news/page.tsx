@@ -10,10 +10,91 @@ import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-// Exported for use in dynamic routes
-export const newsData: any[] = [];
+export const newsData = [
+  {
+    id: "spoken-word-night-2026",
+    date: "Jan 28, 2026",
+    title: "Annual Spoken Word Night Draws Record Crowd",
+    desc: "Over 200 people attended our third annual open mic, celebrating 18 original performances. The event showcased the diversity of talent in Jos.",
+    content: `Brilliant Minds Ambassadors Club (BMAC) recently hosted its highly anticipated Annual Spoken Word Night at the Jos Museum Auditorium. The event, which has grown significantly since its inception, saw a record-breaking attendance of over 200 poetry enthusiasts, students, and community leaders.
 
-export const eventsData: any[] = [];
+    Eighteen talented performers took to the stage, delivering powerful verses that touched on themes of identity, social change, and the unique cultural heritage of Plateau State. Suleiman Peace Jagaban, the founder of BMAC, remarked on the importance of providing such platforms: "Our goal is to ensure that every young voice in Jos feels heard and valued. Tonight proved that our youth have incredible stories to tell."
+
+    The night wasn't just about performance; it was a celebration of community. Local artists collaborated with BMAC members to create a truly immersive experience, blending traditional spoken word with modern acoustic sounds. As BMAC looks toward the future, events like these remain central to our mission of building confidence and leadership through the arts.`,
+    img: "/images/jj.jpg",
+    category: "Culture",
+    featured: true,
+  },
+  {
+    id: "digital-literacy-2026",
+    date: "Jan 10, 2026",
+    title: "Digital Literacy Program Launches",
+    desc: "A six-week digital skills curriculum covering research and online safety in partnership with tech hubs.",
+    content: `In an era defined by rapid technological advancement, BMAC is proud to announce the launch of its comprehensive Digital Literacy Program. This initiative, developed in partnership with leading tech hubs in Jos, aims to equip young people with the essential digital skills required for the modern workforce.
+
+    The six-week curriculum covers a wide range of topics, including advanced online research techniques, digital productivity tools, and critical training on online safety and data privacy. "Digital literacy is no longer optional; it is a fundamental requirement for leadership in the 21st century," said Amina Bello, BMAC Programs Director.
+
+    Participants will have access to high-speed internet and modern computing facilities, ensuring a hands-on learning experience. Upon completion of the program, members will receive a certificate recognized by our technical partners, opening new doors for internships and career opportunities in the digital space.`,
+    img: "/images/digital-literacy.jpg",
+    category: "Education",
+  },
+  {
+    id: "cohort-2026-announcement",
+    date: "Dec 18, 2025",
+    title: "Meet Our 2026 Cohort",
+    desc: "72 new members joined BMAC this quarter — representing 14 local schools across Plateau State.",
+    content: `We are thrilled to officially welcome 72 new ambassadors to the Brilliant Minds Ambassadors Club as part of our 2026 cohort. This group represents one of our most diverse intakes yet, with members coming from 14 different secondary schools and universities across Plateau State.
+
+    The selection process was rigorous, focusing not just on academic excellence but on a demonstrated passion for community service and a desire to develop leadership potential. These new members will immediately begin their journey with our core workshops in public speaking and critical thinking.
+
+    "Seeing the energy and potential in this new cohort is truly inspiring," noted Chinedu Okonkwo, Head of Communications. "They represent the future of BMAC and, more importantly, the future of leadership in Jos. We can't wait to see what they will achieve over the next year."`,
+    img: "/images/IMG_1351.jpg",
+    category: "Community",
+  },
+  {
+    id: "partnership-progress-2025",
+    date: "Nov 5, 2025",
+    title: "Partnering for Progress",
+    desc: "How collaboration is driving youth empowerment in the North Central region.",
+    content: `BMAC's impact is amplified through the strength of our partnerships. Our latest initiative, "Partnering for Progress," highlights the vital role that local businesses, NGOs, and government agencies play in supporting youth development.
+
+    By working together, we are able to provide our members with unique opportunities, from industry-specific mentorship to specialized vocational training. These collaborations ensure that our programs remain relevant and impactful, directly addressing the needs of the youth in Plateau State.
+
+    We extend our sincere gratitude to all our community partners who share our vision of a confident and empowered next generation. Together, we are not just running a club; we are building a sustainable ecosystem for leadership and growth.`,
+    img: "/images/cp1.jpg",
+    category: "Partnership",
+  },
+];
+
+export const eventsData = [
+  { 
+    id: "public-speaking-march-2026",
+    date: "March 15, 2026", 
+    title: "Public Speaking Workshop", 
+    venue: "BMAC Hall, Nalado Street", 
+    time: "09:00 AM",
+    desc: "An intensive training session focused on mastering impromptu speaking and commanding the stage with authority.",
+    longDesc: "Join us for our monthly intensive workshop where we deep dive into the mechanics of effective communication. This month, we focus on the art of 'The Spontaneous Leader' — learning how to think on your feet and deliver compelling messages under pressure. Whether you are a beginner or looking to refine your expertise, our facilitators will guide you through practical exercises and live feedback sessions."
+  },
+  { 
+    id: "inter-school-debate-april-2026",
+    date: "April 2, 2026", 
+    title: "Inter-School Debate", 
+    venue: "Hillside Hotel, Jos", 
+    time: "10:30 AM",
+    desc: "A high-stakes debate competition featuring top students from across Plateau State competing for the 2026 Trophy.",
+    longDesc: "The BMAC Inter-School Debate Championship returns to Hillside Hotel. This year's competition brings together the brightest minds from across Jos to debate critical issues surrounding technology, governance, and the future of Plateau State. Come and support your school or witness the incredible rhetorical talent of our next generation of leaders."
+  },
+  { 
+    id: "spoken-word-showcase-april-2026",
+    date: "April 20, 2026", 
+    title: "Spoken Word Showcase", 
+    venue: "Museum Auditorium, Jos", 
+    time: "04:00 PM",
+    desc: "An evening of poetic expression where ambassadors share their voices through powerful performance art.",
+    longDesc: "Experience the power of the spoken word at our quarterly showcase. Our ambassadors will take you on a journey of identity, hope, and social commentary. This event is more than a performance; it is a movement that celebrates the rich cultural heritage and vibrant future of Nigerian youth. Admission is free for members and open to the general public with a token registration."
+  },
+];
 
 export default function News() {
   return (

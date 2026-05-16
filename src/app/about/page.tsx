@@ -8,7 +8,28 @@ import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-const team: any[] = [];
+const team = [
+  {
+    name: "Suleiman Peace Jagaban",
+    role: "Founder & Director",
+    img: "/images/jagsba.jpg",
+  },
+  { 
+    name: "Amina Bello", 
+    role: "Programs Director", 
+    img: "/images/maryam.jpg",
+  },
+  {
+    name: "Chinedu Okonkwo",
+    role: "Head of Communications",
+    img: "/images/anu.jpg",
+  },
+  {
+    name: "Fatima Abdullahi",
+    role: "Mentorship Coordinator",
+    img: "/images/maryam1.jpg",
+  },
+];
 
 const impact = [
   { num: "350+", label: "Members Trained", icon: <ShieldCheck size={20}/> },
@@ -193,7 +214,7 @@ export default function About() {
          </div>
       </section>
 
-      <section className="py-24 px-6 bg-gold">
+      <section className="py-24 px-6 bg-gold" style={{ backgroundImage: 'radial-gradient(#0a2e1c 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
         <FadeIn className="max-w-4xl mx-auto text-center px-4">
           <h2 className="font-display text-4xl lg:text-6xl font-extrabold text-deep tracking-tighter mb-10 leading-none">
             Join the Network of <br className="hidden sm:block"/> <span className="text-white">Future Leaders</span>.

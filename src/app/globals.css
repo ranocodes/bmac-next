@@ -47,7 +47,6 @@
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
-
 /* Custom Scrollbar */
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
