@@ -81,7 +81,7 @@ export default function Home() {
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-               className="text-center lg:text-left order-2 lg:order-1"
+               className="text-center lg:text-left order-1"
             >
                <span className="inline-block px-4 py-1.5 mb-6 lg:mb-8 text-[10px] font-bold tracking-[0.3em] uppercase bg-green/5 border border-green/10 rounded-full text-green">
                   Brilliant Minds ambassadors club
@@ -108,7 +108,7 @@ export default function Home() {
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
                transition={{ duration: 1.2, delay: 0.2 }}
-               className="relative h-[350px] md:h-[450px] lg:h-[600px] rounded-[3rem] lg:rounded-[4rem] overflow-hidden shadow-2xl shadow-emerald-900/10 border-4 lg:border-8 border-white order-1 lg:order-2"
+               className="relative h-[350px] md:h-[450px] lg:h-[600px] rounded-[3rem] lg:rounded-[4rem] overflow-hidden shadow-2xl shadow-emerald-900/10 border-4 lg:border-8 border-white order-2"
             >
                <Image 
                   src="/images/literary-arts.jpg" 
