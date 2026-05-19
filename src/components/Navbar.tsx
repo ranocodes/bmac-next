@@ -40,7 +40,7 @@ export default function Navbar() {
       {/* Floating Island Navbar - Centered Pill */}
       <div className="fixed top-6 left-0 right-0 z-[1000] flex justify-center px-6 pointer-events-none">
         <header 
-          className={`pointer-events-auto transition-all duration-500 rounded-full border flex items-center justify-between gap-4 md:gap-8 px-6 md:px-8 py-2.5 ${
+          className={`pointer-events-auto transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 rounded-full border flex items-center justify-between gap-4 md:gap-8 px-6 md:px-8 py-2.5 ${
             scrolled 
               ? "bg-white/70 backdrop-blur-xl border-slate-200/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
               : "bg-white/10 backdrop-blur-md border-white/20 shadow-none"
@@ -80,10 +80,11 @@ export default function Navbar() {
              </Link>
              
              <button 
-                className={`lg:hidden w-10 h-10 flex items-center justify-center rounded-full border transition-all ${
+                className={`lg:hidden w-10 h-10 flex items-center justify-center rounded-full border transition-[background-color,border-color,color] ${
                   scrolled ? "bg-white border-slate-200" : "bg-white/20 border-white/20 text-deep"
                 }`} 
                 onClick={() => toggleMenu(true)}
+                aria-label="Toggle Menu"
               >
                 <Menu size={20} />
              </button>

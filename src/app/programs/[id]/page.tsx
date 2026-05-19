@@ -45,7 +45,7 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
               
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
                 <div className={`p-3 rounded-2xl ${program.color} shadow-sm hidden md:block`}>
-                  {React.cloneElement(program.icon as React.ReactElement, { size: 24 })}
+                  {React.cloneElement(program.icon as React.ReactElement<any>, { size: 24 })}
                 </div>
                 <span className="text-gold font-bold tracking-[0.2em] uppercase text-[9px] md:text-[10px]">
                   Official BMAC Program

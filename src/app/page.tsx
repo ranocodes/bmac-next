@@ -12,9 +12,9 @@ import { BentoCard } from "@/components/ui/BentoCard";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 
 const stats = [
-  { num: "350+", label: "Members Trained", icon: <Target size={18}/> },
-  { num: "48", label: "Events Hosted", icon: <Zap size={18}/> },
-  { num: "12", label: "Partners", icon: <Sparkles size={18}/> },
+  { num: "350\u00A0+", label: "Members Trained", icon: <Target size={18} aria-hidden="true" /> },
+  { num: "48", label: "Events Hosted", icon: <Zap size={18} aria-hidden="true" /> },
+  { num: "12", label: "Partners", icon: <Sparkles size={18} aria-hidden="true" /> },
 ];
 
 const programs = [
@@ -22,7 +22,7 @@ const programs = [
     id: "speaking",
     title: "Public Speaking",
     desc: "From nervous beginners to confident room-commanding speakers.",
-    icon: <Mic size={20} />,
+    icon: <Mic size={20} aria-hidden="true" />,
     color: "bg-emerald-50 text-emerald-600",
     img: "/images/public-speaking.jpg",
     details: "Weekly practice|Live feedback|Real stages|Saturday 9am",
@@ -31,7 +31,7 @@ const programs = [
     id: "literary",
     title: "Literary Arts",
     desc: "A safe space where young voices learn to paint with words.",
-    icon: <BookOpen size={20} />,
+    icon: <BookOpen size={20} aria-hidden="true" />,
     color: "bg-amber-50 text-amber-600",
     img: "/images/literary-arts.jpg",
     details: "Creative writing|Poetry slams|Anthologies|Open Mic nights",
@@ -40,7 +40,7 @@ const programs = [
     id: "mentorship",
     title: "Mentorship",
     desc: "One-on-one pairing with industry leaders for career growth.",
-    icon: <Users size={20} />,
+    icon: <Users size={20} aria-hidden="true" />,
     color: "bg-blue-50 text-blue-600",
     img: "/images/mentorship.jpg",
     details: "1-on-1 sessions|Career pathing|6-month program|Expert alumni",
