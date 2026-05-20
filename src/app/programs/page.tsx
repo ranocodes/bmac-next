@@ -69,20 +69,20 @@ export default function Programs() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <main suppressHydrationWarning className="bg-[#fafbf9]">
-      <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-green/5 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#0a2e1c 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+    <main suppressHydrationWarning className="bg-background">
+      <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
+        <div className="absolute inset-0 bg-primary/5 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="text-green font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
+            <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
               Leadership Ecosystem
             </span>
-            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-deep tracking-tighter leading-[0.9]">
-              Our Core <span className="text-gold italic font-light serif">Curriculum</span>.
+            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-secondary tracking-tighter leading-[0.9]">
+              Our Core <span className="text-accent italic font-light serif">Curriculum</span>.
             </h1>
           </motion.div>
         </div>
@@ -94,7 +94,7 @@ export default function Programs() {
             {allPrograms.map((prog, i) => (
               <FadeIn key={prog.id} delay={i * 0.1}>
                 <Link href={`/programs/${prog.id}`} className="group flex flex-col h-full">
-                  <BentoCard className="p-0 overflow-hidden flex flex-col h-full border-none shadow-sm group-hover:shadow-xl transition-all bg-white">
+                  <BentoCard className="p-0 overflow-hidden flex flex-col h-full border-none shadow-sm group-hover:shadow-xl transition-all bg-card">
                     <div className="relative h-48 w-full shrink-0">
                       <Image
                         src={prog.img}
@@ -102,22 +102,22 @@ export default function Programs() {
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
-                      <div className="absolute top-4 left-4 p-2.5 rounded-xl bg-white/90 backdrop-blur-md shadow-sm">
+                      <div className="absolute top-4 left-4 p-2.5 rounded-xl bg-card/90 backdrop-blur-md shadow-sm">
                         <div className={prog.color}>{prog.icon}</div>
                       </div>
                     </div>
                     
-                    <div className="p-8 flex flex-col flex-grow bg-white">
-                      <h3 className="font-display text-xl font-bold text-deep mb-3 tracking-tight">
+                    <div className="p-8 flex flex-col flex-grow bg-card">
+                      <h3 className="font-display text-xl font-bold text-secondary mb-3 tracking-tight">
                         {prog.title}
                       </h3>
-                      <p className="text-slate-500 text-sm leading-relaxed mb-8 line-clamp-2">
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-8 line-clamp-2">
                         {prog.desc}
                       </p>
                       
-                      <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                      <div className="mt-auto pt-6 border-t border-border/50 flex items-center justify-between">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">View Workshop</span>
-                        <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-green group-hover:text-white transition-colors">
+                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                           <ArrowRight size={16} />
                         </div>
                       </div>
@@ -130,13 +130,13 @@ export default function Programs() {
         </div>
       </section>
 
-      <section className="py-24 px-6 overflow-hidden relative" style={{ backgroundImage: 'radial-gradient(#0a2e1c 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-green rounded-full blur-[120px] opacity-20 -mr-48 -mt-48 pointer-events-none" />
+      <section className="py-24 px-6 overflow-hidden relative" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[120px] opacity-20 -mr-48 -mt-48 pointer-events-none" />
         <FadeIn className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="font-display text-[clamp(2rem,6vw,4rem)] font-extrabold text-green tracking-tighter mb-8 leading-none">
-            Ready to Accelerate <br/> Your <span className="text-gold">Growth</span>?
+          <h2 className="font-display text-[clamp(2rem,6vw,4rem)] font-extrabold text-primary tracking-tighter mb-8 leading-none">
+            Ready to Accelerate <br/> Your <span className="text-accent">Growth</span>?
           </h2>
-          <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-4 bg-deep text-white px-5 py-3 rounded-full font-bold hover:bg-gold transition-all duration-300">
+          <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-4 bg-secondary text-secondary-foreground px-5 py-3 rounded-full font-bold hover:bg-accent transition-all duration-300">
             Join the Next Cohort <ArrowRight size={20} />
           </button>
         </FadeIn>

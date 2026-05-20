@@ -1,3 +1,4 @@
+import React from "react";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import Navbar from "@/components/Navbar";

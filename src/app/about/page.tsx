@@ -40,7 +40,7 @@ const impact = [
 
 export default function About() {
   return (
-    <main suppressHydrationWarning className="bg-[#fafbf9]">
+    <main suppressHydrationWarning className="bg-background">
       <section className="relative min-h-[60dvh] flex items-center justify-center overflow-hidden pt-20">
         <Image
           src="/images/about-hero.jpg"
@@ -49,7 +49,7 @@ export default function About() {
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-[#0a2e1c]/80 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-secondary/80 backdrop-blur-[2px]" />
         
         <div className="relative z-10 text-center px-4">
           <motion.div
@@ -57,11 +57,11 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-             <span className="text-gold font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
+             <span className="text-accent font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
               Our Identity
             </span>
-            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-white tracking-tighter leading-none">
-              Building <span className="text-gold">Ambassadors</span>.
+            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-card tracking-tighter leading-none">
+              Building <span className="text-accent">Ambassadors</span>.
             </h1>
           </motion.div>
         </div>
@@ -72,10 +72,10 @@ export default function About() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center text-center lg:text-left">
           <FadeIn>
              <div className="section-eyebrow">Our Story</div>
-             <h2 className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold text-deep tracking-tighter leading-[1.1] mb-8">
-               From a Local Hub <br/> to a <span className="text-green">National Movement</span>.
+             <h2 className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold text-secondary tracking-tighter leading-[1.1] mb-8">
+               From a Local Hub <br/> to a <span className="text-primary">National Movement</span>.
              </h2>
-             <div className="space-y-6 text-slate-500 text-base lg:text-lg leading-relaxed">
+             <div className="space-y-6 text-muted-foreground text-base lg:text-lg leading-relaxed">
                 <p>
                   Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
                   State by Suleiman Peace Jagaban — a visionary who saw the
@@ -91,18 +91,18 @@ export default function About() {
           
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-4 pt-6 lg:pt-12">
-                <FadeIn delay={0.2} className="relative h-48 lg:h-64 rounded-[2rem] overflow-hidden shadow-sm">
+                <FadeIn delay={0.2} className="relative h-48 lg:h-64 rounded-bento overflow-hidden shadow-sm">
                    <Image src="/images/ws.jpg" alt="Outreach" fill className="object-cover" />
                 </FadeIn>
-                <FadeIn delay={0.3} className="relative h-40 lg:h-48 rounded-[2rem] overflow-hidden bg-gold p-6 lg:p-8 flex flex-col justify-end shadow-sm">
-                   <h4 className="text-deep font-display font-bold text-lg lg:text-xl leading-tight text-left">100% Youth Led.</h4>
+                <FadeIn delay={0.3} className="relative h-40 lg:h-48 rounded-bento overflow-hidden bg-accent p-6 lg:p-8 flex flex-col justify-end shadow-sm">
+                   <h4 className="text-secondary font-display font-bold text-lg lg:text-xl leading-tight text-left">100% Youth Led.</h4>
                 </FadeIn>
              </div>
              <div className="space-y-4">
-                <FadeIn delay={0.4} className="relative h-40 lg:h-48 rounded-[2rem] overflow-hidden bg-deep p-6 lg:p-8 flex flex-col justify-end shadow-sm text-left">
-                   <h4 className="text-white font-display font-bold text-lg lg:text-xl leading-tight">Community Rooted.</h4>
+                <FadeIn delay={0.4} className="relative h-40 lg:h-48 rounded-bento overflow-hidden bg-secondary p-6 lg:p-8 flex flex-col justify-end shadow-sm text-left">
+                   <h4 className="text-secondary-foreground font-display font-bold text-lg lg:text-xl leading-tight">Community Rooted.</h4>
                 </FadeIn>
-                <FadeIn delay={0.5} className="relative h-48 lg:h-64 rounded-[2rem] overflow-hidden shadow-sm">
+                <FadeIn delay={0.5} className="relative h-48 lg:h-64 rounded-bento overflow-hidden shadow-sm">
                    <Image src="/images/ws1.jpg" alt="Workshop" fill className="object-cover" />
                 </FadeIn>
              </div>
@@ -111,39 +111,39 @@ export default function About() {
       </section>
 
       {/* Foundation Section */}
-      <section className="py-24 px-6 bg-slate-50">
+      <section className="py-24 px-6 bg-muted/50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="section-title">Core Foundation</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            <BentoCard className="bg-white">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
+            <BentoCard className="bg-card">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
                 <Target size={24} />
               </div>
               <h3 className="font-display text-2xl font-bold mb-3">Our Mission</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 To identify, train, and empower young people with communication, creative, and critical thinking skills needed to lead with confidence.
               </p>
             </BentoCard>
 
-            <BentoCard className="bg-white">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6">
+            <BentoCard className="bg-card">
+              <div className="w-12 h-12 rounded-2xl bg-accent/10 text-accent flex items-center justify-center mb-6">
                 <Eye size={24} />
               </div>
               <h3 className="font-display text-2xl font-bold mb-3">Our Vision</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 A generation of young African leaders who speak boldly, think critically, and build communities where every voice matters.
               </p>
             </BentoCard>
 
-            <BentoCard className="bg-white">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-6">
+            <BentoCard className="bg-card">
+              <div className="w-12 h-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mb-6">
                 <Heart size={24} />
               </div>
               <h3 className="font-display text-2xl font-bold mb-3">Our Values</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 Excellence in every session. Inclusivity for all. Integrity in mentorship. Impact measured by real member outcomes.
               </p>
             </BentoCard>
@@ -159,7 +159,7 @@ export default function About() {
                <span className="section-eyebrow">The Leadership</span>
                <h2 className="section-title">Meet the Minds Behind BMAC</h2>
             </div>
-            <p className="text-slate-400 text-sm max-w-xs pb-2">
+            <p className="text-muted-foreground text-sm max-w-xs pb-2">
                Our team consists of dedicated professionals and alumni committed to youth development.
             </p>
           </div>
@@ -169,7 +169,7 @@ export default function About() {
               {team.map((member, i) => (
                 <motion.div 
                   key={i} 
-                  className="group relative aspect-[3/4] rounded-[2rem] overflow-hidden bg-white border border-slate-100 shadow-sm"
+                  className="group relative aspect-[3/4] rounded-bento overflow-hidden bg-card border border-border shadow-sm"
                   whileHover={{ y: -5 }}
                 >
                   <Image
@@ -178,11 +178,11 @@ export default function About() {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-deep via-deep/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                   
                   <div className="absolute bottom-8 left-8 right-8 text-left">
-                    <h3 className="text-white font-display text-xl font-bold tracking-tight mb-1">{member.name}</h3>
-                    <p className="text-gold font-bold text-[9px] uppercase tracking-[0.2em]">{member.role}</p>
+                    <h3 className="text-secondary-foreground font-display text-xl font-bold tracking-tight mb-1">{member.name}</h3>
+                    <p className="text-accent font-bold text-[9px] uppercase tracking-[0.2em]">{member.role}</p>
                   </div>
                 </motion.div>
               ))}
@@ -200,26 +200,26 @@ export default function About() {
       </section>
 
       {/* Impact Numbers */}
-      <section className="py-20 bg-deep text-white overflow-hidden relative">
+      <section className="py-20 bg-secondary text-secondary-foreground overflow-hidden relative">
          <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 lg:gap-16 text-center relative z-10">
             {impact.map((stat, i) => (
               <div key={i} className="space-y-3">
-                <div className="mx-auto w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gold">
+                <div className="mx-auto w-10 h-10 rounded-xl bg-card/5 flex items-center justify-center text-accent">
                    {stat.icon}
                 </div>
-                <h3 className="font-display text-4xl lg:text-5xl font-extrabold tracking-tighter text-white">{stat.num}</h3>
-                <p className="text-white/40 text-[10px] lg:text-xs font-bold uppercase tracking-widest">{stat.label}</p>
+                <h3 className="font-display text-4xl lg:text-5xl font-extrabold tracking-tighter text-secondary-foreground">{stat.num}</h3>
+                <p className="text-secondary-foreground/40 text-[10px] lg:text-xs font-bold uppercase tracking-widest">{stat.label}</p>
               </div>
             ))}
          </div>
       </section>
 
-      <section className="py-24 px-6 bg-gold" style={{ backgroundImage: 'radial-gradient(#0a2e1c 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+      <section className="py-24 px-6 bg-accent" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
         <FadeIn className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="font-display text-4xl lg:text-6xl font-extrabold text-deep tracking-tighter mb-10 leading-none">
-            Join the Network of <br className="hidden sm:block"/> <span className="text-white">Future Leaders</span>.
+          <h2 className="font-display text-4xl lg:text-6xl font-extrabold text-secondary tracking-tighter mb-10 leading-none">
+            Join the Network of <br className="hidden sm:block"/> <span className="text-card">Future Leaders</span>.
           </h2>
-          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-deep text-white px-8 lg:px-10 py-4 lg:py-5 rounded-full font-bold hover:bg-white hover:text-deep transition-all duration-300 shadow-xl shadow-deep/10 text-sm lg:text-base">
+          <Link href="/get-involved" className="inline-flex items-center gap-4 bg-secondary text-secondary-foreground px-8 lg:px-10 py-4 lg:py-5 rounded-full font-bold hover:bg-card hover:text-secondary transition-all duration-300 shadow-xl shadow-secondary/10 text-sm lg:text-base">
             Learn How to Participate <ArrowRight size={20} />
           </Link>
         </FadeIn>

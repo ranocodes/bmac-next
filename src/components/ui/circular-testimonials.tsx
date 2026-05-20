@@ -54,12 +54,12 @@ export const CircularTestimonials = ({
   fontSizes = {},
 }: CircularTestimonialsProps) => {
   // Color & font config
-  const colorName = colors.name ?? "var(--deep)";
-  const colorDesignation = colors.designation ?? "var(--muted)";
-  const colorTestimony = colors.testimony ?? "var(--text)";
-  const colorArrowBg = colors.arrowBackground ?? "var(--deep)";
-  const colorArrowFg = colors.arrowForeground ?? "var(--white)";
-  const colorArrowHoverBg = colors.arrowHoverBackground ?? "var(--green)";
+  const colorName = colors.name ?? "var(--secondary)";
+  const colorDesignation = colors.designation ?? "var(--muted-foreground)";
+  const colorTestimony = colors.testimony ?? "var(--foreground)";
+  const colorArrowBg = colors.arrowBackground ?? "var(--secondary)";
+  const colorArrowFg = colors.arrowForeground ?? "var(--secondary-foreground)";
+  const colorArrowHoverBg = colors.arrowHoverBackground ?? "var(--primary)";
   
   const fontSizeName = fontSizes.name ?? "1.5rem";
   const fontSizeDesignation = fontSizes.designation ?? "0.925rem";
@@ -299,8 +299,8 @@ export const CircularTestimonials = ({
           width: 100%;
           height: 100%;
           object-fit: cover;
-          border-radius: 1.25rem;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+          border-radius: var(--radius-card);
+          box-shadow: var(--shadow-diffused);
         }
         .testimonial-content {
           display: flex;

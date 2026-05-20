@@ -42,13 +42,13 @@ export default function Navbar() {
         <header 
           className={`pointer-events-auto transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 rounded-full border flex items-center justify-between gap-4 md:gap-8 px-6 md:px-8 py-2.5 ${
             scrolled 
-              ? "bg-white/70 backdrop-blur-xl border-slate-200/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
-              : "bg-white/10 backdrop-blur-md border-white/20 shadow-none"
+              ? "bg-card/70 backdrop-blur-xl border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
+              : "bg-card/10 backdrop-blur-md border-card/20 shadow-none"
           }`}
           style={{ width: 'auto', maxWidth: '95vw' }}
         >
-          <Link href="/" className="font-display font-bold text-xl tracking-tighter text-deep flex-shrink-0">
-            BMAC<span className="text-green">.</span>
+          <Link href="/" className="font-display font-bold text-xl tracking-tighter text-secondary flex-shrink-0">
+            BMAC<span className="text-primary">.</span>
           </Link>
           
           <nav className="hidden lg:flex items-center gap-1">
@@ -58,8 +58,8 @@ export default function Navbar() {
                 href={link.href}
                 className={`text-[13px] px-4 py-2 rounded-full transition-all duration-300 font-medium ${
                   pathname === link.href 
-                    ? scrolled ? "bg-deep text-white shadow-sm" : "bg-white/20 text-deep"
-                    : scrolled ? "text-slate-500 hover:text-deep hover:bg-slate-100" : "text-deep/70 hover:text-deep hover:bg-white/10"
+                    ? scrolled ? "bg-secondary text-secondary-foreground shadow-sm" : "bg-card/20 text-secondary"
+                    : scrolled ? "text-muted-foreground hover:text-secondary hover:bg-muted" : "text-secondary/70 hover:text-secondary hover:bg-card/10"
                 }`}
               >
                 {link.name}
@@ -72,8 +72,8 @@ export default function Navbar() {
                 href="/get-involved" 
                 className={`hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold transition-all shadow-lg ${
                   scrolled 
-                    ? "bg-green text-white hover:bg-deep shadow-green/10" 
-                    : "bg-white text-deep hover:bg-gold shadow-white/10"
+                    ? "bg-primary text-primary-foreground hover:bg-secondary shadow-primary/10" 
+                    : "bg-card text-secondary hover:bg-accent shadow-card/10"
                 }`}
               >
                 Join Us
@@ -81,7 +81,7 @@ export default function Navbar() {
              
              <button 
                 className={`lg:hidden w-10 h-10 flex items-center justify-center rounded-full border transition-[background-color,border-color,color] ${
-                  scrolled ? "bg-white border-slate-200" : "bg-white/20 border-white/20 text-deep"
+                  scrolled ? "bg-card border-border" : "bg-card/20 border-card/20 text-secondary"
                 }`} 
                 onClick={() => toggleMenu(true)}
                 aria-label="Toggle Menu"
