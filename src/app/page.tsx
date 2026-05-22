@@ -9,6 +9,7 @@ import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { CircularTestimonials } from "@/components/ui/circular-testimonials";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 
 const stats = [
@@ -147,16 +148,14 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                {programs.map((prog, i) => (
-                 <BentoCard 
+                 <DigitalPass 
                     key={prog.id} 
-                    delay={i * 0.1}
-                    className="p-0 overflow-hidden flex flex-col h-full bg-card group border-none shadow-sm hover:shadow-xl transition-all"
-                    onClick={() => {}}
+                    className="p-0 overflow-hidden flex flex-col h-full bg-card group border-none"
                  >
                     <Link href={`/programs/${prog.id}`} className="flex flex-col h-full">
                       <div className="relative h-48 lg:h-56 w-full overflow-hidden shrink-0 border-b border-border/50">
                          <Image src={prog.img} alt={prog.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-                         <div className="absolute top-4 lg:top-6 left-4 lg:left-6 p-2.5 rounded-xl bg-card/90 backdrop-blur-md shadow-sm">
+                         <div className="absolute top-4 lg:top-6 left-4 lg:left-6 p-2.5 rounded-xl bg-card/90 backdrop-blur-md shadow-sm z-20">
                             <div className={prog.color}>{React.cloneElement(prog.icon as React.ReactElement, { "aria-hidden": "true" } as any)}</div>
                          </div>
                       </div>
@@ -165,14 +164,14 @@ export default function Home() {
                          <h3 className="font-display text-xl lg:text-2xl font-bold text-secondary mb-3 tracking-tight">{prog.title}</h3>
                          <p className="text-muted-foreground text-sm leading-relaxed mb-8">{prog.desc}</p>
                          <div className="mt-auto pt-6 border-t border-border/50 flex justify-between items-center">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Learn More</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Claim Pass</span>
                             <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                                <ArrowRight size={18} />
                             </div>
                          </div>
                       </div>
                     </Link>
-                 </BentoCard>
+                 </DigitalPass>
                ))}
             </div>
          </div>

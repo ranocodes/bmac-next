@@ -178,14 +178,14 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
                 {otherPathways.map((item, i) => (
                   <FadeIn key={i} delay={i * 0.1}>
                       <Link href={`/programs/${item.id}`} className="group block h-full">
-                        <BentoCard className="bg-card p-6 md:p-8 h-full flex flex-col items-center md:items-start border-none shadow-sm hover:shadow-lg transition-all rounded-[2rem]">
-                            <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center mb-6`}>
+                        <BentoCard className="bg-card p-8 h-full flex flex-col items-center border-none shadow-sm hover:shadow-lg transition-all rounded-[2rem]">
+                            <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center mb-6 shrink-0`}>
                               {item.icon}
                             </div>
-                            <h3 className="font-display text-lg font-bold text-secondary group-hover:text-primary transition-colors leading-tight mb-3">
+                            <h3 className="font-display text-lg font-bold text-secondary group-hover:text-primary transition-colors leading-tight mb-3 text-center">
                               {item.title}
-                            </h3>
-                            <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2">
+                           </h3>
+                            <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2 text-center">
                               {item.desc}
                             </p>
                         </BentoCard>

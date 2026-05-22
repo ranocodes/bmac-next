@@ -133,8 +133,8 @@ export default function BlogPost({ params }: { params: Promise<{ id: string }> }
                     </div>
                   )}
                   
-                  <Link href="/programs" className="block w-full mt-6 md:mt-10 py-4 bg-card/5 border border-card/10 rounded-2xl text-center text-[10px] font-bold hover:bg-card hover:text-secondary transition-all uppercase tracking-widest">
-                     View All Programs
+                  <Link href="/events" className="block w-full mt-6 md:mt-10 py-4 bg-card/5 border border-card/10 rounded-2xl text-center text-[10px] font-bold hover:bg-card hover:text-secondary transition-all uppercase tracking-widest">
+                     View All Events
                   </Link>
                </div>
 
