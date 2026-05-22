@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import {
   Users,
@@ -11,7 +11,7 @@ import {
   Send,
   ArrowRight
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
@@ -131,56 +131,59 @@ export default function GetInvolved() {
       {/* Unified Modal */}
       <Modal isOpen={!!selectedWay} onClose={() => setSelectedWay(null)}>
         {selectedWay && (
-          <div className="bg-card p-8 md:p-12">
-            <div className="flex items-start justify-between mb-8">
-              <div>
-                <span className="text-xs font-bold tracking-[0.2em] text-accent uppercase block mb-2">
-                  Action Step
-                </span>
-                <h2 className="font-display text-4xl font-extrabold text-secondary tracking-tighter leading-none">
-                  {selectedWay.title}
-                </h2>
-              </div>
-              <div className={`p-4 rounded-2xl ${selectedWay.color}`}>
-                {selectedWay.icon}
-              </div>
+          <div className="bg-card">
+            {/* Modal Header */}
+            <div className="p-8 md:p-12 pb-0 md:pb-0">
+               <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-8 md:mb-12">
+                 <div className="order-2 md:order-1 text-center md:text-left w-full md:w-auto">
+                   <span className="text-xs font-bold tracking-[0.2em] text-accent uppercase block mb-3 md:mb-2">
+                     Action Step
+                   </span>
+                   <h2 className="font-display text-3xl md:text-5xl font-extrabold text-secondary tracking-tighter leading-[0.95]">
+                     {selectedWay.title}
+                   </h2>
+                 </div>
+                 <div className={`p-4 md:p-5 rounded-2xl md:rounded-3xl ${selectedWay.color} order-1 md:order-2 mx-auto md:mx-0 shadow-sm`}>
+                   {React.cloneElement(selectedWay.icon as React.ReactElement<any>, { size: 32 })}
+                 </div>
+               </div>
+               
+               <p className="text-muted-foreground text-base md:text-xl mb-10 md:mb-16 leading-relaxed max-w-2xl mx-auto md:mx-0 text-center md:text-left font-medium">
+                 {selectedWay.desc}
+               </p>
             </div>
 
-            <p className="text-muted-foreground text-lg mb-10 leading-relaxed max-w-xl">
-              {selectedWay.desc}
-            </p>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                 <div>
-                    <h4 className="font-bold text-secondary uppercase text-[10px] tracking-widest mb-4">What to Expect</h4>
-                    <div className="space-y-3">
-                      {selectedWay.details.split("|").map((detail: string, i: number) => (
-                        <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground bg-muted/50 px-4 py-3 rounded-xl border border-border/50">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          {detail}
-                        </div>
-                      ))}
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 border-t border-border/50">
+              {/* Expectations Section */}
+              <div className="p-8 md:p-12 bg-muted/20">
+                 <h4 className="font-bold text-secondary uppercase text-[10px] tracking-widest mb-6 text-center md:text-left">What to Expect</h4>
+                 <div className="grid grid-cols-1 gap-3">
+                   {selectedWay.details.split("|").map((detail: string, i: number) => (
+                     <div key={i} className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground bg-card px-5 py-4 rounded-xl border border-border/30 shadow-sm transition-transform hover:scale-[1.02]">
+                       <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                       <span className="font-bold">{detail}</span>
+                     </div>
+                   ))}
                  </div>
               </div>
 
-              <div className="bg-secondary rounded-bento p-8 text-secondary-foreground relative overflow-hidden">
+              {/* Form Section */}
+              <div className="p-8 md:p-12 bg-secondary text-secondary-foreground relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary rounded-full blur-[60px] opacity-20" />
                 
-                <h3 className="relative z-10 font-display text-xl font-bold mb-6">
-                   {selectedWay.id === "donate" ? "Gift of Growth" : "Get Started"}
+                <h3 className="relative z-10 font-display text-xl md:text-2xl font-bold mb-8 text-center md:text-left">
+                   {selectedWay.id === "donate" ? "Gift of Growth" : "Secure Connection"}
                 </h3>
 
                 {selectedWay.id === "donate" && (
                   <div className="space-y-6 mb-8 relative z-10">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                       {["5000", "10000", "25000", "custom"].map((amt) => (
                         <button
                           key={amt}
-                          className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                          className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
                             donateAmount === amt 
-                              ? "bg-accent border-accent text-accent-foreground" 
+                              ? "bg-accent border-accent text-accent-foreground shadow-lg shadow-accent/20" 
                               : "bg-white/5 border-white/10 text-white hover:bg-white/10"
                           }`}
                           onClick={() => setDonateAmount(amt)}
@@ -189,24 +192,38 @@ export default function GetInvolved() {
                         </button>
                       ))}
                     </div>
-                    {donateAmount === "custom" && (
-                      <input
-                        type="number"
-                        placeholder="Enter amount (₦)"
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
-                        value={customAmount}
-                        onChange={(e) => setCustomAmount(e.target.value)}
-                      />
-                    )}
+                    <AnimatePresence>
+                      {donateAmount === "custom" && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                        >
+                          <input
+                            type="number"
+                            placeholder="Enter amount (₦)"
+                            className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+                            value={customAmount}
+                            onChange={(e) => setCustomAmount(e.target.value)}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
 
-                <form className="space-y-4 relative z-10" onSubmit={selectedWay.id === "donate" ? handleDonate : (e) => { e.preventDefault(); alert("Success!"); setSelectedWay(null); }}>
-                  <input type="text" placeholder="Full Name" className="w-full px-5 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none" required />
-                  <input type="email" placeholder="Email Address" className="w-full px-5 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none" required />
-                  <button className="w-full py-4 bg-accent text-accent-foreground font-bold rounded-xl text-sm hover:bg-card hover:text-accent transition-all flex items-center justify-center gap-2 mt-4 shadow-lg shadow-accent/10">
-                    {selectedWay.id === "donate" ? "Complete Donation" : "Join the Movement"} 
-                    <ArrowRight size={16} />
+                <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={selectedWay.id === "donate" ? handleDonate : (e) => { e.preventDefault(); alert("Success!"); setSelectedWay(null); }}>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Your Identity</label>
+                    <input type="text" placeholder="Full Name" className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Communication</label>
+                    <input type="email" placeholder="Email Address" className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all" required />
+                  </div>
+                  <button className="w-full py-4 md:py-5 bg-accent text-accent-foreground font-bold rounded-xl md:rounded-2xl text-sm hover:bg-card hover:text-accent transition-all flex items-center justify-center gap-3 mt-6 shadow-xl shadow-accent/10 active:scale-[0.98]">
+                    {selectedWay.id === "donate" ? "Complete Donation" : "Initiate Partnership"} 
+                    <ArrowRight size={18} />
                   </button>
                 </form>
               </div>

@@ -74,20 +74,20 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
       </section>
 
       {/* Main Content Area */}
-      <section className="py-12 md:py-20 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+      <section className="py-10 md:py-20 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24">
           
           <div className="lg:col-span-7">
             <div className="prose prose-slate lg:prose-lg max-w-none mb-12 md:mb-16 text-center md:text-left">
               <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6">Overview</h3>
-              <p className="text-muted-foreground text-base md:text-lg leading-[1.8] mb-8">
+              <p className="text-muted-foreground text-base md:text-lg leading-[1.7] md:leading-[1.8] mb-8">
                 {program.longDesc}
               </p>
             </div>
 
             <div className="mb-12 md:mb-16">
                <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-8 text-center md:text-left">What You'll Master</h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   {[
                     "Commanding presence and stage authority",
                     "Advanced rhetorical techniques",
@@ -96,9 +96,9 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
                     "Professional storytelling frameworks",
                     "Leadership communication strategies"
                   ].map((skill, i) => (
-                    <div key={i} className="flex items-center gap-3 p-5 rounded-xl bg-card border border-border shadow-sm transition-transform hover:-translate-y-1">
+                    <div key={i} className="flex items-center gap-3 p-4 md:p-5 rounded-xl bg-card border border-border shadow-sm transition-transform hover:-translate-y-1">
                        <CheckCircle2 className="text-primary flex-shrink-0" size={18} />
-                       <span className="text-xs md:text-sm font-bold text-secondary">{skill}</span>
+                       <span className="text-[11px] md:text-sm font-bold text-secondary">{skill}</span>
                     </div>
                   ))}
                </div>
@@ -106,31 +106,31 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
 
             <hr className="border-border/50 mb-12 md:mb-16" />
 
-            <div className="bg-muted rounded-bento p-8 md:p-12 border border-border text-center md:text-left">
+            <div className="bg-muted/50 rounded-[2rem] md:rounded-bento p-6 md:p-12 border border-border text-center md:text-left">
                <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-4">Common Questions</h3>
-               <div className="space-y-4 text-left">
+               <div className="space-y-3 md:space-y-4 text-left">
                   {[
                     { q: "Is this workshop for beginners?", a: "Absolutely. We have specialized modules designed specifically for those starting their journey." },
                     { q: "Are there any fees?", a: "Most BMAC programs are free for active members. Public competitions may have small registration fees." }
                   ].map((faq, i) => (
-                    <div key={i} className="bg-card p-6 rounded-xl shadow-sm border border-border">
+                    <div key={i} className="bg-card p-5 md:p-6 rounded-xl shadow-sm border border-border">
                        <p className="font-bold text-secondary text-sm md:text-base mb-2">{faq.q}</p>
-                       <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                       <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
                     </div>
                   ))}
                </div>
             </div>
           </div>
 
-          <aside className="lg:col-span-5 space-y-8 md:space-y-12">
-            <div className="sticky top-32 space-y-8 md:space-y-12">
+          <aside className="lg:col-span-5 space-y-6 md:space-y-12">
+            <div className="lg:sticky lg:top-32 space-y-6 md:space-y-12">
                
                {/* Logistics Widget */}
-               <div className="bg-secondary rounded-bento p-8 md:p-10 text-secondary-foreground relative overflow-hidden shadow-2xl">
+               <div className="bg-secondary rounded-[2rem] md:rounded-bento p-6 md:p-10 text-secondary-foreground relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary rounded-full blur-[60px] opacity-20" />
                   <h3 className="font-display text-xl md:text-2xl font-bold mb-8 relative z-10 text-center md:text-left">Workshop <br className="hidden md:block"/> Logistics</h3>
                   
-                  <div className="grid grid-cols-1 gap-6 relative z-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 relative z-10">
                     {program.details.split('|').map((detail, i) => (
                       <div key={i} className="flex items-center gap-4 md:gap-5 justify-start">
                          <div className="w-10 h-10 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent flex-shrink-0">
@@ -143,7 +143,7 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
                </div>
 
                {/* RSVP Form */}
-               <div className="bg-card rounded-bento p-6 md:p-10 lg:p-12 shadow-2xl border border-border relative overflow-hidden text-center md:text-left">
+               <div className="bg-card rounded-[2rem] md:rounded-bento p-6 md:p-10 lg:p-12 shadow-2xl border border-border relative overflow-hidden text-center md:text-left">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-24 -mt-24 pointer-events-none" />
                   <div className="relative z-10">
                     <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
@@ -152,11 +152,11 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
                     <form className="space-y-4 md:space-y-5" onSubmit={(e) => { e.preventDefault(); alert("Application Sent!"); }}>
                        <div className="space-y-1.5 text-left">
                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Full Name</label>
-                          <input type="text" placeholder="Ambassador Name" className="w-full px-5 md:px-6 py-4 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
+                          <input type="text" placeholder="Ambassador Name" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
                        </div>
                        <div className="space-y-1.5 text-left">
                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Email Address</label>
-                          <input type="email" placeholder="email@bmacjos.org" className="w-full px-5 md:px-6 py-4 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
+                          <input type="email" placeholder="email@bmacjos.org" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
                        </div>
                        <button className="w-full py-4 md:py-5 bg-primary text-primary-foreground rounded-xl md:rounded-2xl font-bold hover:bg-secondary transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/10 mt-4 active:scale-[0.98]">
                           Apply to Program <Send size={18} />
@@ -171,14 +171,14 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
 
       {/* Other Growth Pathways */}
       {otherPathways.length > 0 && (
-        <section className="py-20 md:py-24 px-6 bg-muted/50 border-t border-border">
+        <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-t border-border/50">
           <div className="max-w-7xl mx-auto text-center md:text-left">
               <h2 className="font-display text-2xl md:text-3xl font-extrabold text-secondary tracking-tight mb-12">Other Growth Pathways</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {otherPathways.map((item, i) => (
                   <FadeIn key={i} delay={i * 0.1}>
                       <Link href={`/programs/${item.id}`} className="group block h-full">
-                        <BentoCard className="bg-card p-8 h-full flex flex-col items-center md:items-start border-none shadow-sm hover:shadow-lg transition-all">
+                        <BentoCard className="bg-card p-6 md:p-8 h-full flex flex-col items-center md:items-start border-none shadow-sm hover:shadow-lg transition-all rounded-[2rem]">
                             <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center mb-6`}>
                               {item.icon}
                             </div>
