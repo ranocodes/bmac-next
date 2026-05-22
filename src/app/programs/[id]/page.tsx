@@ -172,7 +172,7 @@ export default function ProgramDetail({ params }: { params: Promise<{ id: string
       {/* Other Growth Pathways */}
       {otherPathways.length > 0 && (
         <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-t border-border/50">
-          <div className="max-w-7xl mx-auto text-center md:text-left">
+          <div className="max-w-7xl mx-auto text-center">
               <h2 className="font-display text-2xl md:text-3xl font-extrabold text-secondary tracking-tight mb-12">Other Growth Pathways</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {otherPathways.map((item, i) => (

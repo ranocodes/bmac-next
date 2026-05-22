@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from "react";
+import React, { use, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Calendar, MapPin, Send, Clock, Share2, Bookmark, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -36,71 +36,80 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
 
   return (
     <main suppressHydrationWarning className="bg-background">
-      {/* Immersive Event Hero */}
-      <section className="relative min-h-[70dvh] flex items-center pt-24 overflow-hidden bg-secondary">
-        <div className="absolute inset-0 bg-primary/5 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      {/* Editorial Event Hero - Professional Mobile Layout */}
+      <section className="relative overflow-hidden bg-secondary pt-24 pb-12 md:pt-32 md:pb-20">
+        {/* Tactical Grid Overlay */}
+        <div className="absolute inset-0 bg-primary/5 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
         
-        <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Link href="/events" className="inline-flex items-center gap-2 text-accent hover:text-card text-[10px] font-bold uppercase tracking-[0.3em] mb-12 transition-colors group">
-              <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Access All Passes
-            </Link>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 w-full relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10 lg:gap-16">
             
-            <div className="flex items-center gap-4 mb-8">
-              <span className="bg-accent text-accent-foreground px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-accent/20">
-                Live Registration
-              </span>
-              <div className="flex items-center gap-2 text-card/60 text-xs font-bold uppercase tracking-widest">
-                <Calendar size={14} className="text-accent" /> {event.date}
-              </div>
-            </div>
-
-            <h1 className="font-display text-[clamp(2.5rem,8vw,5.5rem)] font-extrabold text-card tracking-tighter leading-[0.85] mb-10">
-              {event.title}
-            </h1>
-
-            <div className="flex flex-wrap gap-8">
-              <div className="flex items-center gap-4 text-card/80">
-                <div className="w-12 h-12 rounded-2xl bg-card/5 border border-card/10 flex items-center justify-center text-accent">
-                  <MapPin size={24} />
-                </div>
-                <div>
-                   <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Location</p>
-                   <p className="text-base font-bold">{event.venue}</p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex-1 text-center lg:text-left"
+            >
+              <Link href="/events" className="inline-flex items-center gap-2 text-accent hover:text-card text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] mb-8 md:mb-12 transition-colors group mx-auto lg:mx-0">
+                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Access All Passes
+              </Link>
+              
+              <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 md:mb-8">
+                <span className="bg-accent text-accent-foreground px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest border border-accent/20">
+                  Registration Open
+                </span>
+                <div className="flex items-center gap-2 text-card/50 text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                  <Calendar size={12} className="text-accent" /> {event.date}
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-card/80">
-                <div className="w-12 h-12 rounded-2xl bg-card/5 border border-card/10 flex items-center justify-center text-accent">
-                  <Clock size={24} />
+
+              <h1 className="font-display text-[clamp(2.25rem,10vw,5.5rem)] font-extrabold text-card tracking-tighter leading-[0.95] md:leading-[0.85] mb-8 md:mb-10 max-w-4xl mx-auto lg:mx-0">
+                {event.title}
+              </h1>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 md:gap-10">
+                <div className="flex items-center gap-4 text-card/80">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent shrink-0 shadow-lg">
+                    <MapPin size={20} className="md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-left">
+                     <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-40">Location</p>
+                     <p className="text-sm md:text-base font-bold leading-tight">{event.venue}</p>
+                  </div>
                 </div>
-                <div>
-                   <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Start Time</p>
-                   <p className="text-base font-bold">{event.time}</p>
+                <div className="flex items-center gap-4 text-card/80">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent shrink-0 shadow-lg">
+                    <Clock size={20} className="md:w-6 md:h-6" />
+                  </div>
+                  <div className="text-left">
+                     <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-40">Start Time</p>
+                     <p className="text-sm md:text-base font-bold leading-tight">{event.time}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="hidden lg:block relative aspect-square"
-          >
-             <div className="w-full h-full rounded-[4rem] border-[12px] border-card/5 relative overflow-hidden shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary opacity-20" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                   <div className="text-center">
-                      <span className="text-8xl font-display font-extrabold text-card/10 block leading-none">2026</span>
-                      <span className="text-2xl font-bold text-accent uppercase tracking-[0.5em] block mt-4">Official Pass</span>
-                   </div>
-                </div>
-             </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="lg:w-[400px] shrink-0"
+            >
+               {/* Responsive Tactical Visual */}
+               <div className="w-full aspect-[4/3] lg:aspect-square rounded-[2.5rem] md:rounded-[4rem] border-[8px] md:border-[12px] border-card/5 relative overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary opacity-40" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                     <div className="text-center p-6">
+                        <span className="text-6xl md:text-8xl font-display font-extrabold text-card/10 block leading-none">2026</span>
+                        <span className="text-base md:text-xl font-bold text-accent uppercase tracking-[0.4em] block mt-4">Verified Pass</span>
+                        <div className="mt-8 pt-8 border-t border-card/10 flex justify-center gap-4 opacity-20">
+                           {[1,2,3,4].map(i => <div key={i} className="w-1 h-1 rounded-full bg-card" />)}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -231,6 +240,41 @@ export default function EventDetail({ params }: { params: Promise<{ id: string }
           </aside>
         </div>
       </section>
+
+      {/* Other Growth Pathways */}
+      {eventsData.filter(p => p.id !== id).length > 0 && (
+         <GrowthPathways pathways={eventsData.filter(p => p.id !== id).slice(0, 3)} />
+      )}
     </main>
   );
+}
+
+// Fixed centering for growth pathways
+function GrowthPathways({ pathways }: { pathways: any[] }) {
+   return (
+     <section className="py-20 md:py-24 px-4 md:px-6 bg-muted/30 border-t border-border/50">
+       <div className="max-w-7xl mx-auto text-center">
+           <h2 className="font-display text-2xl md:text-3xl font-extrabold text-secondary tracking-tight mb-12">Other Growth Pathways</h2>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+             {pathways.map((item, i) => (
+               <FadeIn key={i} delay={i * 0.1}>
+                   <Link href={`/news/events/${item.id}`} className="group block h-full">
+                     <BentoCard className="bg-card p-8 h-full flex flex-col items-center border-none shadow-sm hover:shadow-lg transition-all rounded-[2rem]">
+                         <div className="w-12 h-12 rounded-2xl bg-secondary/5 text-primary flex items-center justify-center mb-6 shrink-0">
+                           <Calendar size={24} />
+                         </div>
+                         <h3 className="font-display text-lg font-bold text-secondary group-hover:text-primary transition-colors leading-tight mb-3 text-center">
+                           {item.title}
+                        </h3>
+                         <p className="text-muted-foreground text-xs md:text-sm leading-relaxed line-clamp-2 text-center">
+                           {item.desc}
+                         </p>
+                     </BentoCard>
+                   </Link>
+               </FadeIn>
+             ))}
+           </div>
+       </div>
+     </section>
+   );
 }

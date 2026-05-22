@@ -243,6 +243,49 @@ export default function News() {
       </section>
 
       <NewsletterModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Join the Chronicle" />
+
+      {/* Re-introduced Upcoming Events Section */}
+      <section className="py-24 px-4 md:px-6 bg-muted/20 border-t border-border/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 gap-6 text-center md:text-left">
+            <div className="max-w-xl">
+               <span className="text-accent font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">Event Calendar</span>
+               <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary tracking-tighter leading-none">
+                  Upcoming <span className="text-primary">Engagements</span>.
+               </h2>
+            </div>
+            <Link href="/events" className="font-bold text-sm text-primary hover:gap-4 transition-all flex items-center gap-2 pb-2">
+               View Full Schedule <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {eventsData.map((event, i) => (
+              <FadeIn key={i} delay={i * 0.1}>
+                <Link href={`/news/events/${event.id}`} className="group block h-full">
+                  <DigitalPass variant="mini" className="h-full p-8 flex flex-col bg-card">
+                    <div className="flex-grow">
+                        <div className="flex items-center justify-between mb-6">
+                           <div className="bg-secondary text-white min-w-[48px] h-[48px] flex flex-col items-center justify-center rounded-xl">
+                              <span className="text-[8px] font-bold opacity-60 uppercase">{event.date.split(' ')[0].substring(0,3)}</span>
+                              <span className="text-sm font-extrabold leading-none">{event.date.split(' ')[1].replace(',','')}</span>
+                           </div>
+                           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        </div>
+                        <h3 className="text-lg font-bold text-secondary mb-2 group-hover:text-primary transition-colors line-clamp-1">{event.title}</h3>
+                        <p className="text-muted-foreground text-xs leading-relaxed mb-6 line-clamp-2">{event.desc}</p>
+                    </div>
+                    <div className="pt-6 border-t border-dashed border-border/50 flex items-center justify-between">
+                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-300">RSVP Pass</span>
+                       <ArrowRight size={14} className="text-primary group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </DigitalPass>
+                </Link>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
