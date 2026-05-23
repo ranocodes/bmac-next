@@ -9,6 +9,7 @@ import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { Program } from "@/types/cms";
+import { cn } from "@/lib/utils";
 
 interface ProgramsClientProps {
   programs: Program[];
@@ -16,6 +17,7 @@ interface ProgramsClientProps {
 
 export default function ProgramsClient({ programs }: { programs: Program[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  console.log("Programs data:", programs);
 
   return (
     <>
@@ -55,8 +57,8 @@ export default function ProgramsClient({ programs }: { programs: Program[] }) {
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute top-4 lg:top-6 left-4 lg:left-6 p-2.5 rounded-xl bg-card/90 backdrop-blur-md shadow-sm">
-                        <div className={prog.color}>
-                          {React.cloneElement(prog.icon as React.ReactElement, { "aria-hidden": "true" } as any)}
+                        <div className={cn(prog.color, "w-6 h-6 flex items-center justify-center")}>
+                          {prog.icon}
                         </div>
                       </div>
                     </div>

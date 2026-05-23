@@ -33,8 +33,10 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
               </Link>
               
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
-                <div className={`p-3 rounded-2xl ${program.color} shadow-sm hidden md:block`}>
-                  {React.cloneElement(program.icon as React.ReactElement, { size: 24, "aria-hidden": "true" } as any)}
+                <div className={cn("p-3 rounded-2xl shadow-sm hidden md:block", program.color)}>
+                  <div className="w-6 h-6 flex items-center justify-center">
+                    {program.icon}
+                  </div>
                 </div>
                 <span className="text-accent font-bold tracking-[0.2em] uppercase text-[9px] md:text-[10px]">
                   Official BMAC Program
