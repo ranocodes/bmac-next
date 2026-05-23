@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { Program } from "@/types/cms";
+import { cn } from "@/lib/utils";
 
 interface ProgramDetailClientProps {
   program: Program;
