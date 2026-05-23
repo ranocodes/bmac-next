@@ -1,0 +1,38 @@
+backend:
+  name: github
+  repo: ranocodes/bmac-nextjs # REPLACE with your actual GitHub username/repo
+  branch: main
+  base_url: https://api.github.com
+  auth_endpoint: oauth # Standard for GitHub OAuth
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "programs"
+    label: "Programs"
+    folder: "content/programs"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "desc", widget: "string" }
+      - { label: "Long Description", name: "longDesc", widget: "markdown" }
+      - { label: "Image", name: "img", widget: "image" }
+      - { label: "Color Class", name: "color", widget: "string" }
+      - { label: "Details", name: "details", widget: "string" }
+      - { label: "Variant", name: "variant", widget: "select", options: ["default", "featured"] }
+
+  - name: "news"
+    label: "News & Events"
+    folder: "content/news"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "string" }
+      - { label: "Category", name: "category", widget: "string" }
+      - { label: "Description", name: "desc", widget: "string" }
+      - { label: "Content", name: "content", widget: "markdown" }
+      - { label: "Image", name: "img", widget: "image" }
+      - { label: "Featured", name: "featured", widget: "boolean", default: false }

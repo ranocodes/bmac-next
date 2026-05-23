@@ -1,42 +1,55 @@
-import { 
-  programsData, 
-  eventsData, 
-  newsArticles, 
-  teamData, 
-  impactStats, 
-  galleryData 
-} from "@/data/mockData";
-import { 
-  Program, 
-  EventPass, 
-  NewsArticle, 
-  TeamMember, 
-  ImpactStat, 
-  GalleryItem 
-} from "@/types/cms";
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
+import { Program, EventPass, NewsArticle } from "@/types/cms";
+
+const CONTENT_PATH = path.join(process.cwd(), "content");
 
 /**
  * CMS Data Fetching Layer
- * These functions currently return local mock data but are structured 
- * to be replaced with real CMS API calls (Sanity, Payload, etc.)
+ * Now reading directly from Markdown/JSON files in /content
  */
 
 export async function getPrograms(): Promise<Program[]> {
-  // Simulate network delay
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(programsData), 500);
-  });
-}
+  const programsDir = path.join(CONTENT_PATH, "programs");
+  const filenames = fs.readdirSync(programsDir);
 
-export async function getProgramById(id: string): Promise<Program | undefined> {
-  const programs = await getPrograms();
-  return programs.find((p) => p.id === id);
+  return filenames.map((filename) => {
+    const filePath = path.join(programsDir, filename);
+    const fileContents = fs.readFileSync(filePath, "utf8");
+    const { data, content } = matter(fileContents);
+    return { ...data, longDesc: content } as Program;
+  });
 }
 
 export async function getEvents(): Promise<EventPass[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(eventsData), 500);
+  const eventsDir = path.join(CONTENT_PATH, "events");
+  const filenames = fs.readdirSync(eventsDir);
+
+  return filenames.map((filename) => {
+    const filePath = path.join(eventsDir, filename);
+    const fileContents = fs.readFileSync(filePath, "utf8");
+    const { data, content } = matter(fileContents);
+    return { ...data, longDesc: content } as EventPass;
   });
+}
+
+export async function getNews(): Promise<NewsArticle[]> {
+  const newsDir = path.join(CONTENT_PATH, "news");
+  const filenames = fs.readdirSync(newsDir);
+
+  return filenames.map((filename) => {
+    const filePath = path.join(newsDir, filename);
+    const fileContents = fs.readFileSync(filePath, "utf8");
+    const { data, content } = matter(fileContents);
+    return { ...data, content } as NewsArticle;
+  });
+}
+
+// These keep existing signatures but fetch from FS
+export async function getProgramById(id: string): Promise<Program | undefined> {
+  const programs = await getPrograms();
+  return programs.find((p) => p.id === id);
 }
 
 export async function getEventById(id: string): Promise<EventPass | undefined> {
@@ -44,25 +57,18 @@ export async function getEventById(id: string): Promise<EventPass | undefined> {
   return events.find((e) => e.id === id);
 }
 
-export async function getNews(): Promise<NewsArticle[]> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(newsArticles), 500);
-  });
-}
-
 export async function getNewsById(id: string): Promise<NewsArticle | undefined> {
   const articles = await getNews();
   return articles.find((a) => a.id === id);
 }
 
-export async function getTeam(): Promise<TeamMember[]> {
-  return Promise.resolve(teamData);
+// Simple JSON loaders for non-content-heavy data
+export async function getTeam() {
+  const filePath = path.join(CONTENT_PATH, "settings/team.json");
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-export async function getImpactStats(): Promise<ImpactStat[]> {
-  return Promise.resolve(impactStats);
-}
-
-export async function getGalleryItems(): Promise<GalleryItem[]> {
-  return Promise.resolve(galleryData);
+export async function getImpactStats() {
+  const filePath = path.join(CONTENT_PATH, "settings/stats.json");
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
