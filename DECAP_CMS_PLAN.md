@@ -1,4 +1,4 @@
-# BMAC Jos: Decap CMS Integration Plan & Website Audit
+# BMAC Jos: Decap CMS Integration Plan & Website Audit (REFINED)
 
 ## 1. Executive Summary
 The current website is a high-performance Next.js 16 application with a premium UI. However, it is currently "content-locked"—meaning updates require a developer to modify `.tsx` files. By integrating **Decap CMS**, we will move this content into a Git-based backend. This allows non-technical admins to perform full **CRUD (Create, Read, Update, Delete)** operations on programs, news, events, and team members through a secure web interface, while maintaining the high-end "Bento 2.0" aesthetic.
@@ -25,8 +25,12 @@ The current website is a high-performance Next.js 16 application with a premium 
 | **Gallery** | Collection | Low | JSON |
 | **FAQs** | Collection | Low | JSON |
 | **Testimonials** | Collection | Low | JSON |
-| **Hero/About Story** | Singleton | Medium | Markdown |
-| **Site Settings** | Singleton | Low | YAML |
+| **Impact Stats** | Singleton | Low | JSON (Global stats like "350+ members") |
+| **Social Links** | Singleton | Low | YAML (Footer/Contact links) |
+| **Navigation** | Singleton | Medium | JSON (Header/Footer menu management) |
+| **Page SEO** | Singleton | Medium | YAML (Per-page titles/descriptions) |
+| **Hero Sections** | Singleton | Medium | Markdown (Per-page headlines/images) |
+| **Site Branding** | Singleton | Low | YAML (Logos, copyright text) |
 
 ---
 
@@ -36,7 +40,7 @@ The current website is a high-performance Next.js 16 application with a premium 
     *   **External Data Source:** Content must move from `.tsx` constants to `.md` or `.json` files in a `/content` directory.
     *   **Data Fetching Layer:** A utility library to parse Markdown (e.g., `gray-matter`) and inject data into Server Components.
     *   **CMS Configuration:** A `config.yml` file defining the fields for the Decap interface.
-    *   **Authentication:** Netlify Identity or a Git Gateway (e.g., Decap's local-fs-proxy).
+    *   **Authentication:** Netlify Identity or a Git Gateway.
 
 ---
 
@@ -45,99 +49,72 @@ The current website is a high-performance Next.js 16 application with a premium 
 *   **Backend:** Git Gateway via Netlify Identity.
 *   **Preview Mode:** Real-time previews using a `Preview Component` that mimics the site's layout.
 *   **File Approach:** 
-    *   **Markdown:** Used for detail-heavy pages (News, Events, Programs) to allow for rich text editing.
-    *   **JSON:** Used for simple lists (Team, Gallery, FAQs) for fast parsing.
+    *   **Markdown:** Used for detail-heavy pages (News, Events, Programs) for rich text editing.
+    *   **JSON:** Used for simple lists (Team, Gallery, FAQs) and global settings.
 *   **Media Library:** Store uploads in `public/images/uploads`.
 
 ---
 
-## 6. Collection and Schema Design (Proposed `config.yml`)
+## 6. Expanded Collection Design (Proposed `config.yml`)
 
-```yaml
-backend:
-  name: git-gateway
-  branch: main
+### A. Dynamic Collections (Markdown)
+*   **News/Blog:** `content/news/*.md`
+*   **Events:** 
+    *   `content/events/*.md`
+    *   Fields:
+        *   `title`: Event name.
+        *   `date`: Visual date string.
+        *   `venue`: Location name.
+        *   `time`: Start/End time.
+        *   `desc`: Short teaser for grid cards.
+        *   `longDesc`: Full narrative description for the detail page.
+        *   `highlights`: A dynamic list of key features (e.g., "Networking", "Certificates").
+        *   `map_coordinates`: Lat/Long for the Google Maps embed.
+*   **Programs:** `content/programs/*.md`
 
-media_folder: "public/images/uploads"
-public_folder: "/images/uploads"
-
-collections:
-  - name: "news"
-    label: "News & Blog"
-    folder: "content/news"
-    create: true
-    slug: "{{slug}}"
-    fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Publish Date", name: "date", widget: "datetime" }
-      - { label: "Category", name: "category", widget: "select", options: ["Culture", "Education", "Community", "Partnership"] }
-      - { label: "Featured", name: "featured", widget: "boolean", default: false }
-      - { label: "Featured Image", name: "img", widget: "image" }
-      - { label: "Summary", name: "desc", widget: "text" }
-      - { label: "Body Content", name: "body", widget: "markdown" }
-
-  - name: "programs"
-    label: "Workshops & Programs"
-    folder: "content/programs"
-    create: true
-    fields:
-      - { label: "Program Name", name: "title", widget: "string" }
-      - { label: "Icon", name: "icon", widget: "select", options: ["Mic", "BookOpen", "Users", "Trophy", "Cpu"] }
-      - { label: "Thumbnail Image", name: "img", widget: "image" }
-      - { label: "Short Description", name: "desc", widget: "text" }
-      - { label: "Detailed Overview", name: "body", widget: "markdown" }
-      - { label: "Logistics", name: "details", widget: "list", summary: "{{fields.item}}" }
-```
+### B. Global Singleton Settings (YAML/JSON)
+*   **Impact Stats:**
+    *   `content/settings/stats.json`
+    *   Fields: `label`, `value`, `icon` (Lucide name).
+*   **Branding & Navigation:**
+    *   `content/settings/site.json`
+    *   Fields: `logo_text`, `copyright`, `social_links` (list), `navigation` (list).
+*   **SEO Metadata:**
+    *   `content/settings/seo.json`
+    *   Fields: `home_title`, `home_desc`, `about_title`, etc.
 
 ---
 
 ## 7. Frontend Refactor Plan
 
-1.  **Create Content Directory:** Structure `/content/news`, `/content/programs`, etc.
+1.  **Create Content Directory:** Structure `/content/news`, `/content/programs`, `/content/settings`, etc.
 2.  **Externalize Data:** Convert current `.tsx` arrays into individual `.md` or `.json` files.
-3.  **Data Utility (lib/cms.ts):** Create logic to read and parse local CMS files.
+3.  **Data Utility (lib/cms.ts):** Create logic to read and parse local CMS files using `gray-matter`.
 4.  **Refactor Server Components:** Update page files to fetch data using the new CMS utility.
-5.  **Dynamic Routing:** Update `[id]/page.tsx` routes to fetch files by slug.
+5.  **Lucide Icon Mapper:** Create a utility to map string icon names from CMS (e.g., "Mic") to actual Lucide components.
 
 ---
 
 ## 8. Admin Workflow Design
-1.  **Access:** Admin visits `/admin`.
-2.  **Auth:** Login via Email/Password (Netlify Identity).
-3.  **Edit:** Admin edits content in the visual UI.
+1.  **Access:** Admin visits `bmacjos.org/admin`.
+2.  **Auth:** Login via Netlify Identity.
+3.  **Edit:** Admin updates stats, news, or navigation items.
 4.  **Save:** Decap CMS commits changes to GitHub.
-5.  **Build:** Continuous Deployment (Vercel/Netlify) triggers a rebuild.
-6.  **Live:** Update appears on the site automatically.
+5.  **Live:** Update appears on the site automatically after a static build.
 
 ---
 
-## 9. Security and Permissions
-*   **Role Based Access:** Restricted via Netlify Identity.
-*   **Git Security:** Admins do not need direct access to the GitHub repository.
-*   **Media Protection:** Uploads are stored in the public folder but managed via the CMS.
+## 9. Deployment & Performance
+1.  **Hosting:** Deploy on **Netlify** for native CMS and Identity support.
+2.  **Static Generation:** Use `getStaticProps` (or equivalent in Next 16) to ensure zero performance hit from the CMS.
+3.  **Scalability:** The Git-based approach scales with the project history.
 
 ---
 
-## 10. Step-by-Step Implementation Roadmap
+## 10. Implementation Roadmap
 
-### **Phase 1: Setup**
-*   Add `public/admin/index.html` and `public/admin/config.yml`.
-*   Setup Decap's `local-fs-proxy` for local development.
-
-### **Phase 2: Data Migration**
-*   Move hardcoded constants to `/content` directory as MD/JSON files.
-
-### **Phase 3: Frontend Refactor**
-*   Implement data fetching utility and replace static imports.
-*   Update dynamic routes.
-
-### **Phase 4: Cloud Deployment**
-*   Enable Git Gateway and Identity.
-*   Final testing.
-
----
-
-## 11. Final Recommendations
-1.  **Hosting:** Deploy on **Netlify** for easiest Identity integration.
-2.  **Performance:** Next.js static generation ensures zero performance impact.
-3.  **Scalability:** This architecture supports thousands of entries effortlessly.
+1.  **Phase 1:** Core Setup (`admin/index.html`, `config.yml`).
+2.  **Phase 2:** Global Settings Migration (Stats, Nav, Social).
+3.  **Phase 3:** Detail Collections Migration (News, Programs, Events).
+4.  **Phase 4:** SEO & Metadata Integration.
+5.  **Phase 5:** Media Library & Image Optimization.
