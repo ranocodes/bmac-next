@@ -45,3 +45,9 @@ export interface ImpactStat {
   label: string;
   icon: string; // Changed to string name
 }
+
+export interface GalleryItem {
+  img: string;
+  category: string;
+  alt: string;
+}
