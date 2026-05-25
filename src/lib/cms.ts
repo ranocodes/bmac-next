@@ -18,31 +18,33 @@ export async function getPrograms(): Promise<Program[]> {
     const filePath = path.join(programsDir, filename);
     const fileContents = fs.readFileSync(filePath, "utf8");
     const { data, content } = matter(fileContents);
-    return { ...data, longDesc: content } as Program;
+    return { ...data, longDesc: content || data.body } as Program;
   });
 }
 
 export async function getEvents(): Promise<EventPass[]> {
   const eventsDir = path.join(CONTENT_PATH, "events");
+  if (!fs.existsSync(eventsDir)) return [];
   const filenames = fs.readdirSync(eventsDir);
 
   return filenames.map((filename) => {
     const filePath = path.join(eventsDir, filename);
     const fileContents = fs.readFileSync(filePath, "utf8");
     const { data, content } = matter(fileContents);
-    return { ...data, longDesc: content } as EventPass;
+    return { ...data, longDesc: content || data.body } as EventPass;
   });
 }
 
 export async function getNews(): Promise<NewsArticle[]> {
   const newsDir = path.join(CONTENT_PATH, "news");
+  if (!fs.existsSync(newsDir)) return [];
   const filenames = fs.readdirSync(newsDir);
 
   return filenames.map((filename) => {
     const filePath = path.join(newsDir, filename);
     const fileContents = fs.readFileSync(filePath, "utf8");
     const { data, content } = matter(fileContents);
-    return { ...data, content } as NewsArticle;
+    return { ...data, content: content || data.body } as NewsArticle;
   });
 }
 
@@ -65,15 +67,18 @@ export async function getNewsById(id: string): Promise<NewsArticle | undefined> 
 // Simple JSON loaders for non-content-heavy data
 export async function getTeam() {
   const filePath = path.join(CONTENT_PATH, "settings/team.json");
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return data.members || data;
 }
 
 export async function getImpactStats() {
   const filePath = path.join(CONTENT_PATH, "settings/stats.json");
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return data.stats || data;
 }
 
 export async function getGalleryItems() {
   const filePath = path.join(CONTENT_PATH, "settings/gallery.json");
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return data.items || data;
 }

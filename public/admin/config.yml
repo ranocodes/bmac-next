@@ -1,9 +1,9 @@
 backend:
   name: github
-  repo: ranocodes/bmac-nextjs # REPLACE with your actual GitHub username/repo
+  repo: ranocodes/bmac-nextjs
   branch: main
-  base_url: https://api.github.com
-  auth_endpoint: oauth # Standard for GitHub OAuth
+  base_url: https://bmac-next.vercel.app # Points to our Vercel OAuth bridge
+  auth_endpoint: api/auth # This maps to /api/auth
 
 media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
@@ -15,24 +15,84 @@ collections:
     create: true
     slug: "{{slug}}"
     fields:
+      - { label: "ID", name: "id", widget: "string" }
       - { label: "Title", name: "title", widget: "string" }
-      - { label: "Description", name: "desc", widget: "string" }
-      - { label: "Long Description", name: "longDesc", widget: "markdown" }
+      - { label: "Teaser Description", name: "desc", widget: "string" }
+      - { label: "Body Content", name: "body", widget: "markdown" }
       - { label: "Image", name: "img", widget: "image" }
-      - { label: "Color Class", name: "color", widget: "string" }
-      - { label: "Details", name: "details", widget: "string" }
-      - { label: "Variant", name: "variant", widget: "select", options: ["default", "featured"] }
+      - { label: "Icon Name", name: "icon", widget: "string", hint: "Lucide icon name e.g. Mic, Users, Trophy" }
+      - { label: "Color Class", name: "color", widget: "string", hint: "Tailwind color class e.g. bg-emerald-50 text-emerald-600" }
+      - { label: "Logistics", name: "details", widget: "string", hint: "Separate with | pipes" }
+      - { label: "Layout Variant", name: "variant", widget: "select", options: ["default", "featured"] }
+
+  - name: "events"
+    label: "Official Events"
+    folder: "content/events"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "ID", name: "id", widget: "string" }
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "string", hint: "e.g. March 15, 2026" }
+      - { label: "Time", name: "time", widget: "string", hint: "e.g. 09:00 AM" }
+      - { label: "Venue", name: "venue", widget: "string" }
+      - { label: "Category", name: "category", widget: "select", options: ["Workshop", "Competition", "Culture"] }
+      - { label: "Teaser", name: "desc", widget: "string" }
+      - { label: "Full Details", name: "body", widget: "markdown" }
 
   - name: "news"
-    label: "News & Events"
+    label: "News & Chronicle"
     folder: "content/news"
     create: true
     slug: "{{slug}}"
     fields:
+      - { label: "ID", name: "id", widget: "string" }
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Date", name: "date", widget: "string" }
       - { label: "Category", name: "category", widget: "string" }
-      - { label: "Description", name: "desc", widget: "string" }
-      - { label: "Content", name: "content", widget: "markdown" }
-      - { label: "Image", name: "img", widget: "image" }
       - { label: "Featured", name: "featured", widget: "boolean", default: false }
+      - { label: "Teaser", name: "desc", widget: "string" }
+      - { label: "Image", name: "img", widget: "image" }
+      - { label: "Article Content", name: "body", widget: "markdown" }
+
+  - name: "settings"
+    label: "Global Settings"
+    delete: false
+    editor:
+      preview: false
+    files:
+      - name: "team"
+        label: "Team Members"
+        file: "content/settings/team.json"
+        fields:
+          - name: members
+            label: Members
+            widget: list
+            fields:
+              - { label: "Name", name: "name", widget: "string" }
+              - { label: "Role", name: "role", widget: "string" }
+              - { label: "Image", name: "img", widget: "image" }
+
+      - name: "stats"
+        label: "Impact Stats"
+        file: "content/settings/stats.json"
+        fields:
+          - name: stats
+            label: Stats
+            widget: list
+            fields:
+              - { label: "Value", name: "num", widget: "string", hint: "e.g. 350+" }
+              - { label: "Label", name: "label", widget: "string" }
+              - { label: "Icon Name", name: "icon", widget: "string", hint: "Lucide icon name" }
+
+      - name: "gallery"
+        label: "Gallery Archive"
+        file: "content/settings/gallery.json"
+        fields:
+          - name: items
+            label: Images
+            widget: list
+            fields:
+              - { label: "Image", name: "img", widget: "image" }
+              - { label: "Category", name: "category", widget: "select", options: ["workshops", "competitions", "outreach", "events"] }
+              - { label: "Alt Text", name: "alt", widget: "string" }
