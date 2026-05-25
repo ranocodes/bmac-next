@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
-import { EventPass } from "@/types/cms";
+import type { EventPass } from "@/types/cms";
 
 interface EventsClientProps {
   events: EventPass[];

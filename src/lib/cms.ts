@@ -72,3 +72,8 @@ export async function getImpactStats() {
   const filePath = path.join(CONTENT_PATH, "settings/stats.json");
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
+
+export async function getGalleryItems() {
+  const filePath = path.join(CONTENT_PATH, "settings/gallery.json");
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}

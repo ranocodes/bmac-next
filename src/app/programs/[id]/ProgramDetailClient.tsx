@@ -7,8 +7,9 @@ import { ArrowLeft, CheckCircle2, Users, Clock, Send, MapPin } from "lucide-reac
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
-import { Program } from "@/types/cms";
+import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
+import { getIcon } from "@/lib/iconMapper";
 
 interface ProgramDetailClientProps {
   program: Program;
@@ -36,7 +37,7 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
                 <div className={cn("p-3 rounded-2xl shadow-sm hidden md:block", program.color)}>
                   <div className="w-6 h-6 flex items-center justify-center">
-                    {program.icon}
+                    {getIcon(program.icon as string, { size: 24 })}
                   </div>
                 </div>
                 <span className="text-accent font-bold tracking-[0.2em] uppercase text-[9px] md:text-[10px]">

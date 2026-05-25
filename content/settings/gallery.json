@@ -1,0 +1,14 @@
+[
+  { "img": "/images/public-speaking.jpg", "category": "workshops", "alt": "Public speaking workshop session" },
+  { "img": "/images/literary-arts.jpg", "category": "workshops", "alt": "Group discussion during workshop" },
+  { "img": "/images/competitions.jpg", "category": "competitions", "alt": "Debate competition on stage" },
+  { "img": "/images/award1.jpg", "category": "competitions", "alt": "Award presentation at competition" },
+  { "img": "/images/pre.jpg", "category": "outreach", "alt": "Community outreach in rural area" },
+  { "img": "/images/ws.jpg", "category": "outreach", "alt": "Students at school visit" },
+  { "img": "/images/anu.jpg", "category": "events", "alt": "Annual BMAC gathering" },
+  { "img": "/images/jj.jpg", "category": "events", "alt": "Spoken word performance night" },
+  { "img": "/images/digital-literacy.jpg", "category": "workshops", "alt": "Writing workshop with facilitator" },
+  { "img": "/images/award2.jpg", "category": "competitions", "alt": "Winners posing with trophies" },
+  { "img": "/images/jb.jpg", "category": "events", "alt": "Networking event for members" },
+  { "img": "/images/ws1.jpg", "category": "outreach", "alt": "Mentorship session at local school" }
+]

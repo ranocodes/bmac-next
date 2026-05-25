@@ -1,5 +1,3 @@
-import React from "react";
-
 export type EventCategory = "Workshop" | "Competition" | "Culture" | "Mentorship" | "Education" | "Community" | "Partnership";
 
 export interface Program {
@@ -8,7 +6,7 @@ export interface Program {
   desc: string;
   longDesc: string;
   img: string;
-  icon: React.ReactNode;
+  icon: string; // Changed to string name
   color: string;
   details: string;
   variant?: "default" | "featured";
@@ -45,11 +43,5 @@ export interface TeamMember {
 export interface ImpactStat {
   num: string;
   label: string;
-  icon: React.ReactNode;
-}
-
-export interface GalleryItem {
-  img: string;
-  category: string;
-  alt: string;
+  icon: string; // Changed to string name
 }
