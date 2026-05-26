@@ -18,9 +18,11 @@ export interface EventPass {
   title: string;
   venue: string;
   time: string;
-  category: EventCategory;
+  category: string; // Changed from EventCategory to string to support new categories
   desc: string;
   longDesc: string;
+  isPaid?: boolean;
+  price?: number;
 }
 
 export interface NewsArticle {

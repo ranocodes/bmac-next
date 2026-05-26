@@ -2,8 +2,8 @@ import React from "react";
 import { getNewsById, getNews, getEvents } from "@/lib/cms";
 import NewsDetailClient from "./NewsDetailClient";
 
-// Force dynamic to ensure data is always fresh
-export const dynamic = "force-dynamic";
+// Revalidate every hour
+export const revalidate = 3600;
 
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

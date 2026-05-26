@@ -106,7 +106,7 @@ export default function HomeClient({ stats, programs, testimonials }: HomeClient
                       <div className="relative h-48 lg:h-56 w-full overflow-hidden shrink-0 border-b border-border/50">
                          <Image src={prog.img} alt={prog.title} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
                          <div className="absolute top-4 lg:top-6 left-4 lg:left-6 p-2.5 rounded-xl bg-card/90 backdrop-blur-md shadow-sm z-20">
-                            <div className={prog.color}>{getIcon(prog.icon as string, { size: 20 })}</div>
+                            <div className={prog.color}>{getIcon(prog.icon as string, { size: 24 })}</div>
                          </div>
                       </div>
                       

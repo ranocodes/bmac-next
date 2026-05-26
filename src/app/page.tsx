@@ -2,7 +2,8 @@ import React from "react";
 import { getPrograms, getImpactStats, getTestimonials } from "@/lib/cms";
 import HomeClient from "./HomeClient";
 
-export const dynamic = "force-dynamic";
+// Revalidate every hour
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const [programs, stats, testimonials] = await Promise.all([

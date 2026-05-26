@@ -2,8 +2,7 @@ import React from "react";
 import { getPrograms } from "@/lib/cms";
 import ProgramDetailClient from "./ProgramDetailClient";
 
-// Force dynamic to ensure data is always fresh
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function ProgramDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

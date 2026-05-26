@@ -46,7 +46,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
               
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 md:mb-8">
                 <span className="bg-accent text-accent-foreground px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest border border-accent/20">
-                  Registration Open
+                  {event.isPaid ? `Ticket: ₦${event.price}` : "Registration Open"}
                 </span>
                 <div className="flex items-center gap-2 text-card/50 text-[10px] md:text-xs font-bold uppercase tracking-widest">
                   <Calendar size={12} className="text-accent" /> {event.date}
@@ -145,7 +145,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                             {isPending ? (
                               <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <>Request Official Pass <Send size={20} /></>
+                              <>{event.isPaid ? `Purchase Pass (₦${event.price})` : "Request Official Pass"} <Send size={20} /></>
                             )}
                          </button>
                       </form>
