@@ -6,7 +6,7 @@ time: 10:30 AM
 venue: Hillside Hotel, Jos
 category: Competition
 isPaid: true
-price: 49997
+price: 4999
 desc: A high-stakes debate competition featuring top students from across
   Plateau State competing for the 2026 Trophy.
 ---

@@ -2,12 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, Send, Clock, Share2, Bookmark, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
-import { BentoCard } from "@/components/ui/BentoCard";
 import type { EventPass } from "@/types/cms";
-import { cn } from "@/lib/utils";
 
 interface EventDetailClientProps {
   event: EventPass;
@@ -16,18 +14,58 @@ interface EventDetailClientProps {
 export default function EventDetailClient({ event }: EventDetailClientProps) {
   const [isReserved, setIsReserved] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "" });
 
-  const handleRSVP = async (e: React.FormEvent) => {
+  const handlePaystackPayment = () => {
+    // @ts-ignore
+    const handler = window.PaystackPop.setup({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+      email: formData.email,
+      amount: (event.price || 0) * 100, // Paystack expects amount in Kobo
+      currency: "NGN",
+      ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+      metadata: {
+        custom_fields: [
+          {
+            display_name: "Event Title",
+            variable_name: "event_title",
+            value: event.title
+          },
+          {
+            display_name: "Attendee Name",
+            variable_name: "attendee_name",
+            value: formData.name
+          }
+        ]
+      },
+      callback: function(response: any) {
+        console.log("Payment successful. Reference: " + response.reference);
+        setIsReserved(true);
+      },
+      onClose: function() {
+        setIsPending(false);
+      }
+    });
+    handler.openIframe();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsPending(false);
-    setIsReserved(true);
+
+    if (event.isPaid) {
+      handlePaystackPayment();
+    } else {
+      // Simulate registration for free events
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setIsPending(false);
+      setIsReserved(true);
+    }
   };
 
   return (
     <main suppressHydrationWarning className="bg-background">
-      {/* Editorial Event Hero - Professional Mobile Layout */}
+      {/* Editorial Event Hero */}
       <section className="relative overflow-hidden bg-secondary pt-24 pb-12 md:pt-32 md:pb-20">
         <div className="absolute inset-0 bg-primary/5 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
         
@@ -46,7 +84,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
               
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 md:mb-8">
                 <span className="bg-accent text-accent-foreground px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest border border-accent/20">
-                  {event.isPaid ? `Ticket: ₦${event.price}` : "Registration Open"}
+                  {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}
                 </span>
                 <div className="flex items-center gap-2 text-card/50 text-[10px] md:text-xs font-bold uppercase tracking-widest">
                   <Calendar size={12} className="text-accent" /> {event.date}
@@ -82,15 +120,14 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
         </div>
       </section>
 
-      {/* Split Screen Detail Area */}
+      {/* Main Content Area */}
       <section className="py-24 px-4 md:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-start">
           
-          {/* Narrative Content */}
           <div className="lg:col-span-7">
-            <div className="prose prose-slate lg:prose-xl max-w-none mb-20">
+            <div className="prose prose-slate lg:prose-xl max-w-none mb-20 text-muted-foreground">
               <h3 className="font-display text-4xl font-extrabold text-secondary mb-10 tracking-tight">The Vision</h3>
-              <p className="text-muted-foreground text-lg md:text-xl leading-[1.8] mb-12 font-medium">
+              <p className="text-lg md:text-xl leading-[1.8] mb-12 font-medium">
                 {event.longDesc}
               </p>
               
@@ -128,14 +165,28 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                         <p className="text-muted-foreground text-sm font-medium">Limited spots available for the 2026 cycle.</p>
                       </div>
                       
-                      <form className="space-y-5" onSubmit={handleRSVP}>
+                      <form className="space-y-5" onSubmit={handleSubmit}>
                          <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-4">Legal Name</label>
-                            <input type="text" placeholder="Peace Jagaban" className="w-full px-8 py-5 bg-muted/50 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold" required />
+                            <input 
+                              type="text" 
+                              value={formData.name}
+                              onChange={(e) => setFormData({...formData, name: e.target.value})}
+                              placeholder="Peace Jagaban" 
+                              className="w-full px-8 py-5 bg-muted/50 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold" 
+                              required 
+                            />
                          </div>
                          <div className="space-y-2">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-4">Communications</label>
-                            <input type="email" placeholder="peace@bmacjos.org" className="w-full px-8 py-5 bg-muted/50 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold" required />
+                            <input 
+                              type="email" 
+                              value={formData.email}
+                              onChange={(e) => setFormData({...formData, email: e.target.value})}
+                              placeholder="peace@bmacjos.org" 
+                              className="w-full px-8 py-5 bg-muted/50 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold" 
+                              required 
+                            />
                          </div>
                          
                          <button 
@@ -145,7 +196,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                             {isPending ? (
                               <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <>{event.isPaid ? `Purchase Pass (₦${event.price})` : "Request Official Pass"} <Send size={20} /></>
+                              <>{event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Request Official Pass"} <Send size={20} /></>
                             )}
                          </button>
                       </form>
