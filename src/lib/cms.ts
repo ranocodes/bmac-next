@@ -12,14 +12,18 @@ const CONTENT_PATH = path.join(process.cwd(), "content");
 
 export async function getPrograms(): Promise<Program[]> {
   const programsDir = path.join(CONTENT_PATH, "programs");
+  if (!fs.existsSync(programsDir)) return [];
   const filenames = fs.readdirSync(programsDir);
 
-  return filenames.map((filename) => {
-    const filePath = path.join(programsDir, filename);
-    const fileContents = fs.readFileSync(filePath, "utf8");
-    const { data, content } = matter(fileContents);
-    return { ...data, longDesc: content || data.body } as Program;
-  });
+  // Filter for .md files only to avoid system files like .DS_Store
+  return filenames
+    .filter((fn) => fn.endsWith(".md"))
+    .map((filename) => {
+      const filePath = path.join(programsDir, filename);
+      const fileContents = fs.readFileSync(filePath, "utf8");
+      const { data, content } = matter(fileContents);
+      return { ...data, longDesc: content || data.body } as Program;
+    });
 }
 
 export async function getEvents(): Promise<EventPass[]> {
@@ -27,12 +31,14 @@ export async function getEvents(): Promise<EventPass[]> {
   if (!fs.existsSync(eventsDir)) return [];
   const filenames = fs.readdirSync(eventsDir);
 
-  return filenames.map((filename) => {
-    const filePath = path.join(eventsDir, filename);
-    const fileContents = fs.readFileSync(filePath, "utf8");
-    const { data, content } = matter(fileContents);
-    return { ...data, longDesc: content || data.body } as EventPass;
-  });
+  return filenames
+    .filter((fn) => fn.endsWith(".md"))
+    .map((filename) => {
+      const filePath = path.join(eventsDir, filename);
+      const fileContents = fs.readFileSync(filePath, "utf8");
+      const { data, content } = matter(fileContents);
+      return { ...data, longDesc: content || data.body } as EventPass;
+    });
 }
 
 export async function getNews(): Promise<NewsArticle[]> {
@@ -40,12 +46,14 @@ export async function getNews(): Promise<NewsArticle[]> {
   if (!fs.existsSync(newsDir)) return [];
   const filenames = fs.readdirSync(newsDir);
 
-  return filenames.map((filename) => {
-    const filePath = path.join(newsDir, filename);
-    const fileContents = fs.readFileSync(filePath, "utf8");
-    const { data, content } = matter(fileContents);
-    return { ...data, content: content || data.body } as NewsArticle;
-  });
+  return filenames
+    .filter((fn) => fn.endsWith(".md"))
+    .map((filename) => {
+      const filePath = path.join(newsDir, filename);
+      const fileContents = fs.readFileSync(filePath, "utf8");
+      const { data, content } = matter(fileContents);
+      return { ...data, content: content || data.body } as NewsArticle;
+    });
 }
 
 // These keep existing signatures but fetch from FS
@@ -67,18 +75,33 @@ export async function getNewsById(id: string): Promise<NewsArticle | undefined> 
 // Simple JSON loaders for non-content-heavy data
 export async function getTeam() {
   const filePath = path.join(CONTENT_PATH, "settings/team.json");
+  if (!fs.existsSync(filePath)) return [];
   const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
   return data.members || data;
 }
 
 export async function getImpactStats() {
   const filePath = path.join(CONTENT_PATH, "settings/stats.json");
+  if (!fs.existsSync(filePath)) return [];
   const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
   return data.stats || data;
 }
 
 export async function getGalleryItems() {
   const filePath = path.join(CONTENT_PATH, "settings/gallery.json");
+  if (!fs.existsSync(filePath)) return [];
   const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
   return data.items || data;
+}
+
+export async function getTestimonials() {
+  const filePath = path.join(CONTENT_PATH, "settings/testimonials.json");
+  if (!fs.existsSync(filePath)) return [];
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+export async function getSiteSettings() {
+  const filePath = path.join(CONTENT_PATH, "settings/site.json");
+  if (!fs.existsSync(filePath)) return null;
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }

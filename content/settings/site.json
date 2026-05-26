@@ -1,0 +1,19 @@
+{
+  "logo_text": "BMAC Jos",
+  "copyright": "Brilliant Minds Ambassadors Club. All rights reserved.",
+  "social_links": [
+    { "name": "Facebook", "href": "https://facebook.com/bmacjos", "icon": "Facebook" },
+    { "name": "TikTok", "href": "https://tiktok.com/@bmacjos", "icon": "Music2" },
+    { "name": "Instagram", "href": "https://instagram.com/bmacjos", "icon": "Instagram" },
+    { "name": "Twitter", "href": "https://twitter.com/bmacjos", "icon": "Twitter" }
+  ],
+  "navigation": [
+    { "name": "Home", "href": "/" },
+    { "name": "About", "href": "/about" },
+    { "name": "Programs", "href": "/programs" },
+    { "name": "Events", "href": "/events" },
+    { "name": "Gallery", "href": "/gallery" },
+    { "name": "News", "href": "/news" },
+    { "name": "Contact", "href": "/contact" }
+  ]
+}

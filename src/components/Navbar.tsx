@@ -5,8 +5,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-const navLinks = [
+interface NavLink {
+  name: string;
+  href: string;
+}
+
+interface NavbarProps {
+  logoText?: string;
+  navLinks?: NavLink[];
+}
+
+const defaultLinks = [
   { name: "Home", href: "/" },
   { name: "About", href: "/about" },
   { name: "Programs", href: "/programs" },
@@ -16,7 +27,7 @@ const navLinks = [
   { name: "Contact", href: "/contact" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -31,15 +42,17 @@ export default function Navbar() {
 
   const toggleMenu = (open: boolean) => {
     setIsOpen(open);
-    if (typeof document !== "undefined") {
-      document.body.style.overflow = open ? "hidden" : "auto";
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
     }
   };
 
   return (
     <>
       {/* Floating Island Navbar - Centered Pill */}
-      <div className="fixed top-6 left-0 right-0 z-[1000] flex justify-center px-6 pointer-events-none">
+      <div className="fixed top-0 left-0 right-0 z-[1000] flex justify-center pt-6 px-4 pointer-events-none">
         <header 
           className={`pointer-events-auto transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 rounded-full border flex items-center justify-between gap-4 md:gap-8 px-6 md:px-8 py-2.5 ${
             scrolled 
@@ -49,7 +62,7 @@ export default function Navbar() {
           style={{ width: 'auto', maxWidth: '95vw' }}
         >
           <Link href="/" className="font-display font-bold text-xl tracking-tighter text-secondary flex-shrink-0">
-            BMAC<span className="text-primary">.</span>
+            {logoText}<span className="text-primary">.</span>
           </Link>
           
           <nav className="hidden lg:flex items-center gap-1">
@@ -93,54 +106,61 @@ export default function Navbar() {
         </header>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-secondary/60 backdrop-blur-xl z-[2000]"
               onClick={() => toggleMenu(false)}
-              className="fixed inset-0 z-[1001] bg-deep/40 backdrop-blur-sm lg:hidden"
             />
-            <motion.div
+            <motion.div 
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-[1002] shadow-2xl lg:hidden p-8 flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-card z-[2001] shadow-2xl p-8 flex flex-col"
             >
               <div className="flex items-center justify-between mb-12">
-                <span className="font-display font-bold text-2xl text-deep">BMAC.</span>
+                <Link href="/" className="font-display font-bold text-2xl tracking-tighter" onClick={() => toggleMenu(false)}>
+                  {logoText}<span className="text-primary">.</span>
+                </Link>
                 <button 
-                  className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full" 
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-muted text-secondary hover:bg-muted/80 transition-colors"
                   onClick={() => toggleMenu(false)}
                 >
-                  <X size={20} />
+                  <X size={24} />
                 </button>
               </div>
 
-              <div className="flex flex-col gap-4">
-                {navLinks.map((link) => (
-                  <Link
+              <nav className="flex flex-col gap-4 mb-auto">
+                {navLinks.map((link, i) => (
+                  <motion.div
                     key={link.name}
-                    href={link.href}
-                    onClick={() => toggleMenu(false)}
-                    className={`text-2xl font-display font-bold tracking-tight ${
-                      pathname === link.href ? "text-green" : "text-slate-400"
-                    }`}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
                   >
-                    {link.name}
-                  </Link>
+                    <Link
+                      href={link.href}
+                      className={`text-2xl font-bold tracking-tight py-2 block ${
+                        pathname === link.href ? "text-primary" : "text-secondary"
+                      }`}
+                      onClick={() => toggleMenu(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  </motion.div>
                 ))}
-               
-              </div>
+              </nav>
 
-              <div className="mt-auto">
-                <Link
-                  href="/get-involved"
-                  className="w-full flex items-center justify-center gap-2 bg-green text-white py-5 rounded-3xl font-bold"
+              <div className="pt-8 border-t border-border/50">
+                <Link 
+                  href="/get-involved" 
+                  className="w-full bg-primary text-primary-foreground py-5 rounded-[2rem] font-bold flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] transition-all"
                   onClick={() => toggleMenu(false)}
                 >
                   Join the Movement <ArrowRight size={20} />
