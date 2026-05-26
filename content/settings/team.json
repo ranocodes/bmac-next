@@ -5,9 +5,9 @@
       "role": "Founder & Director",
       "img": "/images/jagsba.jpg"
     },
-    { 
-      "name": "Amina Bello", 
-      "role": "Programs Director", 
+    {
+      "name": "Amina Bello",
+      "role": "Programs Director",
       "img": "/images/maryam.jpg"
     },
     {
@@ -19,6 +19,11 @@
       "name": "Fatima Abdullahi",
       "role": "Mentorship Coordinator",
       "img": "/images/maryam1.jpg"
+    },
+    {
+      "name": "Habu",
+      "role": "CTO",
+      "img": "/images/uploads/unknow.jpg"
     }
   ]
 }

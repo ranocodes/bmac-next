@@ -15,15 +15,27 @@ export async function getPrograms(): Promise<Program[]> {
   if (!fs.existsSync(programsDir)) return [];
   const filenames = fs.readdirSync(programsDir);
 
-  // Filter for .md files only to avoid system files like .DS_Store
-  return filenames
+  // Filter for .md files only and ensure unique IDs
+  const programs: Program[] = [];
+  const seenIds = new Set<string>();
+
+  filenames
     .filter((fn) => fn.endsWith(".md"))
-    .map((filename) => {
+    .forEach((filename) => {
       const filePath = path.join(programsDir, filename);
       const fileContents = fs.readFileSync(filePath, "utf8");
       const { data, content } = matter(fileContents);
-      return { ...data, longDesc: content || data.body } as Program;
+      const prog = { ...data, longDesc: content || data.body } as Program;
+      
+      if (!seenIds.has(prog.id)) {
+        seenIds.add(prog.id);
+        programs.push(prog);
+      } else {
+        console.warn(`Duplicate program ID found: ${prog.id} in file ${filename}`);
+      }
     });
+  
+  return programs;
 }
 
 export async function getEvents(): Promise<EventPass[]> {
@@ -31,14 +43,24 @@ export async function getEvents(): Promise<EventPass[]> {
   if (!fs.existsSync(eventsDir)) return [];
   const filenames = fs.readdirSync(eventsDir);
 
-  return filenames
+  const events: EventPass[] = [];
+  const seenIds = new Set<string>();
+
+  filenames
     .filter((fn) => fn.endsWith(".md"))
-    .map((filename) => {
+    .forEach((filename) => {
       const filePath = path.join(eventsDir, filename);
       const fileContents = fs.readFileSync(filePath, "utf8");
       const { data, content } = matter(fileContents);
-      return { ...data, longDesc: content || data.body } as EventPass;
+      const event = { ...data, longDesc: content || data.body } as EventPass;
+      
+      if (!seenIds.has(event.id)) {
+        seenIds.add(event.id);
+        events.push(event);
+      }
     });
+
+  return events;
 }
 
 export async function getNews(): Promise<NewsArticle[]> {
@@ -46,14 +68,24 @@ export async function getNews(): Promise<NewsArticle[]> {
   if (!fs.existsSync(newsDir)) return [];
   const filenames = fs.readdirSync(newsDir);
 
-  return filenames
+  const articles: NewsArticle[] = [];
+  const seenIds = new Set<string>();
+
+  filenames
     .filter((fn) => fn.endsWith(".md"))
-    .map((filename) => {
+    .forEach((filename) => {
       const filePath = path.join(newsDir, filename);
       const fileContents = fs.readFileSync(filePath, "utf8");
       const { data, content } = matter(fileContents);
-      return { ...data, content: content || data.body } as NewsArticle;
+      const article = { ...data, content: content || data.body } as NewsArticle;
+      
+      if (!seenIds.has(article.id)) {
+        seenIds.add(article.id);
+        articles.push(article);
+      }
     });
+
+  return articles;
 }
 
 // These keep existing signatures but fetch from FS

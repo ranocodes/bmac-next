@@ -46,7 +46,7 @@ export default function ProgramsClient({ programs }: { programs: Program[] }) {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {programs.map((prog, i) => (
-              <FadeIn key={prog.id} delay={i * 0.1}>
+              <FadeIn key={`${prog.id}-${i}`} delay={i * 0.1}>
                 <Link href={`/programs/${prog.id}`} className="group flex flex-col h-full">
                   <BentoCard className="p-0 overflow-hidden flex flex-col h-full border-none shadow-sm group-hover:shadow-xl transition-all bg-card">
                     <div className="relative h-48 lg:h-56 w-full shrink-0 border-b border-border/50">
