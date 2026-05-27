@@ -11,19 +11,6 @@ media_folder: "public/images/uploads"
 public_folder: "/images/uploads"
 
 collections:
-  - name: "mission_control"
-    label: "Mission Control"
-    delete: false
-    editor:
-      preview: false
-    files:
-      - name: "welcome"
-        label: "Welcome Screen"
-        file: "content/admin/welcome.json"
-        fields:
-          - { label: "Admin Greeting", name: "greeting", widget: "string", default: "Welcome to the BMAC Command Center." }
-          - { label: "Dashboard Notice", name: "notice", widget: "text", default: "Use the sidebar to manage programs, events, and chronicles." }
-
   - name: "programs"
     label: "Programs"
     folder: "content/programs"
