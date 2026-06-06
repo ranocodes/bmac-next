@@ -38,7 +38,7 @@ export default function NewsForm() {
       if (article) {
         setTitle(article.title);
         setDate(article.date);
-        setCategory(article.category);
+        setCategory(article.category || "");
         setDesc(article.desc || (article as any).description || "");
         setContent(article.content);
         setImg(article.img || "");
