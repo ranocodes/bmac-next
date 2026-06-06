@@ -1,10 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import BackToTop from "@/components/BackToTop";
-import { getSiteSettings } from "@/lib/cms";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -23,13 +19,11 @@ export const metadata: Metadata = {
     "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const siteSettings = await getSiteSettings();
-
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -43,18 +37,7 @@ export default async function RootLayout({
         className={`${plusJakartaSans.variable} ${outfit.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <Navbar 
-          logoText={siteSettings?.logo_text} 
-          navLinks={siteSettings?.navigation} 
-        />
         {children}
-        <Footer 
-          logoText={siteSettings?.logo_text}
-          copyright={siteSettings?.copyright}
-          socialLinks={siteSettings?.social_links}
-          navLinks={siteSettings?.navigation}
-        />
-        <BackToTop />
       </body>
     </html>
   );

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { insertRegistration } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -26,14 +25,7 @@ export async function POST(request: Request) {
 
     console.log(`SECURE PAYMENT VERIFIED: ${reference}`);
     
-    // Store in Supabase
-    await insertRegistration({
-      event_title: metadata.event_title,
-      attendee_name: metadata.attendee_name,
-      email: customer.email,
-      amount: data.amount / 100, // Convert back from Kobo to Naira
-      reference: reference
-    });
+    console.log(`Registration data: ${metadata.event_title}, ${metadata.attendee_name}, ${customer.email}, ${reference}`);
   }
 
   return NextResponse.json({ status: 'success' });

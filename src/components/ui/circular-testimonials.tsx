@@ -198,55 +198,59 @@ export const CircularTestimonials = ({
         {/* Content */}
         <div className="testimonial-content">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              variants={quoteVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <h3
-                className="name"
-                style={{ color: colorName, fontSize: "clamp(1.25rem, 5vw, 1.75rem)" }}
+            {activeTestimonial ? (
+              <motion.div
+                key={activeIndex}
+                variants={quoteVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
-                {activeTestimonial.name}
-              </h3>
-              <p
-                className="designation"
-                style={{ color: colorDesignation, fontSize: "clamp(0.875rem, 3vw, 1rem)" }}
-              >
-                {activeTestimonial.designation}
-              </p>
-              <motion.p
-                className="quote"
-                style={{ color: colorTestimony, fontSize: "clamp(0.95rem, 4vw, 1.125rem)" }}
-              >
-                {activeTestimonial.quote.split(" ").map((word, i) => (
-                  <motion.span
-                    key={i}
-                    initial={{
-                      filter: "blur(10px)",
-                      opacity: 0,
-                      y: 5,
-                    }}
-                    animate={{
-                      filter: "blur(0px)",
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      duration: 0.22,
-                      ease: "easeInOut",
-                      delay: 0.025 * i,
-                    }}
-                    style={{ display: "inline-block" }}
-                  >
-                    {word}&nbsp;
-                  </motion.span>
-                ))}
-              </motion.p>
-            </motion.div>
+                <h3
+                  className="name"
+                  style={{ color: colorName, fontSize: "clamp(1.25rem, 5vw, 1.75rem)" }}
+                >
+                  {activeTestimonial.name}
+                </h3>
+                <p
+                  className="designation"
+                  style={{ color: colorDesignation, fontSize: "clamp(0.875rem, 3vw, 1rem)" }}
+                >
+                  {activeTestimonial.designation}
+                </p>
+                <motion.p
+                  className="quote"
+                  style={{ color: colorTestimony, fontSize: "clamp(0.95rem, 4vw, 1.125rem)" }}
+                >
+                  {activeTestimonial.quote.split(" ").map((word, i) => (
+                    <motion.span
+                      key={i}
+                      initial={{
+                        filter: "blur(10px)",
+                        opacity: 0,
+                        y: 5,
+                      }}
+                      animate={{
+                        filter: "blur(0px)",
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      transition={{
+                        duration: 0.22,
+                        ease: "easeInOut",
+                        delay: 0.025 * i,
+                      }}
+                      style={{ display: "inline-block" }}
+                    >
+                      {word}&nbsp;
+                    </motion.span>
+                  ))}
+                </motion.p>
+              </motion.div>
+            ) : (
+              <div className="py-20 text-muted-foreground italic">No testimonials available.</div>
+            )}
           </AnimatePresence>
           <div className="arrow-buttons">
             <button
