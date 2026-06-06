@@ -136,27 +136,31 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
                </div>
 
                {/* RSVP Form */}
-               <div className="bg-card rounded-[2rem] md:rounded-bento p-6 md:p-10 lg:p-12 shadow-2xl border border-border relative overflow-hidden text-center md:text-left">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-24 -mt-24 pointer-events-none" />
-                  <div className="relative z-10">
-                    <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
-                    <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">Join the next cohort of ambassadors gathering in Jos.</p>
-                    
-                    <form className="space-y-4 md:space-y-5" onSubmit={(e) => { e.preventDefault(); alert("Application Sent!"); }}>
-                       <div className="space-y-1.5 text-left">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Full Name</label>
-                          <input type="text" placeholder="Ambassador Name" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
-                       </div>
-                       <div className="space-y-1.5 text-left">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Email Address</label>
-                          <input type="email" placeholder="email@bmacjos.org" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" required />
-                       </div>
-                       <button className="w-full py-4 md:py-5 bg-primary text-primary-foreground rounded-xl md:rounded-2xl font-bold hover:bg-secondary transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/10 mt-4 active:scale-[0.98]">
-                          Apply to Program <Send size={18} />
-                       </button>
-                    </form>
-                  </div>
-               </div>
+               <div className="bg-gradient-to-br from-card to-muted/30 rounded-[2rem] md:rounded-bento p-6 md:p-10 lg:p-12 shadow-2xl border border-border relative overflow-hidden text-center md:text-left">
+                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-24 -mt-24 pointer-events-none" />
+                   <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl opacity-30 -ml-16 -mb-16 pointer-events-none" />
+                   <div className="relative z-10">
+                     <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
+                     <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">Join the next cohort of ambassadors gathering in Jos.</p>
+                     
+                     <form className="space-y-5 md:space-y-6" onSubmit={(e) => { e.preventDefault(); alert("Application Sent!"); }}>
+                        <div className="space-y-2 text-left group">
+                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
+                           <input type="text" placeholder="Ambassador Name" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                        </div>
+                        <div className="space-y-2 text-left group">
+                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Email Address</label>
+                           <input type="email" placeholder="email@bmacjos.org" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                        </div>
+                        <button className="group relative w-full py-4 md:py-5 bg-gradient-to-r from-secondary to-primary text-card rounded-xl md:rounded-2xl font-bold hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-secondary/10 mt-4 active:scale-[0.98] overflow-hidden">
+                           <span className="relative z-10 flex items-center gap-3">
+                              Apply to Program <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
+                           </span>
+                           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full" />
+                        </button>
+                     </form>
+                   </div>
+                </div>
             </div>
           </aside>
         </div>
@@ -173,7 +177,7 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
                       <Link href={`/programs/${item.id}`} className="group block h-full">
                         <BentoCard className="bg-card p-8 h-full flex flex-col items-center border-none shadow-sm hover:shadow-lg transition-all rounded-[2rem]">
                             <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center mb-6 shrink-0`}>
-                              {item.icon}
+                              {getIcon(item.icon as string, { size: 24 })}
                             </div>
                             <h3 className="font-display text-lg font-bold text-secondary group-hover:text-primary transition-colors leading-tight mb-3 text-center">
                               {item.title}

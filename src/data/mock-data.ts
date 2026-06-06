@@ -148,7 +148,7 @@ export const mockNews = [
     title: "BMAC Ambassadors Shine at National Debate Championship",
     date: "2026-05-10",
     category: "Achievements",
-    featured: true,
+    featured: false,
     description: "Three BMAC ambassadors brought home gold medals from the National Youth Debate Championship, showcasing exceptional oratory and critical thinking skills.",
     content: "Three BMAC ambassadors representing Plateau State emerged victorious at the National Youth Debate Championship held in Abuja. Maryam Abdullah took first place in the individual category, while the team secured gold in the group debate. The competition featured participants from all 36 states, making this achievement particularly significant. 'BMAC taught me that my voice matters,' said Maryam. 'Standing on that stage, I knew I was ready.'",
     img_url: "/images/award.jpg"

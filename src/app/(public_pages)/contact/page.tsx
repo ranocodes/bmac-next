@@ -62,73 +62,80 @@ export default function Contact() {
           
           {/* Contact Form - Responsive Padding */}
           <div className="lg:col-span-7">
-             <div className="bg-card rounded-[2rem] md:rounded-bento p-6 md:p-12 shadow-xl border border-border relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50 -mr-32 -mt-32 pointer-events-none" />
-                
-                <div className="relative z-10">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 text-center sm:text-left justify-center sm:justify-start">
-                     <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                        <MessageSquare size={24} />
+              <div className="bg-gradient-to-br from-card to-muted/50 rounded-[2rem] md:rounded-bento p-6 md:p-12 shadow-xl border border-border/80 relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50 -mr-32 -mt-32 pointer-events-none" />
+                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl opacity-30 -ml-24 -mb-24 pointer-events-none" />
+                 
+                 <div className="relative z-10">
+                   <div className="flex flex-col sm:flex-row items-center gap-4 mb-8 text-center sm:text-left justify-center sm:justify-start">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary flex-shrink-0 shadow-inner">
+                         <MessageSquare size={24} />
+                      </div>
+                      <div>
+                         <h2 className="font-display text-xl md:text-2xl font-bold text-secondary tracking-tight">Send a Message</h2>
+                         <p className="text-muted-foreground text-xs md:text-sm">We typically respond within 24 hours.</p>
+                      </div>
+                   </div>
+
+                   <form action={formAction} className="space-y-5 md:space-y-7">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-7">
+                        <div className="space-y-2 group">
+                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Full Name</label>
+                           <input name="name" type="text" placeholder="Peace Jagaban" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                        </div>
+                        <div className="space-y-2 group">
+                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Email Address</label>
+                           <input name="email" type="email" placeholder="peace@bmacjos.org" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                        </div>
                      </div>
-                     <div>
-                        <h2 className="font-display text-xl md:text-2xl font-bold text-secondary tracking-tight">Send a Message</h2>
-                        <p className="text-muted-foreground text-xs md:text-sm">We typically respond within 24 hours.</p>
+                     
+                     <div className="space-y-2 group">
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Subject</label>
+                        <div className="relative">
+                           <select name="subject" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 appearance-none cursor-pointer">
+                              <option>General Inquiry</option>
+                              <option>Membership</option>
+                              <option>Partnership</option>
+                           </select>
+                           <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+                        </div>
                      </div>
-                  </div>
 
-                  <form action={formAction} className="space-y-4 md:space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                       <div className="space-y-1.5">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Full Name</label>
-                          <input name="name" type="text" placeholder="Peace Jagaban" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl md:rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" required />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Email Address</label>
-                          <input name="email" type="email" placeholder="peace@bmacjos.org" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl md:rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" required />
-                       </div>
-                    </div>
-                    
-                    <div className="space-y-1.5">
-                       <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Subject</label>
-                       <select name="subject" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl md:rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
-                          <option>General Inquiry</option>
-                          <option>Membership</option>
-                          <option>Partnership</option>
-                       </select>
-                    </div>
+                     <div className="space-y-2 group">
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Detailed Message</label>
+                        <textarea name="message" rows={4} placeholder="How can we help?" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 resize-none placeholder:text-muted-foreground/40" required />
+                     </div>
 
-                    <div className="space-y-1.5">
-                       <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Detailed Message</label>
-                       <textarea name="message" rows={4} placeholder="How can we help?" className="w-full px-5 md:px-6 py-3.5 md:py-4 bg-muted/30 border border-border rounded-xl md:rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none" required />
-                    </div>
-
-                    <button className="w-full py-4 md:py-5 bg-secondary text-secondary-foreground rounded-xl md:rounded-2xl font-bold hover:bg-primary transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/10" disabled={pending}>
-                       {pending ? "Transmitting..." : "Send Message"} 
-                       <Send size={18} />
-                    </button>
-                  </form>
-                </div>
-             </div>
+                     <button className="group relative w-full py-4 md:py-5 bg-gradient-to-r from-secondary to-primary rounded-xl md:rounded-2xl font-bold text-card hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-secondary/10 active:scale-[0.98] disabled:opacity-70" disabled={pending}>
+                        <span className="relative z-10 flex items-center gap-3">
+                           {pending ? "Transmitting..." : "Send Message"} 
+                           <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
+                        </span>
+                        <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full" />
+                     </button>
+                   </form>
+                 </div>
+              </div>
           </div>
 
-          <div className="lg:col-span-5 space-y-6 md:space-y-8">
-             <div className="bg-secondary rounded-[2rem] md:rounded-bento p-8 md:p-10 text-secondary-foreground relative overflow-hidden">
-                <h3 className="font-display text-xl md:text-2xl font-bold mb-8 relative z-10 text-center md:text-left">Direct Contact</h3>
-                
-                <div className="space-y-6 md:space-y-8 relative z-10">
-                   {[
-                     { icon: <Mail />, label: "Email", value: "hello@bmacjos.org" },
-                     { icon: <Phone />, label: "Phone", value: "+234 803 456 7891" },
-                     { icon: <MapPin />, label: "Hub", value: "Nalado Street, Jos" },
-                     { icon: <Clock />, label: "Hours", value: "Mon - Sat: 9am - 5pm" },
-                   ].map((item, i) => (
-                     <div key={i} className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 text-center sm:text-left">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent flex-shrink-0">
-                           {item.icon}
-                        </div>
-                        <div>
-                           <p className="text-[9px] font-bold uppercase tracking-widest text-secondary-foreground/40 mb-0.5">{item.label}</p>
-                           <p className="font-bold text-sm md:text-base">{item.value}</p>
+           <div className="lg:col-span-5 space-y-6 md:space-y-8">
+              <div className="bg-secondary rounded-[2rem] md:rounded-bento p-5 md:p-10 text-secondary-foreground relative overflow-hidden">
+                 <h3 className="font-display text-lg md:text-2xl font-bold mb-5 md:mb-8 relative z-10 text-center md:text-left">Direct Contact</h3>
+                 
+                 <div className="space-y-4 md:space-y-8 relative z-10">
+                    {[
+                      { icon: <Mail />, label: "Email", value: "hello@bmacjos.org" },
+                      { icon: <Phone />, label: "Phone", value: "+234 803 456 7891" },
+                      { icon: <MapPin />, label: "Hub", value: "Nalado Street, Jos" },
+                      { icon: <Clock />, label: "Hours", value: "Mon - Sat: 9am - 5pm" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex flex-row items-center gap-3 md:gap-5 text-left">
+                         <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent flex-shrink-0">
+                            {item.icon}
+                         </div>
+                         <div>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-secondary-foreground/40 mb-0.5">{item.label}</p>
+                            <p className="font-bold text-sm md:text-base">{item.value}</p>
                         </div>
                      </div>
                    ))}

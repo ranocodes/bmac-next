@@ -39,76 +39,76 @@ export default function EventsClient({ events }: EventsClientProps) {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 px-4 md:px-6 relative">
-        <div className="max-w-7xl mx-auto space-y-32">
+      <section className="py-12 md:py-20 px-4 md:px-6 relative">
+        <div className="max-w-7xl mx-auto space-y-16">
           {events.map((event, i) => (
             <FadeIn key={event.id} delay={i * 0.1}>
               <Link href={`/news/events/${event.id}`} className="group relative block">
-                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     
-                    <div className="lg:col-span-3 relative">
-                       <div className="flex flex-row lg:flex-col items-baseline lg:items-start gap-4">
-                          <span className="text-7xl md:text-9xl font-display font-extrabold text-secondary/5 tracking-tighter absolute -top-10 -left-4 lg:-top-16 lg:-left-8 pointer-events-none group-hover:text-primary/10 transition-colors duration-700">
+                    <div className="lg:col-span-2 relative">
+                       <div className="flex flex-row lg:flex-col items-baseline lg:items-start gap-2">
+                          <span className="text-6xl md:text-8xl font-display font-extrabold text-secondary/5 tracking-tighter absolute -top-8 -left-3 lg:-top-12 lg:-left-6 pointer-events-none group-hover:text-primary/10 transition-colors duration-700">
                              0{i + 1}
                           </span>
-                          <span className="text-5xl md:text-7xl font-display font-extrabold text-secondary tracking-tighter leading-none relative z-10">
+                          <span className="text-4xl md:text-6xl font-display font-extrabold text-secondary tracking-tighter leading-none relative z-10">
                              {event.date.split(' ')[1].replace(',','')}
                           </span>
-                          <span className="text-xl md:text-2xl font-bold text-accent uppercase tracking-[0.2em] relative z-10">
+                          <span className="text-lg md:text-xl font-bold text-accent uppercase tracking-[0.2em] relative z-10">
                              {event.date.split(' ')[0]}
                           </span>
                        </div>
                     </div>
 
-                    <div className="lg:col-span-9">
-                       <div className="relative group-hover:-translate-y-2 transition-transform duration-700">
-                          <div className="bg-card border border-border/50 rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-16 shadow-diffused relative overflow-hidden">
-                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="lg:col-span-10">
+                       <div className="relative group-hover:-translate-y-1 transition-transform duration-700">
+                          <div className="bg-card border border-border/50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-diffused relative overflow-hidden">
+                             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-24 -mt-24 opacity-0 group-hover:opacity-100 transition-opacity" />
                              
-                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-10 border-b border-border/30 pb-10">
+                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-border/30 pb-6">
                                 <div>
-                                   <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary mb-3 block">
+                                   <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary mb-2 block">
                                       {event.category}
                                    </span>
-                                   <h3 className="text-3xl md:text-5xl font-extrabold tracking-tighter text-secondary leading-none">
+                                   <h3 className="text-2xl md:text-3xl font-extrabold tracking-tighter text-secondary leading-none">
                                       {event.title}
                                    </h3>
                                 </div>
-                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border/50 shadow-inner">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border/50 shadow-inner">
                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                   <span className="text-[10px] font-bold uppercase tracking-widest text-secondary">Reservations Open</span>
+                                   <span className="text-[9px] font-bold uppercase tracking-widest text-secondary">Reservations Open</span>
                                 </div>
                              </div>
 
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
-                                <p className="text-muted-foreground text-base md:text-lg leading-relaxed font-medium line-clamp-3">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                                <p className="text-muted-foreground text-sm md:text-base leading-relaxed font-medium line-clamp-3">
                                    {event.desc}
                                 </p>
-                                <div className="flex flex-wrap md:justify-end gap-6 md:gap-10">
-                                   <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-primary">
-                                         <Clock size={18} />
+                                <div className="flex flex-wrap md:justify-end gap-4 md:gap-6">
+                                   <div className="flex items-center gap-3">
+                                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-primary">
+                                         <Clock size={16} />
                                       </div>
                                       <div>
-                                         <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest">Time</p>
-                                         <p className="text-sm font-bold text-secondary">{event.time}</p>
+                                         <p className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest">Time</p>
+                                         <p className="text-xs font-bold text-secondary">{event.time}</p>
                                       </div>
                                    </div>
-                                   <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-primary">
-                                         <MapPin size={18} />
+                                   <div className="flex items-center gap-3">
+                                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-primary">
+                                         <MapPin size={16} />
                                       </div>
                                       <div>
-                                         <p className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest">Venue</p>
-                                         <p className="text-sm font-bold text-secondary">{event.venue}</p>
+                                         <p className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest">Venue</p>
+                                         <p className="text-xs font-bold text-secondary truncate max-w-[160px]">{event.venue}</p>
                                       </div>
                                    </div>
                                 </div>
                              </div>
 
-                             <div className="mt-12 flex justify-end">
-                                <div className="w-16 h-16 rounded-full bg-secondary text-card flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-500 shadow-xl">
-                                   <ArrowRight size={28} />
+                             <div className="mt-8 flex justify-end">
+                                <div className="w-12 h-12 rounded-full bg-secondary text-card flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-500 shadow-xl">
+                                   <ArrowRight size={20} />
                                 </div>
                              </div>
                           </div>
@@ -121,24 +121,24 @@ export default function EventsClient({ events }: EventsClientProps) {
         </div>
       </section>
 
-      <section className="py-24 px-4 md:px-6 bg-card border-t border-border/50">
-        <div className="max-w-5xl mx-auto">
-           <div className="bg-secondary rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none" />
+      <section className="py-16 md:py-20 px-4 md:px-6 bg-card border-t border-border/50">
+        <div className="max-w-4xl mx-auto">
+           <div className="bg-secondary rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-14 text-center relative overflow-hidden shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none" />
               <div className="relative z-10">
-                 <h2 className="font-display text-4xl md:text-6xl font-extrabold text-card tracking-tighter mb-8">
+                 <h2 className="font-display text-3xl md:text-5xl font-extrabold text-card tracking-tighter mb-6">
                     Stay <span className="text-accent italic font-light serif">Synchronized</span>.
                  </h2>
-                 <p className="text-card/60 text-lg md:text-xl mb-12 max-w-xl mx-auto font-medium leading-relaxed">
+                 <p className="text-card/60 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium leading-relaxed">
                     Import the official BMAC leadership cycle directly into your workspace.
                  </p>
-                 <div className="flex flex-wrap justify-center gap-4">
-                    <button className="px-10 py-5 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-3 backdrop-blur-md shadow-xl group">
-                       <Calendar size={20} className="text-accent group-hover:scale-110 transition-transform" />
+                 <div className="flex flex-wrap justify-center gap-3">
+                    <button className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
+                       <Calendar size={16} className="text-accent group-hover:scale-110 transition-transform" />
                        Add to Google
                     </button>
-                    <button className="px-10 py-5 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-3 backdrop-blur-md shadow-xl group">
-                       <Calendar size={20} className="text-accent group-hover:scale-110 transition-transform" />
+                    <button className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
+                       <Calendar size={16} className="text-accent group-hover:scale-110 transition-transform" />
                        Add to Apple
                     </button>
                  </div>

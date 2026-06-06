@@ -155,51 +155,55 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                {!isReserved ? (
                   <motion.div 
                     layoutId="rsvp-card"
-                    className="bg-card rounded-[3rem] p-10 md:p-12 shadow-diffused border border-border/50 relative overflow-hidden"
+                    className="bg-gradient-to-br from-card to-muted/30 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-diffused border border-border/50 relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-24 -mt-24 pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-32 md:w-48 h-32 md:h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-16 md:-mr-24 -mt-16 md:-mt-24 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-24 md:w-36 h-24 md:h-36 bg-accent/5 rounded-full blur-3xl opacity-30 -ml-12 md:-ml-18 -mb-12 md:-mb-18 pointer-events-none" />
                     
                     <div className="relative z-10">
-                      <div className="text-center md:text-left mb-10">
-                        <h3 className="font-display text-3xl font-extrabold text-secondary mb-3 tracking-tight">Secure Your Pass</h3>
+                      <div className="text-center md:text-left mb-6 md:mb-10">
+                        <h3 className="font-display text-2xl md:text-3xl font-extrabold text-secondary mb-3 tracking-tight">Secure Your Pass</h3>
                         <p className="text-muted-foreground text-sm font-medium">Limited spots available for the 2026 cycle.</p>
                       </div>
                       
-                      <form className="space-y-5" onSubmit={handleSubmit}>
-                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-4">Legal Name</label>
-                            <input 
-                              type="text" 
-                              value={formData.name}
-                              onChange={(e) => setFormData({...formData, name: e.target.value})}
-                              placeholder="Peace Jagaban" 
-                              className="w-full px-8 py-5 bg-muted/50 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold" 
-                              required 
-                            />
-                         </div>
-                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-4">Communications</label>
-                            <input 
-                              type="email" 
-                              value={formData.email}
-                              onChange={(e) => setFormData({...formData, email: e.target.value})}
-                              placeholder="peace@bmacjos.org" 
-                              className="w-full px-8 py-5 bg-muted/50 border border-border rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold" 
-                              required 
-                            />
-                         </div>
-                         
-                         <button 
-                           disabled={isPending}
-                           className="w-full py-6 bg-secondary text-card rounded-[2rem] font-extrabold text-base hover:bg-primary transition-all flex items-center justify-center gap-4 mt-8 shadow-2xl disabled:opacity-70 active:scale-[0.98]"
-                         >
-                            {isPending ? (
-                              <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <>{event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Request Official Pass"} <Send size={20} /></>
-                            )}
-                         </button>
-                      </form>
+                      <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+                          <div className="space-y-2 group">
+                             <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Legal Name</label>
+                             <input 
+                               type="text" 
+                               value={formData.name}
+                               onChange={(e) => setFormData({...formData, name: e.target.value})}
+                               placeholder="Peace Jagaban" 
+                               className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
+                               required 
+                             />
+                          </div>
+                          <div className="space-y-2 group">
+                             <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Communications</label>
+                             <input 
+                               type="email" 
+                               value={formData.email}
+                               onChange={(e) => setFormData({...formData, email: e.target.value})}
+                               placeholder="peace@bmacjos.org" 
+                               className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
+                               required 
+                             />
+                          </div>
+                          
+                          <button 
+                            disabled={isPending}
+                            className="group relative w-full py-4 md:py-6 bg-gradient-to-r from-secondary to-primary text-card rounded-[1.5rem] md:rounded-[2rem] font-extrabold text-sm md:text-base hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-4 mt-5 md:mt-8 shadow-2xl disabled:opacity-70 active:scale-[0.98] overflow-hidden"
+                          >
+                             <span className="relative z-10 flex items-center gap-3 md:gap-4">
+                                {isPending ? (
+                                  <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <>{event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Request Official Pass"} <Send size={18} className="md:w-5 md:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" /></>
+                                )}
+                             </span>
+                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full" />
+                          </button>
+                       </form>
                     </div>
                   </motion.div>
                ) : (

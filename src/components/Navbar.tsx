@@ -136,7 +136,7 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
                 </button>
               </div>
 
-              <nav className="flex flex-col gap-4 mb-auto">
+              <nav className="flex flex-col mb-auto">
                 {navLinks.map((link, i) => (
                   <motion.div
                     key={link.name}
@@ -146,7 +146,7 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
                   >
                     <Link
                       href={link.href}
-                      className={`text-2xl font-bold tracking-tight py-2 block ${
+                      className={`text-lg font-bold tracking-tight py-2.5 block border-b border-border/30 ${
                         pathname === link.href ? "text-primary" : "text-secondary"
                       }`}
                       onClick={() => toggleMenu(false)}
@@ -163,7 +163,7 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
                   className="w-full bg-primary text-primary-foreground py-5 rounded-[2rem] font-bold flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] transition-all"
                   onClick={() => toggleMenu(false)}
                 >
-                  Join the Movement <ArrowRight size={20} />
+                  Join Us <ArrowRight size={20} />
                 </Link>
               </div>
             </motion.div>

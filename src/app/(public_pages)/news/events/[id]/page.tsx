@@ -20,7 +20,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const mappedEvent = {
     ...event,
     id: event.id,
-    date: event.event_date,
+    date: new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     desc: event.description
   };
 

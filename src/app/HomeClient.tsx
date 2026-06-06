@@ -70,11 +70,11 @@ export default function HomeClient({ stats, programs, testimonials }: HomeClient
                />
                <div className="absolute inset-0 bg-gradient-to-t from-secondary/40 via-transparent to-transparent" />
 
-               <div className="absolute bottom-4 lg:bottom-10 left-4 lg:left-10 right-4 lg:left-10 bg-card/90 backdrop-blur-xl p-6 lg:p-8 rounded-card lg:rounded-bento border border-card/20 flex justify-between items-center gap-2">
+               <div className="absolute bottom-4 lg:bottom-10 left-4 lg:left-10 right-4 lg:right-10 bg-card/90 backdrop-blur-xl p-4 md:p-6 lg:p-8 rounded-card lg:rounded-bento border border-card/20 grid grid-cols-3 gap-1 md:gap-2">
                   {stats.slice(0, 3).map((stat, i) => (
-                    <div key={i} className="text-center flex-1">
-                       <p className="text-lg lg:text-2xl font-display font-extrabold text-secondary">{stat.num}</p>
-                       <p className="text-[7px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">{stat.label}</p>
+                    <div key={i} className="text-center">
+                       <p className="text-base md:text-lg lg:text-2xl font-display font-extrabold text-secondary truncate">{stat.num}</p>
+                       <p className="text-[6px] md:text-[8px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">{stat.label}</p>
                     </div>
                   ))}
                </div>
@@ -157,23 +157,23 @@ export default function HomeClient({ stats, programs, testimonials }: HomeClient
         </div>
       </section>
 
-      <section className="py-24 lg:py-32 px-6 bg-background">
-         <div className="max-w-5xl mx-auto w-full">
-            <BentoCard className="bg-primary p-10 md:p-16 lg:p-24 text-center relative overflow-hidden border-none shadow-2xl shadow-primary/20">
-               <div className="absolute top-0 left-0 w-64 h-64 bg-card/5 rounded-full blur-3xl pointer-events-none" />
+      <section className="py-16 lg:py-24 px-6 bg-background">
+         <div className="max-w-4xl mx-auto w-full">
+            <BentoCard className="bg-primary p-8 md:p-12 lg:p-16 text-center relative overflow-hidden border-none shadow-2xl shadow-primary/20">
+               <div className="absolute top-0 left-0 w-48 h-48 bg-card/5 rounded-full blur-3xl pointer-events-none" />
                <div className="relative z-10">
-                  <h2 className="font-display text-[clamp(1.75rem,6vw,4rem)] font-extrabold text-card tracking-tighter mb-6 lg:mb-8 leading-tight">
+                  <h2 className="font-display text-[clamp(1.5rem,5vw,3rem)] font-extrabold text-card tracking-tighter mb-4 lg:mb-6 leading-tight">
                      Ready to <span className="text-accent">Speak Boldly</span> <br className="hidden sm:block"/> and Lead Fearlessly?
                   </h2>
-                  <p className="text-primary-foreground text-base lg:text-lg mb-8 lg:mb-12 max-w-2xl mx-auto opacity-80 leading-relaxed">
+                  <p className="text-primary-foreground text-sm lg:text-base mb-6 lg:mb-8 max-w-xl mx-auto opacity-80 leading-relaxed">
                      Our next 2026 cohort is gathering soon. Secure your place in a 
                      community that pushes you to be your absolute best.
                   </p>
-                  <div className="flex flex-wrap justify-center gap-4">
-                     <button onClick={() => setIsModalOpen(true)} className="bg-accent text-accent-foreground px-10 lg:px-14 py-4 lg:py-6 rounded-full font-bold hover:bg-card transition-all shadow-xl shadow-accent/10 text-sm lg:text-base">
+                  <div className="flex flex-wrap justify-center gap-3">
+                     <button onClick={() => setIsModalOpen(true)} className="bg-accent text-accent-foreground px-8 lg:px-10 py-3 lg:py-4 rounded-full font-bold hover:bg-card transition-all shadow-xl shadow-accent/10 text-xs lg:text-sm">
                         Join the Movement
                      </button>
-                     <Link href="/contact" className="bg-card/10 backdrop-blur-md border border-card/20 text-card px-10 lg:px-14 py-4 lg:py-6 rounded-full font-bold hover:bg-card/20 transition-all text-sm lg:text-base">
+                     <Link href="/contact" className="bg-card/10 backdrop-blur-md border border-card/20 text-card px-8 lg:px-10 py-3 lg:py-4 rounded-full font-bold hover:bg-card/20 transition-all text-xs lg:text-sm">
                         Contact Support
                      </Link>
                   </div>

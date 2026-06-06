@@ -37,7 +37,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
   const mappedEvents = mockEvents.map((e) => ({
     ...e,
     id: e.id,
-    date: e.event_date,
+    date: new Date(e.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     desc: e.description
   }));
 
