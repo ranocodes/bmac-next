@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Newspaper } from "lucide-react";
@@ -10,15 +10,38 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { cn } from "@/lib/utils";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockNews, mockEvents } from "@/data/mock-data";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
-interface NewsClientProps {
-  news: NewsArticle[];
-  events: EventPass[];
+function formatEventDate(raw: string | undefined): { month: string; day: string } {
+  if (!raw) return { month: "", day: "" };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const d = new Date(raw + "T00:00:00");
+    if (isNaN(d.getTime())) return { month: "", day: "" };
+    return {
+      month: d.toLocaleDateString("en-US", { month: "short" }),
+      day: String(d.getDate()),
+    };
+  }
+  const parts = raw.split(" ");
+  return {
+    month: parts[0]?.substring(0, 3) || "",
+    day: (parts[1] || "").replace(",", ""),
+  };
 }
 
-export default function NewsClient({ news, events }: NewsClientProps) {
+export default function NewsClient() {
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [events, setEvents] = useState<EventPass[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
+    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
+    setNews(getAll<NewsArticle>("news").map(a => ({ ...a, img: (a as any).img_url || a.img || "/images/placeholder.jpg", desc: a.desc || (a as any).description || "" })));
+    setEvents(getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "" })));
+  }, []);
 
   return (
     <>
@@ -134,8 +157,8 @@ export default function NewsClient({ news, events }: NewsClientProps) {
                                 "min-w-[42px] h-[42px] flex flex-col items-center justify-center rounded-xl transition-colors",
                                 i === 0 ? "bg-secondary text-white" : "bg-muted text-secondary"
                               )}>
-                                 <span className="text-[8px] font-bold uppercase opacity-60">{event.date.split(' ')[0].substring(0,3)}</span>
-                                 <span className="text-sm font-extrabold leading-none">{event.date.split(' ')[1].replace(',','')}</span>
+                                  <span className="text-[8px] font-bold uppercase opacity-60">{formatEventDate(event.date).month}</span>
+                                  <span className="text-sm font-extrabold leading-none">{formatEventDate(event.date).day}</span>
                               </div>
                               <div className="flex-1">
                                  {i === 0 && (

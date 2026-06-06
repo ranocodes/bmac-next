@@ -1,22 +1,83 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockNews, mockEvents } from "@/data/mock-data";
 import type { NewsArticle, EventPass } from "@/types/cms";
-import { cn } from "@/lib/utils";
 
-interface NewsDetailClientProps {
-  article: NewsArticle;
-  relatedStories: NewsArticle[];
-  events: EventPass[];
+function formatEventDate(raw: string | undefined): { month: string; day: string } {
+  if (!raw) return { month: "", day: "" };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const d = new Date(raw + "T00:00:00");
+    if (isNaN(d.getTime())) return { month: "", day: "" };
+    return {
+      month: d.toLocaleDateString("en-US", { month: "short" }),
+      day: String(d.getDate()),
+    };
+  }
+  const parts = raw.split(" ");
+  return {
+    month: parts[0]?.substring(0, 3) || "",
+    day: (parts[1] || "").replace(",", ""),
+  };
 }
 
-export default function NewsDetailClient({ article, relatedStories, events }: NewsDetailClientProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface NewsDetailClientProps {
+  id: string;
+}
+
+export default function NewsDetailClient({ id }: NewsDetailClientProps) {
+  const [article, setArticle] = useState<NewsArticle | null>(null);
+  const [relatedStories, setRelatedStories] = useState<NewsArticle[]>([]);
+  const [events, setEvents] = useState<EventPass[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
+    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
+
+    const allNews = getAll<NewsArticle>("news").map(a => ({ ...a, img: (a as any).img_url || a.img || "/images/placeholder.jpg", desc: a.desc || (a as any).description || "" }));
+    const found = allNews.find(a => a.id === id) || null;
+    setArticle(found);
+
+    if (found) {
+      setRelatedStories(
+        allNews
+          .filter(a => a.id !== id && a.category === found.category)
+          .slice(0, 3)
+      );
+    }
+
+    setEvents(getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "" })));
+    setLoading(false);
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="bg-background min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
+      </main>
+    );
+  }
+
+  if (!article) {
+    return (
+      <main className="bg-background min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-md">
+          <h1 className="font-display text-3xl font-bold text-secondary mb-4">Story Not Found</h1>
+          <p className="text-muted-foreground mb-8">This article may have been removed or the link is invalid.</p>
+          <Link href="/news" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
+            <ArrowLeft size={16} /> Back to Chronicle
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main suppressHydrationWarning className="bg-background">
@@ -71,13 +132,10 @@ export default function NewsDetailClient({ article, relatedStories, events }: Ne
           
           {/* Article Text */}
           <article className="lg:col-span-8">
-            <div className="prose prose-slate lg:prose-lg max-w-none">
-              {article.content.split('\n\n').map((paragraph, i) => (
-                <p key={i} className="text-muted-foreground text-base md:text-lg leading-[1.7] md:leading-[1.8] mb-8 first-letter:text-4xl md:first-letter:text-5xl first-letter:font-bold first-letter:text-secondary first-letter:mr-2 md:first-letter:mr-3 first-letter:float-left">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            <div
+              className="prose prose-slate lg:prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
 
             {/* Engagement Footer */}
             <div className="mt-12 md:mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
@@ -108,8 +166,8 @@ export default function NewsDetailClient({ article, relatedStories, events }: Ne
                       {events.map((event, i) => (
                         <Link href={`/news/events/${event.id}`} key={i} className="group flex gap-4 md:gap-5 justify-start cursor-pointer">
                            <div className="flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-card/5 border border-card/10 flex flex-col items-center justify-center group-hover:bg-accent transition-colors">
-                                <span className="text-[8px] md:text-[9px] font-bold uppercase group-hover:text-secondary">{event.date.split(' ')[0].substring(0,3)}</span>
-                                <span className="text-xs md:text-sm font-extrabold group-hover:text-secondary">{event.date.split(' ')[1].replace(',','')}</span>
+                                 <span className="text-[8px] md:text-[9px] font-bold uppercase group-hover:text-secondary">{formatEventDate(event.date).month}</span>
+                                 <span className="text-xs md:text-sm font-extrabold group-hover:text-secondary">{formatEventDate(event.date).day}</span>
                            </div>
                            <div>
                               <h4 className="text-xs md:text-sm font-bold group-hover:text-accent transition-colors leading-tight mb-1">{event.title}</h4>

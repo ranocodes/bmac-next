@@ -37,6 +37,7 @@ export interface NewsArticle {
 }
 
 export interface TeamMember {
+  id: string;
   name: string;
   role: string;
   img: string;
@@ -49,7 +50,34 @@ export interface ImpactStat {
 }
 
 export interface GalleryItem {
+  id: string;
   img: string;
   category: string;
   alt: string;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  designation: string;
+  quote: string;
+  src: string;
+}
+
+export interface SiteSettings {
+  id: string;
+  logo_text: string;
+  navigation: { name: string; href: string }[];
+  social_links: { name: string; href: string; icon: string }[];
+  copyright: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+}
+
+export interface AdminUser {
+  email: string;
+  password: string;
 }
