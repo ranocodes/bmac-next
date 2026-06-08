@@ -7,6 +7,7 @@ import { setItem } from "@/data/store";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,10 +15,10 @@ export default function LoginForm() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    if (!email || !password) { setError("Email and password required"); return; }
+    if (!email || !password || !firstName) { setError("All fields required"); return; }
     setLoading(true);
     setTimeout(() => {
-      setItem("session", { email, loggedInAt: Date.now() });
+      setItem("session", { email, firstName, loggedInAt: Date.now() });
       window.location.href = "/admin";
     }, 600);
   }
@@ -31,6 +32,11 @@ export default function LoginForm() {
           <p className="text-xs text-muted-foreground/60 mt-1">Demo: any email + password works</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">First Name</label>
+            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="John"
+              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          </div>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@bmacjos.org"

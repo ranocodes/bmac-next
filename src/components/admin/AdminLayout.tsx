@@ -27,14 +27,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
-    const session = getItem<{ email: string }>("session");
+    const session = getItem<{ email: string; firstName?: string }>("session");
     if (!session && pathname !== "/admin/login") {
       window.location.href = "/admin/login";
     } else if (session) {
       setAuthed(true);
       setEmail(session.email);
+      setFirstName(session.firstName || session.email.split("@")[0]);
     }
     setReady(true);
   }, [pathname]);
@@ -88,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex-1" />
           <div className="relative">
             <button onClick={() => setProfileOpen(p => !p)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-              <span className="text-xs font-bold text-primary">{email.charAt(0).toUpperCase() || "A"}</span>
+              <span className="text-xs font-bold text-primary">{firstName.charAt(0).toUpperCase()}</span>
             </button>
             {profileOpen && (
               <>
@@ -105,7 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </>
             )}
           </div>
-          <span className="text-sm font-medium text-secondary hidden sm:block">{email.split("@")[0] || "Admin"}</span>
+          <span className="text-sm font-medium text-secondary hidden sm:block">{firstName}</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
       </div>
