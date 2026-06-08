@@ -333,49 +333,57 @@ export const mockGallery = [
     id: "gallery-1",
     img: "/images/competitions.jpg",
     category: "Events",
-    alt: "BMAC Debate Championship"
+    alt: "BMAC Debate Championship",
+    status: "published",
   },
   {
     id: "gallery-2",
     img: "/images/ws.jpg",
     category: "Workshops",
-    alt: "Digital Literacy Workshop"
+    alt: "Digital Literacy Workshop",
+    status: "published",
   },
   {
     id: "gallery-3",
     img: "/images/public-speaking.jpg",
     category: "Programs",
-    alt: "Public Speaking Session"
+    alt: "Public Speaking Session",
+    status: "published",
   },
   {
     id: "gallery-4",
     img: "/images/mentorship.jpg",
     category: "Mentorship",
-    alt: "Mentorship Meeting"
+    alt: "Mentorship Meeting",
+    status: "published",
   },
   {
     id: "gallery-5",
     img: "/images/award.jpg",
     category: "Events",
-    alt: "Award Ceremony"
+    alt: "Award Ceremony",
+    status: "published",
   },
   {
     id: "gallery-6",
     img: "/images/digital-literacy.jpg",
     category: "Workshops",
-    alt: "Computer Lab Session"
+    alt: "Computer Lab Session",
+    status: "published",
   },
   {
     id: "gallery-7",
     img: "/images/literary-arts.jpg",
     category: "Programs",
-    alt: "Literary Arts Workshop"
+    alt: "Literary Arts Workshop",
+    status: "published",
   },
   {
     id: "gallery-8",
     img: "/images/peace.jpg",
     category: "Community",
-    alt: "Community Outreach"
+    alt: "Community Outreach",
+    status: "published",
   }
 ];
 

@@ -1,3 +1,5 @@
-export default function GalleryPage() {
-  return <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Gallery management — coming in Iteration 7</div>;
+import GalleryTable from "@/components/admin/GalleryTable";
+
+export default function GalleryAdminPage() {
+  return <GalleryTable />;
 }

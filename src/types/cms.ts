@@ -62,6 +62,7 @@ export interface GalleryItem {
   img: string;
   category: string;
   alt: string;
+  status?: "draft" | "published";
 }
 
 export interface Testimonial {

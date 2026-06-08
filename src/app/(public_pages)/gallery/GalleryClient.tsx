@@ -1,27 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Expand, X } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import { motion, AnimatePresence } from "framer-motion";
-import { GalleryItem } from "@/types/cms";
-
-interface GalleryClientProps {
-  galleryItems: GalleryItem[];
-}
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockGallery } from "@/data/mock-data";
 
 const categories = ["all", "workshops", "competitions", "outreach", "events"];
 
-export default function GalleryClient({ galleryItems }: GalleryClientProps) {
+export default function GalleryClient() {
   const [filter, setFilter] = useState("all");
-  const [selectedImg, setSelectedImg] = useState<GalleryItem | null>(null);
+  const [selectedImg, setSelectedImg] = useState<any | null>(null);
+  const [galleryItems, setGalleryItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    seedIfEmpty("gallery", mockGallery);
+    const all = getAll<any>("gallery").reverse();
+    const published = all.filter((g: any) => g.status === "published");
+    setGalleryItems(published.length > 0 ? published : all);
+  }, []);
 
   const filteredItems =
     filter === "all"
       ? galleryItems
-      : galleryItems.filter((item) => item.category === filter);
+      : galleryItems.filter((item) => item.category?.toLowerCase() === filter);
 
   return (
     <>
