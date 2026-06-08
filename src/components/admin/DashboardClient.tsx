@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Newspaper, Calendar, BookOpen, Image, Users, Star, TrendingUp, ArrowRight, Plus, Sparkle } from "lucide-react";
 import { getAll, seedIfEmpty, create } from "@/data/store";
-import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials } from "@/data/mock-data";
+import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials, mockStats } from "@/data/mock-data";
 import type { NewsArticle, EventPass, Program, GalleryItem, TeamMember, Testimonial, Category } from "@/types/cms";
 
 const quickActions = [
@@ -29,6 +29,7 @@ export default function DashboardClient() {
     seedIfEmpty("gallery", mockGallery);
     seedIfEmpty("team", mockTeam);
     seedIfEmpty("testimonials", mockTestimonials);
+    seedIfEmpty("stats", mockStats);
     seedIfEmpty("categories", [
       "Achievements", "Programs", "Alumni", "Partnerships",
       "Events", "Announcements", "Workshops", "Competition",

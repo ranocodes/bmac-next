@@ -52,9 +52,11 @@ export interface TeamMember {
 }
 
 export interface ImpactStat {
+  id: string;
   num: string;
   label: string;
-  icon: string; // Changed to string name
+  icon: string;
+  status?: "draft" | "published";
 }
 
 export interface GalleryItem {

@@ -306,25 +306,29 @@ export const mockStats = [
     id: "stat-1",
     num: "500+",
     label: "Students Reached",
-    icon: "Users"
+    icon: "Users",
+    status: "published",
   },
   {
     id: "stat-2",
     num: "12",
     label: "Programs Offered",
-    icon: "BookOpen"
+    icon: "BookOpen",
+    status: "published",
   },
   {
     id: "stat-3",
     num: "15+",
     label: "Partner Schools",
-    icon: "School"
+    icon: "School",
+    status: "published",
   },
   {
     id: "stat-4",
     num: "98%",
     label: "Graduation Rate",
-    icon: "Award"
+    icon: "Award",
+    status: "published",
   }
 ];
 

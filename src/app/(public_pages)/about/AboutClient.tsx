@@ -8,23 +8,24 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ImpactStat } from "@/types/cms";
 import { getIcon } from "@/lib/iconMapper";
 import { getAll, seedIfEmpty } from "@/data/store";
-import { mockTeam } from "@/data/mock-data";
+import { mockTeam, mockStats } from "@/data/mock-data";
 
-interface AboutClientProps {
-  impact: ImpactStat[];
-}
-
-export default function AboutClient({ impact }: AboutClientProps) {
+export default function AboutClient() {
   const [team, setTeam] = useState<any[]>([]);
+  const [impact, setImpact] = useState<any[]>([]);
 
   useEffect(() => {
     seedIfEmpty("team", mockTeam);
     const all = getAll<any>("team").reverse();
     const published = all.filter((m: any) => m.status === "published");
     setTeam(published.length > 0 ? published : all);
+
+    seedIfEmpty("stats", mockStats);
+    const allStats = getAll<any>("stats").reverse();
+    const publishedStats = allStats.filter((s: any) => s.status === "published");
+    setImpact(publishedStats.length > 0 ? publishedStats : allStats);
   }, []);
   return (
     <main suppressHydrationWarning className="bg-background">

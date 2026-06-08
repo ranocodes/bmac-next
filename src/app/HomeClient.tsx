@@ -11,17 +11,14 @@ import { BentoCard } from "@/components/ui/BentoCard";
 import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { getIcon } from "@/lib/iconMapper";
-import { Program, ImpactStat } from "@/types/cms";
+import { Program } from "@/types/cms";
 import { getAll, seedIfEmpty } from "@/data/store";
-import { mockPrograms, mockTestimonials } from "@/data/mock-data";
+import { mockPrograms, mockTestimonials, mockStats } from "@/data/mock-data";
 
-interface HomeClientProps {
-  stats: ImpactStat[];
-}
-
-export default function HomeClient({ stats }: HomeClientProps) {
+export default function HomeClient() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -42,6 +39,11 @@ export default function HomeClient({ stats }: HomeClientProps) {
     const allTestimonials = getAll<any>("testimonials").reverse();
     const published = allTestimonials.filter(t => t.status === "published");
     setTestimonials(published.length > 0 ? published : allTestimonials);
+
+    seedIfEmpty("stats", mockStats);
+    const allStats = getAll<any>("stats").reverse();
+    const publishedStats = allStats.filter((s: any) => s.status === "published");
+    setStats(publishedStats.length > 0 ? publishedStats : allStats);
   }, []);
 
   return (
