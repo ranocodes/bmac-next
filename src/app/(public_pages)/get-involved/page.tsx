@@ -9,7 +9,8 @@ import {
   Handshake,
   School,
   Send,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
@@ -63,12 +64,12 @@ export default function GetInvolved() {
   const [selectedWay, setSelectedWay] = useState<any>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
+  const [submitted, setSubmitted] = useState<string | null>(null);
 
   const handleDonate = (e: any) => {
     e.preventDefault();
     const finalAmount = donateAmount === "custom" ? customAmount : donateAmount;
-    alert(`Initiating Paystack payment for ₦${finalAmount}`);
-    setSelectedWay(null);
+    setSubmitted(`Initiating Paystack payment for ₦${finalAmount}`);
   };
 
   return (
@@ -212,7 +213,26 @@ export default function GetInvolved() {
                   </div>
                 )}
 
-                <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={selectedWay.id === "donate" ? handleDonate : (e) => { e.preventDefault(); alert("Success!"); setSelectedWay(null); }}>
+                {submitted ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-5">
+                      <CheckCircle2 size={32} className="text-emerald-600" />
+                    </div>
+                    <p className="font-display text-2xl font-bold text-white mb-2">
+                      {selectedWay?.id === "donate" ? "Payment Initiated" : "Application Sent!"}
+                    </p>
+                    <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
+                      {selectedWay?.id === "donate" ? submitted : "We'll review your application and get back to you within 48 hours."}
+                    </p>
+                    <button
+                      onClick={() => { setSubmitted(null); setSelectedWay(null); }}
+                      className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : (
+                  <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={selectedWay.id === "donate" ? handleDonate : (e) => { e.preventDefault(); setSubmitted("success"); }}>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Your Identity</label>
                     <input type="text" placeholder="Full Name" className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all" required />
@@ -225,7 +245,7 @@ export default function GetInvolved() {
                     {selectedWay.id === "donate" ? "Complete Donation" : "Initiate Partnership"} 
                     <ArrowRight size={18} />
                   </button>
-                </form>
+                </form>)}
               </div>
             </div>
           </div>

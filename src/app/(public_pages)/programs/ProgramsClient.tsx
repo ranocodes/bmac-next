@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
@@ -8,16 +8,30 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import NewsletterModal from "@/components/ui/NewsletterModal";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockPrograms } from "@/data/mock-data";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
 
-interface ProgramsClientProps {
-  programs: Program[];
-}
-
-export default function ProgramsClient({ programs }: { programs: Program[] }) {
+export default function ProgramsClient() {
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    seedIfEmpty("programs", mockPrograms.map(p => ({ ...p, desc: p.description, img: p.img_url, icon: p.icon_name, color: p.color_class, landingPage: p.landingPage || false })));
+    setPrograms(getAll<Program>("programs").map(p => ({
+      ...p,
+      desc: (p as any).desc || (p as any).description || "",
+      img: (p as any).img || (p as any).img_url || "",
+      icon: (p as any).icon || (p as any).icon_name || "",
+      color: (p as any).color || (p as any).color_class || "",
+      skills: (p as any).skills || mockPrograms.find(m => m.id === p.id)?.skills || [],
+      faqs: (p as any).faqs || mockPrograms.find(m => m.id === p.id)?.faqs || [],
+      landingPage: (p as any).landingPage || false,
+      status: (p as any).status || "draft",
+    })).filter(p => p.status === "published").reverse());
+  }, []);
 
   return (
     <>

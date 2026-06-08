@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -12,15 +12,32 @@ import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { getIcon } from "@/lib/iconMapper";
 import { Program, ImpactStat } from "@/types/cms";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockPrograms } from "@/data/mock-data";
 
 interface HomeClientProps {
   stats: ImpactStat[];
-  programs: Program[];
   testimonials: any[];
 }
 
-export default function HomeClient({ stats, programs, testimonials }: HomeClientProps) {
+export default function HomeClient({ stats, testimonials }: HomeClientProps) {
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    seedIfEmpty("programs", mockPrograms.map(p => ({ ...p, desc: p.description, img: p.img_url, icon: p.icon_name, color: p.color_class, landingPage: p.landingPage || false })));
+    const all = getAll<Program>("programs").map(p => ({
+      ...p,
+      desc: (p as any).desc || (p as any).description || "",
+      img: (p as any).img || (p as any).img_url || "",
+      icon: (p as any).icon || (p as any).icon_name || "",
+      color: (p as any).color || (p as any).color_class || "",
+      landingPage: (p as any).landingPage || false,
+      status: (p as any).status || "draft",
+    }));
+    const landing = all.filter(p => p.landingPage && p.status === "published");
+    setPrograms(landing.length > 0 ? landing.slice(0, 3) : all.filter(p => p.status === "published").slice(0, 3));
+  }, []);
 
   return (
     <>

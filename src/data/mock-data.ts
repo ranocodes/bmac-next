@@ -8,7 +8,11 @@ export const mockPrograms = [
     icon_name: "MicVocal",
     color_class: "text-emerald-400",
     details: "12 weeks | Saturdays 10am-12pm | Open to ages 13-18",
-    variant: "featured"
+    variant: "featured",
+    status: "published",
+    landingPage: true,
+    skills: ["Commanding presence and stage authority", "Advanced rhetorical techniques", "Critical thinking and rapid response", "Emotional connection with any audience", "Professional storytelling frameworks", "Leadership communication strategies"],
+    faqs: [{ q: "Is this workshop for beginners?", a: "Absolutely. We have specialized modules designed specifically for those starting their journey." }, { q: "Are there any fees?", a: "Most BMAC programs are free for active members. Public competitions may have small registration fees." }]
   },
   {
     id: "literary-arts",
@@ -19,7 +23,11 @@ export const mockPrograms = [
     icon_name: "BookOpen",
     color_class: "text-blue-400",
     details: "10 weeks | Wednesdays 2pm-4pm | Open to ages 14-19",
-    variant: "default"
+    variant: "default",
+    status: "published",
+    landingPage: true,
+    skills: ["Narrative structure and plot development", "Voice and style experimentation", "Literary analysis and critique", "Portfolio-building techniques", "Performance poetry delivery", "Published author networking"],
+    faqs: [{ q: "Do I need prior writing experience?", a: "Not at all. Our program is designed for writers at every level, from complete beginners to experienced young authors." }, { q: "Will my work be published?", a: "Yes! Exceptional pieces are featured in our biannual literary magazine and showcased at our end-of-year reading event." }]
   },
   {
     id: "digital-literacy",
@@ -30,7 +38,11 @@ export const mockPrograms = [
     icon_name: "Monitor",
     color_class: "text-purple-400",
     details: "8 weeks | Tuesdays & Thursdays 3pm-5pm | Open to ages 12-17",
-    variant: "default"
+    variant: "default",
+    status: "published",
+    landingPage: true,
+    skills: ["Computer literacy and file management", "Productivity suite proficiency", "Online research and source evaluation", "Cybersecurity best practices", "Digital content creation", "Social media literacy and responsibility"],
+    faqs: [{ q: "Do I need my own computer?", a: "We provide laptops for all in-session work. A computer is not required, though access to one for practice is beneficial." }, { q: "What's the student-to-instructor ratio?", a: "Our classes maintain a maximum of 15 students per instructor to ensure personalized attention." }]
   },
   {
     id: "mentorship",
@@ -41,7 +53,11 @@ export const mockPrograms = [
     icon_name: "Users",
     color_class: "text-amber-400",
     details: "6 months | Monthly sessions + weekly check-ins | Ages 15-20",
-    variant: "featured"
+    variant: "featured",
+    status: "published",
+    landingPage: false,
+    skills: ["Goal setting and accountability", "Career path exploration", "Academic excellence strategies", "Professional network building", "Personal brand development", "Resilience and character formation"],
+    faqs: [{ q: "How are mentors matched with mentees?", a: "We carefully pair based on the mentee's expressed interests, aspirations, and personality profile. You can request a reassignment if needed." }, { q: "What's the time commitment?", a: "One monthly one-on-one session (45-60 minutes) plus weekly text/email check-ins. Total commitment is about 2-3 hours per month." }]
   },
   {
     id: "debate-argumentation",
@@ -52,7 +68,11 @@ export const mockPrograms = [
     icon_name: "Scale",
     color_class: "text-rose-400",
     details: "12 weeks | Fridays 2pm-5pm | Open to ages 14-18",
-    variant: "default"
+    variant: "default",
+    status: "published",
+    landingPage: false,
+    skills: ["Parliamentary debate format mastery", "Argument construction and rebuttal", "Research and evidence gathering", "Ethical persuasion techniques", "Impromptu speaking under pressure", "Collaborative case building"],
+    faqs: [{ q: "Is this program competitive?", a: "Yes — participants compete in intra-program debates and represent BMAC at regional and national tournaments." }, { q: "Do I need to be an extrovert?", a: "Not at all. Many of our best debaters started as quiet, analytical thinkers. Debate teaches you to channel your voice effectively." }]
   },
   {
     id: "creative-writing",
@@ -63,7 +83,11 @@ export const mockPrograms = [
     icon_name: "Feather",
     color_class: "text-cyan-400",
     details: "10 weeks | Saturdays 11am-1pm | Open to ages 13-17",
-    variant: "default"
+    variant: "default",
+    status: "published",
+    landingPage: false,
+    skills: ["Character development and dialogue writing", "Plot structure and pacing", "Setting and world-building", "Revision and self-editing", "Genre exploration (fiction, poetry, creative nonfiction)", "Peer feedback and workshop participation"],
+    faqs: [{ q: "What kind of writing will I do?", a: "You'll explore fiction, poetry, creative nonfiction, and scriptwriting. The program adapts to your interests." }, { q: "Is there a final project?", a: "Yes — you'll complete a polished piece for our annual student anthology, which receives an ISBN and is distributed locally." }]
   }
 ];
 

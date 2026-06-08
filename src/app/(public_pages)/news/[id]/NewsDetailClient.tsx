@@ -38,6 +38,7 @@ export default function NewsDetailClient({ id }: NewsDetailClientProps) {
   const [relatedStories, setRelatedStories] = useState<NewsArticle[]>([]);
   const [events, setEvents] = useState<EventPass[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
 
   useEffect(() => {
     seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
@@ -196,11 +197,20 @@ export default function NewsDetailClient({ id }: NewsDetailClientProps) {
                   <p className="text-accent-foreground/70 text-xs md:text-sm leading-relaxed mb-8">
                      Get the latest stories from Jos delivered every Friday.
                   </p>
-                  <form className="space-y-3 md:space-y-4" onSubmit={(e) => { e.preventDefault(); alert("Subscribed!"); }}>
+                   {newsletterSubmitted ? (
+                      <div className="text-center py-6">
+                        <div className="w-12 h-12 rounded-full bg-card/30 flex items-center justify-center mx-auto mb-3">
+                          <CheckCircle2 size={24} className="text-accent" />
+                        </div>
+                        <p className="font-bold text-accent mb-1">You're In!</p>
+                        <p className="text-xs text-accent-foreground/60">Check your inbox every Friday.</p>
+                      </div>
+                    ) : (
+                      <form className="space-y-3 md:space-y-4" onSubmit={(e) => { e.preventDefault(); setNewsletterSubmitted(true); }}>
                      <input type="email" placeholder="Your Email" className="w-full px-5 py-3.5 md:py-4 bg-card/30 border border-accent-foreground/10 rounded-xl text-sm placeholder:text-accent-foreground/40 focus:outline-none" required />
-                     <button className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold shadow-lg active:scale-[0.98] transition-transform">Join 500+ Readers</button>
-                  </form>
-               </div>
+                      <button className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold shadow-lg active:scale-[0.98] transition-transform">Join 500+ Readers</button>
+                   </form>)}
+                </div>
             </div>
           </aside>
         </div>

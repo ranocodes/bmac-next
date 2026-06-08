@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { getById, create, update, getAll, seedIfEmpty } from "@/data/store";
 import type { NewsArticle, Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
+import { useToast } from "@/components/ui/Toast";
 
 export default function NewsForm() {
   const router = useRouter();
@@ -27,7 +28,9 @@ export default function NewsForm() {
   const [featured, setFeatured] = useState(initialArticle?.featured || false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const defaultCategories = [
@@ -42,10 +45,16 @@ export default function NewsForm() {
 
   function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
+    setMissingFields([]);
 
-    const stripped = content.replace(/<[^>]*>/g, "").trim();
-    if (!title || !date || !category || !desc || !stripped) {
-      setError("Title, date, category, description, and content are required");
+    if (!title || !date || !category || !desc) {
+      const missing: string[] = [];
+      if (!title) missing.push("title");
+      if (!date) missing.push("date");
+      if (!category) missing.push("category");
+      if (!desc) missing.push("description");
+      setMissingFields(missing);
+      setError(`Complete required fields: ${missing.join(", ")}`);
       return;
     }
 
@@ -64,6 +73,7 @@ export default function NewsForm() {
         create<NewsArticle>("news", { id: `news-${Date.now()}`, ...payload });
       }
       setSaving(false);
+      toast(isEdit ? "Article updated" : "Article created", "success");
       router.push("/admin/news");
     }, 300);
   }
@@ -114,7 +124,9 @@ export default function NewsForm() {
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Article title"
-              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
+                missingFields.includes("title") ? "border-destructive/50" : "border-input"
+              }`}
             />
           </div>
 
@@ -127,7 +139,9 @@ export default function NewsForm() {
               onChange={e => setDesc(e.target.value)}
               rows={3}
               placeholder="Brief summary of the article"
-              className="w-full px-3 py-2.5 min-h-[60px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+              className={`w-full px-3 py-2.5 min-h-[60px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none ${
+                missingFields.includes("description") ? "border-destructive/50" : "border-input"
+              }`}
             />
           </div>
 
@@ -140,7 +154,9 @@ export default function NewsForm() {
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
+                  missingFields.includes("date") ? "border-destructive/50" : "border-input"
+                }`}
               />
             </div>
             <div>
@@ -150,7 +166,9 @@ export default function NewsForm() {
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
+                  missingFields.includes("category") ? "border-destructive/50" : "border-input"
+                }`}
               >
                 <option value="">Select category</option>
                 {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -215,8 +233,12 @@ export default function NewsForm() {
         </div>
 
         {error && (
-          <div className="px-4 py-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
-            {error}
+          <div className="flex items-start gap-3 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">Required fields missing</p>
+              <p className="text-destructive/80 mt-0.5">{error}</p>
+            </div>
           </div>
         )}
       </form>

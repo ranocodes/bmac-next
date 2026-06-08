@@ -10,6 +10,10 @@ export interface Program {
   color: string;
   details: string;
   variant?: "default" | "featured";
+  status?: "draft" | "published";
+  skills?: string[];
+  faqs?: { q: string; a: string }[];
+  landingPage?: boolean;
 }
 
 export interface EventPass {

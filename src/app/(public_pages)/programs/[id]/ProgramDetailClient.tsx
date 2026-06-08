@@ -1,22 +1,65 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Users, Clock, Send, MapPin } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Users, Clock, Send, MapPin, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockPrograms } from "@/data/mock-data";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
 
 interface ProgramDetailClientProps {
-  program: Program;
-  otherPathways: Program[];
+  id: string;
 }
 
-export default function ProgramDetailClient({ program, otherPathways }: ProgramDetailClientProps) {
+export default function ProgramDetailClient({ id }: ProgramDetailClientProps) {
+  const [program, setProgram] = useState<Program | null>(null);
+  const [otherPathways, setOtherPathways] = useState<Program[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    seedIfEmpty("programs", mockPrograms.map(p => ({ ...p, desc: p.description, img: p.img_url, icon: p.icon_name, color: p.color_class, landingPage: p.landingPage || false })));
+    const all = getAll<Program>("programs").map(p => ({
+      ...p,
+      desc: (p as any).desc || (p as any).description || "",
+      img: (p as any).img || (p as any).img_url || "",
+      icon: (p as any).icon || (p as any).icon_name || "",
+      color: (p as any).color || (p as any).color_class || "",
+      skills: (p as any).skills || mockPrograms.find(m => m.id === p.id)?.skills || [],
+      faqs: (p as any).faqs || mockPrograms.find(m => m.id === p.id)?.faqs || [],
+      landingPage: (p as any).landingPage || false,
+      status: (p as any).status || "draft",
+    }));
+    setProgram(all.find(p => p.id === id && p.status === "published") || null);
+    setOtherPathways(all.filter(p => p.id !== id && p.status === "published").slice(0, 3));
+    setLoading(false);
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </main>
+    );
+  }
+
+  if (!program) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Program Not Found</h2>
+          <Link href="/programs" className="text-primary font-bold">Back to Curriculum</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main suppressHydrationWarning className="bg-background">
       {/* Hero Section */}
@@ -81,14 +124,14 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
             <div className="mb-12 md:mb-16">
                <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-8 text-center md:text-left">What You'll Master</h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                  {[
+                  {(program.skills?.length ? program.skills : [
                     "Commanding presence and stage authority",
                     "Advanced rhetorical techniques",
                     "Critical thinking and rapid response",
                     "Emotional connection with any audience",
                     "Professional storytelling frameworks",
                     "Leadership communication strategies"
-                  ].map((skill, i) => (
+                  ]).map((skill, i) => (
                     <div key={i} className="flex items-center gap-3 p-4 md:p-5 rounded-xl bg-card border border-border shadow-sm transition-transform hover:-translate-y-1">
                        <CheckCircle2 className="text-primary flex-shrink-0" size={18} />
                        <span className="text-[11px] md:text-sm font-bold text-secondary">{skill}</span>
@@ -102,10 +145,10 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
             <div className="bg-muted/50 rounded-[2rem] md:rounded-bento p-6 md:p-12 border border-border text-center md:text-left">
                <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-4">Common Questions</h3>
                <div className="space-y-3 md:space-y-4 text-left">
-                  {[
+               {(program.faqs?.length ? program.faqs : [
                     { q: "Is this workshop for beginners?", a: "Absolutely. We have specialized modules designed specifically for those starting their journey." },
                     { q: "Are there any fees?", a: "Most BMAC programs are free for active members. Public competitions may have small registration fees." }
-                  ].map((faq, i) => (
+                  ]).map((faq, i) => (
                     <div key={i} className="bg-card p-5 md:p-6 rounded-xl shadow-sm border border-border">
                        <p className="font-bold text-secondary text-sm md:text-base mb-2">{faq.q}</p>
                        <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
@@ -124,7 +167,7 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
                   <h3 className="font-display text-xl md:text-2xl font-bold mb-8 relative z-10 text-center md:text-left">Workshop <br className="hidden md:block"/> Logistics</h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 relative z-10">
-                    {program.details.split('|').map((detail, i) => (
+                    {program.details.split('|').filter(s => s.trim()).map((detail, i) => (
                       <div key={i} className="flex items-center gap-4 md:gap-5 justify-start">
                          <div className="w-10 h-10 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent flex-shrink-0">
                             <Clock size={18} />
@@ -143,7 +186,16 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
                      <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
                      <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">Join the next cohort of ambassadors gathering in Jos.</p>
                      
-                     <form className="space-y-5 md:space-y-6" onSubmit={(e) => { e.preventDefault(); alert("Application Sent!"); }}>
+                   {submitted ? (
+                      <div className="text-center py-8">
+                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle size={28} className="text-emerald-600" />
+                        </div>
+                        <p className="font-display text-lg font-bold text-secondary mb-1">Application Sent!</p>
+                        <p className="text-xs text-muted-foreground">We'll reach out within 48 hours.</p>
+                      </div>
+                    ) : (
+                      <form className="space-y-5 md:space-y-6" onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}>
                         <div className="space-y-2 text-left group">
                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
                            <input type="text" placeholder="Ambassador Name" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
@@ -157,9 +209,9 @@ export default function ProgramDetailClient({ program, otherPathways }: ProgramD
                               Apply to Program <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
                            </span>
                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full" />
-                        </button>
-                     </form>
-                   </div>
+                         </button>
+                      </form>)}
+                    </div>
                 </div>
             </div>
           </aside>
