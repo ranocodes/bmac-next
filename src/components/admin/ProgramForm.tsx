@@ -8,6 +8,7 @@ import { getById, create, update, getAll } from "@/data/store";
 import { mockPrograms } from "@/data/mock-data";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import IconPicker from "@/components/ui/IconPicker";
+import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
 
 const COLOR_OPTIONS = [
@@ -233,24 +234,8 @@ export default function ProgramForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Image URL</label>
-            <input
-              type="text"
-              value={img}
-              onChange={(e) => setImg(e.target.value)}
-              placeholder="/images/program.jpg"
-              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
-            />
-            {img && (
-              <div className="mt-2 relative w-24 h-16 rounded-lg overflow-hidden border border-border/50 bg-muted">
-                <img
-                  src={img}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-              </div>
-            )}
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Image</label>
+            <ImagePicker value={img} onChange={setImg} />
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { getById, create, update } from "@/data/store";
+import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
 
 export default function TestimonialForm() {
@@ -155,24 +156,8 @@ export default function TestimonialForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Photo URL</label>
-            <input
-              type="text"
-              value={src}
-              onChange={e => setSrc(e.target.value)}
-              placeholder="/images/photo.jpg"
-              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
-            />
-            {src && (
-              <div className="mt-2 relative w-16 h-16 rounded-full overflow-hidden border border-border/50 bg-muted">
-                <img
-                  src={src}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-              </div>
-            )}
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Photo</label>
+            <ImagePicker value={src} onChange={setSrc} previewShape="round" />
           </div>
         </div>
 
