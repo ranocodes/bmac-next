@@ -39,8 +39,8 @@ export default function NewsClient() {
   useEffect(() => {
     seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
     seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-    setNews(getAll<NewsArticle>("news").map(a => ({ ...a, img: (a as any).img_url || a.img || "/images/placeholder.jpg", desc: a.desc || (a as any).description || "" })));
-    setEvents(getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "" })));
+    setNews(getAll<NewsArticle>("news").reverse().map(a => ({ ...a, img: (a as any).img_url || a.img || "/images/placeholder.jpg", desc: a.desc || (a as any).description || "" })));
+    setEvents(getAll<EventPass>("events").reverse().map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] })));
   }, []);
 
   return (

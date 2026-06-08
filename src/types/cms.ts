@@ -23,6 +23,8 @@ export interface EventPass {
   longDesc: string;
   isPaid?: boolean;
   price?: number;
+  features?: string[];
+  status?: "draft" | "published";
 }
 
 export interface NewsArticle {
@@ -34,6 +36,7 @@ export interface NewsArticle {
   img: string;
   category: string;
   featured?: boolean;
+  status?: "draft" | "published";
 }
 
 export interface TeamMember {

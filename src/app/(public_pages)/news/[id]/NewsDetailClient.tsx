@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { getAll, seedIfEmpty } from "@/data/store";
 import { mockNews, mockEvents } from "@/data/mock-data";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
 function formatEventDate(raw: string | undefined): { month: string; day: string } {
@@ -49,11 +51,12 @@ export default function NewsDetailClient({ id }: NewsDetailClientProps) {
       setRelatedStories(
         allNews
           .filter(a => a.id !== id && a.category === found.category)
+          .reverse()
           .slice(0, 3)
       );
     }
 
-    setEvents(getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "" })));
+    setEvents(getAll<EventPass>("events").reverse().map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] })));
     setLoading(false);
   }, [id]);
 
@@ -132,10 +135,9 @@ export default function NewsDetailClient({ id }: NewsDetailClientProps) {
           
           {/* Article Text */}
           <article className="lg:col-span-8">
-            <div
-              className="prose prose-slate lg:prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
+            <div className="prose prose-slate lg:prose-lg max-w-none">
+              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{article.content}</ReactMarkdown>
+            </div>
 
             {/* Engagement Footer */}
             <div className="mt-12 md:mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">

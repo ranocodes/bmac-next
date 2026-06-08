@@ -1,20 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock, Calendar, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
-import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockEvents } from "@/data/mock-data";
 import type { EventPass } from "@/types/cms";
 
-interface EventsClientProps {
-  events: EventPass[];
+function formatEventDate(raw: string | undefined): { month: string; day: string } {
+  if (!raw) return { month: "", day: "" };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const d = new Date(raw + "T00:00:00");
+    if (isNaN(d.getTime())) return { month: "", day: "" };
+    return {
+      month: d.toLocaleDateString("en-US", { month: "short" }),
+      day: String(d.getDate()),
+    };
+  }
+  const parts = raw.split(" ");
+  return {
+    month: parts[0]?.substring(0, 3) || "",
+    day: (parts[1] || "").replace(",", ""),
+  };
 }
 
-export default function EventsClient({ events }: EventsClientProps) {
+export default function EventsClient() {
+  const [events, setEvents] = useState<EventPass[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
+    setEvents(getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] })).reverse());
+  }, []);
 
   return (
     <>
@@ -41,7 +61,9 @@ export default function EventsClient({ events }: EventsClientProps) {
 
       <section className="py-12 md:py-20 px-4 md:px-6 relative">
         <div className="max-w-7xl mx-auto space-y-16">
-          {events.map((event, i) => (
+          {events.map((event, i) => {
+            const fd = formatEventDate(event.date);
+            return (
             <FadeIn key={event.id} delay={i * 0.1}>
               <Link href={`/news/events/${event.id}`} className="group relative block">
                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -51,12 +73,16 @@ export default function EventsClient({ events }: EventsClientProps) {
                           <span className="text-6xl md:text-8xl font-display font-extrabold text-secondary/5 tracking-tighter absolute -top-8 -left-3 lg:-top-12 lg:-left-6 pointer-events-none group-hover:text-primary/10 transition-colors duration-700">
                              0{i + 1}
                           </span>
+                          {fd.day && (
                           <span className="text-4xl md:text-6xl font-display font-extrabold text-secondary tracking-tighter leading-none relative z-10">
-                             {event.date.split(' ')[1].replace(',','')}
+                             {fd.day}
                           </span>
+                          )}
+                          {fd.month && (
                           <span className="text-lg md:text-xl font-bold text-accent uppercase tracking-[0.2em] relative z-10">
-                             {event.date.split(' ')[0]}
+                             {fd.month}
                           </span>
+                          )}
                        </div>
                     </div>
 
@@ -117,7 +143,8 @@ export default function EventsClient({ events }: EventsClientProps) {
                  </div>
               </Link>
             </FadeIn>
-          ))}
+          );
+          })}
         </div>
       </section>
 

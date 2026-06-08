@@ -56,8 +56,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {sidebarOpen && <div className="fixed inset-0 bg-secondary/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border/50 flex flex-col transition-transform duration-300 w-[240px] ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="h-16 flex items-center gap-3 px-5 border-b border-border/50">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0"><span className="text-primary-foreground font-display font-bold text-sm">B</span></div>
-          <span className="font-display font-bold text-base text-secondary tracking-tight">BMAC<span className="text-primary">.</span></span>
+          <div className="w-0.5 h-6 rounded-full bg-primary/40" />
+          <span className="font-display font-extrabold text-lg text-secondary tracking-tight leading-none">BMAC<span className="text-primary">.</span></span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/50 leading-none mt-0.5">Admin</span>
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {navItems.map(item => {

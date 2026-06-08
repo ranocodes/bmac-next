@@ -78,7 +78,8 @@ export const mockEvents = [
     longDesc: "The Annual Speech Championship is the highlight of BMAC's public speaking calendar. Finalists from our intensive training program deliver prepared and impromptu speeches before a distinguished panel of judges. Categories include persuasive speaking, storytelling, and poetry recitation. The event is open to families, educators, and community leaders.",
     category: "Competition",
     is_paid: false,
-    price: 0
+    price: 0,
+    features: ["Persuasive & impromptu speaking", "Live adjudication by expert panel", "Prize ceremony & recognition", "Audience Q&A session"]
   },
   {
     id: "event-2",
@@ -90,7 +91,8 @@ export const mockEvents = [
     longDesc: "This hands-on bootcamp immerses participants in practical digital skills. Day one covers web fundamentals and design thinking. Day two focuses on content creation including graphics, video, and social media. Day three addresses digital citizenship, online safety, and a capstone project where students build their own digital portfolios.",
     category: "Workshop",
     is_paid: true,
-    price: 5000
+    price: 5000,
+    features: ["Hands-on lab sessions", "Expert-led facilitation", "Certificate of completion", "Portfolio building workshop"]
   },
   {
     id: "event-3",
@@ -102,7 +104,8 @@ export const mockEvents = [
     longDesc: "Our quarterly Open Mic Night provides a platform for young writers to share their work with a live audience. The evening features poetry readings, spoken word performances, short story readings, and musical interludes. Guest artists from the Nigerian literary scene perform and offer informal mentorship. Light refreshments provided.",
     category: "Culture",
     is_paid: false,
-    price: 0
+    price: 0,
+    features: ["Poetry slam & spoken word", "Story circle performances", "Guest artist feature", "Open floor sessions"]
   },
   {
     id: "event-4",
@@ -114,7 +117,8 @@ export const mockEvents = [
     longDesc: "Career Day brings together professionals from law, medicine, engineering, technology, creative arts, and entrepreneurship. Each session includes a keynote presentation, breakout discussions, and Q&A. Participants rotate through career stations to explore different fields. The event concludes with a networking session where students can make direct connections with mentors.",
     category: "Mentorship",
     is_paid: false,
-    price: 0
+    price: 0,
+    features: ["Keynote sessions by industry leaders", "Breakout career tracks", "Speed networking rounds", "Mentorship matching board"]
   },
   {
     id: "event-5",
@@ -126,7 +130,8 @@ export const mockEvents = [
     longDesc: "This community outreach event embodies BMAC's commitment to civic responsibility. Volunteers participate in neighborhood clean-up, tree planting, and a community awareness campaign on education. The day ends with a community football match and shared meal. All participants receive community service certificates.",
     category: "Community",
     is_paid: false,
-    price: 0
+    price: 0,
+    features: ["Team volunteering & clean-up", "Tree planting initiative", "Community awareness campaign", "Football match & shared meal"]
   },
   {
     id: "event-6",
@@ -138,7 +143,8 @@ export const mockEvents = [
     longDesc: "The Partnership Gala brings together donors, partners, alumni, and friends of BMAC. The evening includes impact presentations, beneficiary testimonials, cultural performances, and a fundraising auction. Funds raised directly support program operations, scholarship recipients, and expansion to new communities.",
     category: "Partnership",
     is_paid: true,
-    price: 15000
+    price: 15000,
+    features: ["Impact showcase presentations", "Beneficiary testimonial sessions", "Cultural & artistic performances", "Fundraising auction"]
   }
 ];
 

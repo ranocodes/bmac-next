@@ -36,7 +36,7 @@ export default function DashboardClient() {
     ].map((name, i) => ({ id: `cat-${i}`, name })));
 
     const news = getAll<NewsArticle>("news");
-    const events = getAll<EventPass>("events");
+    const events = getAll<any>("events").map(e => ({ ...e, date: e.date || e.event_date || "", desc: e.desc || e.description || "" }));
     setCounts({
       news: news.length,
       events: events.length,
@@ -45,7 +45,7 @@ export default function DashboardClient() {
       team: getAll<TeamMember>("team").length,
       testimonials: getAll<Testimonial>("testimonials").length,
     });
-    setRecentNews(news.slice(0, 4));
+    setRecentNews([...news].reverse().slice(0, 4));
     setRecentEvents(events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4));
   }, []);
 
@@ -124,7 +124,7 @@ export default function DashboardClient() {
           ) : (
             <div className="space-y-1">
               {recentNews.map(a => (
-                <div key={a.id} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
+                <Link key={a.id} href={`/admin/news/${a.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
                   <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
                     <Newspaper size={15} className="text-muted-foreground group-hover:text-blue-500 transition-colors" />
                   </div>
@@ -133,7 +133,7 @@ export default function DashboardClient() {
                     <p className="text-xs text-muted-foreground mt-0.5">{a.date} &middot; {a.category}</p>
                   </div>
                   <ArrowRight size={14} className="text-muted-foreground/0 group-hover:text-muted-foreground transition-all" />
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -160,7 +160,7 @@ export default function DashboardClient() {
           ) : (
             <div className="space-y-1">
               {recentEvents.map(e => (
-                <div key={e.id} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
+                <Link key={e.id} href={`/admin/events/${e.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
                   <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-amber-50 transition-colors">
                     <Calendar size={15} className="text-muted-foreground group-hover:text-amber-500 transition-colors" />
                   </div>
@@ -169,7 +169,7 @@ export default function DashboardClient() {
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{e.date} &middot; {e.venue}</p>
                   </div>
                   <ArrowRight size={14} className="text-muted-foreground/0 group-hover:text-muted-foreground transition-all flex-shrink-0" />
-                </div>
+                </Link>
               ))}
             </div>
           )}

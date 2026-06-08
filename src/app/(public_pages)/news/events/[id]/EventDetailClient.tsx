@@ -1,27 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockEvents } from "@/data/mock-data";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import type { EventPass } from "@/types/cms";
 
-interface EventDetailClientProps {
-  event: EventPass;
+function formatDisplayDate(raw: string | undefined): string {
+  if (!raw) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const d = new Date(raw + "T00:00:00");
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+  return raw;
 }
 
-export default function EventDetailClient({ event }: EventDetailClientProps) {
+interface EventDetailClientProps {
+  id: string;
+}
+
+export default function EventDetailClient({ id }: EventDetailClientProps) {
+  const [event, setEvent] = useState<EventPass | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isReserved, setIsReserved] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
 
+  useEffect(() => {
+    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
+    const all = getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] }));
+    const found = all.find(e => e.id === id) || null;
+    setEvent(found);
+    setLoading(false);
+  }, [id]);
+
   const handlePaystackPayment = () => {
+    if (!event) return;
     // @ts-ignore
     const handler = window.PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
       email: formData.email,
-      amount: (event.price || 0) * 100, // Paystack expects amount in Kobo
+      amount: (event.price || 0) * 100,
       currency: "NGN",
       ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
       metadata: {
@@ -51,17 +76,36 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!event) return;
     setIsPending(true);
 
     if (event.isPaid) {
       handlePaystackPayment();
     } else {
-      // Simulate registration for free events
       await new Promise(resolve => setTimeout(resolve, 1500));
       setIsPending(false);
       setIsReserved(true);
     }
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </main>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Event Not Found</h2>
+          <Link href="/events" className="text-primary font-bold">Back to Events</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main suppressHydrationWarning className="bg-background">
@@ -87,7 +131,7 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                   {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}
                 </span>
                 <div className="flex items-center gap-2 text-card/50 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                  <Calendar size={12} className="text-accent" /> {event.date}
+                  <Calendar size={12} className="text-accent" /> {formatDisplayDate(event.date)}
                 </div>
               </div>
 
@@ -127,25 +171,22 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
           <div className="lg:col-span-7">
             <div className="prose prose-slate lg:prose-xl max-w-none mb-20 text-muted-foreground">
               <h3 className="font-display text-4xl font-extrabold text-secondary mb-10 tracking-tight">The Vision</h3>
-              <p className="text-lg md:text-xl leading-[1.8] mb-12 font-medium">
-                {event.longDesc}
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
-                 {[
-                    "Networking with industry mentors",
-                    "Live workshop demonstrations",
-                    "Performance showcases",
-                    "Interactive Q&A blocks"
-                 ].map((feat, i) => (
-                    <div key={i} className="flex items-center gap-4 p-6 rounded-3xl bg-muted/30 border border-border/50 group hover:bg-card transition-colors duration-500">
-                       <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <CheckCircle2 size={20} />
-                       </div>
-                       <span className="font-bold text-secondary text-sm">{feat}</span>
-                    </div>
-                 ))}
+              <div className="text-lg md:text-xl leading-[1.8] mb-12 font-medium">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{event.longDesc}</ReactMarkdown>
               </div>
+
+              {(event.features && event.features.length > 0) && (
+                <div className="flex flex-wrap gap-2.5 mt-12">
+                  {event.features.map((feat, i) => (
+                    <div key={i} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border/40 shadow-xs hover:bg-card hover:border-border/70 hover:shadow-sm transition-all duration-300">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={12} />
+                      </div>
+                      <span className="font-semibold text-secondary text-xs leading-tight">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
