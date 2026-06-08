@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Users } from "lucide-react";
@@ -8,15 +8,24 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { TeamMember, ImpactStat } from "@/types/cms";
+import { ImpactStat } from "@/types/cms";
 import { getIcon } from "@/lib/iconMapper";
+import { getAll, seedIfEmpty } from "@/data/store";
+import { mockTeam } from "@/data/mock-data";
 
 interface AboutClientProps {
-  team: TeamMember[];
   impact: ImpactStat[];
 }
 
-export default function AboutClient({ team, impact }: AboutClientProps) {
+export default function AboutClient({ impact }: AboutClientProps) {
+  const [team, setTeam] = useState<any[]>([]);
+
+  useEffect(() => {
+    seedIfEmpty("team", mockTeam);
+    const all = getAll<any>("team").reverse();
+    const published = all.filter((m: any) => m.status === "published");
+    setTeam(published.length > 0 ? published : all);
+  }, []);
   return (
     <main suppressHydrationWarning className="bg-background">
       <section className="relative min-h-[60dvh] flex items-center justify-center overflow-hidden pt-20">

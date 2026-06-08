@@ -48,6 +48,7 @@ export interface TeamMember {
   name: string;
   role: string;
   img: string;
+  status?: "draft" | "published";
 }
 
 export interface ImpactStat {

@@ -275,25 +275,29 @@ export const mockTeam = [
     id: "team-1",
     name: "Sarah Adeyemi",
     role: "Executive Director",
-    img: "/images/maryam.jpg"
+    img: "/images/maryam.jpg",
+    status: "published",
   },
   {
     id: "team-2",
     name: "Emmanuel Bature",
     role: "Programs Coordinator",
-    img: "/images/maryam1.jpg"
+    img: "/images/maryam1.jpg",
+    status: "published",
   },
   {
     id: "team-3",
     name: "Grace Okonkwo",
     role: "Digital Literacy Lead",
-    img: "/images/maryam2.jpg"
+    img: "/images/maryam2.jpg",
+    status: "published",
   },
   {
     id: "team-4",
     name: "Daniel Pwajok",
     role: "Mentorship Director",
-    img: "/images/maryam3.jpg"
+    img: "/images/maryam3.jpg",
+    status: "published",
   }
 ];
 
