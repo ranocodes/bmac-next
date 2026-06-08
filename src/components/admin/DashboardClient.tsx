@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Newspaper, Calendar, BookOpen, Image, Users, Star, TrendingUp, ArrowRight, Plus, Sparkle } from "lucide-react";
-import { getAll, seedIfEmpty, create } from "@/data/store";
+import { getAll, seedIfEmpty, create, setItem, getItem } from "@/data/store";
 import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials, mockStats } from "@/data/mock-data";
 import type { NewsArticle, EventPass, Program, GalleryItem, TeamMember, Testimonial, Category } from "@/types/cms";
 
@@ -30,6 +30,27 @@ export default function DashboardClient() {
     seedIfEmpty("team", mockTeam);
     seedIfEmpty("testimonials", mockTestimonials);
     seedIfEmpty("stats", mockStats);
+    if (!getItem<any>("site_settings")) {
+      setItem("site_settings", {
+        id: "settings-1",
+        logo_text: "BMAC",
+        navigation: [
+          { name: "Home", href: "/" },
+          { name: "Programs", href: "/programs" },
+          { name: "Events", href: "/events" },
+          { name: "News", href: "/news" },
+          { name: "Gallery", href: "/gallery" },
+          { name: "About", href: "/about" },
+          { name: "Contact", href: "/contact" }
+        ],
+        social_links: [
+          { name: "Instagram", href: "https://instagram.com/bmacjos", icon: "Instagram" },
+          { name: "Twitter", href: "https://twitter.com/bmacjos", icon: "Twitter" },
+          { name: "YouTube", href: "https://youtube.com/@bmac", icon: "Youtube" }
+        ],
+        copyright: "Brilliant Minds Ambassadors Club. All rights reserved.",
+      });
+    }
     seedIfEmpty("categories", [
       "Achievements", "Programs", "Alumni", "Partnerships",
       "Events", "Announcements", "Workshops", "Competition",

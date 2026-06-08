@@ -25,6 +25,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     const session = getItem<{ email: string }>("session");
@@ -32,6 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       window.location.href = "/admin/login";
     } else if (session) {
       setAuthed(true);
+      setEmail(session.email);
     }
     setReady(true);
   }, [pathname]);
@@ -83,8 +86,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="h-16 bg-card border-b border-border/50 flex items-center gap-4 px-4 lg:px-6 sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted"><Menu size={20} /></button>
           <div className="flex-1" />
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><span className="text-xs font-bold text-primary">A</span></div>
-          <span className="text-sm font-medium text-secondary hidden sm:block">Admin</span>
+          <div className="relative">
+            <button onClick={() => setProfileOpen(p => !p)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <span className="text-xs font-bold text-primary">{email.charAt(0).toUpperCase() || "A"}</span>
+            </button>
+            {profileOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border/50 rounded-xl shadow-lg z-50 py-2 overflow-hidden">
+                  <div className="px-4 py-2 border-b border-border/30">
+                    <p className="text-xs text-muted-foreground">Signed in as</p>
+                    <p className="text-sm font-medium text-secondary truncate">{email}</p>
+                  </div>
+                  <button onClick={() => { setProfileOpen(false); logout(); }} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                    <LogOut size={15} /> Logout
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          <span className="text-sm font-medium text-secondary hidden sm:block">{email.split("@")[0] || "Admin"}</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
       </div>
