@@ -241,28 +241,32 @@ export const mockTestimonials = [
     quote: "BMAC transformed me from a shy girl who couldn't speak in class to a confident young woman who represented Plateau State at the National Debate Championship. This program is life-changing.",
     name: "Maryam Abdullah",
     designation: "Debate Champion, Class of 2025",
-    src: "/images/maryam1.jpg"
+    src: "/images/maryam1.jpg",
+    status: "published",
   },
   {
     id: "test-2",
     quote: "The mentorship program connected me with a lawyer who guided me through my university applications. I'm now studying law at the University of Jos. BMAC made my dream possible.",
     name: "Joshua Tanko",
     designation: "Law Student, University of Jos",
-    src: "/images/jagabs.jpg"
+    src: "/images/jagabs.jpg",
+    status: "published",
   },
   {
     id: "test-3",
     quote: "Before BMAC, I had never touched a computer. After the Digital Literacy program, I built my first website. Now I'm teaching coding to younger students in my community.",
     name: "Aisha Mohammed",
     designation: "Digital Literacy Graduate, 2025",
-    src: "/images/peace.jpg"
+    src: "/images/peace.jpg",
+    status: "published",
   },
   {
     id: "test-4",
     quote: "The literary arts program helped me discover my voice as a poet. I've been published in two anthologies and I'm working on my first collection. BMAC gave me the courage to write.",
     name: "Chinedu Okafor",
     designation: "Published Poet, Class of 2024",
-    src: "/images/sun.jpg"
+    src: "/images/sun.jpg",
+    status: "published",
   }
 ];
 

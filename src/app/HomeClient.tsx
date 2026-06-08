@@ -13,15 +13,15 @@ import NewsletterModal from "@/components/ui/NewsletterModal";
 import { getIcon } from "@/lib/iconMapper";
 import { Program, ImpactStat } from "@/types/cms";
 import { getAll, seedIfEmpty } from "@/data/store";
-import { mockPrograms } from "@/data/mock-data";
+import { mockPrograms, mockTestimonials } from "@/data/mock-data";
 
 interface HomeClientProps {
   stats: ImpactStat[];
-  testimonials: any[];
 }
 
-export default function HomeClient({ stats, testimonials }: HomeClientProps) {
+export default function HomeClient({ stats }: HomeClientProps) {
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -37,6 +37,11 @@ export default function HomeClient({ stats, testimonials }: HomeClientProps) {
     }));
     const landing = all.filter(p => p.landingPage && p.status === "published");
     setPrograms(landing.length > 0 ? landing.slice(0, 3) : all.filter(p => p.status === "published").slice(0, 3));
+
+    seedIfEmpty("testimonials", mockTestimonials);
+    const allTestimonials = getAll<any>("testimonials").reverse();
+    const published = allTestimonials.filter(t => t.status === "published");
+    setTestimonials(published.length > 0 ? published : allTestimonials);
   }, []);
 
   return (
