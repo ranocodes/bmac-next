@@ -1,12 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import {
-  Carousel,
-  CarouselApi,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+import { Building2 } from "lucide-react";
 
 interface PartnerLogo {
   id: string;
@@ -16,28 +9,8 @@ interface PartnerLogo {
 }
 
 function Case({ partners, hideHeading }: { partners?: PartnerLogo[]; hideHeading?: boolean }) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      if (api.selectedScrollSnap() + 1 === api.scrollSnapList().length) {
-        setCurrent(0);
-        api.scrollTo(0);
-      } else {
-        api.scrollNext();
-        setCurrent(current + 1);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [api, current]);
-
   const items = partners || Array.from({ length: 15 });
+  const doubled = [...items, ...items];
 
   return (
     <div className={`w-full ${hideHeading ? "" : "py-20 lg:py-40"}`}>
@@ -48,35 +21,45 @@ function Case({ partners, hideHeading }: { partners?: PartnerLogo[]; hideHeading
               Trusted by thousands of businesses worldwide
             </h2>
           )}
-          <Carousel setApi={setApi} className="w-full">
-            <CarouselContent>
-              {items.map((item: PartnerLogo | number, index: number) => {
+          <div className="overflow-hidden w-full">
+            <div className="bmac-scroll-track flex">
+              {doubled.map((item: PartnerLogo | number, index: number) => {
                 if (typeof item === "number") {
                   return (
-                    <CarouselItem className="basis-1/2 md:basis-1/4 lg:basis-1/6" key={index}>
-                      <div className="flex rounded-md aspect-square bg-muted items-center justify-center p-6">
-                        <span className="text-sm">Logo {index + 1}</span>
+                    <div key={index} className="min-w-0 shrink-0 grow-0 basis-1/4 sm:basis-1/5 md:basis-1/8 lg:basis-1/10 pl-4">
+                      <div className="flex rounded-md bg-muted items-center justify-center h-20 sm:h-24 md:h-28 px-3 md:px-6">
+                        <span className="text-xs sm:text-sm">Logo {index + 1}</span>
                       </div>
-                    </CarouselItem>
+                    </div>
                   );
                 }
                 const partner = item as PartnerLogo;
                 return (
-                  <CarouselItem className="basis-1/2 md:basis-1/4 lg:basis-1/6" key={partner.id}>
-                    <div className="flex rounded-md aspect-square bg-muted items-center justify-center p-6 overflow-hidden">
+                  <div key={`${partner.id}-${index}`} className="min-w-0 shrink-0 grow-0 basis-1/4 sm:basis-1/5 md:basis-1/8 lg:basis-1/10 pl-4">
+                    <div className="flex rounded-md bg-muted items-center justify-center h-20 sm:h-24 md:h-28 px-3 md:px-6 overflow-hidden">
                       {partner.logo && !partner.logo.includes("placeholder") ? (
                         <img src={partner.logo} alt={partner.name} className="w-full h-full object-contain" />
                       ) : (
-                        <span className="text-sm font-medium text-center leading-tight">{partner.name}</span>
+                        <Building2 className="w-8 h-8 text-muted-foreground/40" />
                       )}
                     </div>
-                  </CarouselItem>
+                  </div>
                 );
               })}
-            </CarouselContent>
-          </Carousel>
+            </div>
+          </div>
         </div>
       </div>
+      <style>{`
+        .bmac-scroll-track {
+          animation: bmac-scroll 30s linear infinite;
+          width: fit-content;
+        }
+        @keyframes bmac-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </div>
   );
 };
