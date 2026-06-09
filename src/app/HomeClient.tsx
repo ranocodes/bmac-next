@@ -97,8 +97,8 @@ export default function HomeClient() {
                <div className="absolute bottom-4 lg:bottom-10 left-4 lg:left-10 right-4 lg:right-10 bg-card/90 backdrop-blur-xl p-4 md:p-6 lg:p-8 rounded-card lg:rounded-bento border border-card/20 grid grid-cols-3 gap-1 md:gap-2">
                   {stats.slice(0, 3).map((stat, i) => (
                     <div key={i} className="text-center">
-                       <p className="text-base md:text-lg lg:text-2xl font-display font-extrabold text-secondary truncate">{stat.num}</p>
-                       <p className="text-[6px] md:text-[8px] lg:text-[10px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">{stat.label}</p>
+                        <p className="text-base md:text-lg lg:text-2xl font-display font-extrabold text-secondary">{stat.num}</p>
+                       <p className="text-[9px] md:text-[11px] lg:text-[12px] font-bold uppercase tracking-widest text-muted-foreground leading-tight mt-0.5">{stat.label}</p>
                     </div>
                   ))}
                </div>

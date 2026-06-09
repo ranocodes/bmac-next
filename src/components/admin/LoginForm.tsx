@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
-import { setItem } from "@/data/store";
+import { setItem, getItem } from "@/data/store";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -11,11 +11,24 @@ export default function LoginForm() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasCreds, setHasCreds] = useState(false);
+
+  useEffect(() => {
+    const creds = getItem<{ email: string; password: string }>("admin_credentials");
+    setHasCreds(!!creds);
+  }, []);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
     if (!email || !password || !firstName) { setError("All fields required"); return; }
+
+    const creds = getItem<{ email: string; password: string }>("admin_credentials");
+    if (creds && (email !== creds.email || password !== creds.password)) {
+      setError("Invalid email or password");
+      return;
+    }
+
     setLoading(true);
     setTimeout(() => {
       setItem("session", { email, firstName, loggedInAt: Date.now() });
@@ -29,7 +42,7 @@ export default function LoginForm() {
         <div className="text-center mb-10">
           <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">BMAC<span className="text-primary">.</span></h1>
           <p className="text-sm text-muted-foreground mt-2">Admin dashboard</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Demo: any email + password works</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">{hasCreds ? "Use your saved admin credentials" : "First login? Any email + password works"}</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">

@@ -21,8 +21,11 @@ export default function DashboardClient() {
   const [counts, setCounts] = useState({ news: 0, events: 0, programs: 0, gallery: 0, team: 0, testimonials: 0 });
   const [recentNews, setRecentNews] = useState<NewsArticle[]>([]);
   const [recentEvents, setRecentEvents] = useState<EventPass[]>([]);
+  const [firstName, setFirstName] = useState("Admin");
 
   useEffect(() => {
+    const session = getItem<{ firstName?: string }>("session");
+    if (session?.firstName) setFirstName(session.firstName);
     seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
     seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
     seedIfEmpty("programs", mockPrograms);
@@ -85,7 +88,7 @@ export default function DashboardClient() {
       {/* Header */}
       <div>
         <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary">
-          {greeting}, Admin
+          {greeting}, {firstName}
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5">Here is what is happening across your site.</p>
       </div>

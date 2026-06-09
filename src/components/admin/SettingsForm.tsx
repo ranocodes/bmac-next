@@ -28,7 +28,10 @@ export default function SettingsForm() {
   const [logoText, setLogoText] = useState("");
   const [socialLinks, setSocialLinks] = useState<{ name: string; href: string; icon: string }[]>([]);
   const [copyright, setCopyright] = useState("");
+  const [credEmail, setCredEmail] = useState("");
+  const [credPassword, setCredPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savingCred, setSavingCred] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -37,6 +40,15 @@ export default function SettingsForm() {
     setLogoText(s.logo_text || "BMAC");
     setSocialLinks(s.social_links || DEFAULT.social_links);
     setCopyright(s.copyright || DEFAULT.copyright);
+
+    const creds = getItem<{ email: string; password: string }>("admin_credentials");
+    if (creds) {
+      setCredEmail(creds.email);
+      setCredPassword(creds.password);
+    } else {
+      const session = getItem<{ email: string }>("session");
+      if (session) setCredEmail(session.email);
+    }
   }, []);
 
   function handleSave() {
@@ -51,6 +63,16 @@ export default function SettingsForm() {
       });
       setSaving(false);
       toast("Settings saved", "success");
+    }, 300);
+  }
+
+  function handleSaveCredentials() {
+    if (!credEmail || !credPassword) { toast("Email and password required", "error"); return; }
+    setSavingCred(true);
+    setTimeout(() => {
+      setItem("admin_credentials", { email: credEmail, password: credPassword });
+      setSavingCred(false);
+      toast("Login credentials updated", "success");
     }, 300);
   }
 
@@ -139,6 +161,30 @@ export default function SettingsForm() {
               className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
             />
           </div>
+        </div>
+
+        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+          <h2 className="font-display text-lg font-bold text-secondary">Admin Credentials</h2>
+          <p className="text-xs text-muted-foreground -mt-2">Update your login email and password. Next login will require these credentials.</p>
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Email</label>
+            <input type="email" value={credEmail} onChange={e => setCredEmail(e.target.value)} placeholder="admin@bmacjos.org"
+              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Password</label>
+            <input type="password" value={credPassword} onChange={e => setCredPassword(e.target.value)} placeholder="New password"
+              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+          </div>
+          <button
+            type="button"
+            disabled={savingCred}
+            onClick={handleSaveCredentials}
+            className="flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {savingCred ? "Saving..." : "Update Credentials"}
+          </button>
         </div>
 
         {!saving && (

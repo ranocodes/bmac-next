@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star, BarChart3, Settings, Tag, LogOut, Menu, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star, BarChart3, Settings, Tag, LogOut, Menu, ChevronRight, Send } from "lucide-react";
 import { removeItem, getItem } from "@/data/store";
 import { ToastProvider } from "@/components/ui/Toast";
 
@@ -17,6 +17,7 @@ const navItems = [
   { label: "Testimonials", href: "/admin/testimonials", icon: Star },
   { label: "Categories", href: "/admin/categories", icon: Tag },
   { label: "Stats", href: "/admin/stats", icon: BarChart3 },
+  { label: "Invite", href: "/admin/invite", icon: Send },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
