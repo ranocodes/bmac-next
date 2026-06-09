@@ -7,6 +7,7 @@ import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { getById, create, update } from "@/data/store";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function TeamForm() {
   const router = useRouter();
@@ -45,8 +46,11 @@ export default function TeamForm() {
       const payload = { name, role, img, status: publishStatus };
       if (isEdit && params?.id) {
         update<any>("team", params.id as string, payload);
+        logActivity("admin", "update_team", "team", params.id as string, `Updated team member: ${name}`);
       } else {
-        create<any>("team", { id: `team-${Date.now()}`, ...payload });
+        const id = `team-${Date.now()}`;
+        create<any>("team", { id, ...payload });
+        logActivity("admin", "create_team", "team", id, `Created team member: ${name}`);
       }
       setSaving(false);
       toast(isEdit ? "Team member updated" : "Team member created", "success");

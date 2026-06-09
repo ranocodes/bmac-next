@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 import type { EventPass } from "@/types/cms";
 
 export default function EventTable() {
@@ -27,7 +28,9 @@ export default function EventTable() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this event?");
     if (!ok) return;
+    const item = events.find(e => e.id === id);
     remove("events", id);
+    logActivity("admin", "delete_event", "event", id, `Deleted ${item?.title}`);
     toast("Event deleted");
     load();
   }

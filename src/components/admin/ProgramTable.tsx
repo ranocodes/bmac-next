@@ -6,6 +6,7 @@ import { BookOpen, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { mockPrograms } from "@/data/mock-data";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 import type { Program } from "@/types/cms";
 
 export default function ProgramTable() {
@@ -31,7 +32,9 @@ export default function ProgramTable() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this program?");
     if (!ok) return;
+    const item = programs.find(p => p.id === id);
     remove("programs", id);
+    logActivity("admin", "delete_program", "program", id, `Deleted ${item?.title}`);
     toast("Program deleted");
     load();
   }

@@ -1,29 +1,63 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Send, Copy, Check, Plus, Trash2, Users } from "lucide-react";
+import { Send, Copy, Check, Plus, Trash2, Users, Link as LinkIcon, Mail } from "lucide-react";
 import { setItem, getItem } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
+import { requirePermission, getSessionUser } from "@/lib/permissions";
+import type { Permission } from "@/types/cms";
 
-const roles = ["Admin", "Moderator"] as const;
+const roles = ["administrator", "moderator"] as const;
+
+const allPermissions: { key: Permission; label: string }[] = [
+  { key: "manage_users", label: "Manage Users" },
+  { key: "edit_content", label: "Edit Content" },
+  { key: "manage_courses", label: "Manage Courses" },
+  { key: "manage_partners", label: "Manage Partners" },
+  { key: "view_analytics", label: "View Analytics" },
+  { key: "access_settings", label: "Access Settings" },
+  { key: "delete_records", label: "Delete Records" },
+  { key: "manage_moderators", label: "Manage Moderators" },
+];
+
+const roleDefaults: Record<string, Permission[]> = {
+  administrator: ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "delete_records"],
+  moderator: ["edit_content", "manage_courses", "manage_partners", "view_analytics"],
+};
 
 export default function InviteUserForm() {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string>("Moderator");
+  const [role, setRole] = useState<string>("moderator");
   const [message, setMessage] = useState("");
   const [invites, setInvites] = useState<any[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [copiedLink, setCopiedLink] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [permissions, setPermissions] = useState<Permission[]>(roleDefaults.moderator);
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const stored = getItem<any[]>("invited_users") || [];
-    setInvites(stored);
+    refreshInvites();
+    setAdminUsers(getItem<any[]>("admin_users") || []);
   }, []);
+
+  useEffect(() => {
+    setPermissions(roleDefaults[role] || []);
+  }, [role]);
+
+  function isAccepted(email: string) {
+    return adminUsers.some(u => u.email === email);
+  }
 
   function refreshInvites() {
     const stored = getItem<any[]>("invited_users") || [];
     setInvites(stored);
+  }
+
+  function togglePermission(key: Permission) {
+    setPermissions(p => p.includes(key) ? p.filter(k => k !== key) : [...p, key]);
   }
 
   function generateCode() {
@@ -34,6 +68,11 @@ export default function InviteUserForm() {
   }
 
   function handleSend() {
+    const session = getSessionUser();
+    if (!session || !requirePermission(session.email, "manage_users")) {
+      toast("You don't have permission to send invites", "error");
+      return;
+    }
     if (!email) { toast("Email is required", "error"); return; }
     if (!email.includes("@")) { toast("Invalid email address", "error"); return; }
 
@@ -44,24 +83,36 @@ export default function InviteUserForm() {
       role,
       message,
       code,
+      permissions,
       createdAt: Date.now(),
       used: false,
+      usedAt: null,
+      invitedBy: session.email,
     };
 
     const existing = getItem<any[]>("invited_users") || [];
     setItem("invited_users", [...existing, invite]);
     refreshInvites();
 
-    toast("Invite created! Share the code below.", "success");
+    logActivity(session.email, "invite_create", "invite", invite.id, `Invited ${email} as ${role}`);
+
+    toast("Invite link created! Share it with the user.", "success");
     setEmail("");
     setMessage("");
     setShowForm(false);
   }
 
   function handleRevoke(id: string) {
+    const session = getSessionUser();
+    if (!session || !requirePermission(session.email, "manage_users")) {
+      toast("You don't have permission to revoke invites", "error");
+      return;
+    }
     const existing = getItem<any[]>("invited_users") || [];
+    const invite = existing.find((i: any) => i.id === id);
     setItem("invited_users", existing.filter((i: any) => i.id !== id));
     refreshInvites();
+    if (invite) logActivity(session.email, "invite_revoke", "invite", id, `Revoked invite for ${invite.email}`);
     toast("Invite revoked", "success");
   }
 
@@ -69,6 +120,13 @@ export default function InviteUserForm() {
     navigator.clipboard.writeText(code);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
+  }
+
+  function copyInviteLink(code: string, idx: number) {
+    const link = `${window.location.origin}/admin/accept-invite?code=${code}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(idx);
+    setTimeout(() => setCopiedLink(null), 2000);
   }
 
   return (
@@ -99,20 +157,31 @@ export default function InviteUserForm() {
             <div className="flex gap-2">
               {roles.map(r => (
                 <button key={r} type="button" onClick={() => setRole(r)}
-                  className={`px-4 py-2 min-h-[40px] rounded-lg text-sm font-medium transition-all ${role === r ? "bg-primary text-primary-foreground" : "bg-background border border-input text-secondary hover:border-primary/50"}`}>
+                  className={`px-4 py-2 min-h-[40px] rounded-lg text-sm font-medium capitalize transition-all ${role === r ? "bg-primary text-primary-foreground" : "bg-background border border-input text-secondary hover:border-primary/50"}`}>
                   {r}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Message (optional)</label>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Permissions</label>
+            <div className="flex flex-wrap gap-2">
+              {allPermissions.map(p => (
+                <button key={p.key} type="button" onClick={() => togglePermission(p.key)}
+                  className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-medium transition-all ${permissions.includes(p.key) ? "bg-primary/10 text-primary border border-primary/20" : "bg-background border border-input text-muted-foreground hover:text-secondary"}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Personal Note (optional)</label>
             <textarea value={message} onChange={e => setMessage(e.target.value)} rows={3} placeholder="Hey, I'd like you to join the BMAC admin team..."
               className="w-full px-3 py-2.5 bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none" />
           </div>
           <button onClick={handleSend}
             className="flex items-center justify-center gap-2 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors text-sm">
-            <Send size={15} /> Send Invitation
+            <Send size={15} /> Create Invite Link
           </button>
         </div>
       )}
@@ -128,28 +197,48 @@ export default function InviteUserForm() {
           </div>
         ) : (
           <div className="space-y-2">
-            {invites.map((invite, i) => (
-              <div key={invite.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-background border border-border/30 rounded-lg">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-secondary truncate">{invite.email}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">{invite.role}</span>
-                    {invite.used && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Used</span>}
+            {invites.map((invite, i) => {
+              const accepted = isAccepted(invite.email);
+              return (
+                <div key={invite.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-background border border-border/30 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-secondary truncate">{invite.email}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">{invite.role}</span>
+                      {accepted ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Accepted</span>
+                      ) : invite.used ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Used</span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 uppercase tracking-wider">Pending</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-2 gap-1.5">
+                    <button onClick={() => copyInviteLink(invite.code, i)}
+                      className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
+                      {copiedLink === i ? <Check size={14} /> : <LinkIcon size={14} />}
+                      <span className="hidden sm:inline">{copiedLink === i ? "Copied!" : "Copy Link"}</span>
+                    </button>
+                    {!accepted && (
+                      <a href={`mailto:${invite.email}?subject=Join%20the%20BMAC%20Admin%20Team&body=You%27ve%20been%20invited%20to%20join%20the%20BMAC%20admin%20dashboard.%0A%0AOpen%20this%20link%20to%20accept%3A%0A${typeof window !== "undefined" ? window.location.origin : ""}/admin/accept-invite?code=${invite.code}%0A%0ARole%3A%20${invite.role}`}
+                        className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
+                        <Mail size={14} /> <span className="hidden sm:inline">Email</span>
+                      </a>
+                    )}
+                    <button onClick={() => copyCode(invite.code, i)}
+                      className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
+                      {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
+                      <span className="hidden sm:inline">{copiedIndex === i ? "Copied" : "Code"}</span>
+                    </button>
+                    <button onClick={() => handleRevoke(invite.id)}
+                      className="flex items-center justify-center h-9 px-3 rounded-lg bg-muted text-xs font-medium text-destructive hover:bg-destructive/10 transition-all">
+                      <Trash2 size={14} /> <span className="hidden sm:inline">Revoke</span>
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => copyCode(invite.code, i)}
-                    className="flex items-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
-                    {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
-                    {copiedIndex === i ? "Copied" : invite.code}
-                  </button>
-                  <button onClick={() => handleRevoke(invite.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

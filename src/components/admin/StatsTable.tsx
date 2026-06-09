@@ -2,10 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, Plus, Pencil, Trash2, Search } from "lucide-react";
-import * as LucideIcons from "lucide-react";
+import { BarChart3, Plus, Pencil, Trash2, Search, Users, GraduationCap, Building2, BookOpen, Trophy, Activity, Heart, Star, Target, Globe, Award, Zap, TrendingUp, CheckCircle, School, Lightbulb, Rocket, Palette, Camera, Music, Compass, Brain, Feather } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
+import { requirePermission, getSessionUser } from "@/lib/permissions";
+
+const ICON_MAP: Record<string, any> = {
+  Users, GraduationCap, Building2, BookOpen, Trophy, Activity,
+  Heart, Star, Target, Globe, Award, Zap, TrendingUp, CheckCircle,
+  School, Lightbulb, Rocket, Palette, Camera, Music, Compass, Brain, Feather,
+};
+
+function resolveIcon(name: string) {
+  return ICON_MAP[name] || BarChart3;
+}
 
 export default function StatsTable() {
   const [items, setItems] = useState<any[]>([]);
@@ -23,9 +34,16 @@ export default function StatsTable() {
   useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
+    const session = getSessionUser();
+    if (!session || !requirePermission(session.email, "edit_content")) {
+      toast("You don't have permission to delete stats", "error");
+      return;
+    }
     const ok = await confirm("Delete this stat?");
     if (!ok) return;
+    const item = items.find(s => s.id === id);
     remove("stats", id);
+    logActivity("admin", "delete_stat", "stat", id, `Deleted ${item?.label}`);
     toast("Stat deleted");
     load();
   }
@@ -61,7 +79,7 @@ export default function StatsTable() {
           <p className="text-xs text-muted-foreground mt-1">
             {search ? "Try a different term" : "Add your first stat to get started"}
           </p>
-          {!search && (
+          {!search && items.length < 3 && (
             <Link href="/admin/stats/new" className="mt-5 flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
               <Plus size={15} /> New Stat
             </Link>
@@ -82,7 +100,7 @@ export default function StatsTable() {
               </thead>
               <tbody>
                 {filtered.map(s => {
-                  const IconComp = (LucideIcons as any)[s.icon];
+                  const IconComp = resolveIcon(s.icon);
                   return (
                     <tr key={s.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-4">

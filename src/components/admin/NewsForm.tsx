@@ -9,6 +9,7 @@ import type { NewsArticle, Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function NewsForm() {
   const router = useRouter();
@@ -70,8 +71,11 @@ export default function NewsForm() {
       };
       if (isEdit && params?.id) {
         update<NewsArticle>("news", params.id as string, payload);
+        logActivity("admin", "update_news", "news", params.id as string, `Updated news: ${title}`);
       } else {
-        create<NewsArticle>("news", { id: `news-${Date.now()}`, ...payload });
+        const id = `news-${Date.now()}`;
+        create<NewsArticle>("news", { id, ...payload });
+        logActivity("admin", "create_news", "news", id, `Created news: ${title}`);
       }
       setSaving(false);
       toast(isEdit ? "Article updated" : "Article created", "success");

@@ -10,6 +10,7 @@ import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import IconPicker from "@/components/ui/IconPicker";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 const COLOR_OPTIONS = [
   { name: "Emerald", class: "text-emerald-400" },
@@ -94,8 +95,11 @@ export default function ProgramForm() {
       };
       if (isEdit && params?.id) {
         update<any>("programs", params.id as string, payload);
+        logActivity("admin", "update_program", "program", params.id as string, `Updated program: ${title}`);
       } else {
-        create<any>("programs", { id: `program-${Date.now()}`, ...payload });
+        const id = `program-${Date.now()}`;
+        create<any>("programs", { id, ...payload });
+        logActivity("admin", "create_program", "program", id, `Created program: ${title}`);
       }
       setSaving(false);
       toast(isEdit ? "Program updated" : "Program created", "success");

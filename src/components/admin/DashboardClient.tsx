@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Newspaper, Calendar, BookOpen, Image, Users, Star, TrendingUp, ArrowRight, Plus, Sparkle } from "lucide-react";
+import { Newspaper, Calendar, BookOpen, Image, Users, Star, TrendingUp, ArrowRight, Plus, Sparkle, Activity, ClipboardList } from "lucide-react";
 import { getAll, seedIfEmpty, create, setItem, getItem } from "@/data/store";
-import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials, mockStats } from "@/data/mock-data";
+import { getCurrentUserPermissions } from "@/lib/permissions";
+import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials, mockStats, mockPartners } from "@/data/mock-data";
 import type { NewsArticle, EventPass, Program, GalleryItem, TeamMember, Testimonial, Category } from "@/types/cms";
 
 const quickActions = [
@@ -21,6 +22,8 @@ export default function DashboardClient() {
   const [counts, setCounts] = useState({ news: 0, events: 0, programs: 0, gallery: 0, team: 0, testimonials: 0 });
   const [recentNews, setRecentNews] = useState<NewsArticle[]>([]);
   const [recentEvents, setRecentEvents] = useState<EventPass[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [todayCount, setTodayCount] = useState(0);
   const [firstName, setFirstName] = useState("Admin");
 
   useEffect(() => {
@@ -33,6 +36,9 @@ export default function DashboardClient() {
     seedIfEmpty("team", mockTeam);
     seedIfEmpty("testimonials", mockTestimonials);
     seedIfEmpty("stats", mockStats);
+    seedIfEmpty("partners", mockPartners);
+        seedIfEmpty("categories", [{ id: "default", name: "General" }]);
+
     if (!getItem<any>("site_settings")) {
       setItem("site_settings", {
         id: "settings-1",
@@ -72,7 +78,15 @@ export default function DashboardClient() {
     });
     setRecentNews([...news].reverse().slice(0, 4));
     setRecentEvents(events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4));
+
+    const logs = getAll<any>("activity_logs");
+    setRecentActivity(logs.slice(0, 15));
+    const today = Date.now() - 86400000;
+    setTodayCount(logs.filter((l: any) => l.timestamp > today).length);
   }, []);
+
+  const perms = getCurrentUserPermissions();
+  const canViewActivity = perms.includes("manage_users");
 
   const statCards = [
     { label: "News", value: counts.news, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
@@ -203,6 +217,43 @@ export default function DashboardClient() {
           </Link>
         </div>
       </div>
+
+      {/* Recent Activity — full width */}
+      {canViewActivity && <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Activity size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-secondary">Recent Activity</h2>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{todayCount} today</span>
+          </div>
+          <Link href="/admin/logs" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
+        </div>
+        {recentActivity.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <ClipboardList size={32} className="text-muted-foreground/30 mb-3" />
+            <p className="text-sm text-muted-foreground">No activity logged yet</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {recentActivity.map((log: any) => (
+              <div key={log.id} className="flex items-start gap-3 py-2.5 border-b border-border/10 last:border-0">
+                <div className="w-1.5 h-1.5 rounded-full mt-1.5 bg-primary/20 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-medium text-secondary">{log.user}</span>
+                    <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action}</span>
+                    <span className="text-[11px] text-muted-foreground">{log.resource}</span>
+                  </div>
+                  {log.details && <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate max-w-lg">{log.details}</p>}
+                </div>
+                <span className="text-[10px] text-muted-foreground/40 whitespace-nowrap shrink-0">
+                  {new Date(log.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>}
     </div>
   );
 }

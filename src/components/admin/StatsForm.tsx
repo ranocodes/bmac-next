@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update } from "@/data/store";
+import { getById, create, update, getAll } from "@/data/store";
 import IconPicker from "@/components/ui/IconPicker";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function StatsForm() {
   const router = useRouter();
@@ -40,14 +41,23 @@ export default function StatsForm() {
       return;
     }
 
+    if (!isEdit && getAll<any>("stats").length >= 3) {
+      setError("Maximum of 3 stats allowed. Delete an existing stat first.");
+      setSaving(false);
+      return;
+    }
+
     setSaving(true);
 
     setTimeout(() => {
       const payload = { num, label, icon, status: publishStatus };
       if (isEdit && params?.id) {
         update<any>("stats", params.id as string, payload);
+        logActivity("admin", "update_stat", "stat", params.id as string, `Updated stat: ${label}`);
       } else {
-        create<any>("stats", { id: `stat-${Date.now()}`, ...payload });
+        const id = `stat-${Date.now()}`;
+        create<any>("stats", { id, ...payload });
+        logActivity("admin", "create_stat", "stat", id, `Created stat: ${label}`);
       }
       setSaving(false);
       toast(isEdit ? "Stat updated" : "Stat created", "success");

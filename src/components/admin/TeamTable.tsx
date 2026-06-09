@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Users, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function TeamTable() {
   const [items, setItems] = useState<any[]>([]);
@@ -24,7 +25,9 @@ export default function TeamTable() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this team member?");
     if (!ok) return;
+    const item = items.find(m => m.id === id);
     remove("team", id);
+    logActivity("admin", "delete_team", "team", id, `Deleted ${item?.name}`);
     toast("Team member deleted");
     load();
   }

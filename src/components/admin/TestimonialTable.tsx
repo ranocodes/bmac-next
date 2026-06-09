@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MessageSquareQuote, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function TestimonialTable() {
   const [items, setItems] = useState<any[]>([]);
@@ -20,7 +21,9 @@ export default function TestimonialTable() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this testimonial?");
     if (!ok) return;
+    const item = items.find(t => t.id === id);
     remove("testimonials", id);
+    logActivity("admin", "delete_testimonial", "testimonial", id, `Deleted ${item?.name}`);
     toast("Testimonial deleted");
     load();
   }

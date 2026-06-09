@@ -9,6 +9,7 @@ import { mockEvents } from "@/data/mock-data";
 import type { EventPass, Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function EventForm() {
   const router = useRouter();
@@ -74,8 +75,11 @@ export default function EventForm() {
       };
       if (isEdit && params?.id) {
         update<any>("events", params.id as string, payload);
+        logActivity("admin", "update_event", "event", params.id as string, `Updated event: ${title}`);
       } else {
-        create<any>("events", { id: `event-${Date.now()}`, ...payload });
+        const id = `event-${Date.now()}`;
+        create<any>("events", { id, ...payload });
+        logActivity("admin", "create_event", "event", id, `Created event: ${title}`);
       }
       setSaving(false);
       toast(isEdit ? "Event updated" : "Event created", "success");

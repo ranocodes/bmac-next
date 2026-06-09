@@ -89,7 +89,45 @@ export interface Category {
   name: string;
 }
 
+export type AdminRole = "super_admin" | "administrator" | "moderator";
+
+export type Permission =
+  | "manage_users"
+  | "edit_content"
+  | "manage_courses"
+  | "manage_partners"
+  | "view_analytics"
+  | "access_settings"
+  | "delete_records"
+  | "manage_moderators";
+
+export interface Partner {
+  id: string;
+  name: string;
+  logo: string;
+  url?: string;
+  status?: "active" | "hidden";
+  order: number;
+}
+
 export interface AdminUser {
+  id: string;
   email: string;
   password: string;
+  firstName: string;
+  role: AdminRole;
+  permissions: Permission[];
+  createdAt: number;
+  invitedBy?: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  user: string;
+  action: string;
+  resource: string;
+  resourceId?: string;
+  details?: string;
+  timestamp: number;
+  ip?: string;
 }

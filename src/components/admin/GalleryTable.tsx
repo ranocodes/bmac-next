@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Image, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function GalleryTable() {
   const [items, setItems] = useState<any[]>([]);
@@ -24,7 +25,9 @@ export default function GalleryTable() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this gallery item?");
     if (!ok) return;
+    const item = items.find(g => g.id === id);
     remove("gallery", id);
+    logActivity("admin", "delete_gallery", "gallery", id, `Deleted ${item?.alt}`);
     toast("Gallery item deleted");
     load();
   }

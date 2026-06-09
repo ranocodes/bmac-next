@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Tag, Plus, Trash2 } from "lucide-react";
 import { getAll, create, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 import type { Category } from "@/types/cms";
 
 export default function CategoriesPageClient() {
@@ -25,7 +26,9 @@ export default function CategoriesPageClient() {
       toast("Category already exists", "error");
       return;
     }
-    create<Category>("categories", { id: `cat-${Date.now()}`, name });
+    const id = `cat-${Date.now()}`;
+    create<Category>("categories", { id, name });
+    logActivity("admin", "create_category", "category", id, `Created category: ${name}`);
     setNewName("");
     toast("Category added");
     load();
@@ -34,7 +37,9 @@ export default function CategoriesPageClient() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this category?");
     if (!ok) return;
+    const cat = categories.find(c => c.id === id);
     remove("categories", id);
+    logActivity("admin", "delete_category", "category", id, `Deleted ${cat?.name}`);
     toast("Category deleted");
     load();
   }

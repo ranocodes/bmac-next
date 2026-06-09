@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Newspaper, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 import type { NewsArticle } from "@/types/cms";
 
 export default function NewsTable() {
@@ -22,7 +23,9 @@ export default function NewsTable() {
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this article?");
     if (!ok) return;
+    const item = articles.find(a => a.id === id);
     remove("news", id);
+    logActivity("admin", "delete_news", "news", id, `Deleted ${item?.title}`);
     toast("Article deleted");
     load();
   }

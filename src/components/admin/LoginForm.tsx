@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
 import { setItem, getItem } from "@/data/store";
+import { logActivity } from "@/lib/activity";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -29,9 +30,32 @@ export default function LoginForm() {
       return;
     }
 
+    const users = getItem<any[]>("admin_users") || [];
+    if (users.length > 0) {
+      const found = users.find(u => u.email === email);
+      if (!found) { setError("Account not found. You may need an invite."); return; }
+    }
+
     setLoading(true);
     setTimeout(() => {
+      if (users.length === 0) {
+        const superAdmin = {
+          id: "admin-super",
+          email,
+          password,
+          firstName,
+          role: "super_admin" as const,
+          permissions: [
+            "manage_users", "edit_content", "manage_courses", "manage_partners",
+            "view_analytics", "access_settings", "delete_records", "manage_moderators",
+          ],
+          createdAt: Date.now(),
+        };
+        setItem("admin_users", [superAdmin]);
+      }
+
       setItem("session", { email, firstName, loggedInAt: Date.now() });
+      logActivity(email, "login", "session");
       window.location.href = "/admin";
     }, 600);
   }

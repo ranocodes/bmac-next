@@ -391,6 +391,15 @@ export const mockGallery = [
   }
 ];
 
+export const mockPartners = [
+  { id: "partner-1", name: "UNICEF", logo: "/images/partner-placeholder.svg", url: "https://www.unicef.org", status: "active" as const, order: 1 },
+  { id: "partner-2", name: "British Council", logo: "/images/partner-placeholder.svg", status: "active" as const, order: 2 },
+  { id: "partner-3", name: "Plateau State Government", logo: "/images/partner-placeholder.svg", status: "active" as const, order: 3 },
+  { id: "partner-4", name: "Tech Hub Jos", logo: "/images/partner-placeholder.svg", status: "active" as const, order: 4 },
+  { id: "partner-5", name: "African Leadership Academy", logo: "/images/partner-placeholder.svg", status: "active" as const, order: 5 },
+  { id: "partner-6", name: "MTN Foundation", logo: "/images/partner-placeholder.svg", status: "active" as const, order: 6 },
+];
+
 export const mockSiteSettings = {
   id: "settings-1",
   logo_text: "BMAC",

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+
 
 interface NavLink {
   name: string;
@@ -54,23 +54,23 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
       {/* Floating Island Navbar - Centered Pill */}
       <div className="fixed top-0 left-0 right-0 z-[1000] flex justify-center pt-6 px-4 pointer-events-none">
         <header 
-          className={`pointer-events-auto transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 rounded-full border flex items-center justify-between gap-4 md:gap-8 px-6 md:px-8 py-2.5 ${
+          className={`pointer-events-auto transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 rounded-full border flex items-center justify-between gap-3 md:gap-4 px-4 md:px-6 py-2.5 ${
             scrolled 
               ? "bg-card/70 backdrop-blur-xl border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
               : "bg-card/10 backdrop-blur-md border-card/20 shadow-none"
           }`}
           style={{ width: 'auto', maxWidth: '95vw' }}
         >
-          <Link href="/" className="font-display font-bold text-xl tracking-tighter text-secondary flex-shrink-0">
+          <Link href="/" className="font-display font-bold text-xl tracking-tighter text-secondary flex-shrink-0 mr-1">
             {logoText}<span className="text-primary">.</span>
           </Link>
           
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center justify-center flex-1 gap-0.5">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-[13px] px-4 py-2 rounded-full transition-all duration-300 font-medium ${
+                className={`text-[13px] px-3.5 py-1.5 rounded-full transition-all duration-300 font-medium whitespace-nowrap ${
                   pathname === link.href 
                     ? scrolled ? "bg-secondary text-secondary-foreground shadow-sm" : "bg-card/20 text-secondary"
                     : scrolled ? "text-muted-foreground hover:text-secondary hover:bg-muted" : "text-secondary/70 hover:text-secondary hover:bg-card/10"
@@ -143,12 +143,11 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
+                    className="w-full"
                   >
                     <Link
                       href={link.href}
-                      className={`text-lg font-bold tracking-tight py-2.5 block border-b border-border/30 ${
-                        pathname === link.href ? "text-primary" : "text-secondary"
-                      }`}
+                      className={`flex items-center min-h-[52px] text-lg font-bold tracking-tight ${i < navLinks.length - 1 ? "border-b border-border/30" : ""} ${pathname === link.href ? "text-primary" : "text-secondary"}`}
                       onClick={() => toggleMenu(false)}
                     >
                       {link.name}

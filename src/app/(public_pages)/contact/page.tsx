@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
+import LocationMap from "@/components/ui/expand-map";
 import { sendContactMessage } from "./actions";
 
 const faqs = [
@@ -142,21 +143,8 @@ export default function Contact() {
                 </div>
              </div>
 
-             <div className="relative h-[250px] md:h-[350px] rounded-[2rem] md:rounded-bento overflow-hidden border border-border">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31226.39734639848!2d8.8721!3d9.9280!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104b42f0c5e0e7e7%3A0x1e2e2e2e2e2e2e2e!2sJos%2C%20Plate%20State%2C%20Nigeria!5e0!3m2!1sen!2sng!4v1714600000000!5m2!1sen!2sng"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                ></iframe>
-                <div className="absolute bottom-4 left-4 right-4 md:right-auto md:left-6 bg-card/90 backdrop-blur-md px-5 py-2.5 rounded-xl md:rounded-2xl shadow-lg border border-card/20 text-center md:text-left">
-                   <div className="flex items-center justify-center md:justify-start gap-2.5 text-[10px] md:text-xs font-bold text-secondary">
-                      <MapPin size={14} className="text-primary" />
-                      Our Hub in Jos
-                   </div>
-                </div>
+             <div className="h-[250px] md:h-[350px]">
+                <LocationMap location="Jos, Plateau State" coordinates="9.9280° N, 8.8721° E" />
              </div>
           </div>
         </div>

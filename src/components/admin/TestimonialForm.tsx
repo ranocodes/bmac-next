@@ -7,6 +7,7 @@ import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import { getById, create, update } from "@/data/store";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function TestimonialForm() {
   const router = useRouter();
@@ -46,8 +47,11 @@ export default function TestimonialForm() {
       const payload = { name, designation, quote, src, status: publishStatus };
       if (isEdit && params?.id) {
         update<any>("testimonials", params.id as string, payload);
+        logActivity("admin", "update_testimonial", "testimonial", params.id as string, `Updated testimonial: ${name}`);
       } else {
-        create<any>("testimonials", { id: `testimonial-${Date.now()}`, ...payload });
+        const id = `testimonial-${Date.now()}`;
+        create<any>("testimonials", { id, ...payload });
+        logActivity("admin", "create_testimonial", "testimonial", id, `Created testimonial: ${name}`);
       }
       setSaving(false);
       toast(isEdit ? "Testimonial updated" : "Testimonial created", "success");

@@ -8,6 +8,7 @@ import { getById, create, update, getAll, seedIfEmpty } from "@/data/store";
 import type { Category } from "@/types/cms";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
+import { logActivity } from "@/lib/activity";
 
 export default function GalleryForm() {
   const router = useRouter();
@@ -59,8 +60,11 @@ export default function GalleryForm() {
       const payload = { img, alt, category, status: publishStatus };
       if (isEdit && params?.id) {
         update<any>("gallery", params.id as string, payload);
+        logActivity("admin", "update_gallery", "gallery", params.id as string, `Updated gallery: ${alt}`);
       } else {
-        create<any>("gallery", { id: `gallery-${Date.now()}`, ...payload });
+        const id = `gallery-${Date.now()}`;
+        create<any>("gallery", { id, ...payload });
+        logActivity("admin", "create_gallery", "gallery", id, `Created gallery: ${alt}`);
       }
       setSaving(false);
       toast(isEdit ? "Gallery item updated" : "Gallery item created", "success");

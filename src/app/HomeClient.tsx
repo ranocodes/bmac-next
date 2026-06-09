@@ -9,6 +9,7 @@ import FadeIn from "@/components/FadeIn";
 import { CircularTestimonials } from "@/components/ui/circular-testimonials";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { DigitalPass } from "@/components/ui/DigitalPass";
+import PartnersSection from "@/components/ui/PartnersSection";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { getIcon } from "@/lib/iconMapper";
 import { Program } from "@/types/cms";
@@ -180,6 +181,8 @@ export default function HomeClient() {
           />
         </div>
       </section>
+
+      <PartnersSection />
 
       <section className="py-16 lg:py-24 px-6 bg-background">
          <div className="max-w-4xl mx-auto w-full">
