@@ -2,50 +2,48 @@
 
 import { useEffect, useState } from "react";
 import { ClipboardList, Search, Trash2, Filter } from "lucide-react";
-import { getAll, setItem } from "@/data/store";
+import { useAdmin } from "@/lib/auth/admin-context";
 import { useToast } from "@/components/ui/Toast";
-import { requirePermission, getSessionUser } from "@/lib/permissions";
 
-export default function ActivityLogTable() {
+export default function ActivityLogTable({ initialData }: { initialData: any[] }) {
   const [logs, setLogs] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("");
+  const user = useAdmin();
   const { toast, confirm } = useToast();
 
-  function load() {
-    const all = getAll<any>("activity_logs");
-    setLogs(all);
-  }
+  useEffect(() => {
+    setLogs([...initialData].reverse());
+  }, [initialData]);
 
-  useEffect(() => { load(); }, []);
-
-  function formatTime(ts: number) {
+  function formatTime(ts: string | number) {
     const d = new Date(ts);
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) +
       " " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
   }
 
   async function handleClear() {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "manage_users")) {
+    if (!user?.permissions.includes("manage_users")) {
       toast("You don't have permission to clear logs", "error");
       return;
     }
     const ok = await confirm("Clear all activity logs? This cannot be undone.");
     if (!ok) return;
-    setItem("activity_logs", []);
-    setLogs([]);
-    toast("Logs cleared", "success");
+    toast("Clear logs feature coming soon", "info");
   }
 
-  const actions = [...new Set(logs.map(l => l.action))].sort();
+  const actions = [...new Set(logs.map(l => l.action || l.action_type))].sort();
 
   const filtered = logs.filter(l => {
     if (search) {
       const q = search.toLowerCase();
-      if (!l.user?.toLowerCase().includes(q) && !l.resource?.toLowerCase().includes(q) && !l.details?.toLowerCase().includes(q)) return false;
+      const userField = l.user || l.user_email || "";
+      const resourceField = l.resource || l.resource_type || "";
+      const details = l.details || l.description || "";
+      if (!userField.toLowerCase().includes(q) && !resourceField.toLowerCase().includes(q) && !details.toLowerCase().includes(q)) return false;
     }
-    if (actionFilter && l.action !== actionFilter) return false;
+    const act = l.action || l.action_type;
+    if (actionFilter && act !== actionFilter) return false;
     return true;
   });
 
@@ -90,13 +88,13 @@ export default function ActivityLogTable() {
               <div className="w-1.5 h-1.5 rounded-full mt-1.5 bg-primary/30 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-secondary">{log.user}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action}</span>
-                  <span className="text-xs text-muted-foreground">{log.resource}{log.resourceId ? ` #${log.resourceId.slice(0, 12)}` : ""}</span>
+                  <span className="text-sm font-medium text-secondary">{log.user || log.user_email}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action || log.action_type}</span>
+                  <span className="text-xs text-muted-foreground">{log.resource || log.resource_type}{log.resource_id || log.resourceId ? ` #${(log.resource_id || log.resourceId).slice(0, 12)}` : ""}</span>
                 </div>
-                {log.details && <p className="text-xs text-muted-foreground/70 mt-0.5">{log.details}</p>}
+                {(log.details || log.description) && <p className="text-xs text-muted-foreground/70 mt-0.5">{log.details || log.description}</p>}
               </div>
-              <span className="text-[10px] text-muted-foreground/50 whitespace-nowrap shrink-0 mt-0.5">{formatTime(log.timestamp)}</span>
+              <span className="text-[10px] text-muted-foreground/50 whitespace-nowrap shrink-0 mt-0.5">{formatTime(log.timestamp || log.created_at)}</span>
             </div>
           ))}
         </div>

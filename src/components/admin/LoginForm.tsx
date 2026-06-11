@@ -1,106 +1,46 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
-import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
-import { setItem, getItem } from "@/data/store";
-import { logActivity } from "@/lib/activity";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import Link from "next/link";
 
-export default function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [show, setShow] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [hasCreds, setHasCreds] = useState(false);
-
-  useEffect(() => {
-    const creds = getItem<{ email: string; password: string }>("admin_credentials");
-    setHasCreds(!!creds);
-  }, []);
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!email || !password || !firstName) { setError("All fields required"); return; }
-
-    const creds = getItem<{ email: string; password: string }>("admin_credentials");
-    if (creds && (email !== creds.email || password !== creds.password)) {
-      setError("Invalid email or password");
-      return;
-    }
-
-    const users = getItem<any[]>("admin_users") || [];
-    if (users.length > 0) {
-      const found = users.find(u => u.email === email);
-      if (!found) { setError("Account not found. You may need an invite."); return; }
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      if (users.length === 0) {
-        const superAdmin = {
-          id: "admin-super",
-          email,
-          password,
-          firstName,
-          role: "super_admin" as const,
-          permissions: [
-            "manage_users", "edit_content", "manage_courses", "manage_partners",
-            "view_analytics", "access_settings", "delete_records", "manage_moderators",
-          ],
-          createdAt: Date.now(),
-        };
-        setItem("admin_users", [superAdmin]);
-      }
-
-      setItem("session", { email, firstName, loggedInAt: Date.now() });
-      logActivity(email, "login", "session");
-      window.location.href = "/admin";
-    }, 600);
+export default function LoginForm({ isFirstSetup }: { isFirstSetup: boolean }) {
+  if (isFirstSetup) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="mb-10">
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">BMAC<span className="text-primary">.</span></h1>
+            <p className="text-sm text-muted-foreground mt-2">First-time setup</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Create your Super Admin account</p>
+          </div>
+          <SignUpButton mode="redirect" forceRedirectUrl="/admin">
+            <button className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
+              Create Admin Account
+            </button>
+          </SignUpButton>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-sm text-center">
+        <div className="mb-10">
           <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">BMAC<span className="text-primary">.</span></h1>
           <p className="text-sm text-muted-foreground mt-2">Admin dashboard</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">{hasCreds ? "Use your saved admin credentials" : "First login? Any email + password works"}</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">First Name</label>
-            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="John"
-              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@bmacjos.org"
-              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Password</label>
-            <div className="relative">
-              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password"
-                className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-              <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
-                {show ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-          {error && (
-            <div className="flex items-center gap-2.5 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-          <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><LogIn size={16} /> Sign in</>}
+        <SignInButton mode="redirect" forceRedirectUrl="/admin">
+          <button className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
+            Sign in with Clerk
           </button>
-        </form>
+        </SignInButton>
+        <p className="text-xs text-muted-foreground/60 mt-4">
+          Don't have an account?{" "}
+          <Link href="/admin/accept-invite" className="text-primary hover:underline font-medium">
+            Use an invite code
+          </Link>
+        </p>
       </div>
     </div>
   );

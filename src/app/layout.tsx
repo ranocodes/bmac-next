@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -37,7 +38,7 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} ${outfit.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        {children}
+        <ClerkProvider>{children}</ClerkProvider>
       </body>
     </html>
   );

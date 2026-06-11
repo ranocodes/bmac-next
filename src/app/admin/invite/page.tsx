@@ -1,5 +1,7 @@
+import { getInvitations } from "@/actions/invitations";
 import InviteUserForm from "@/components/admin/InviteUserForm";
 
-export default function InvitePage() {
-  return <InviteUserForm />;
+export default async function InvitePage() {
+  const invites = await getInvitations();
+  return <InviteUserForm initialData={invites} />;
 }

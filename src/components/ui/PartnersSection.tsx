@@ -1,22 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockPartners } from "@/data/mock-data";
 import { Case } from "@/components/ui/cases-with-infinite-scroll";
 import type { Partner } from "@/types/cms";
 
-export default function PartnersSection() {
-  const [partners, setPartners] = useState<Partner[]>([]);
+interface PartnersSectionProps {
+  initialPartners?: Partner[];
+}
 
-  useEffect(() => {
-    seedIfEmpty("partners", mockPartners);
-    const stored = getAll<Partner>("partners")
-      .filter(p => p.status !== "hidden")
-      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-    setPartners(stored.length > 0 ? stored : mockPartners);
-  }, []);
+export default function PartnersSection({ initialPartners }: PartnersSectionProps) {
+  const partners = (initialPartners || [])
+    .filter(p => p.status !== "hidden")
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
   if (partners.length === 0) return null;
 

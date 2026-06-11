@@ -1,31 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { MessageSquareQuote, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { deleteItem } from "@/actions/crud";
 
-export default function TestimonialTable() {
-  const [items, setItems] = useState<any[]>([]);
+export default function TestimonialTable({ initialData = [] }: { initialData?: any[] }) {
+  const [items, setItems] = useState<any[]>(() =>
+    initialData.map((t: any) => ({ ...t })).reverse()
+  );
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    setItems(getAll<any>("testimonials").reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this testimonial?");
     if (!ok) return;
-    const item = items.find(t => t.id === id);
-    remove("testimonials", id);
-    logActivity("admin", "delete_testimonial", "testimonial", id, `Deleted ${item?.name}`);
+    await deleteItem("testimonials", id);
+    setItems(prev => prev.filter(t => t.id !== id));
     toast("Testimonial deleted");
-    load();
   }
 
   const filtered = search

@@ -1,35 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Image, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { deleteItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 
-export default function GalleryTable() {
-  const [items, setItems] = useState<any[]>([]);
+export default function GalleryTable({ initialData = [] }: { initialData?: any[] }) {
+  const [items, setItems] = useState<any[]>(() =>
+    initialData.map((g: any) => ({ ...g, status: g.status || "draft" })).reverse()
+  );
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    const all = getAll<any>("gallery").map((g: any) => ({
-      ...g,
-      status: g.status || "draft",
-    }));
-    setItems(all.reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this gallery item?");
     if (!ok) return;
-    const item = items.find(g => g.id === id);
-    remove("gallery", id);
-    logActivity("admin", "delete_gallery", "gallery", id, `Deleted ${item?.alt}`);
+    await deleteItem("gallery_items", id);
+    setItems(prev => prev.filter(g => g.id !== id));
     toast("Gallery item deleted");
-    load();
   }
 
   const filtered = search

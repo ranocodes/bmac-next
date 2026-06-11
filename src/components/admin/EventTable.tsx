@@ -1,42 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Calendar, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
+import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { useAdmin } from "@/lib/auth/admin-context";
 import type { EventPass } from "@/types/cms";
 
-export default function EventTable() {
-  const [events, setEvents] = useState<EventPass[]>([]);
+export default function EventTable({ initialData }: { initialData: any[] }) {
+  const [events, setEvents] = useState<any[]>([...initialData].reverse().map((e: any) => ({
+    ...e,
+    date: e.date || e.event_date || "",
+    desc: e.desc || e.description || "",
+    isPaid: e.isPaid ?? e.is_paid ?? false,
+  })));
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    const all = getAll<any>("events").map(e => ({
-      ...e,
-      date: e.date || e.event_date || "",
-      desc: e.desc || e.description || "",
-      isPaid: e.isPaid ?? e.is_paid ?? false,
-    }));
-    setEvents(all.reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this event?");
     if (!ok) return;
-    const item = events.find(e => e.id === id);
-    remove("events", id);
-    logActivity("admin", "delete_event", "event", id, `Deleted ${item?.title}`);
+    await deleteItem("events", id);
     toast("Event deleted");
-    load();
+    setEvents(prev => prev.filter((e: any) => e.id !== id));
   }
 
   const filtered = search
-    ? events.filter(e => e.title.toLowerCase().includes(search.toLowerCase()) || e.category.toLowerCase().includes(search.toLowerCase()))
+    ? events.filter((e: any) => e.title.toLowerCase().includes(search.toLowerCase()) || e.category.toLowerCase().includes(search.toLowerCase()))
     : events;
 
   return (
@@ -86,7 +77,7 @@ export default function EventTable() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(e => (
+                {filtered.map((e: any) => (
                   <tr key={e.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-4">
                       <div>

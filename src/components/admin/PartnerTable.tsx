@@ -1,44 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Handshake, Plus, Pencil, Trash2, Search, ArrowUp, ArrowDown, Eye, EyeOff } from "lucide-react";
-import { getAll, remove, update } from "@/data/store";
+import { deleteItem, updateItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
-import { requirePermission, getSessionUser } from "@/lib/permissions";
 import type { Partner } from "@/types/cms";
 
-export default function PartnerTable() {
+export default function PartnerTable({ initialData }: { initialData: Partner[] }) {
   const [items, setItems] = useState<Partner[]>([]);
   const [search, setSearch] = useState("");
+  const user = useAdmin();
   const { toast, confirm } = useToast();
 
-  function load() {
-    const all = getAll<Partner>("partners").map(p => ({
+  useEffect(() => {
+    const sorted = [...initialData].map(p => ({
       ...p,
       status: p.status || "active",
       order: p.order ?? 999,
-    }));
-    all.sort((a, b) => a.order - b.order);
-    setItems(all);
-  }
+    })).sort((a, b) => a.order - b.order);
+    setItems(sorted);
+  }, [initialData]);
 
-  useEffect(() => { load(); }, []);
+  const canDelete = user?.permissions.includes("manage_partners");
 
   async function handleDelete(id: string) {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "manage_partners")) {
-      toast("You don't have permission to delete partners", "error");
-      return;
-    }
+    if (!canDelete) { toast("You don't have permission to delete partners", "error"); return; }
     const ok = await confirm("Are you sure you want to delete this partner?");
     if (!ok) return;
-    const item = items.find(i => i.id === id);
-    remove("partners", id);
-    logActivity("admin", "delete", "partner", id, `Deleted partner ${item?.name}`);
+    await deleteItem("partners", id);
+    setItems(p => p.filter(i => i.id !== id));
     toast("Partner deleted", "success");
-    load();
   }
 
   function moveItem(id: string, dir: -1 | 1) {
@@ -46,20 +39,18 @@ export default function PartnerTable() {
     if (idx === -1) return;
     const target = idx + dir;
     if (target < 0 || target >= items.length) return;
-
     const next = [...items];
     [next[idx], next[target]] = [next[target], next[idx]];
     const reordered = next.map((item, i) => ({ ...item, order: i + 1 }));
-    reordered.forEach(item => update<Partner>("partners", item.id, { order: item.order }));
+    reordered.forEach(item => updateItem("partners", item.id, { order: item.order }));
     setItems(reordered);
   }
 
   function toggleStatus(id: string, current?: string) {
     const next = current === "active" ? "hidden" : "active";
-    update<Partner>("partners", id, { status: next as "active" | "hidden" });
-    const item = items.find(i => i.id === id);
-    logActivity("admin", "update", "partner", id, `${item?.name} → ${next}`);
-    load();
+    updateItem("partners", id, { status: next });
+    setItems(p => p.map(i => i.id === id ? { ...i, status: next as "active" | "hidden" } : i));
+    toast(`Partner ${next === "active" ? "shown" : "hidden"}`, "success");
   }
 
   const filtered = items.filter(i =>

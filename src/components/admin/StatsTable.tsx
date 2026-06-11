@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BarChart3, Plus, Pencil, Trash2, Search, Users, GraduationCap, Building2, BookOpen, Trophy, Activity, Heart, Star, Target, Globe, Award, Zap, TrendingUp, CheckCircle, School, Lightbulb, Rocket, Palette, Camera, Music, Compass, Brain, Feather } from "lucide-react";
-import { getAll, remove } from "@/data/store";
+import { deleteItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
-import { requirePermission, getSessionUser } from "@/lib/permissions";
 
 const ICON_MAP: Record<string, any> = {
   Users, GraduationCap, Building2, BookOpen, Trophy, Activity,
@@ -18,34 +17,29 @@ function resolveIcon(name: string) {
   return ICON_MAP[name] || BarChart3;
 }
 
-export default function StatsTable() {
+export default function StatsTable({ initialData }: { initialData: any[] }) {
   const [items, setItems] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const user = useAdmin();
   const { toast, confirm } = useToast();
 
-  function load() {
-    const all = getAll<any>("stats").map((s: any) => ({
+  useEffect(() => {
+    const mapped = initialData.map(s => ({
       ...s,
       status: s.status || "draft",
     }));
-    setItems(all.reverse());
-  }
+    setItems(mapped);
+  }, [initialData]);
 
-  useEffect(() => { load(); }, []);
+  const canDelete = user?.permissions.includes("edit_content");
 
   async function handleDelete(id: string) {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "edit_content")) {
-      toast("You don't have permission to delete stats", "error");
-      return;
-    }
+    if (!canDelete) { toast("You don't have permission to delete stats", "error"); return; }
     const ok = await confirm("Delete this stat?");
     if (!ok) return;
-    const item = items.find(s => s.id === id);
-    remove("stats", id);
-    logActivity("admin", "delete_stat", "stat", id, `Deleted ${item?.label}`);
+    await deleteItem("impact_stats", id);
+    setItems(p => p.filter(i => i.id !== id));
     toast("Stat deleted");
-    load();
   }
 
   const filtered = search

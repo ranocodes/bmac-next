@@ -1,46 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
-import { mockPrograms } from "@/data/mock-data";
+import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { useAdmin } from "@/lib/auth/admin-context";
 import type { Program } from "@/types/cms";
 
-export default function ProgramTable() {
-  const [programs, setPrograms] = useState<Program[]>([]);
+export default function ProgramTable({ initialData }: { initialData: any[] }) {
+  const [programs, setPrograms] = useState<any[]>([...initialData].reverse().map((p: any) => ({
+    ...p,
+    desc: p.desc || p.description || "",
+    img: p.img || p.img_url || "",
+    icon: p.icon || p.icon_name || "",
+    color: p.color || p.color_class || "",
+    landingPage: p.landingPage || false,
+    status: p.status || "draft",
+  })));
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    const all = getAll<any>("programs").map(p => ({
-      ...p,
-      desc: p.desc || p.description || "",
-      img: p.img || p.img_url || "",
-      icon: p.icon || p.icon_name || "",
-      color: p.color || p.color_class || "",
-      landingPage: p.landingPage || false,
-      status: p.status || "draft",
-    }));
-    setPrograms(all.reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this program?");
     if (!ok) return;
-    const item = programs.find(p => p.id === id);
-    remove("programs", id);
-    logActivity("admin", "delete_program", "program", id, `Deleted ${item?.title}`);
+    await deleteItem("programs", id);
     toast("Program deleted");
-    load();
+    setPrograms((prev: any[]) => prev.filter((p: any) => p.id !== id));
   }
 
   const filtered = search
-    ? programs.filter(p => p.title.toLowerCase().includes(search.toLowerCase()))
+    ? programs.filter((p: any) => p.title.toLowerCase().includes(search.toLowerCase()))
     : programs;
 
   return (
@@ -89,7 +79,7 @@ export default function ProgramTable() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(p => (
+                {filtered.map((p: any) => (
                   <tr key={p.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">

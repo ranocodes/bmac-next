@@ -1,33 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Newspaper, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
+import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { useAdmin } from "@/lib/auth/admin-context";
 import type { NewsArticle } from "@/types/cms";
 
-export default function NewsTable() {
-  const [articles, setArticles] = useState<NewsArticle[]>([]);
+export default function NewsTable({ initialData }: { initialData: any[] }) {
+  const [articles, setArticles] = useState<NewsArticle[]>([...initialData].reverse());
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    const all = getAll<NewsArticle>("news");
-    setArticles(all.reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this article?");
     if (!ok) return;
-    const item = articles.find(a => a.id === id);
-    remove("news", id);
-    logActivity("admin", "delete_news", "news", id, `Deleted ${item?.title}`);
+    await deleteItem("news_articles", id);
     toast("Article deleted");
-    load();
+    setArticles(prev => prev.filter(a => a.id !== id));
   }
 
   const filtered = search

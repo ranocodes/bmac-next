@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Send, Copy, Check, Plus, Trash2, Users, Link as LinkIcon, Mail } from "lucide-react";
-import { setItem, getItem } from "@/data/store";
+import { createInvite, revokeInvite } from "@/actions/invitations";
+import { useAdmin } from "@/lib/auth/admin-context";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
-import { requirePermission, getSessionUser } from "@/lib/permissions";
 import type { Permission } from "@/types/cms";
 
 const roles = ["administrator", "moderator"] as const;
@@ -26,38 +25,20 @@ const roleDefaults: Record<string, Permission[]> = {
   moderator: ["edit_content", "manage_courses", "manage_partners", "view_analytics"],
 };
 
-export default function InviteUserForm() {
+export default function InviteUserForm({ initialData }: { initialData: any[] }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("moderator");
   const [message, setMessage] = useState("");
-  const [invites, setInvites] = useState<any[]>([]);
+  const [invites, setInvites] = useState<any[]>(initialData);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedLink, setCopiedLink] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>(roleDefaults.moderator);
-  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const user = useAdmin();
   const { toast } = useToast();
 
-  useEffect(() => {
-    refreshInvites();
-    setAdminUsers(getItem<any[]>("admin_users") || []);
-  }, []);
-
-  useEffect(() => {
-    setPermissions(roleDefaults[role] || []);
-  }, [role]);
-
   function isAccepted(email: string) {
-    return adminUsers.some(u => u.email === email);
-  }
-
-  function refreshInvites() {
-    const stored = getItem<any[]>("invited_users") || [];
-    setInvites(stored);
-  }
-
-  function togglePermission(key: Permission) {
-    setPermissions(p => p.includes(key) ? p.filter(k => k !== key) : [...p, key]);
+    return false;
   }
 
   function generateCode() {
@@ -67,9 +48,8 @@ export default function InviteUserForm() {
     return code;
   }
 
-  function handleSend() {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "manage_users")) {
+  async function handleSend() {
+    if (!user?.permissions.includes("manage_users")) {
       toast("You don't have permission to send invites", "error");
       return;
     }
@@ -81,38 +61,27 @@ export default function InviteUserForm() {
       id: `invite-${Date.now()}`,
       email,
       role,
-      message,
       code,
       permissions,
-      createdAt: Date.now(),
-      used: false,
-      usedAt: null,
-      invitedBy: session.email,
+      invited_by: user.email,
+      message: message || "",
     };
 
-    const existing = getItem<any[]>("invited_users") || [];
-    setItem("invited_users", [...existing, invite]);
-    refreshInvites();
-
-    logActivity(session.email, "invite_create", "invite", invite.id, `Invited ${email} as ${role}`);
-
+    await createInvite(invite);
+    setInvites(p => [...p, { ...invite, created_at: new Date().toISOString(), used: false }]);
     toast("Invite link created! Share it with the user.", "success");
     setEmail("");
     setMessage("");
     setShowForm(false);
   }
 
-  function handleRevoke(id: string) {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "manage_users")) {
+  async function handleRevoke(id: string) {
+    if (!user?.permissions.includes("manage_users")) {
       toast("You don't have permission to revoke invites", "error");
       return;
     }
-    const existing = getItem<any[]>("invited_users") || [];
-    const invite = existing.find((i: any) => i.id === id);
-    setItem("invited_users", existing.filter((i: any) => i.id !== id));
-    refreshInvites();
-    if (invite) logActivity(session.email, "invite_revoke", "invite", id, `Revoked invite for ${invite.email}`);
+    await revokeInvite(id);
+    setInvites(p => p.filter(i => i.id !== id));
     toast("Invite revoked", "success");
   }
 
@@ -167,7 +136,7 @@ export default function InviteUserForm() {
             <label className="block text-sm font-medium text-secondary/80 mb-1.5">Permissions</label>
             <div className="flex flex-wrap gap-2">
               {allPermissions.map(p => (
-                <button key={p.key} type="button" onClick={() => togglePermission(p.key)}
+                <button key={p.key} type="button" onClick={() => setPermissions(perms => perms.includes(p.key) ? perms.filter(k => k !== p.key) : [...perms, p.key])}
                   className={`px-3 py-1.5 min-h-[34px] rounded-lg text-xs font-medium transition-all ${permissions.includes(p.key) ? "bg-primary/10 text-primary border border-primary/20" : "bg-background border border-input text-muted-foreground hover:text-secondary"}`}>
                   {p.label}
                 </button>
@@ -205,10 +174,8 @@ export default function InviteUserForm() {
                     <p className="text-sm font-medium text-secondary truncate">{invite.email}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">{invite.role}</span>
-                      {accepted ? (
+                      {accepted || invite.used ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Accepted</span>
-                      ) : invite.used ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Used</span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 uppercase tracking-wider">Pending</span>
                       )}
@@ -220,7 +187,7 @@ export default function InviteUserForm() {
                       {copiedLink === i ? <Check size={14} /> : <LinkIcon size={14} />}
                       <span className="hidden sm:inline">{copiedLink === i ? "Copied!" : "Copy Link"}</span>
                     </button>
-                    {!accepted && (
+                    {!accepted && !invite.used && (
                       <a href={`mailto:${invite.email}?subject=Join%20the%20BMAC%20Admin%20Team&body=You%27ve%20been%20invited%20to%20join%20the%20BMAC%20admin%20dashboard.%0A%0AOpen%20this%20link%20to%20accept%3A%0A${typeof window !== "undefined" ? window.location.origin : ""}/admin/accept-invite?code=${invite.code}%0A%0ARole%3A%20${invite.role}`}
                         className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
                         <Mail size={14} /> <span className="hidden sm:inline">Email</span>

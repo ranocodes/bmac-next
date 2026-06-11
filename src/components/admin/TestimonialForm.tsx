@@ -4,31 +4,26 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update } from "@/data/store";
+import { createItem, updateItem } from "@/actions/crud";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
 
-export default function TestimonialForm() {
+export default function TestimonialForm({ initialData }: { initialData?: any | null }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
 
-  const initial = isEdit && params?.id
-    ? getById<any>("testimonials", params.id as string)
-    : null;
-
-  const [name, setName] = useState(initial?.name || "");
-  const [designation, setDesignation] = useState(initial?.designation || "");
-  const [quote, setQuote] = useState(initial?.quote || "");
-  const [src, setSrc] = useState(initial?.src || "");
-  const [status, setStatus] = useState<"draft" | "published">(initial?.status || "draft");
+  const [name, setName] = useState(initialData?.name || "");
+  const [designation, setDesignation] = useState(initialData?.designation || "");
+  const [quote, setQuote] = useState(initialData?.quote || "");
+  const [src, setSrc] = useState(initialData?.src || "");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const { toast } = useToast();
 
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
     setMissingFields([]);
 
@@ -43,20 +38,21 @@ export default function TestimonialForm() {
 
     setSaving(true);
 
-    setTimeout(() => {
+    try {
       const payload = { name, designation, quote, src, status: publishStatus };
       if (isEdit && params?.id) {
-        update<any>("testimonials", params.id as string, payload);
-        logActivity("admin", "update_testimonial", "testimonial", params.id as string, `Updated testimonial: ${name}`);
+        await updateItem("testimonials", params.id as string, payload);
       } else {
         const id = `testimonial-${Date.now()}`;
-        create<any>("testimonials", { id, ...payload });
-        logActivity("admin", "create_testimonial", "testimonial", id, `Created testimonial: ${name}`);
+        await createItem("testimonials", { id, ...payload });
       }
-      setSaving(false);
       toast(isEdit ? "Testimonial updated" : "Testimonial created", "success");
       router.push("/admin/testimonials");
-    }, 300);
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

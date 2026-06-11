@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Newspaper, Calendar, BookOpen, Image, Users, Star, TrendingUp, ArrowRight, Plus, Sparkle, Activity, ClipboardList } from "lucide-react";
-import { getAll, seedIfEmpty, create, setItem, getItem } from "@/data/store";
-import { getCurrentUserPermissions } from "@/lib/permissions";
-import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials, mockStats, mockPartners } from "@/data/mock-data";
-import type { NewsArticle, EventPass, Program, GalleryItem, TeamMember, Testimonial, Category } from "@/types/cms";
+import {
+  Newspaper, Calendar, BookOpen, Image, Users, Star,
+  ArrowRight, Plus, Sparkle, Activity, ClipboardList,
+} from "lucide-react";
+import { useAdmin } from "@/lib/auth/admin-context";
+import type { NewsArticle, EventPass } from "@/types/cms";
+
+interface DashboardProps {
+  initialCounts: Record<string, number>;
+  recentNews: any[];
+  recentEvents: any[];
+  recentActivity: any[];
+  todayCount: number;
+}
 
 const quickActions = [
   { label: "New Article", href: "/admin/news/new", icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
@@ -15,86 +24,24 @@ const quickActions = [
   { label: "Upload Photo", href: "/admin/gallery/new", icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
 ];
 
-const hours = new Date().getHours();
-const greeting = hours < 12 ? "Good morning" : hours < 18 ? "Good afternoon" : "Good evening";
-
-export default function DashboardClient() {
-  const [counts, setCounts] = useState({ news: 0, events: 0, programs: 0, gallery: 0, team: 0, testimonials: 0 });
-  const [recentNews, setRecentNews] = useState<NewsArticle[]>([]);
-  const [recentEvents, setRecentEvents] = useState<EventPass[]>([]);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [todayCount, setTodayCount] = useState(0);
-  const [firstName, setFirstName] = useState("Admin");
+export default function DashboardClient({ initialCounts, recentNews, recentEvents, recentActivity, todayCount }: DashboardProps) {
+  const user = useAdmin();
+  const [greeting, setGreeting] = useState("Good day");
 
   useEffect(() => {
-    const session = getItem<{ firstName?: string }>("session");
-    if (session?.firstName) setFirstName(session.firstName);
-    seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
-    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-    seedIfEmpty("programs", mockPrograms);
-    seedIfEmpty("gallery", mockGallery);
-    seedIfEmpty("team", mockTeam);
-    seedIfEmpty("testimonials", mockTestimonials);
-    seedIfEmpty("stats", mockStats);
-    seedIfEmpty("partners", mockPartners);
-        seedIfEmpty("categories", [{ id: "default", name: "General" }]);
-
-    if (!getItem<any>("site_settings")) {
-      setItem("site_settings", {
-        id: "settings-1",
-        logo_text: "BMAC",
-        navigation: [
-          { name: "Home", href: "/" },
-          { name: "Programs", href: "/programs" },
-          { name: "Events", href: "/events" },
-          { name: "News", href: "/news" },
-          { name: "Gallery", href: "/gallery" },
-          { name: "About", href: "/about" },
-          { name: "Contact", href: "/contact" }
-        ],
-        social_links: [
-          { name: "Instagram", href: "https://instagram.com/bmacjos", icon: "Instagram" },
-          { name: "Twitter", href: "https://twitter.com/bmacjos", icon: "Twitter" },
-          { name: "YouTube", href: "https://youtube.com/@bmac", icon: "Youtube" }
-        ],
-        copyright: "Brilliant Minds Ambassadors Club. All rights reserved.",
-      });
-    }
-    seedIfEmpty("categories", [
-      "Achievements", "Programs", "Alumni", "Partnerships",
-      "Events", "Announcements", "Workshops", "Competition",
-      "Culture", "Mentorship", "Community",
-    ].map((name, i) => ({ id: `cat-${i}`, name })));
-
-    const news = getAll<NewsArticle>("news");
-    const events = getAll<any>("events").map(e => ({ ...e, date: e.date || e.event_date || "", desc: e.desc || e.description || "" }));
-    setCounts({
-      news: news.length,
-      events: events.length,
-      programs: getAll<Program>("programs").length,
-      gallery: getAll<GalleryItem>("gallery").length,
-      team: getAll<TeamMember>("team").length,
-      testimonials: getAll<Testimonial>("testimonials").length,
-    });
-    setRecentNews([...news].reverse().slice(0, 4));
-    setRecentEvents(events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4));
-
-    const logs = getAll<any>("activity_logs");
-    setRecentActivity(logs.slice(0, 15));
-    const today = Date.now() - 86400000;
-    setTodayCount(logs.filter((l: any) => l.timestamp > today).length);
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
   }, []);
 
-  const perms = getCurrentUserPermissions();
-  const canViewActivity = perms.includes("manage_users");
+  const canViewActivity = user?.permissions.includes("manage_users") ?? false;
 
   const statCards = [
-    { label: "News", value: counts.news, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
-    { label: "Events", value: counts.events, icon: Calendar, color: "text-amber-500", bg: "bg-amber-50" },
-    { label: "Programs", value: counts.programs, icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-50" },
-    { label: "Gallery", value: counts.gallery, icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
-    { label: "Team", value: counts.team, icon: Users, color: "text-rose-500", bg: "bg-rose-50" },
-    { label: "Testimonials", value: counts.testimonials, icon: Star, color: "text-cyan-500", bg: "bg-cyan-50" },
+    { label: "News", value: initialCounts.news, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
+    { label: "Events", value: initialCounts.events, icon: Calendar, color: "text-amber-500", bg: "bg-amber-50" },
+    { label: "Programs", value: initialCounts.programs, icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-50" },
+    { label: "Gallery", value: initialCounts.gallery, icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
+    { label: "Team", value: initialCounts.team, icon: Users, color: "text-rose-500", bg: "bg-rose-50" },
+    { label: "Testimonials", value: initialCounts.testimonials, icon: Star, color: "text-cyan-500", bg: "bg-cyan-50" },
   ];
 
   return (
@@ -102,12 +49,12 @@ export default function DashboardClient() {
       {/* Header */}
       <div>
         <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary">
-          {greeting}, {firstName}
+          {greeting}, {user?.firstName ?? "Admin"}
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5">Here is what is happening across your site.</p>
       </div>
 
-      {/* Stat cards — bento row */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
         {statCards.map(card => (
           <div key={card.label} className="bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
@@ -120,7 +67,7 @@ export default function DashboardClient() {
         ))}
       </div>
 
-      {/* Quick Actions — horizontal scroll on mobile, grid on desktop */}
+      {/* Quick Actions */}
       <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
         <div className="flex items-center gap-2 mb-5">
           <Sparkle size={16} className="text-primary" />
@@ -143,9 +90,8 @@ export default function DashboardClient() {
         </div>
       </div>
 
-      {/* Recent content — asymmetric bento grid */}
+      {/* Recent content */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* Recent News — takes 3/5 on desktop */}
         <div className="xl:col-span-3 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -162,7 +108,7 @@ export default function DashboardClient() {
             </div>
           ) : (
             <div className="space-y-1">
-              {recentNews.map(a => (
+              {recentNews.map((a: any) => (
                 <Link key={a.id} href={`/admin/news/${a.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
                   <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
                     <Newspaper size={15} className="text-muted-foreground group-hover:text-blue-500 transition-colors" />
@@ -181,7 +127,6 @@ export default function DashboardClient() {
           </Link>
         </div>
 
-        {/* Upcoming Events — takes 2/5 on desktop */}
         <div className="xl:col-span-2 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -198,7 +143,7 @@ export default function DashboardClient() {
             </div>
           ) : (
             <div className="space-y-1">
-              {recentEvents.map(e => (
+              {recentEvents.map((e: any) => (
                 <Link key={e.id} href={`/admin/events/${e.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
                   <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-amber-50 transition-colors">
                     <Calendar size={15} className="text-muted-foreground group-hover:text-amber-500 transition-colors" />
@@ -218,7 +163,7 @@ export default function DashboardClient() {
         </div>
       </div>
 
-      {/* Recent Activity — full width */}
+      {/* Recent Activity */}
       {canViewActivity && <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">

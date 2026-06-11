@@ -3,13 +3,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, AlertCircle, UserCheck } from "lucide-react";
-import { setItem, getItem } from "@/data/store";
-import { logActivity } from "@/lib/activity";
+import { useClerk } from "@clerk/nextjs";
+import { getInviteByCode, acceptInviteAction } from "@/actions/invitations";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AcceptInviteForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get("code");
+  const { toast } = useToast();
+  const clerk = useClerk();
 
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,59 +21,70 @@ export default function AcceptInviteForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [inviteRole, setInviteRole] = useState<string | null>(null);
+  const [invitePerms, setInvitePerms] = useState<string[]>([]);
 
   useEffect(() => {
     if (!code) return;
-    const invites = getItem<any[]>("invited_users") || [];
-    const found = invites.find(i => i.code === code && !i.used);
-    if (found) {
-      if (found.email) setEmail(found.email);
-      if (found.role) setInviteRole(found.role);
-    }
+    fetchInvite(code);
   }, [code]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function fetchInvite(inviteCode: string) {
+    const invite = await getInviteByCode(inviteCode);
+    if (invite) {
+      if (invite.email) setEmail(invite.email);
+      if (invite.role) setInviteRole(invite.role);
+      if (invite.permissions) setInvitePerms(invite.permissions);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (!firstName || !email || !password) { setError("All fields required"); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (!code) { setError("Invalid invite code"); return; }
 
     setLoading(true);
-    setTimeout(() => {
-      const users = getItem<any[]>("admin_users") || [];
-      if (users.find(u => u.email === email)) {
-        setError("An account with this email already exists");
+    try {
+      const signUpAttempt = await clerk.client.signUp.create({
+        emailAddress: email,
+        password,
+        firstName,
+      });
+
+      if (signUpAttempt.status !== "complete") {
+        setError("Email verification required. Check your inbox.");
         setLoading(false);
         return;
       }
 
+      if (!signUpAttempt.createdSessionId) {
+        setError("Failed to create session. Please sign in.");
+        setLoading(false);
+        return;
+      }
+
+      await clerk.setActive({ session: signUpAttempt.createdSessionId });
+
       const role = inviteRole || "administrator";
-      const defaultPermissions: string[] = role === "administrator"
+      const perms = invitePerms.length > 0 ? invitePerms : role === "administrator"
         ? ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "access_settings", "delete_records", "manage_moderators"]
         : ["edit_content", "manage_courses", "manage_partners", "view_analytics"];
 
-      const newUser = {
-        id: `user-${Date.now()}`,
-        email,
-        password,
-        firstName,
-        role,
-        permissions: defaultPermissions,
-        createdAt: Date.now(),
-      };
-      setItem("admin_users", [...users, newUser]);
-
-      if (code) {
-        const invites = getItem<any[]>("invited_users") || [];
-        const updated = invites.map(i => i.code === code ? { ...i, used: true, usedAt: Date.now() } : i);
-        setItem("invited_users", updated);
+      const result = await acceptInviteAction({ code, email, firstName, password, role, permissions: perms });
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+        return;
       }
 
-      setItem("session", { email, firstName, loggedInAt: Date.now() });
-      logActivity(email, "signup", "user", newUser.id, `Created account as ${role}`);
-      logActivity(email, "login", "session");
+      toast("Account created! Welcome.", "success");
       router.push("/admin");
-    }, 600);
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

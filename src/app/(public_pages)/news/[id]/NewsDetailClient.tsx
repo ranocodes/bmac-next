@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockNews, mockEvents } from "@/data/mock-data";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import type { NewsArticle, EventPass } from "@/types/cms";
@@ -31,43 +29,38 @@ function formatEventDate(raw: string | undefined): { month: string; day: string 
 
 interface NewsDetailClientProps {
   id: string;
+  initialNews: any[];
+  initialEvents: any[];
 }
 
-export default function NewsDetailClient({ id }: NewsDetailClientProps) {
-  const [article, setArticle] = useState<NewsArticle | null>(null);
-  const [relatedStories, setRelatedStories] = useState<NewsArticle[]>([]);
-  const [events, setEvents] = useState<EventPass[]>([]);
-  const [loading, setLoading] = useState(true);
+function normalizeNews(raw: any[]): NewsArticle[] {
+  return raw.map(a => ({
+    ...a,
+    img: (a as any).img_url || a.img || "/images/placeholder.jpg",
+    desc: a.desc || (a as any).description || "",
+  }));
+}
+
+function normalizeEvents(raw: any[]): EventPass[] {
+  return raw.map(e => ({
+    ...e,
+    date: (e as any).event_date || e.date || "",
+    desc: e.desc || (e as any).description || "",
+    features: (e as any).features || [],
+  }));
+}
+
+export default function NewsDetailClient({ id, initialNews, initialEvents }: NewsDetailClientProps) {
+  const allNews = normalizeNews(initialNews);
+  const found = allNews.find(a => a.id === id) || null;
+  const [article] = useState<NewsArticle | null>(found);
+  const [relatedStories] = useState<NewsArticle[]>(
+    found
+      ? allNews.filter(a => a.id !== id && a.category === found.category).slice(0, 3)
+      : []
+  );
+  const [events] = useState<EventPass[]>(normalizeEvents(initialEvents));
   const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
-
-  useEffect(() => {
-    seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
-    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-
-    const allNews = getAll<NewsArticle>("news").map(a => ({ ...a, img: (a as any).img_url || a.img || "/images/placeholder.jpg", desc: a.desc || (a as any).description || "" }));
-    const found = allNews.find(a => a.id === id) || null;
-    setArticle(found);
-
-    if (found) {
-      setRelatedStories(
-        allNews
-          .filter(a => a.id !== id && a.category === found.category)
-          .reverse()
-          .slice(0, 3)
-      );
-    }
-
-    setEvents(getAll<EventPass>("events").reverse().map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] })));
-    setLoading(false);
-  }, [id]);
-
-  if (loading) {
-    return (
-      <main className="bg-background min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
-      </main>
-    );
-  }
 
   if (!article) {
     return (

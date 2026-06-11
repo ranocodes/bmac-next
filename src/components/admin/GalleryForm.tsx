@@ -1,46 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update, getAll, seedIfEmpty } from "@/data/store";
+import { createItem, updateItem } from "@/actions/crud";
 import type { Category } from "@/types/cms";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
 
-export default function GalleryForm() {
+const CATEGORIES: Category[] = [
+  "Achievements", "Programs", "Alumni", "Partnerships",
+  "Events", "Announcements", "Workshops", "Competition",
+  "Culture", "Mentorship", "Community",
+].map((name, i) => ({ id: `cat-${i}`, name }));
+
+export default function GalleryForm({ initialData }: { initialData?: any | null }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
 
-  const initial = isEdit && params?.id
-    ? getById<any>("gallery", params.id as string)
-    : null;
-
-  const [img, setImg] = useState(initial?.img || "");
-  const [alt, setAlt] = useState(initial?.alt || "");
-  const [category, setCategory] = useState(initial?.category || "");
-  const [status, setStatus] = useState<"draft" | "published">(initial?.status || "draft");
+  const [img, setImg] = useState(initialData?.img || "");
+  const [alt, setAlt] = useState(initialData?.alt || "");
+  const [category, setCategory] = useState(initialData?.category || "");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories] = useState<Category[]>(CATEGORIES);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const defaultCategories = [
-      "Achievements", "Programs", "Alumni", "Partnerships",
-      "Events", "Announcements", "Workshops", "Competition",
-      "Culture", "Mentorship", "Community",
-    ];
-    seedIfEmpty("categories", defaultCategories.map((name, i) => ({ id: `cat-${i}`, name })));
-    const stored = getAll<Category>("categories");
-    setCategories(stored.length > 0 ? stored : defaultCategories.map((name, i) => ({ id: `cat-${i}`, name })));
-  }, []);
-
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
     setMissingFields([]);
 
@@ -56,20 +46,21 @@ export default function GalleryForm() {
 
     setSaving(true);
 
-    setTimeout(() => {
+    try {
       const payload = { img, alt, category, status: publishStatus };
       if (isEdit && params?.id) {
-        update<any>("gallery", params.id as string, payload);
-        logActivity("admin", "update_gallery", "gallery", params.id as string, `Updated gallery: ${alt}`);
+        await updateItem("gallery_items", params.id as string, payload);
       } else {
         const id = `gallery-${Date.now()}`;
-        create<any>("gallery", { id, ...payload });
-        logActivity("admin", "create_gallery", "gallery", id, `Created gallery: ${alt}`);
+        await createItem("gallery_items", { id, ...payload });
       }
-      setSaving(false);
       toast(isEdit ? "Gallery item updated" : "Gallery item created", "success");
       router.push("/admin/gallery");
-    }, 300);
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

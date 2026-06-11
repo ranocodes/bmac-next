@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Users, Search, Trash2, Shield, ShieldAlert, ShieldCheck, ShieldEllipsis, X, Check } from "lucide-react";
-import { getItem, setItem } from "@/data/store";
+import { useAdmin } from "@/lib/auth/admin-context";
+import { updateUserPermissions, deleteAdminUser } from "@/actions/admin-users";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
-import { getSessionUser } from "@/lib/permissions";
 import type { Permission } from "@/types/cms";
 
 const roleIcons: Record<string, any> = {
@@ -31,27 +30,22 @@ const allPermissions: { key: Permission; label: string }[] = [
   { key: "manage_moderators", label: "Manage Moderators" },
 ];
 
-export default function UsersTable() {
+export default function UsersTable({ initialData }: { initialData: any[] }) {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const [currentUser, setCurrentUser] = useState<string>("");
-  const [currentRole, setCurrentRole] = useState<string>("");
+  const currentUser = useAdmin();
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editPerms, setEditPerms] = useState<Permission[]>([]);
   const { toast, confirm } = useToast();
 
-  function load() {
-    const all = getItem<any[]>("admin_users") || [];
-    setUsers(all);
-    const session = getSessionUser();
-    if (session) {
-      setCurrentUser(session.email);
-      const me = all.find(u => u.email === session.email);
-      if (me) setCurrentRole(me.role);
-    }
-  }
-
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const mapped = initialData.map(u => ({
+      ...u,
+      firstName: u.first_name,
+      createdAt: u.created_at,
+    }));
+    setUsers(mapped);
+  }, [initialData]);
 
   function openPermissionEditor(user: any) {
     setEditingUser(user);
@@ -62,17 +56,16 @@ export default function UsersTable() {
     setEditPerms(p => p.includes(key) ? p.filter(k => k !== key) : [...p, key]);
   }
 
-  function savePermissions() {
-    const updated = users.map(u => u.id === editingUser.id ? { ...u, permissions: editPerms } : u);
-    setItem("admin_users", updated);
-    logActivity(currentUser, "update_permissions", "user", editingUser.id, `Updated permissions for ${editingUser.email}`);
+  async function savePermissions() {
+    if (!editingUser) return;
+    await updateUserPermissions(editingUser.id, editPerms);
+    setUsers(p => p.map(u => u.id === editingUser.id ? { ...u, permissions: editPerms } : u));
     toast("Permissions updated", "success");
     setEditingUser(null);
-    load();
   }
 
   async function handleDelete(id: string, userEmail: string) {
-    if (userEmail === currentUser) {
+    if (userEmail === currentUser?.email) {
       toast("You cannot delete your own account", "error");
       return;
     }
@@ -81,24 +74,22 @@ export default function UsersTable() {
       toast("Cannot delete a Super Admin account", "error");
       return;
     }
-    if (currentRole !== "super_admin") {
+    if (currentUser?.role !== "super_admin") {
       toast("Only Super Admin can delete users", "error");
       return;
     }
     const ok = await confirm(`Delete user ${target?.firstName || userEmail}?`);
     if (!ok) return;
-    const updated = users.filter(u => u.id !== id);
-    setItem("admin_users", updated);
-    logActivity(currentUser, "delete_user", "user", id, `Deleted user ${userEmail}`);
+    await deleteAdminUser(id);
+    setUsers(p => p.filter(u => u.id !== id));
     toast("User deleted", "success");
-    load();
   }
 
   const filtered = search
     ? users.filter(u => u.email?.toLowerCase().includes(search.toLowerCase()) || u.firstName?.toLowerCase().includes(search.toLowerCase()))
     : users;
 
-  const isSuper = currentRole === "super_admin";
+  const isSuper = currentUser?.role === "super_admin";
 
   return (
     <div className="w-full max-w-4xl space-y-6">
@@ -146,7 +137,7 @@ export default function UsersTable() {
                           </div>
                           <div>
                             <p className="text-sm font-medium text-secondary">{u.firstName}
-                              {u.email === currentUser && <span className="text-[10px] text-muted-foreground ml-1.5">(you)</span>}
+                              {u.email === currentUser?.email && <span className="text-[10px] text-muted-foreground ml-1.5">(you)</span>}
                             </p>
                             <span className="text-xs text-muted-foreground sm:hidden">{u.email}</span>
                           </div>
@@ -189,7 +180,6 @@ export default function UsersTable() {
         </div>
       )}
 
-      {/* Edit Permissions Modal */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary/20 backdrop-blur-sm p-4" onClick={() => setEditingUser(null)}>
           <div className="bg-card rounded-2xl shadow-xl border border-border/50 w-full max-w-md" onClick={e => e.stopPropagation()}>

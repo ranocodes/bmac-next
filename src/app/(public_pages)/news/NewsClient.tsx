@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Newspaper } from "lucide-react";
@@ -10,8 +10,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { DigitalPass } from "@/components/ui/DigitalPass";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { cn } from "@/lib/utils";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockNews, mockEvents } from "@/data/mock-data";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
 function formatEventDate(raw: string | undefined): { month: string; day: string } {
@@ -31,17 +29,32 @@ function formatEventDate(raw: string | undefined): { month: string; day: string 
   };
 }
 
-export default function NewsClient() {
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [events, setEvents] = useState<EventPass[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface NewsClientProps {
+  initialNews: any[];
+  initialEvents: any[];
+}
 
-  useEffect(() => {
-    seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
-    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-    setNews(getAll<NewsArticle>("news").reverse().map(a => ({ ...a, img: (a as any).img_url || a.img || "/images/placeholder.jpg", desc: a.desc || (a as any).description || "" })));
-    setEvents(getAll<EventPass>("events").reverse().map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] })));
-  }, []);
+function normalizeNews(raw: any[]): NewsArticle[] {
+  return raw.map(a => ({
+    ...a,
+    img: (a as any).img_url || a.img || "/images/placeholder.jpg",
+    desc: a.desc || (a as any).description || "",
+  }));
+}
+
+function normalizeEvents(raw: any[]): EventPass[] {
+  return raw.map(e => ({
+    ...e,
+    date: (e as any).event_date || e.date || "",
+    desc: e.desc || (e as any).description || "",
+    features: (e as any).features || [],
+  }));
+}
+
+export default function NewsClient({ initialNews, initialEvents }: NewsClientProps) {
+  const [news] = useState<NewsArticle[]>(normalizeNews(initialNews));
+  const [events] = useState<EventPass[]>(normalizeEvents(initialEvents));
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>

@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
-  BarChart3, Settings, Tag, LogOut, Menu, ChevronRight, Send,
+  BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, PanelLeftClose, PanelLeftOpen,
-  UserCog
+  UserCog, Send
 } from "lucide-react";
-import { removeItem, getItem, setItem } from "@/data/store";
 import { ToastProvider } from "@/components/ui/Toast";
+import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
 import { ShieldOff } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
+
+interface AdminUser {
+  email: string;
+  firstName: string;
+  role: string;
+  permissions: Permission[];
+}
 
 interface NavItem {
   label: string;
@@ -96,78 +104,43 @@ function checkRouteAccess(pathname: string, permissions: Permission[]): boolean 
   return permissions.includes(matched[1]);
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children, user: userProp }: { children: React.ReactNode; user?: AdminUser }) {
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
-  const [authed, setAuthed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [permissions, setPermissions] = useState<Permission[]>(defaultPermissions);
-  const [role, setRole] = useState<string>("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    setSidebarCollapsed(getItem("sidebar_collapsed") === true);
-    const session = getItem<{ email: string; firstName?: string }>("session");
-    if (!session && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
-      window.location.href = "/admin/login";
-    } else if (session) {
-      setAuthed(true);
-      setEmail(session.email);
-      setFirstName(session.firstName || session.email.split("@")[0]);
-
-      const user = getItem<any[]>("admin_users")?.find((u: any) => u.email === session.email);
-      if (user) {
-        setPermissions(user.permissions || defaultPermissions);
-        setRole(user.role);
-      }
-    }
-    setReady(true);
-  }, [pathname]);
+    const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
+    if (saved === "true") setSidebarCollapsed(true);
+  }, []);
 
   useEffect(() => {
-    if (!ready || !authed) return;
-    const initial: Record<string, boolean> = {};
-    for (const g of navGroups) {
-      initial[g.label] = g.children.some(c => c.href && pathname.startsWith(c.href));
+    if (!userProp && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
+      window.location.href = "/admin/login";
     }
-    setOpenGroups(initial);
-  }, [ready, authed, pathname]);
+  }, [userProp, pathname]);
 
-  const toggleGroup = (label: string) => setOpenGroups(p => ({ ...p, [label]: !p[label] }));
-
-  const toggleCollapse = useCallback(() => {
-    setSidebarCollapsed(prev => {
-      const next = !prev;
-      setItem("sidebar_collapsed", next);
-      return next;
-    });
-  }, []);
+  const user = userProp;
+  const email = user?.email ?? "";
+  const firstName = user?.firstName ?? "";
+  const role = user?.role ?? "";
+  const permissions = user?.permissions ?? defaultPermissions;
 
   const filteredGroups = navGroups
     .map(g => ({ ...g, children: g.children.filter(c => hasAccess(permissions, c)) }))
     .filter(g => groupHasAccess(permissions, g));
 
-  const logout = useCallback(() => {
-    removeItem("session");
-    window.location.href = "/admin/login";
-  }, []);
+  const toggleGroup = (label: string) => setOpenGroups(p => ({ ...p, [label]: !p[label] }));
+
+  const denied = !checkRouteAccess(pathname, permissions);
 
   const isLogin = pathname === "/admin/login";
-
-  if (!ready) {
-    return <div className="min-h-[100dvh] flex items-center justify-center bg-background"><span className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
-  }
 
   if (isLogin || pathname.startsWith("/admin/accept-invite")) {
     return <ToastProvider><>{children}</></ToastProvider>;
   }
-  if (!authed) return null;
-
-  const denied = !checkRouteAccess(pathname, permissions);
 
   return (
     <ToastProvider>
@@ -241,15 +214,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">{role.replace("_", " ")}</span>
             </div>
           )}
-          <button onClick={logout} className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
-            <LogOut size={18} /> {!sidebarCollapsed && <span>Logout</span>}
-          </button>
+          <SignOutButton>
+            <button className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
+              <LogOut size={18} /> {!sidebarCollapsed && <span>Logout</span>}
+            </button>
+          </SignOutButton>
         </div>
       </aside>
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-card border-b border-border/50 flex items-center gap-4 px-4 lg:px-6 sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted"><Menu size={20} /></button>
-          <button onClick={toggleCollapse} className="hidden lg:flex w-9 h-9 items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+          <button onClick={() => setSidebarCollapsed(p => { const next = !p; localStorage.setItem("bmac_admin_sidebar_collapsed", String(next)); return next; })} className="hidden lg:flex w-9 h-9 items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
           <div className="flex-1" />
@@ -266,9 +241,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <p className="text-sm font-medium text-secondary truncate">{email}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mt-0.5">{role.replace("_", " ")}</p>
                   </div>
-                  <button onClick={() => { setProfileOpen(false); logout(); }} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
-                    <LogOut size={15} /> Logout
-                  </button>
+                  <SignOutButton>
+                    <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                      <LogOut size={15} /> Logout
+                    </button>
+                  </SignOutButton>
                 </div>
               </>
             )}
@@ -286,7 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 You don't have the required permissions to access this page.
               </p>
             </div>
-          ) : children}
+          ) : <AdminProvider value={user as any}>{children}</AdminProvider>}
         </main>
       </div>
     </div>

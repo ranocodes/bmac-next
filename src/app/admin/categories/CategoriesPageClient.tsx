@@ -1,25 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Tag, Plus, Trash2 } from "lucide-react";
-import { getAll, create, remove } from "@/data/store";
+import { createItem, deleteItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
 import type { Category } from "@/types/cms";
 
-export default function CategoriesPageClient() {
-  const [categories, setCategories] = useState<Category[]>([]);
+export default function CategoriesPageClient({ initialData }: { initialData: Category[] }) {
+  const [categories, setCategories] = useState<Category[]>(initialData);
   const [newName, setNewName] = useState("");
+  const user = useAdmin();
   const { toast, confirm } = useToast();
 
-  function load() {
-    setCategories(getAll<Category>("categories"));
-  }
+  const canManage = user?.permissions.includes("edit_content");
 
-  useEffect(() => { load(); }, []);
-
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (!canManage) { toast("You don't have permission to manage categories", "error"); return; }
     const name = newName.trim();
     if (!name) return;
     if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
@@ -27,21 +25,19 @@ export default function CategoriesPageClient() {
       return;
     }
     const id = `cat-${Date.now()}`;
-    create<Category>("categories", { id, name });
-    logActivity("admin", "create_category", "category", id, `Created category: ${name}`);
+    await createItem("categories", { id, name });
+    setCategories(p => [...p, { id, name } as Category]);
     setNewName("");
     toast("Category added");
-    load();
   }
 
   async function handleDelete(id: string) {
+    if (!canManage) { toast("You don't have permission to delete categories", "error"); return; }
     const ok = await confirm("Delete this category?");
     if (!ok) return;
-    const cat = categories.find(c => c.id === id);
-    remove("categories", id);
-    logActivity("admin", "delete_category", "category", id, `Deleted ${cat?.name}`);
+    await deleteItem("categories", id);
+    setCategories(p => p.filter(c => c.id !== id));
     toast("Category deleted");
-    load();
   }
 
   return (
