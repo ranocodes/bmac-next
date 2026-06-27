@@ -12,12 +12,15 @@ export async function createInvite(data: {
   email: string;
   role: string;
   code: string;
-  permissions: string[];
   invited_by: string;
-  message?: string;
 }) {
-  const result = await db.create("invitations", data);
-  // Add email to Clerk allowlist so they can sign up
+  const result = await db.create("invitations", {
+    id: data.id,
+    email: data.email,
+    role: data.role,
+    code: data.code,
+    created_by: data.invited_by,
+  });
   try {
     const client = await clerkClient();
     await client.allowlistIdentifiers.createAllowlistIdentifier({ identifier: data.email, notify: false });
@@ -65,7 +68,37 @@ export async function acceptInviteAction(params: {
     permissions,
   });
 
-  await db.update("invitations", code, { used: true, used_at: new Date().toISOString() });
+  await db.query("UPDATE public.invitations SET used = true, used_at = $1 WHERE code = $2", [new Date().toISOString(), code]);
+
+  return { success: true, adminId };
+}
+
+export async function acceptExistingUserInvite(params: {
+  code: string;
+  email: string;
+  firstName: string;
+  role: string;
+  permissions: string[];
+}) {
+  const { code, email, firstName, role, permissions } = params;
+
+  const existing = await db.query<any>(
+    "SELECT id FROM public.admin_users WHERE email = $1",
+    [email]
+  );
+  if (existing.length > 0) return { error: "Account already exists for this email" };
+
+  const adminId = `admin-${Date.now()}`;
+  await db.create("admin_users", {
+    id: adminId,
+    email,
+    password: "",
+    first_name: firstName,
+    role,
+    permissions,
+  });
+
+  await db.query("UPDATE public.invitations SET used = true, used_at = $1 WHERE code = $2", [new Date().toISOString(), code]);
 
   return { success: true, adminId };
 }

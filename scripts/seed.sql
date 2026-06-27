@@ -1,4 +1,4 @@
-TRUNCATE TABLE public.programs, public.events, public.news_articles, public.testimonials, public.team_members, public.impact_stats, public.gallery_items, public.partners, public.site_settings RESTART IDENTITY CASCADE;
+TRUNCATE TABLE public.programs, public.events, public.news_articles, public.testimonials, public.team_members, public.impact_stats, public.gallery_items, public.partners, public.site_settings, public.activity_logs RESTART IDENTITY CASCADE;
 
 INSERT INTO public.programs (id, title, description, long_desc, img, icon, color, details, variant, status, skills, faqs, landing_page) VALUES
 ('public-speaking', 'Public Speaking', 'Master the art of confident communication...', 'Our Public Speaking program is designed to transform shy individuals into confident orators...', '/images/public-speaking.jpg', 'MicVocal', 'text-emerald-400', '12 weeks | Saturdays 10am-12pm | Open to ages 13-18', 'default', 'published', '["Commanding presence","Rhetorical techniques","Critical thinking","Emotional connection","Storytelling","Leadership communication"]', '[{"q":"Is this for beginners?","a":"Yes."},{"q":"Any fees?","a":"Free for members."}]', true),
@@ -62,3 +62,20 @@ INSERT INTO public.partners (id, name, logo, url, status, "order") VALUES
 
 INSERT INTO public.site_settings (id, logo_text, navigation, social_links, copyright) VALUES
 ('settings-1', 'BMAC', '[{"name":"Home","href":"/"},{"name":"Programs","href":"/programs"},{"name":"Events","href":"/events"},{"name":"News","href":"/news"},{"name":"Gallery","href":"/gallery"},{"name":"About","href":"/about"},{"name":"Contact","href":"/contact"}]', '[{"name":"Instagram","href":"https://instagram.com/bmac","icon":"Instagram"},{"name":"Twitter","href":"https://twitter.com/bmac","icon":"Twitter"},{"name":"YouTube","href":"https://youtube.com/@bmac","icon":"Youtube"}]', '(c) 2026 Brilliant Minds Ambassadors Club. All rights reserved.');
+
+INSERT INTO public.activity_logs (id, "user", action, resource, resource_id, details, timestamp) VALUES
+('log-1', 'Sarah Adeyemi', 'login', 'session', 'admin-1', 'Admin logged in', NOW() - INTERVAL '2 hours'),
+('log-2', 'Sarah Adeyemi', 'create', 'news_articles', 'news-7', 'Created article: BMAC Summer Workshop Registration Open', NOW() - INTERVAL '3 hours'),
+('log-3', 'Emmanuel Bature', 'update', 'events', 'event-1', 'Updated event: Annual Speech Championship', NOW() - INTERVAL '5 hours'),
+('log-4', 'Grace Okonkwo', 'delete', 'testimonials', 'test-5', 'Deleted testimonial from John Doe', NOW() - INTERVAL '1 day'),
+('log-5', 'Sarah Adeyemi', 'create', 'programs', 'debate-advanced', 'Created program: Advanced Debate', NOW() - INTERVAL '2 days'),
+('log-6', 'Daniel Pwajok', 'update', 'team_members', 'team-3', 'Updated role for Grace Okonkwo', NOW() - INTERVAL '2 days'),
+('log-7', 'Emmanuel Bature', 'login', 'session', 'admin-2', 'Admin logged in', NOW() - INTERVAL '3 days'),
+('log-8', 'Grace Okonkwo', 'create', 'gallery_items', 'gallery-9', 'Added gallery image: Workshop Group Photo', NOW() - INTERVAL '3 days'),
+('log-9', 'Sarah Adeyemi', 'update', 'site_settings', 'settings-1', 'Updated navigation links', NOW() - INTERVAL '4 days'),
+('log-10', 'Emmanuel Bature', 'publish', 'events', 'event-4', 'Published event: Career Day 2026', NOW() - INTERVAL '5 days'),
+('log-11', 'Daniel Pwajok', 'create', 'news_articles', 'news-8', 'Created article: Mentorship Impact Report 2026', NOW() - INTERVAL '6 days'),
+('log-12', 'Sarah Adeyemi', 'login', 'session', 'admin-1', 'Admin logged in', NOW() - INTERVAL '7 days'),
+('log-13', 'Grace Okonkwo', 'update', 'programs', 'digital-literacy', 'Updated program description', NOW() - INTERVAL '8 days'),
+('log-14', 'Emmanuel Bature', 'delete', 'gallery_items', 'gallery-3', 'Deleted outdated gallery image', NOW() - INTERVAL '9 days'),
+('log-15', 'Sarah Adeyemi', 'create', 'events', 'event-7', 'Created event: End of Year Gala', NOW() - INTERVAL '10 days');

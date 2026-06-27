@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Eye, EyeOff, LogIn, AlertCircle, UserCheck } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
-import { getInviteByCode, acceptInviteAction } from "@/actions/invitations";
+import { Eye, EyeOff, LogIn, AlertCircle, UserCheck, ArrowRight } from "lucide-react";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { getInviteByCode, acceptInviteAction, acceptExistingUserInvite } from "@/actions/invitations";
 import { useToast } from "@/components/ui/Toast";
 
 export default function AcceptInviteForm() {
@@ -12,6 +12,7 @@ export default function AcceptInviteForm() {
   const router = useRouter();
   const code = searchParams.get("code");
   const { toast } = useToast();
+  const { isSignedIn, user } = useUser();
   const clerk = useClerk();
 
   const [firstName, setFirstName] = useState("");
@@ -34,6 +35,37 @@ export default function AcceptInviteForm() {
       if (invite.email) setEmail(invite.email);
       if (invite.role) setInviteRole(invite.role);
       if (invite.permissions) setInvitePerms(invite.permissions);
+    }
+  }
+
+  async function handleAcceptExisting() {
+    if (!code || !email) return;
+    setLoading(true);
+    setError("");
+
+    const role = inviteRole || "administrator";
+    const perms = invitePerms.length > 0 ? invitePerms : role === "administrator"
+      ? ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "access_settings", "delete_records", "manage_moderators"]
+      : ["edit_content", "manage_courses", "manage_partners", "view_analytics"];
+
+    try {
+      const result = await acceptExistingUserInvite({
+        code,
+        email,
+        firstName: firstName || user?.firstName || email.split("@")[0],
+        role,
+        permissions: perms,
+      });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      toast("Invite accepted! Welcome to the admin team.", "success");
+      router.push("/admin");
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -85,6 +117,37 @@ export default function AcceptInviteForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isSignedIn) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <UserCheck size={28} className="text-primary" />
+            </div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Join BMAC<span className="text-primary">.</span></h1>
+            <p className="text-sm text-muted-foreground mt-2">You&apos;re signed in as <span className="font-medium text-secondary">{user?.emailAddresses?.[0]?.emailAddress || email}</span></p>
+            {inviteRole && <p className="text-xs text-muted-foreground/60 mt-1">Invited as <span className="font-medium capitalize text-secondary">{inviteRole}</span></p>}
+          </div>
+
+          <div className="space-y-5">
+            {error && (
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+            <button onClick={handleAcceptExisting} disabled={loading}
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><ArrowRight size={16} /> Accept Invite</>}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

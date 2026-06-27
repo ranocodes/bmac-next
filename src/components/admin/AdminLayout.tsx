@@ -230,7 +230,7 @@ export default function AdminLayout({ children, user: userProp }: { children: Re
           <div className="flex-1" />
           <div className="relative">
             <button onClick={() => setProfileOpen(p => !p)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-              <span className="text-xs font-bold text-primary">{firstName.charAt(0).toUpperCase()}</span>
+              <span className="text-xs font-bold text-primary">{firstName ? firstName.charAt(0).toUpperCase() : "?"}</span>
             </button>
             {profileOpen && (
               <>

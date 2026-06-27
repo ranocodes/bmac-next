@@ -27,13 +27,6 @@ async function createDefaultAdmin(email: string, firstName: string) {
     permissions,
   });
 
-  // Restrict future sign-ups to invited users only
-  try {
-    const client = await clerkClient();
-    await client.instance.updateRestrictions({ allowlist: true });
-  } catch (e) {
-    console.warn("Failed to set Clerk allowlist restriction:", e);
-  }
   return { id, email, first_name: firstName, role: "super_admin", permissions };
 }
 
@@ -43,16 +36,27 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   if (user) {
     const email = user.primaryEmailAddress?.emailAddress;
-    const firstName = user.firstName || "";
+    const firstName = user.firstName || (email ? email.split("@")[0] : "");
     if (email) {
       adminUser = await getAdminUser(email);
       if (!adminUser) {
-        adminUser = await createDefaultAdmin(email, firstName);
+        const existing = await db.query<any>("SELECT COUNT(*)::int AS count FROM public.admin_users");
+        const count = existing[0]?.count ?? 0;
+        if (count === 0) {
+          adminUser = await createDefaultAdmin(email, firstName);
+        }
       }
     }
   }
 
   if (adminUser) {
+    // Ensure Clerk allowlist restriction is active
+    try {
+      const client = await clerkClient();
+      await client.instance.updateRestrictions({ allowlist: true });
+    } catch (e) {
+      console.warn("Failed to set Clerk allowlist restriction:", e);
+    }
     return (
       <AdminLayout
         user={{

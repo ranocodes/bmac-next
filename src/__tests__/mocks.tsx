@@ -19,6 +19,35 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
+vi.mock("@clerk/nextjs", () => ({
+  ClerkProvider: ({ children }: any) => <>{children}</>,
+  useAuth: () => ({ isSignedIn: false, userId: null, getToken: () => null }),
+  useUser: () => ({ isLoaded: true, user: null }),
+  useClerk: () => ({ client: { signUp: { create: () => {} }, signIn: { create: () => {} } }, setActive: () => {} }),
+  SignInButton: ({ children }: any) => <button>{children || "Sign In"}</button>,
+  SignUpButton: ({ children }: any) => <button>{children || "Sign Up"}</button>,
+  SignOutButton: ({ children }: any) => <button>{children || "Sign Out"}</button>,
+  Show: ({ children }: any) => <>{children}</>,
+  UserButton: () => <button>User</button>,
+}));
+
+vi.mock("@clerk/nextjs/server", () => ({
+  auth: () => ({ userId: "test-user", protect: () => {} }),
+  clerkMiddleware: () => {},
+  currentUser: () => null,
+  createRouteMatcher: () => () => false,
+}));
+
+vi.mock("@clerk/ui", () => ({
+  ui: {},
+}));
+
+vi.mock("@clerk/ui/themes", () => ({
+  shadcn: {},
+  dark: {},
+  neobrutalism: {},
+}));
+
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,

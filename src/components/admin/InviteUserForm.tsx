@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, Copy, Check, Plus, Trash2, Users, Link as LinkIcon, Mail } from "lucide-react";
 import { createInvite, revokeInvite } from "@/actions/invitations";
 import { useAdmin } from "@/lib/auth/admin-context";
@@ -34,6 +34,8 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
   const [copiedLink, setCopiedLink] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>(roleDefaults.moderator);
+  const [origin, setOrigin] = useState("");
+  useEffect(() => { setOrigin(window.location.origin); }, []);
   const user = useAdmin();
   const { toast } = useToast();
 
@@ -62,9 +64,7 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
       email,
       role,
       code,
-      permissions,
       invited_by: user.email,
-      message: message || "",
     };
 
     await createInvite(invite);
@@ -188,7 +188,7 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
                       <span className="hidden sm:inline">{copiedLink === i ? "Copied!" : "Copy Link"}</span>
                     </button>
                     {!accepted && !invite.used && (
-                      <a href={`mailto:${invite.email}?subject=Join%20the%20BMAC%20Admin%20Team&body=You%27ve%20been%20invited%20to%20join%20the%20BMAC%20admin%20dashboard.%0A%0AOpen%20this%20link%20to%20accept%3A%0A${typeof window !== "undefined" ? window.location.origin : ""}/admin/accept-invite?code=${invite.code}%0A%0ARole%3A%20${invite.role}`}
+                      <a href={`mailto:${invite.email}?subject=Join%20the%20BMAC%20Admin%20Team&body=You%27ve%20been%20invited%20to%20join%20the%20BMAC%20admin%20dashboard.%0A%0AOpen%20this%20link%20to%20accept%3A%0A${origin}/admin/accept-invite?code=${invite.code}%0A%0ARole%3A%20${invite.role}`}
                         className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
                         <Mail size={14} /> <span className="hidden sm:inline">Email</span>
                       </a>
