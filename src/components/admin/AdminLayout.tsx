@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
@@ -106,6 +106,7 @@ function checkRouteAccess(pathname: string, permissions: Permission[]): boolean 
 
 export default function AdminLayout({ children, user: userProp, error }: { children: React.ReactNode; user?: AdminUser; error?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -118,9 +119,9 @@ export default function AdminLayout({ children, user: userProp, error }: { child
 
   useEffect(() => {
     if (!userProp && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
-      window.location.href = "/admin/login";
+      router.push("/admin/login");
     }
-  }, [userProp, pathname]);
+  }, [userProp, pathname, router]);
 
   const user = userProp;
   const email = user?.email ?? "";

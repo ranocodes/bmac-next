@@ -42,7 +42,7 @@ export async function getInviteByCode(code: string) {
   return rows.length > 0 ? rows[0] : null;
 }
 
-async function validateInviteCode(code: string): Promise<{ error?: string; invite?: any }> {
+export async function validateInviteCode(code: string): Promise<{ error?: string; invite?: any }> {
   const invite = await getInviteByCode(code);
   if (!invite) return { error: "Invalid or expired invitation code." };
   if (invite.expires_at && new Date(invite.expires_at) < new Date()) {

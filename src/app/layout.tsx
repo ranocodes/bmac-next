@@ -39,7 +39,7 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} ${outfit.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <ClerkProvider ui={ui}>{children}</ClerkProvider>
+        <ClerkProvider ui={ui} signInUrl="/admin/login" signUpUrl="/admin/accept-invite">{children}</ClerkProvider>
       </body>
     </html>
   );
