@@ -35,10 +35,7 @@ interface NavGroup {
   children: NavItem[];
 }
 
-const defaultPermissions: Permission[] = [
-  "manage_users", "edit_content", "manage_courses", "manage_partners",
-  "view_analytics", "access_settings", "delete_records", "manage_moderators",
-];
+const defaultPermissions: Permission[] = [];
 
 const navGroups: NavGroup[] = [
   {
@@ -118,10 +115,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   }, []);
 
   useEffect(() => {
-    if (!userProp && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
+    if (!error && !userProp && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
       router.push("/admin/login");
     }
-  }, [userProp, pathname, router]);
+  }, [error, userProp, pathname, router]);
 
   const user = userProp;
   const email = user?.email ?? "";

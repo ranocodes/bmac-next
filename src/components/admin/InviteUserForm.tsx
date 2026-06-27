@@ -39,10 +39,6 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
   const user = useAdmin();
   const { toast } = useToast();
 
-  function isAccepted(email: string) {
-    return false;
-  }
-
   function generateCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
@@ -65,6 +61,7 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
       role,
       code,
       invited_by: user.email,
+      permissions,
     };
 
     await createInvite(invite);
@@ -166,15 +163,14 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
           </div>
         ) : (
           <div className="space-y-2">
-            {invites.map((invite, i) => {
-              const accepted = isAccepted(invite.email);
+              {invites.map((invite, i) => {
               return (
                 <div key={invite.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-background border border-border/30 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-secondary truncate">{invite.email}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">{invite.role}</span>
-                      {accepted || invite.used ? (
+                      {invite.used ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase tracking-wider">Accepted</span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 uppercase tracking-wider">Pending</span>
@@ -187,7 +183,7 @@ export default function InviteUserForm({ initialData }: { initialData: any[] }) 
                       {copiedLink === i ? <Check size={14} /> : <LinkIcon size={14} />}
                       <span className="hidden sm:inline">{copiedLink === i ? "Copied!" : "Copy Link"}</span>
                     </button>
-                    {!accepted && !invite.used && (
+                    {!invite.used && (
                       <a href={`mailto:${invite.email}?subject=Join%20the%20BMAC%20Admin%20Team&body=You%27ve%20been%20invited%20to%20join%20the%20BMAC%20admin%20dashboard.%0A%0AOpen%20this%20link%20to%20accept%3A%0A${origin}/admin/accept-invite?code=${invite.code}%0A%0ARole%3A%20${invite.role}`}
                         className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg bg-muted text-xs font-medium text-muted-foreground hover:text-secondary transition-colors">
                         <Mail size={14} /> <span className="hidden sm:inline">Email</span>

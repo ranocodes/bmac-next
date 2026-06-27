@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Eye, EyeOff, LogIn, AlertCircle, UserCheck, ArrowRight, KeyRound } from "lucide-react";
+import { Eye, EyeOff, LogIn, AlertCircle, UserCheck, ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { getInviteByCode, acceptInviteAction, acceptExistingUserInvite, validateInviteCode } from "@/actions/invitations";
 import { useToast } from "@/components/ui/Toast";
@@ -27,6 +27,9 @@ export default function AcceptInviteForm() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [verifyCode, setVerifyCode] = useState("");
+  const [signUpAttempt, setSignUpAttempt] = useState<any>(null);
 
   useEffect(() => {
     if (codeFromUrl) doValidate(codeFromUrl);
@@ -101,25 +104,25 @@ export default function AcceptInviteForm() {
 
     setLoading(true);
     try {
-      const signUpAttempt = await clerk.client.signUp.create({
+      const attempt = await clerk.client.signUp.create({
         emailAddress: email,
         password,
         firstName,
       });
 
-      if (signUpAttempt.status !== "complete") {
-        setError("Email verification required. Check your inbox.");
+      if (attempt.status === "missing_requirements") {
+        setSignUpAttempt(attempt);
         setLoading(false);
         return;
       }
 
-      if (!signUpAttempt.createdSessionId) {
-        setError("Failed to create session. Please sign in.");
+      if (attempt.status !== "complete" || !attempt.createdSessionId) {
+        setError("Account creation failed. Try again.");
         setLoading(false);
         return;
       }
 
-      await clerk.setActive({ session: signUpAttempt.createdSessionId });
+      await clerk.setActive({ session: attempt.createdSessionId });
 
       const role = inviteData?.role || "administrator";
       const perms = inviteData?.permissions?.length > 0 ? inviteData.permissions : role === "administrator"
@@ -137,6 +140,42 @@ export default function AcceptInviteForm() {
       router.push("/admin");
     } catch (err: any) {
       setError(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerifySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!verifyCode.trim()) { setError("Enter verification code"); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const completeAttempt = await signUpAttempt.attemptEmailAddressVerification({ code: verifyCode.trim() });
+      if (completeAttempt.status !== "complete" || !completeAttempt.createdSessionId) {
+        setError("Invalid or expired verification code.");
+        setLoading(false);
+        return;
+      }
+
+      await clerk.setActive({ session: completeAttempt.createdSessionId });
+
+      const role = inviteData?.role || "administrator";
+      const perms = inviteData?.permissions?.length > 0 ? inviteData.permissions : role === "administrator"
+        ? ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "access_settings", "delete_records", "manage_moderators"]
+        : ["edit_content", "manage_courses", "manage_partners", "view_analytics"];
+
+      const result = await acceptInviteAction({ code: inviteCode, email, firstName, password, role, permissions: perms });
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+
+      toast("Account created! Welcome.", "success");
+      router.push("/admin");
+    } catch (err: any) {
+      setError(err?.message || "Invalid code. Try again.");
     } finally {
       setLoading(false);
     }
@@ -191,6 +230,42 @@ export default function AcceptInviteForm() {
             className="mt-6 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
             Try Again
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (signUpAttempt) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-10">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck size={28} className="text-primary" />
+            </div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Verify your email<span className="text-primary">.</span></h1>
+            <p className="text-sm text-muted-foreground mt-2">Enter the verification code sent to <span className="font-medium text-secondary">{email}</span></p>
+          </div>
+
+          <form onSubmit={handleVerifySubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-secondary">Verification Code</label>
+              <input type="text" value={verifyCode} onChange={e => setVerifyCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+                className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono tracking-widest text-center" />
+            </div>
+            {error && (
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+            <button type="submit" disabled={loading}
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><ShieldCheck size={16} /> Verify Email</>}
+            </button>
+          </form>
         </div>
       </div>
     );

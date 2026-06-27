@@ -13,6 +13,7 @@ export async function createInvite(data: {
   role: string;
   code: string;
   invited_by: string;
+  permissions?: string[];
 }) {
   const result = await db.create("invitations", {
     id: data.id,
@@ -20,6 +21,7 @@ export async function createInvite(data: {
     role: data.role,
     code: data.code,
     created_by: data.invited_by,
+    permissions: data.permissions || [],
   });
   try {
     const client = await clerkClient();

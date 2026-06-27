@@ -71,5 +71,13 @@ export default async function Layout({ children }: { children: React.ReactNode }
     );
   }
 
+  if (user) {
+    return (
+      <AdminLayout error="You are signed in but don't have admin access. If you received an invite, use the invite link to accept it.">
+        {children}
+      </AdminLayout>
+    );
+  }
+
   return <AdminLayout>{children}</AdminLayout>;
 }
