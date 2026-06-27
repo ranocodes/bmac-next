@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff, LogIn, AlertCircle, UserCheck, ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { getInviteByCode, acceptInviteAction, acceptExistingUserInvite, validateInviteCode } from "@/actions/invitations";
@@ -30,6 +31,7 @@ export default function AcceptInviteForm() {
 
   const [verifyCode, setVerifyCode] = useState("");
   const [signUpAttempt, setSignUpAttempt] = useState<any>(null);
+  const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
     if (codeFromUrl) doValidate(codeFromUrl);
@@ -48,6 +50,7 @@ export default function AcceptInviteForm() {
       setInviteCode(code);
       setInviteData(result.invite);
       if (result.invite.email) setEmail(result.invite.email);
+      setShowSignIn(false);
       setStep("form");
     } catch {
       setValidationError("Failed to validate code. Try again.");
@@ -104,10 +107,11 @@ export default function AcceptInviteForm() {
     e.preventDefault();
     setError("");
     if (!firstName || !email || !password) { setError("All fields required"); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     if (!inviteCode) { setError("Invalid invite code"); return; }
 
     setLoading(true);
+    setShowSignIn(false);
     try {
       const attempt = await clerk.client.signUp.create({
         emailAddress: email,
@@ -144,7 +148,13 @@ export default function AcceptInviteForm() {
       toast("Account created! Welcome.", "success");
       router.push("/admin");
     } catch (err: any) {
-      setError(err?.message || "Something went wrong. Please try again.");
+      const isTaken = err?.errors?.some?.((e: any) => e.code === "form_identifier_exists");
+      if (isTaken) {
+        setError("An account with this email already exists. Please sign in instead.");
+        setShowSignIn(true);
+      } else {
+        setError(err?.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -231,7 +241,7 @@ export default function AcceptInviteForm() {
           </div>
           <h1 className="font-display text-xl font-bold text-secondary">Invalid Code</h1>
           <p className="text-sm text-muted-foreground mt-1.5">{validationError}</p>
-          <button onClick={() => { setStep("code"); setValidationError(""); }}
+          <button onClick={() => { setStep("code"); setValidationError(""); setShowSignIn(false); }}
             className="mt-6 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
             Try Again
           </button>
@@ -333,7 +343,7 @@ export default function AcceptInviteForm() {
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Password</label>
             <div className="relative">
-              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters"
+              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters"
                 className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -341,16 +351,26 @@ export default function AcceptInviteForm() {
             </div>
           </div>
           {error && (
-            <div className="flex items-center gap-2.5 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{error}</span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+              {showSignIn && (
+                <Link href="/admin/login"
+                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
+                  <LogIn size={16} /> Sign In
+                </Link>
+              )}
             </div>
           )}
-          <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><LogIn size={16} /> Create Account</>}
-          </button>
+          {!showSignIn && (
+            <button type="submit" disabled={loading}
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><LogIn size={16} /> Create Account</>}
+            </button>
+          )}
         </form>
       </div>
     </div>

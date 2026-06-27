@@ -1,4 +1,5 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { db } from "@/lib/db";
 
@@ -30,6 +31,9 @@ async function createDefaultAdmin(email: string, firstName: string) {
 }
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
+  const { userId } = await auth();
+  if (!userId) redirect("/admin/login");
+
   let user;
   try {
     user = await currentUser();
