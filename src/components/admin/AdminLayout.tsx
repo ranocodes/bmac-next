@@ -134,6 +134,13 @@ export default function AdminLayout({ children, user: userProp, error }: { child
 
   const denied = !checkRouteAccess(pathname, permissions);
 
+  const isLogin = pathname === "/admin/login";
+  const isAcceptInvite = pathname.startsWith("/admin/accept-invite");
+
+  if (isLogin || isAcceptInvite) {
+    return <ToastProvider><>{children}</></ToastProvider>;
+  }
+
   if (error) {
     return (
       <ToastProvider>
@@ -148,12 +155,6 @@ export default function AdminLayout({ children, user: userProp, error }: { child
         </div>
       </ToastProvider>
     );
-  }
-
-  const isLogin = pathname === "/admin/login";
-
-  if (isLogin || pathname.startsWith("/admin/accept-invite")) {
-    return <ToastProvider><>{children}</></ToastProvider>;
   }
 
   return (
