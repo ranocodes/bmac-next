@@ -21,7 +21,6 @@ async function createDefaultAdmin(email: string, firstName: string) {
   await db.create("admin_users", {
     id,
     email,
-    password: "",
     first_name: firstName,
     role: "super_admin",
     permissions,
@@ -47,10 +46,13 @@ export default async function Layout({ children }: { children: React.ReactNode }
     if (email) {
       adminUser = await getAdminUser(email);
       if (!adminUser) {
-        const existing = await db.query<any>("SELECT COUNT(*)::int AS count FROM public.admin_users");
-        const count = existing[0]?.count ?? 0;
-        if (count === 0) {
-          adminUser = await createDefaultAdmin(email, firstName);
+        const firstAdminEmail = process.env.FIRST_ADMIN_EMAIL;
+        if (firstAdminEmail && email === firstAdminEmail) {
+          const existing = await db.query<any>("SELECT COUNT(*)::int AS count FROM public.admin_users");
+          const count = existing[0]?.count ?? 0;
+          if (count === 0) {
+            adminUser = await createDefaultAdmin(email, firstName);
+          }
         }
       }
     }

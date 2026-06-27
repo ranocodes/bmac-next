@@ -6,7 +6,6 @@ import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-r
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import type { EventPass } from "@/types/cms";
 
 function formatDisplayDate(raw: string | undefined): string {
@@ -161,7 +160,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
             <div className="prose prose-slate lg:prose-xl max-w-none mb-20 text-muted-foreground">
               <h3 className="font-display text-4xl font-extrabold text-secondary mb-10 tracking-tight">The Vision</h3>
               <div className="text-lg md:text-xl leading-[1.8] mb-12 font-medium">
-                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{event.longDesc}</ReactMarkdown>
+                <ReactMarkdown>{event.longDesc}</ReactMarkdown>
               </div>
 
               {(event.features && event.features.length > 0) && (

@@ -22,12 +22,21 @@ interface QueryOptions {
   offset?: number;
 }
 
+const ALLOWED_COLUMNS = new Set([
+  "id", "title", "email", "first_name", "role", "created_at", "updated_at",
+  "date", "start_date", "end_date", "order_index", "name", "sort_order",
+]);
+
+const ALLOWED_DIRECTIONS = new Set(["ASC", "DESC"]);
+
 function buildSelect(table: string, opts?: QueryOptions) {
   let q = `SELECT * FROM public.${table}`;
   const params: any[] = [];
 
   if (opts?.orderBy) {
-    q += ` ORDER BY ${opts.orderBy} ${opts.orderDir || "ASC"}`;
+    const col = ALLOWED_COLUMNS.has(opts.orderBy) ? opts.orderBy : "created_at";
+    const dir = ALLOWED_DIRECTIONS.has(opts.orderDir || "ASC") ? opts.orderDir : "ASC";
+    q += ` ORDER BY ${col} ${dir || "ASC"}`;
   }
   if (opts?.limit) {
     q += ` LIMIT $${params.length + 1}`;

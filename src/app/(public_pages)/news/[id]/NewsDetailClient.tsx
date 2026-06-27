@@ -7,7 +7,6 @@ import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
 function formatEventDate(raw: string | undefined): { month: string; day: string } {
@@ -130,7 +129,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
           {/* Article Text */}
           <article className="lg:col-span-8">
             <div className="prose prose-slate lg:prose-lg max-w-none">
-              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{article.content}</ReactMarkdown>
+              <ReactMarkdown>{article.content}</ReactMarkdown>
             </div>
 
             {/* Engagement Footer */}

@@ -66,6 +66,11 @@ export default function AcceptInviteForm() {
 
   async function handleAcceptExisting() {
     if (!inviteCode || !email) return;
+    const clerkEmail = user?.emailAddresses?.[0]?.emailAddress;
+    if (clerkEmail && clerkEmail !== email) {
+      setError(`This invite is for ${email}, but you're signed in as ${clerkEmail}. Sign out and use the invited email.`);
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -129,7 +134,7 @@ export default function AcceptInviteForm() {
         ? ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "access_settings", "delete_records", "manage_moderators"]
         : ["edit_content", "manage_courses", "manage_partners", "view_analytics"];
 
-      const result = await acceptInviteAction({ code: inviteCode, email, firstName, password, role, permissions: perms });
+      const result = await acceptInviteAction({ code: inviteCode, email, firstName, role, permissions: perms });
       if (result?.error) {
         setError(result.error);
         setLoading(false);
@@ -165,7 +170,7 @@ export default function AcceptInviteForm() {
         ? ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "access_settings", "delete_records", "manage_moderators"]
         : ["edit_content", "manage_courses", "manage_partners", "view_analytics"];
 
-      const result = await acceptInviteAction({ code: inviteCode, email, firstName, password, role, permissions: perms });
+      const result = await acceptInviteAction({ code: inviteCode, email, firstName, role, permissions: perms });
       if (result?.error) {
         setError(result.error);
         setLoading(false);

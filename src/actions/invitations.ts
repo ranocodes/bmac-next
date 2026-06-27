@@ -2,8 +2,10 @@
 
 import { db } from "@/lib/db";
 import { clerkClient } from "@clerk/nextjs/server";
+import { requireAdmin, requirePermission } from "@/lib/auth/server";
 
 export async function getInvitations() {
+  await requireAdmin();
   return db.getAll<any>("invitations").catch(() => []);
 }
 
@@ -15,6 +17,7 @@ export async function createInvite(data: {
   invited_by: string;
   permissions?: string[];
 }) {
+  await requirePermission("manage_users");
   const result = await db.create("invitations", {
     id: data.id,
     email: data.email,
@@ -33,6 +36,7 @@ export async function createInvite(data: {
 }
 
 export async function revokeInvite(id: string) {
+  await requirePermission("manage_users");
   return db.remove("invitations", id);
 }
 
@@ -57,11 +61,10 @@ export async function acceptInviteAction(params: {
   code: string;
   email: string;
   firstName: string;
-  password: string;
   role: string;
   permissions: string[];
 }): Promise<{ error?: string; success?: boolean; adminId?: string }> {
-  const { code, email, firstName, password, role, permissions } = params;
+  const { code, email, firstName, role, permissions } = params;
 
   const validation = await validateInviteCode(code);
   if (validation.error) return { error: validation.error };
@@ -76,7 +79,6 @@ export async function acceptInviteAction(params: {
   await db.create("admin_users", {
     id: adminId,
     email,
-    password,
     first_name: firstName,
     role,
     permissions,
@@ -109,7 +111,6 @@ export async function acceptExistingUserInvite(params: {
   await db.create("admin_users", {
     id: adminId,
     email,
-    password: "",
     first_name: firstName,
     role,
     permissions,
