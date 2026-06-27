@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { db } from '@/lib/db';
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -10,9 +11,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Verify the webhook signature to ensure it's from Paystack
   const hash = crypto.createHmac('sha512', secret).update(body).digest('hex');
-  
+
   if (hash !== signature) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
@@ -21,11 +21,39 @@ export async function POST(request: Request) {
 
   if (event.event === 'charge.success') {
     const { data } = event;
-    const { reference, customer, metadata } = data;
+    const { reference, customer, metadata, amount, currency } = data;
 
-    console.log(`SECURE PAYMENT VERIFIED: ${reference}`);
-    
-    console.log(`Registration data: ${metadata.event_title}, ${metadata.attendee_name}, ${customer.email}, ${reference}`);
+    const existing = await db.query<any>(
+      "SELECT id FROM public.paystack_payments WHERE reference = $1",
+      [reference]
+    );
+
+    if (existing.length > 0) {
+      return NextResponse.json({ status: 'already_processed' });
+    }
+
+    const paymentId = `pay-${Date.now()}`;
+    await db.create("paystack_payments", {
+      id: paymentId,
+      reference,
+      source_type: metadata?.source_type || "unknown",
+      source_id: metadata?.source_id || "",
+      amount,
+      currency: currency || "NGN",
+      payer_email: customer?.email || "",
+      payer_name: metadata?.payer_name || customer?.email || "",
+      status: "completed",
+      metadata: { ...metadata, verified_at: new Date().toISOString() },
+    });
+
+    await db.create("activity_logs", {
+      id: `log-pay-${Date.now()}`,
+      user: "system",
+      action: "payment_verified",
+      resource: "paystack_payments",
+      resource_id: paymentId,
+      details: `Payment ${reference} verified: ${currency}${amount} from ${customer?.email}`,
+    });
   }
 
   return NextResponse.json({ status: 'success' });

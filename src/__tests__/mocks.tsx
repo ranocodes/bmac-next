@@ -14,10 +14,13 @@ vi.mock("next/link", () => ({
   },
 }));
 
+const mockUsePathname = vi.fn().mockReturnValue("/");
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: (...args: any[]) => mockUsePathname(...args),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
+
+export { mockUsePathname };
 
 vi.mock("@clerk/nextjs", () => ({
   ClerkProvider: ({ children }: any) => <>{children}</>,

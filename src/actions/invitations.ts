@@ -42,6 +42,15 @@ export async function getInviteByCode(code: string) {
   return rows.length > 0 ? rows[0] : null;
 }
 
+async function validateInviteCode(code: string): Promise<{ error?: string; invite?: any }> {
+  const invite = await getInviteByCode(code);
+  if (!invite) return { error: "Invalid or expired invitation code." };
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    return { error: "This invitation has expired. Please ask an admin to send a new one." };
+  }
+  return { invite };
+}
+
 export async function acceptInviteAction(params: {
   code: string;
   email: string;
@@ -49,8 +58,11 @@ export async function acceptInviteAction(params: {
   password: string;
   role: string;
   permissions: string[];
-}) {
+}): Promise<{ error?: string; success?: boolean; adminId?: string }> {
   const { code, email, firstName, password, role, permissions } = params;
+
+  const validation = await validateInviteCode(code);
+  if (validation.error) return { error: validation.error };
 
   const existing = await db.query<any>(
     "SELECT id FROM public.admin_users WHERE email = $1",
@@ -79,8 +91,11 @@ export async function acceptExistingUserInvite(params: {
   firstName: string;
   role: string;
   permissions: string[];
-}) {
+}): Promise<{ error?: string; success?: boolean; adminId?: string }> {
   const { code, email, firstName, role, permissions } = params;
+
+  const validation = await validateInviteCode(code);
+  if (validation.error) return { error: validation.error };
 
   const existing = await db.query<any>(
     "SELECT id FROM public.admin_users WHERE email = $1",

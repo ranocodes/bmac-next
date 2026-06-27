@@ -1,4 +1,4 @@
-import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { db } from "@/lib/db";
 
@@ -31,7 +31,14 @@ async function createDefaultAdmin(email: string, firstName: string) {
 }
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const user = await currentUser();
+  let user;
+  try {
+    user = await currentUser();
+  } catch (e) {
+    console.error("Clerk currentUser() failed:", e);
+    return <AdminLayout error="Authentication service unavailable. Please try signing in again.">{children}</AdminLayout>;
+  }
+
   let adminUser = null;
 
   if (user) {
@@ -50,13 +57,6 @@ export default async function Layout({ children }: { children: React.ReactNode }
   }
 
   if (adminUser) {
-    // Ensure Clerk allowlist restriction is active
-    try {
-      const client = await clerkClient();
-      await client.instance.updateRestrictions({ allowlist: true });
-    } catch (e) {
-      console.warn("Failed to set Clerk allowlist restriction:", e);
-    }
     return (
       <AdminLayout
         user={{

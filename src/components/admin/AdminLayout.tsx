@@ -104,7 +104,7 @@ function checkRouteAccess(pathname: string, permissions: Permission[]): boolean 
   return permissions.includes(matched[1]);
 }
 
-export default function AdminLayout({ children, user: userProp }: { children: React.ReactNode; user?: AdminUser }) {
+export default function AdminLayout({ children, user: userProp, error }: { children: React.ReactNode; user?: AdminUser; error?: string }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -135,6 +135,22 @@ export default function AdminLayout({ children, user: userProp }: { children: Re
   const toggleGroup = (label: string) => setOpenGroups(p => ({ ...p, [label]: !p[label] }));
 
   const denied = !checkRouteAccess(pathname, permissions);
+
+  if (error) {
+    return (
+      <ToastProvider>
+        <div className="min-h-[100dvh] bg-[#fafbf9] flex items-center justify-center p-4">
+          <div className="max-w-md text-center">
+            <div className="w-16 h-16 rounded-2xl bg-destructive/5 flex items-center justify-center mx-auto mb-4">
+              <ShieldOff size={32} className="text-destructive" />
+            </div>
+            <h2 className="font-display text-xl font-bold text-secondary">Authentication Error</h2>
+            <p className="text-sm text-muted-foreground mt-1.5">{error}</p>
+          </div>
+        </div>
+      </ToastProvider>
+    );
+  }
 
   const isLogin = pathname === "/admin/login";
 

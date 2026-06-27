@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BMAC Next
+
+Full-stack Next.js platform for Brilliant Minds Ambassadors Club (BMAC) Jos — a youth empowerment NGO.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router), React 19 |
+| Styling | Tailwind v4, CSS variables |
+| Database | Neon Postgres (HTTP driver) |
+| Auth | Clerk v7 |
+| Payments | Paystack |
+| Email | Resend |
+| Hosting | Vercel |
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
+cp .env.example .env.local  # fill in values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+See `SETUP.md` for detailed setup instructions.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev          # Turbopack dev server
+npm run build        # Production build
+npm test             # Run tests
+npx tsc --noEmit     # Type check
+npm run lint         # ESLint
+```
 
-## Learn More
+## Production Deployment Checklist
 
-To learn more about Next.js, take a look at the following resources:
+### Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [ ] Create Vercel project linked to GitHub repo
+- [ ] Set Framework Preset: **Next.js**
+- [ ] Set Node.js version: **20+** (or match `.nvmrc`)
+- [ ] Set environment variables (see below)
+- [ ] Deploy: `vercel --prod` or via Git integration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Neon
 
-## Deploy on Vercel
+- [ ] Create production Neon project (paid tier recommended for production)
+- [ ] Copy `NEON_DB_URL` (HTTP connection string)
+- [ ] Run seed script: `psql $NEON_DB_URL -f scripts/seed.sql`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Clerk
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Create production Clerk application
+- [ ] Copy `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
+- [ ] Enable **Custom sessions** in Clerk Dashboard → Sessions
+- [ ] Add production URL to **Application URLs** in Clerk Dashboard
+- [ ] Configure redirect URLs: `/admin` (after sign-in), `/` (after sign-out)
+
+### Paystack
+
+- [ ] Switch from test keys to live keys
+- [ ] Set webhook URL: `https://yourdomain.com/api/webhooks/paystack`
+- [ ] Enable `charge.success` event in webhook settings
+
+### Resend
+
+- [ ] Verify domain in Resend (required for production sending)
+- [ ] Update sender email from `onboarding@resend.dev` to your domain
+- [ ] Copy `RESEND_API_KEY`
+
+### Domain & DNS
+
+- [ ] Configure custom domain in Vercel
+- [ ] Add CNAME/A record pointing to Vercel
+- [ ] Update Clerk Application URLs with production domain
+- [ ] Update Paystack webhook URL with production domain
+
+### Environment Variables (Vercel)
+
+| Variable | Source |
+|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk Dashboard |
+| `CLERK_SECRET_KEY` | Clerk Dashboard |
+| `NEON_DB_URL` | Neon Console |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Paystack Dashboard |
+| `PAYSTACK_SECRET_KEY` | Paystack Dashboard |
+| `RESEND_API_KEY` | Resend Dashboard |
+| `NEXT_PUBLIC_APP_URL` | Your production URL (e.g., `https://bmac.vercel.app`) |

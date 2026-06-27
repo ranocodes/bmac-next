@@ -1,4 +1,19 @@
-TRUNCATE TABLE public.programs, public.events, public.news_articles, public.testimonials, public.team_members, public.impact_stats, public.gallery_items, public.partners, public.site_settings, public.activity_logs RESTART IDENTITY CASCADE;
+CREATE TABLE IF NOT EXISTS public.paystack_payments (
+  id TEXT PRIMARY KEY,
+  reference TEXT UNIQUE NOT NULL,
+  source_type TEXT NOT NULL,
+  source_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  currency TEXT DEFAULT 'NGN',
+  payer_email TEXT NOT NULL,
+  payer_name TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+TRUNCATE TABLE public.programs, public.events, public.news_articles, public.testimonials, public.team_members, public.impact_stats, public.gallery_items, public.partners, public.site_settings, public.activity_logs, public.paystack_payments RESTART IDENTITY CASCADE;
 
 INSERT INTO public.programs (id, title, description, long_desc, img, icon, color, details, variant, status, skills, faqs, landing_page) VALUES
 ('public-speaking', 'Public Speaking', 'Master the art of confident communication...', 'Our Public Speaking program is designed to transform shy individuals into confident orators...', '/images/public-speaking.jpg', 'MicVocal', 'text-emerald-400', '12 weeks | Saturdays 10am-12pm | Open to ages 13-18', 'default', 'published', '["Commanding presence","Rhetorical techniques","Critical thinking","Emotional connection","Storytelling","Leadership communication"]', '[{"q":"Is this for beginners?","a":"Yes."},{"q":"Any fees?","a":"Free for members."}]', true),
