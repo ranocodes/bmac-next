@@ -78,8 +78,12 @@ export default async function Layout({ children }: { children: React.ReactNode }
   }
 
   if (user) {
+    const clerkEmail = user.primaryEmailAddress?.emailAddress || "unknown";
     return (
-      <AdminLayout error="Access denied. Your account is not registered as an admin.">
+      <AdminLayout
+        user={{ email: clerkEmail, firstName: user.firstName || "", role: "", permissions: [] }}
+        error={`Access denied. Signed in as ${clerkEmail} — not registered as an admin.`}
+      >
         {children}
       </AdminLayout>
     );

@@ -150,7 +150,14 @@ export default function AdminLayout({ children, user: userProp, error }: { child
               <ShieldOff size={32} className="text-destructive" />
             </div>
             <h2 className="font-display text-xl font-bold text-secondary">Authentication Error</h2>
-            <p className="text-sm text-muted-foreground mt-1.5">{error}</p>
+            <p className="text-sm text-muted-foreground mt-3">{error}</p>
+            <div className="mt-6">
+              <SignOutButton>
+                <button className="h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
+                  Sign Out
+                </button>
+              </SignOutButton>
+            </div>
           </div>
         </div>
       </ToastProvider>
