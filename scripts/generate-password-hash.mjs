@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync } from "crypto";
+import bcrypt from "bcryptjs";
 
 const password = process.argv[2];
 if (!password) {
@@ -6,7 +6,5 @@ if (!password) {
   process.exit(1);
 }
 
-const salt = randomBytes(32).toString("hex");
-const hash = scryptSync(password, salt, 64).toString("hex");
-
-console.log(`scrypt:${salt}:${hash}`);
+const hash = bcrypt.hashSync(password, 12);
+console.log(hash);
