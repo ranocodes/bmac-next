@@ -3,9 +3,6 @@ import type { NextRequest } from "next/server";
 
 const COOKIE_NAME = "bmac_admin_session";
 
-const protectedRoutes = ["/admin"];
-const publicRoutes = ["/admin/login"];
-
 function base64Decode(b64: string): string {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
@@ -24,20 +21,19 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
   if (dot === -1) return false;
 
   const payloadB64 = raw.slice(0, dot);
-  const sig = raw.slice(dot + 1);
+  const sigHex = raw.slice(dot + 1);
 
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw", encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
-    false, ["sign"],
+    false, ["verify"],
   );
-  const expectedSigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(payloadB64));
-  const expectedSig = Array.from(new Uint8Array(expectedSigBuf))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+  const sigBytes = Uint8Array.from(sigHex.match(/.{1,2}/g) || [], b => parseInt(b, 16));
+  if (sigBytes.length === 0) return false;
 
-  if (expectedSig !== sig) return false;
+  const valid = await crypto.subtle.verify("HMAC", key, sigBytes, encoder.encode(payloadB64));
+  if (!valid) return false;
 
   try {
     const payload = JSON.parse(base64Decode(payloadB64));
@@ -48,12 +44,11 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
 }
 
 export async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  const isProtected = protectedRoutes.some(r => pathname === r || pathname.startsWith(r + "/"));
-  const isPublic = publicRoutes.some(r => pathname === r || pathname.startsWith(r + "/"));
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    if (pathname === "/admin/login") return NextResponse.next();
 
-  if (isProtected && !isPublic) {
     const authed = await verifyCookie(request);
     if (!authed) {
       const loginUrl = new URL("/admin/login", request.url);
@@ -67,7 +62,12 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    {
+      source: "/admin/:path*",
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
   ],
 };

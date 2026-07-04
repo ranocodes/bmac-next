@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, AlertCircle, Shield } from "lucide-react";
 import { loginAdmin } from "@/actions/admin-auth";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -22,11 +20,10 @@ export default function LoginForm() {
     setLoading(true);
     try {
       const result = await loginAdmin(email, password);
-      if (result.error) { setError(result.error); return; }
-      router.push("/admin");
+      if (result.error) { setError(result.error); setLoading(false); return; }
+      window.location.href = "/admin";
     } catch {
       setError("Something went wrong. Try again.");
-    } finally {
       setLoading(false);
     }
   }
