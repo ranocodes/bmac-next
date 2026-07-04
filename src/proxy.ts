@@ -47,7 +47,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    if (pathname === "/admin/login") return NextResponse.next();
+    if (pathname === "/admin/login" || pathname === "/admin/setup" || pathname.startsWith("/admin/invite/")) return NextResponse.next();
 
     const authed = await verifyCookie(request);
     if (!authed) {
