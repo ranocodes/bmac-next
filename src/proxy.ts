@@ -6,6 +6,13 @@ const COOKIE_NAME = "bmac_admin_session";
 const protectedRoutes = ["/admin"];
 const publicRoutes = ["/admin/login"];
 
+function base64Decode(b64: string): string {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
 async function verifyCookie(request: NextRequest): Promise<boolean> {
   const raw = request.cookies.get(COOKIE_NAME)?.value;
   if (!raw) return false;
@@ -21,11 +28,9 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
 
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
+    "raw", encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
+    false, ["sign"],
   );
   const expectedSigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(payloadB64));
   const expectedSig = Array.from(new Uint8Array(expectedSigBuf))
@@ -35,9 +40,7 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
   if (expectedSig !== sig) return false;
 
   try {
-    const payload = JSON.parse(
-      Buffer.from(payloadB64, "base64").toString("utf-8"),
-    );
+    const payload = JSON.parse(base64Decode(payloadB64));
     return payload.role === "super_admin";
   } catch {
     return false;
