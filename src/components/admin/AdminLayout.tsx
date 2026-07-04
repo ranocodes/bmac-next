@@ -7,13 +7,13 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, PanelLeftClose, PanelLeftOpen,
-  UserCog, Send
+  UserCog,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
+import { logoutAdmin } from "@/actions/admin-auth";
 import { ShieldOff } from "lucide-react";
-import { SignOutButton } from "@clerk/nextjs";
 
 interface AdminUser {
   email: string;
@@ -61,7 +61,6 @@ const navGroups: NavGroup[] = [
     label: "System", icon: Shield,
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: ClipboardList, permission: "manage_users" },
-      { label: "Invite", href: "/admin/invite", icon: Send, permission: "manage_users" },
       { label: "Users", href: "/admin/users", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
@@ -88,13 +87,12 @@ const routePermissions: Record<string, Permission> = {
   "/admin/partners": "manage_partners",
   "/admin/stats": "edit_content",
   "/admin/logs": "manage_users",
-  "/admin/invite": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
 };
 
 function checkRouteAccess(pathname: string, permissions: Permission[]): boolean {
-  const exempt = ["/admin/login", "/admin/accept-invite", "/admin"];
+  const exempt = ["/admin/login", "/admin"];
   if (exempt.includes(pathname)) return true;
   const matched = Object.entries(routePermissions).find(([route]) => pathname.startsWith(route));
   if (!matched) return true;
@@ -115,7 +113,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   }, []);
 
   useEffect(() => {
-    if (!error && !userProp && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
+    if (!error && !userProp && pathname !== "/admin/login") {
       router.push("/admin/login");
     }
   }, [error, userProp, pathname, router]);
@@ -134,10 +132,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
 
   const denied = !checkRouteAccess(pathname, permissions);
 
-  const isLogin = pathname === "/admin/login";
-  const isAcceptInvite = pathname.startsWith("/admin/accept-invite");
-
-  if (isLogin || isAcceptInvite) {
+  if (pathname === "/admin/login") {
     return <ToastProvider><>{children}</></ToastProvider>;
   }
 
@@ -152,11 +147,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             <h2 className="font-display text-xl font-bold text-secondary">Authentication Error</h2>
             <p className="text-sm text-muted-foreground mt-3">{error}</p>
             <div className="mt-6">
-              <SignOutButton>
-                <button className="h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
-                  Sign Out
-                </button>
-              </SignOutButton>
+              <button onClick={() => logoutAdmin().then(() => router.push("/admin/login"))}
+                className="h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
@@ -236,11 +230,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">{role.replace("_", " ")}</span>
             </div>
           )}
-          <SignOutButton>
-            <button className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
-              <LogOut size={18} /> {!sidebarCollapsed && <span>Logout</span>}
-            </button>
-          </SignOutButton>
+          <button onClick={() => logoutAdmin().then(() => router.push("/admin/login"))}
+            className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
+            <LogOut size={18} /> {!sidebarCollapsed && <span>Logout</span>}
+          </button>
         </div>
       </aside>
       <div className="flex-1 flex flex-col min-w-0">
@@ -263,11 +256,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
                     <p className="text-sm font-medium text-secondary truncate">{email}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mt-0.5">{role.replace("_", " ")}</p>
                   </div>
-                  <SignOutButton>
-                    <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
-                      <LogOut size={15} /> Logout
-                    </button>
-                  </SignOutButton>
+                  <button onClick={() => logoutAdmin().then(() => router.push("/admin/login"))}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                    <LogOut size={15} /> Logout
+                  </button>
                 </div>
               </>
             )}

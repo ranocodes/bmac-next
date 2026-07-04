@@ -13,6 +13,10 @@ vi.mock("@/components/ui/Toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
+vi.mock("@/actions/admin-auth", () => ({
+  logoutAdmin: vi.fn(() => Promise.resolve()),
+}));
+
 import AdminLayout from "@/components/admin/AdminLayout";
 
 describe("AdminLayout", () => {

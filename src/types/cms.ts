@@ -113,12 +113,10 @@ export interface Partner {
 export interface AdminUser {
   id: string;
   email: string;
-  password: string;
   firstName: string;
   role: AdminRole;
   permissions: Permission[];
   createdAt: number;
-  invitedBy?: string;
 }
 
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
