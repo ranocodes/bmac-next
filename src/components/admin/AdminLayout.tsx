@@ -147,7 +147,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             <h2 className="font-display text-xl font-bold text-secondary">Authentication Error</h2>
             <p className="text-sm text-muted-foreground mt-3">{error}</p>
             <div className="mt-6">
-              <button onClick={() => logoutAdmin().then(() => router.push("/admin/login"))}
+              <button onClick={() => logoutAdmin().then(() => window.location.href = "/admin/login")}
                 className="h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
                 Sign Out
               </button>
@@ -230,7 +230,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">{role.replace("_", " ")}</span>
             </div>
           )}
-          <button onClick={() => logoutAdmin().then(() => router.push("/admin/login"))}
+          <button onClick={() => logoutAdmin().then(() => window.location.href = "/admin/login")}
             className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
             <LogOut size={18} /> {!sidebarCollapsed && <span>Logout</span>}
           </button>
@@ -256,7 +256,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
                     <p className="text-sm font-medium text-secondary truncate">{email}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mt-0.5">{role.replace("_", " ")}</p>
                   </div>
-                  <button onClick={() => logoutAdmin().then(() => router.push("/admin/login"))}
+                  <button onClick={() => logoutAdmin().then(() => window.location.href = "/admin/login")}
                     className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
                     <LogOut size={15} /> Logout
                   </button>

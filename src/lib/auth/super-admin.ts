@@ -46,7 +46,6 @@ async function hmacVerify(data: string, signature: string, secret: string): Prom
   return crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(data));
 }
 
-// DB first, then env var fallback
 export async function verifySuperAdminCredentials(email: string, password: string): Promise<boolean> {
   if (!email || !password) return false;
 
@@ -56,11 +55,7 @@ export async function verifySuperAdminCredentials(email: string, password: strin
     if (rows.length > 0) return bcrypt.compareSync(password, rows[0].password_hash);
   } catch { /* fall through */ }
 
-  const envEmail = process.env.SUPER_ADMIN_EMAIL;
-  const envHash = process.env.SUPER_ADMIN_PASSWORD_HASH;
-  if (!envEmail || !envHash) return false;
-  if (email.toLowerCase() !== envEmail.toLowerCase()) return false;
-  return bcrypt.compareSync(password, envHash);
+  return false;
 }
 
 export async function getSuperAdminCount(): Promise<number> {
