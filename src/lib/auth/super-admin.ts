@@ -52,8 +52,9 @@ async function hmacVerify(data: string, signature: string, secret: string): Prom
 export async function setSuperAdminSession(email: string) {
   const cookie = await cookies();
   const payload = JSON.stringify({ email, role: "super_admin", createdAt: Date.now() });
-  const sig = await hmacSign(payload, getSecret());
-  cookie.set(COOKIE_NAME, `${Buffer.from(payload).toString("base64")}.${sig}`, {
+  const payloadB64 = Buffer.from(payload).toString("base64");
+  const sig = await hmacSign(payloadB64, getSecret());
+  cookie.set(COOKIE_NAME, `${payloadB64}.${sig}`, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
