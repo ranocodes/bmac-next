@@ -7,12 +7,16 @@ import { acceptInviteAction } from "@/actions/admin-auth";
 interface Props {
   token: string;
   email: string;
+  firstName: string;
 }
 
-export default function AcceptInviteForm({ token, email }: Props) {
-  const [password, setPassword] = useState("");
+export default function AcceptInviteForm({ token, email, firstName: initialFirstName }: Props) {
+  const [tempPassword, setTempPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [show, setShow] = useState(false);
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [showTemp, setShowTemp] = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -21,13 +25,14 @@ export default function AcceptInviteForm({ token, email }: Props) {
     e.preventDefault();
     setError("");
 
-    if (!password) { setError("Password is required"); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (password !== confirm) { setError("Passwords do not match"); return; }
+    if (!tempPassword) { setError("Temporary password is required"); return; }
+    if (!newPassword) { setError("New password is required"); return; }
+    if (newPassword.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (newPassword !== confirm) { setError("Passwords do not match"); return; }
 
     setLoading(true);
     try {
-      const result = await acceptInviteAction(token, password);
+      const result = await acceptInviteAction(token, tempPassword, newPassword, firstName.trim());
       if (result.error) { setError(result.error); setLoading(false); return; }
       setDone(true);
     } catch {
@@ -62,26 +67,44 @@ export default function AcceptInviteForm({ token, email }: Props) {
             <Shield size={28} className="text-primary" />
           </div>
           <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Accept Invite</h1>
-          <p className="text-sm text-muted-foreground mt-2">Set your password for <span className="text-secondary font-medium">{email}</span></p>
+          <p className="text-sm text-muted-foreground mt-2">Welcome{initialFirstName ? `, ${initialFirstName}` : ""}! Set up your admin account for <span className="text-secondary font-medium">{email}</span></p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Password</label>
+            <label className="block text-sm font-medium text-secondary">Temporary password</label>
             <div className="relative">
-              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
+              <input type={showTemp ? "text" : "password"} value={tempPassword} onChange={e => setTempPassword(e.target.value)}
+                placeholder="Provided by inviter"
                 className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-              <button type="button" onClick={() => setShow(!show)}
+              <button type="button" onClick={() => setShowTemp(!showTemp)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
-                {show ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showTemp ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Confirm password</label>
-            <input type={show ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)}
+            <label className="block text-sm font-medium text-secondary">New password</label>
+            <div className="relative">
+              <input type={showNew ? "text" : "password"} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              <button type="button" onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
+                {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">Confirm new password</label>
+            <input type={showNew ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)}
               placeholder="Re-enter password"
+              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">Display name <span className="text-muted-foreground font-normal">(optional)</span></label>
+            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+              placeholder="Jane Doe"
               className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
           {error && (

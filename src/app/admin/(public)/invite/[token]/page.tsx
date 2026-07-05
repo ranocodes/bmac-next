@@ -21,5 +21,5 @@ export default async function InvitePage({ params }: Props) {
     );
   }
 
-  return <AcceptInviteForm token={params.token} email={invite.email} />;
+  return <AcceptInviteForm token={params.token} email={invite.email} firstName={invite.firstName} />;
 }

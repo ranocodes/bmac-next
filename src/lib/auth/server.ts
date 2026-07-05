@@ -11,7 +11,7 @@ export const auth = {
         user: {
           id: `super-${session.email}`,
           email: session.email,
-          name: session.email.split("@")[0],
+          name: session.firstName || session.email.split("@")[0],
         },
       },
       error: null,
@@ -29,15 +29,13 @@ export async function requireAdmin() {
   const session = await getSuperAdminSession();
   if (!session) throw new Error("Unauthorized");
 
-  const email = session.email;
   return {
-    email,
-    userId: `super-${email}`,
-    adminId: `super-${email}`,
-    permissions: [
-      "manage_users", "edit_content", "manage_courses", "manage_partners",
-      "view_analytics", "access_settings", "delete_records", "manage_moderators",
-    ] as Permission[],
+    email: session.email,
+    firstName: session.firstName,
+    userId: `super-${session.email}`,
+    adminId: `super-${session.email}`,
+    role: session.role,
+    permissions: session.permissions,
   };
 }
 

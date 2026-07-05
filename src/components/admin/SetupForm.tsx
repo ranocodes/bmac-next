@@ -5,6 +5,7 @@ import { Shield, UserPlus, AlertCircle, Eye, EyeOff, CheckCircle } from "lucide-
 import { registerFirstAdminAction } from "@/actions/admin-auth";
 
 export default function SetupForm() {
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -17,13 +18,14 @@ export default function SetupForm() {
     e.preventDefault();
     setError("");
 
+    if (!firstName.trim()) { setError("Name is required"); return; }
     if (!email || !password) { setError("Email and password required"); return; }
     if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     if (password !== confirm) { setError("Passwords do not match"); return; }
 
     setLoading(true);
     try {
-      const result = await registerFirstAdminAction(email, password);
+      const result = await registerFirstAdminAction(email, password, firstName.trim());
       if (result.error) { setError(result.error); setLoading(false); return; }
       setDone(true);
     } catch {
@@ -62,6 +64,12 @@ export default function SetupForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">Name</label>
+            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+              placeholder="Jane Doe"
+              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          </div>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}

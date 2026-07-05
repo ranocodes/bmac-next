@@ -12,12 +12,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <AdminLayout
       user={{
         email: session.email,
-        firstName: session.email.split("@")[0],
-        role: "super_admin",
-        permissions: [
-          "manage_users", "edit_content", "manage_courses", "manage_partners",
-          "view_analytics", "access_settings", "delete_records", "manage_moderators",
-        ],
+        firstName: session.firstName || session.email.split("@")[0],
+        role: session.role,
+        permissions: session.permissions,
       }}
     >
       {children}
