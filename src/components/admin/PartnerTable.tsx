@@ -117,7 +117,7 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {item.logo && !item.logo.includes("placeholder") ? (
-                          <img src={item.logo} alt={item.name} className="w-full h-full object-cover" />
+                          <img src={item.logo} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">
                             {item.name.split(" ").map(w => w[0]).join("").slice(0, 2)}

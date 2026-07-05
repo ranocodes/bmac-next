@@ -78,7 +78,7 @@ export default function GalleryTable({ initialData = [] }: { initialData?: any[]
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                          <img src={g.img} alt="" className="w-full h-full object-cover" />
+                          <img src={g.img} alt="" loading="lazy" className="w-full h-full object-cover" />
                         </div>
                         <p className="font-medium text-secondary hidden sm:inline truncate max-w-[120px]">{g.img.split("/").pop()}</p>
                       </div>

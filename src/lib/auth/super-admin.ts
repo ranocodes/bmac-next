@@ -243,3 +243,46 @@ export async function clearSuperAdminSession() {
   const cookie = await cookies();
   cookie.set(COOKIE_NAME, "", { path: "/admin", maxAge: 0 });
 }
+
+async function sha256(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const hash = await crypto.subtle.digest("SHA-256", encoder.encode(data));
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function createPasswordResetToken(email: string): Promise<string | null> {
+  const rows = await db.query<{ id: string }>(
+    "SELECT id FROM public.super_admins WHERE LOWER(email) = LOWER($1)", [email]);
+  if (rows.length === 0) return null;
+
+  const token = crypto.randomUUID();
+  const tokenHash = await sha256(token);
+  await db.query(
+    "INSERT INTO public.password_reset_tokens (email, token_hash, expires_at) VALUES ($1, $2, now() + interval '1 hour')",
+    [email.toLowerCase(), tokenHash]);
+  return token;
+}
+
+export async function verifyPasswordResetToken(token: string): Promise<string | null> {
+  const tokenHash = await sha256(token);
+  const rows = await db.query<{ email: string }>(
+    "SELECT email FROM public.password_reset_tokens WHERE token_hash = $1 AND expires_at > now() AND used_at IS NULL",
+    [tokenHash]);
+  return rows.length > 0 ? rows[0].email : null;
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<{ error?: string }> {
+  const email = await verifyPasswordResetToken(token);
+  if (!email) return { error: "Invalid or expired reset token" };
+
+  const hash = bcrypt.hashSync(newPassword, 12);
+  const tokenHash = await sha256(token);
+
+  try {
+    await db.query("UPDATE public.super_admins SET password_hash = $1 WHERE LOWER(email) = LOWER($2)", [hash, email]);
+    await db.query("UPDATE public.password_reset_tokens SET used_at = now() WHERE token_hash = $1", [tokenHash]);
+    return {};
+  } catch (e: any) {
+    return { error: e?.message || "Failed to reset password" };
+  }
+}

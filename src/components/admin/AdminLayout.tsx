@@ -61,7 +61,7 @@ const navGroups: NavGroup[] = [
     label: "System", icon: Shield,
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: ClipboardList, permission: "manage_users" },
-      { label: "Users", href: "/admin/users", icon: UserCog, permission: "manage_users" },
+      { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },
@@ -87,6 +87,7 @@ const routePermissions: Record<string, Permission> = {
   "/admin/partners": "manage_partners",
   "/admin/stats": "edit_content",
   "/admin/logs": "manage_users",
+  "/admin/admins": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
 };
@@ -162,7 +163,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
     <ToastProvider>
     <div className="min-h-[100dvh] bg-[#fafbf9] flex">
       {sidebarOpen && <div className="fixed inset-0 bg-secondary/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border/50 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-[68px]' : 'w-[240px]'} ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border/50 flex flex-col transition-all duration-300 overflow-x-hidden ${sidebarCollapsed ? 'w-[68px]' : 'w-[240px]'} ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className={`h-16 flex items-center gap-3 border-b border-border/50 shrink-0 ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
           <div className="w-0.5 h-6 rounded-full bg-primary/40 shrink-0" />
           {!sidebarCollapsed && (
@@ -172,7 +173,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             </>
           )}
         </div>
-        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-2">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-2">
           <Link href="/admin" onClick={() => setSidebarOpen(false)}
             className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'px-3'} ${pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-secondary hover:bg-muted"}`}>
             <LayoutDashboard size={18} />

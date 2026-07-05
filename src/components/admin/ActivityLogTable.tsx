@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ClipboardList, Search, Trash2, Filter } from "lucide-react";
 import { useAdmin } from "@/lib/auth/admin-context";
 import { useToast } from "@/components/ui/Toast";
+import { clearActivityLogs } from "@/actions/activity-logs";
 
 export default function ActivityLogTable({ initialData }: { initialData: any[] }) {
   const [logs, setLogs] = useState<any[]>([]);
@@ -27,9 +28,28 @@ export default function ActivityLogTable({ initialData }: { initialData: any[] }
       toast("You don't have permission to clear logs", "error");
       return;
     }
-    const ok = await confirm("Clear all activity logs? This cannot be undone.");
+    const scope = actionFilter ? `filtered "${actionFilter}" logs` : search ? "filtered logs" : "all logs";
+    const ok = await confirm(`Clear ${scope}? This cannot be undone.`);
     if (!ok) return;
-    toast("Clear logs feature coming soon", "info");
+    const result = await clearActivityLogs(search, actionFilter);
+    if (result.error) { toast(result.error, "error"); return; }
+    setLogs(prev => {
+      return prev.filter(l => {
+        const act = l.action || l.action_type;
+        let matches = false;
+        if (actionFilter && act === actionFilter) matches = true;
+        if (search) {
+          const q = search.toLowerCase();
+          const userField = l.user || l.user_email || "";
+          const resourceField = l.resource || l.resource_type || "";
+          const details = l.details || l.description || "";
+          if (userField.toLowerCase().includes(q) || resourceField.toLowerCase().includes(q) || details.toLowerCase().includes(q)) matches = true;
+        }
+        if (!actionFilter && !search) matches = true;
+        return !matches;
+      });
+    });
+    toast(`${result.deleted} log(s) cleared`, "success");
   }
 
   const actions = [...new Set(logs.map(l => l.action || l.action_type))].sort();
