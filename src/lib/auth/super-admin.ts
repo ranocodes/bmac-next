@@ -180,5 +180,5 @@ export async function getSuperAdminSession(): Promise<SuperAdminSession | null> 
 
 export async function clearSuperAdminSession() {
   const cookie = await cookies();
-  cookie.delete(COOKIE_NAME);
+  cookie.set(COOKIE_NAME, "", { path: "/admin", maxAge: 0 });
 }
