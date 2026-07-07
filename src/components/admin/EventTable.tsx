@@ -33,9 +33,12 @@ export default function EventTable({ initialData }: { initialData: any[] }) {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Events</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage events</p>
+        <div className="flex items-center gap-3">
+          <Calendar size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Events</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage events</p>
+          </div>
         </div>
         <Link href="/admin/events/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
           <Plus size={16} /> <span className="hidden sm:inline">New Event</span>

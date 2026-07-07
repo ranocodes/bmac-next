@@ -93,9 +93,12 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
 
   return (
     <div className="w-full max-w-4xl space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Users</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage admin accounts</p>
+      <div className="flex items-center gap-3">
+        <Users size={24} className="text-primary shrink-0" />
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Users</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage admin accounts</p>
+        </div>
       </div>
 
       <div className="relative max-w-xs">

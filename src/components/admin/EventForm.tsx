@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
 import type { Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import { useToast } from "@/components/ui/Toast";
@@ -97,6 +97,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
             disabled={saving}
             className="flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm"
           >
+            <CheckCircle className="w-3.5 h-3.5" />
             {isEdit ? "Update & Publish" : "Publish"}
           </button>
         </div>

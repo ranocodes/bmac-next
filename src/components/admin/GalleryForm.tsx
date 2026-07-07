@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
 import { createItem, updateItem } from "@/actions/crud";
 import type { Category } from "@/types/cms";
 import ImagePicker from "@/components/ui/ImagePicker";
@@ -114,6 +114,7 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
               disabled={saving}
               className="flex items-center justify-center gap-1 min-h-[36px] px-2.5 sm:px-3 py-1.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-[11px] sm:text-sm"
             >
+              <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span className="truncate">{saving ? "Saving..." : isEdit ? "Update" : "Publish"}</span>
             </button>
           </div>

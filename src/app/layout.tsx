@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
+import TrackView from "@/components/TrackView";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         {children}
+        <TrackView />
       </body>
     </html>
   );

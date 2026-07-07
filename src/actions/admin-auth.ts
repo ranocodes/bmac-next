@@ -31,7 +31,11 @@ export async function createInviteAction(
   email: string, createdById: string,
   opts: { firstName: string; role: AdminRole; permissions: Permission[]; tempPassword: string }
 ): Promise<{ token?: string; error?: string }> {
-  return createInvite(email, createdById, opts);
+  const { db } = await import("@/lib/db");
+  const rows = await db.query<{ id: string }>(
+    "SELECT id FROM public.super_admins WHERE email = $1", [createdById]);
+  if (rows.length === 0) return { error: "Creator account not found" };
+  return createInvite(email, rows[0].id, opts);
 }
 
 export async function acceptInviteAction(token: string, tempPassword: string, newPassword: string, firstName: string = ""): Promise<{ error?: string }> {
@@ -48,7 +52,7 @@ export async function requestPasswordReset(email: string): Promise<{ error?: str
     if (!email) return { error: "Email is required" };
     const token = await createPasswordResetToken(email);
     if (token) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
       const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
       if (result.error) return { error: "Failed to send reset email. Try again later." };
     }
@@ -79,7 +83,7 @@ export async function adminResetPassword(adminUserId: string): Promise<{ error?:
     const token = await createPasswordResetToken(email);
     if (!token) return { error: "No account found with that email" };
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
     const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
     if (result.error) return { error: "Failed to send reset email. Try again later." };
     return {};

@@ -36,9 +36,12 @@ export default function ProgramTable({ initialData }: { initialData: any[] }) {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Programs</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage programs</p>
+        <div className="flex items-center gap-3">
+          <BookOpen size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Programs</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage programs</p>
+          </div>
         </div>
         <Link href="/admin/programs/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
           <Plus size={16} /> <span className="hidden sm:inline">New Program</span>

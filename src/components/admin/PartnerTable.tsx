@@ -60,9 +60,12 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
   return (
     <div className="w-full max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Partners</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage partner organizations</p>
+        <div className="flex items-center gap-3">
+          <Handshake size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Partners</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage partner organizations</p>
+          </div>
         </div>
         <Link href="/admin/partners/new"
           className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">

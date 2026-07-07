@@ -142,6 +142,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               disabled={saving}
               className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm"
             >
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{isEdit ? "Update & Publish" : "Publish"}</span>
             </button>
           </div>

@@ -70,9 +70,12 @@ export default function ActivityLogTable({ initialData }: { initialData: any[] }
   return (
     <div className="w-full max-w-5xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Activity Log</h1>
-          <p className="text-sm text-muted-foreground mt-1">Audit trail of all administrative actions</p>
+        <div className="flex items-center gap-3">
+          <ClipboardList size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Activity Log</h1>
+            <p className="text-sm text-muted-foreground mt-1">Audit trail of all administrative actions</p>
+          </div>
         </div>
         <button onClick={handleClear}
           className="flex items-center gap-2 h-10 px-4 rounded-xl bg-background border border-input text-muted-foreground text-sm font-medium hover:text-destructive hover:border-destructive/30 transition-all">

@@ -42,9 +42,12 @@ export default function CategoriesPageClient({ initialData }: { initialData: Cat
 
   return (
     <div className="space-y-6 max-w-[600px]">
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Categories</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage news and event categories</p>
+      <div className="flex items-center gap-3">
+        <Tag size={24} className="text-primary shrink-0" />
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Categories</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage news and event categories</p>
+        </div>
       </div>
 
       <form onSubmit={handleAdd} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

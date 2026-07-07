@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, User, Globe, Shield } from "lucide-react";
+import { Plus, X, Save, User, Globe } from "lucide-react";
 import { saveSiteSettings, updateAdminProfile } from "@/actions/settings";
 import { useAdmin } from "@/lib/auth/admin-context";
-import IconPicker from "@/components/ui/IconPicker";
+import SocialLinkSelector from "@/components/ui/SocialLinkSelector";
 import { useToast } from "@/components/ui/Toast";
 
 const DEFAULT = {
@@ -129,15 +129,13 @@ export default function SettingsForm({ initialData }: { initialData?: any | null
                   const next = [...socialLinks]; next[i] = { ...next[i], href: e.target.value }; setSocialLinks(next);
                 }} placeholder="https://..."
                   className="flex-[2] px-3 py-2 min-h-[40px] bg-muted/50 border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
-                <div className="flex items-center gap-2 shrink-0">
-                  <IconPicker value={link.icon} onChange={(v) => {
-                    const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next);
-                  }} />
-                  <button type="button" onClick={() => setSocialLinks(socialLinks.filter((_, j) => j !== i))}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all shrink-0">
-                    <X size={14} />
-                  </button>
-                </div>
+                <SocialLinkSelector value={link.icon} onChange={(v) => {
+                  const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next);
+                }} />
+                <button type="button" onClick={() => setSocialLinks(socialLinks.filter((_, j) => j !== i))}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all shrink-0">
+                  <X size={14} />
+                </button>
               </div>
             ))}
           </div>

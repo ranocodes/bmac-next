@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
-  ChevronDown, Shield, Handshake, ClipboardList, PanelLeftClose, PanelLeftOpen,
+  ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
   UserCog,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -60,7 +60,7 @@ const navGroups: NavGroup[] = [
   {
     label: "System", icon: Shield,
     children: [
-      { label: "Activity Log", href: "/admin/logs", icon: ClipboardList, permission: "manage_users" },
+      { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_users" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
