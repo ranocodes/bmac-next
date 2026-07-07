@@ -6,13 +6,16 @@ import { sendPasswordResetEmail } from "@/lib/email";
 import type { AdminRole, Permission } from "@/types/cms";
 
 export async function loginAdmin(email: string, password: string): Promise<{ error?: string }> {
-  if (!email || !password) return { error: "Email and password required" };
-
-  const info = await verifySuperAdminCredentials(email, password);
-  if (!info) return { error: "Invalid credentials" };
-
-  await setSuperAdminSession(info.email, info.firstName, info.permissions, info.role);
-  return {};
+  try {
+    if (!email || !password) return { error: "Email and password required" };
+    const info = await verifySuperAdminCredentials(email, password);
+    if (!info) return { error: "Invalid email or password" };
+    await setSuperAdminSession(info.email, info.firstName, info.permissions, info.role);
+    return {};
+  } catch (e) {
+    console.error("loginAdmin error:", e);
+    return { error: e instanceof Error ? e.message : "Login failed. Try again." };
+  }
 }
 
 export async function logoutAdmin(): Promise<void> {
@@ -40,14 +43,20 @@ export async function hasAnyAdmins(): Promise<boolean> {
   return count > 0;
 }
 
-export async function requestPasswordReset(email: string): Promise<{ success: boolean }> {
-  if (!email) return { success: false };
-  const token = await createPasswordResetToken(email);
-  if (token) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
+export async function requestPasswordReset(email: string): Promise<{ error?: string }> {
+  try {
+    if (!email) return { error: "Email is required" };
+    const token = await createPasswordResetToken(email);
+    if (token) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
+      if (result.error) return { error: "Failed to send reset email. Try again later." };
+    }
+    return {};
+  } catch (e) {
+    console.error("requestPasswordReset error:", e);
+    return { error: "Something went wrong. Try again." };
   }
-  return { success: true };
 }
 
 export async function executePasswordReset(token: string, newPassword: string): Promise<{ error?: string }> {
@@ -57,19 +66,25 @@ export async function executePasswordReset(token: string, newPassword: string): 
 }
 
 export async function adminResetPassword(adminUserId: string): Promise<{ error?: string }> {
-  const { db } = await import("@/lib/db");
-  const { requirePermission } = await import("@/lib/auth/server");
-  await requirePermission("manage_users");
+  try {
+    const { db } = await import("@/lib/db");
+    const { requirePermission } = await import("@/lib/auth/server");
+    await requirePermission("manage_users");
 
-  const rows = await db.query<{ email: string }>(
-    "SELECT email FROM public.admin_users WHERE id = $1", [adminUserId]);
-  if (rows.length === 0) return { error: "Admin not found" };
+    const rows = await db.query<{ email: string }>(
+      "SELECT email FROM public.admin_users WHERE id = $1", [adminUserId]);
+    if (rows.length === 0) return { error: "Admin not found" };
 
-  const email = rows[0].email;
-  const token = await createPasswordResetToken(email);
-  if (!token) return { error: "No account found with that email" };
+    const email = rows[0].email;
+    const token = await createPasswordResetToken(email);
+    if (!token) return { error: "No account found with that email" };
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
-  return {};
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
+    if (result.error) return { error: "Failed to send reset email. Try again later." };
+    return {};
+  } catch (e) {
+    console.error("adminResetPassword error:", e);
+    return { error: "Something went wrong. Try again." };
+  }
 }
