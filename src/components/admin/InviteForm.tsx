@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Send, AlertCircle, CheckCircle, Copy, Mail, UserPlus, Eye, EyeOff, Shield, ShieldCheck } from "lucide-react";
 import { createInviteAction } from "@/actions/admin-auth";
+import { useToast } from "@/components/ui/Toast";
 import type { Permission } from "@/types/cms";
 
 const ALL_PERMISSIONS_LIST: { id: Permission; label: string }[] = [
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function InviteForm({ email }: Props) {
+  const { toast } = useToast();
   const [firstName, setFirstName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [role, setRole] = useState<"super_admin" | "moderator">("moderator");
@@ -64,6 +66,7 @@ export default function InviteForm({ email }: Props) {
       if (result.error) { setError(result.error); setLoading(false); return; }
       if (result.token) {
         setInviteUrl(`${window.location.origin}/admin/invite/${result.token}`);
+        toast("Invite email sent", "success");
       }
       setLoading(false);
     } catch {
@@ -172,8 +175,9 @@ export default function InviteForm({ email }: Props) {
           <div className="mt-6 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-left">
             <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium mb-3">
               <CheckCircle size={16} />
-              <span>Invite created</span>
+              <span>Invite sent to {inviteEmail}</span>
             </div>
+            <p className="text-xs text-emerald-600/70 mb-3">If you don't receive the email, use the link below instead:</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 text-xs text-muted-foreground bg-card px-3 py-2 rounded-lg truncate">{inviteUrl}</code>
               <button onClick={copyLink}

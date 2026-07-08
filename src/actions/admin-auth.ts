@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { verifySuperAdminCredentials, setSuperAdminSession, clearSuperAdminSession, registerFirstAdmin, createInvite, acceptInvite, getSuperAdminCount, createPasswordResetToken, resetPassword } from "@/lib/auth/super-admin";
-import { sendPasswordResetEmail } from "@/lib/email";
+import { sendPasswordResetEmail, sendInviteEmail } from "@/lib/email";
 import type { AdminRole, Permission } from "@/types/cms";
 
 export async function loginAdmin(email: string, password: string): Promise<{ error?: string }> {
@@ -35,7 +35,15 @@ export async function createInviteAction(
   const rows = await db.query<{ id: string }>(
     "SELECT id FROM public.super_admins WHERE email = $1", [createdById]);
   if (rows.length === 0) return { error: "Creator account not found" };
-  return createInvite(email, rows[0].id, opts);
+
+  const result = await createInvite(email, rows[0].id, opts);
+  if (result.error || !result.token) return result;
+
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const inviteLink = `${baseUrl}/admin/invite/${result.token}`;
+  await sendInviteEmail(email, inviteLink, opts.firstName);
+
+  return result;
 }
 
 export async function acceptInviteAction(token: string, tempPassword: string, newPassword: string, firstName: string = ""): Promise<{ error?: string }> {

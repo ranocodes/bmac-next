@@ -2,6 +2,32 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+export async function sendInviteEmail(email: string, inviteLink: string, firstName: string): Promise<{ error?: string }> {
+  try {
+    await resend.emails.send({
+      from: "BMAC Admin <onboarding@resend.dev>",
+      to: [email],
+      subject: "You're invited to BMAC Admin",
+      text: [
+        `Hi ${firstName},`,
+        "",
+        "You've been invited to the BMAC Admin panel.",
+        "",
+        `Click the link below to accept the invite and set up your account:`,
+        "",
+        inviteLink,
+        "",
+        "This link expires in 7 days.",
+        "If you didn't expect this invite, you can safely ignore this email.",
+      ].join("\n"),
+    });
+    return {};
+  } catch (err) {
+    console.error("Resend error:", err);
+    return { error: "Failed to send invite email" };
+  }
+}
+
 export async function sendPasswordResetEmail(email: string, resetLink: string): Promise<{ error?: string }> {
   try {
     await resend.emails.send({

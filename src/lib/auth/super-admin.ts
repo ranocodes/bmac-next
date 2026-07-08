@@ -126,8 +126,9 @@ export async function createInvite(
     expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
   });
   const payloadB64 = Buffer.from(payload).toString("base64");
+  const payloadUrl = payloadB64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const sig = await hmacSign(payloadB64, getSecret());
-  const token = `${payloadB64}.${sig}`;
+  const token = `${payloadUrl}~${sig}`;
 
   try {
     await db.query(
@@ -146,11 +147,13 @@ interface InvitePayload {
 }
 
 export async function getInviteByToken(token: string): Promise<{ email: string; firstName: string; role: AdminRole; permissions: Permission[]; valid: boolean; error?: string }> {
-  const dot = token.lastIndexOf(".");
-  if (dot === -1) return { email: "", firstName: "", role: "moderator", permissions: [], valid: false, error: "Invalid token" };
+  const sep = token.lastIndexOf("~");
+  if (sep === -1) return { email: "", firstName: "", role: "moderator", permissions: [], valid: false, error: "Invalid token" };
 
-  const payloadB64 = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
+  const payloadUrl = token.slice(0, sep);
+  const sig = token.slice(sep + 1);
+  let payloadB64 = payloadUrl.replace(/-/g, '+').replace(/_/g, '/');
+  while (payloadB64.length % 4) payloadB64 += '=';
 
   const validSig = await hmacVerify(payloadB64, sig, getSecret());
   if (!validSig) return { email: "", firstName: "", role: "moderator", permissions: [], valid: false, error: "Invalid signature" };
