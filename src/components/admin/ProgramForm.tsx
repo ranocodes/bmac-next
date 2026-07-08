@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle } from "lucide-react";
-import { getById, create, update, getAll } from "@/data/store";
-import { mockPrograms } from "@/data/mock-data";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import IconPicker from "@/components/ui/IconPicker";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { createItem, updateItem } from "@/actions/crud";
 
 const COLOR_OPTIONS = [
   { name: "Emerald", class: "text-emerald-400" },
@@ -23,24 +21,20 @@ const COLOR_OPTIONS = [
   { name: "Accent", class: "text-accent" },
 ];
 
-export default function ProgramForm() {
+export default function ProgramForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
 
-  const initialProgram = isEdit && params?.id
-    ? getById<any>("programs", params.id as string)
-    : null;
-
-  const [title, setTitle] = useState(initialProgram?.title || "");
-  const [desc, setDesc] = useState(initialProgram?.desc || initialProgram?.description || "");
-  const [longDesc, setLongDesc] = useState(initialProgram?.longDesc || "");
-  const [img, setImg] = useState(initialProgram?.img || initialProgram?.img_url || "");
-  const [icon, setIcon] = useState(initialProgram?.icon || initialProgram?.icon_name || "");
-  const [color, setColor] = useState(initialProgram?.color || initialProgram?.color_class || "");
-  const [variant, setVariant] = useState<"default" | "featured">(initialProgram?.variant || "default");
-  const [status, setStatus] = useState<"draft" | "published">(initialProgram?.status || "draft");
-  const [landingPage, setLandingPage] = useState(initialProgram?.landingPage || false);
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [desc, setDesc] = useState(initialData?.desc || initialData?.description || "");
+  const [longDesc, setLongDesc] = useState(initialData?.longDesc || "");
+  const [img, setImg] = useState(initialData?.img || initialData?.img_url || "");
+  const [icon, setIcon] = useState(initialData?.icon || initialData?.icon_name || "");
+  const [color, setColor] = useState(initialData?.color || initialData?.color_class || "");
+  const [variant, setVariant] = useState<"default" | "featured">(initialData?.variant || "default");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
+  const [landingPage, setLandingPage] = useState(initialData?.landingPage || false);
   const [landingPageError, setLandingPageError] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -48,7 +42,7 @@ export default function ProgramForm() {
   const { toast } = useToast();
 
   // Logistics details — predefined fields
-  const detailsParts = (initialProgram?.details || "").split("|").map((s: string) => s.trim()).filter(Boolean);
+  const detailsParts = (initialData?.details || "").split("|").map((s: string) => s.trim()).filter(Boolean);
   const [detailDuration, setDetailDuration] = useState(detailsParts[0] || "");
   const [detailSchedule, setDetailSchedule] = useState(detailsParts[1] || "");
   const [detailEligibility, setDetailEligibility] = useState(detailsParts[2] || "");
@@ -56,20 +50,16 @@ export default function ProgramForm() {
   const [detailOtherInput, setDetailOtherInput] = useState("");
 
   // Skills
-  const [skills, setSkills] = useState<string[]>(
-    initialProgram?.skills || (isEdit ? mockPrograms.find(m => m.id === params?.id)?.skills : undefined) || []
-  );
+  const [skills, setSkills] = useState<string[]>(initialData?.skills || []);
   const [skillInput, setSkillInput] = useState("");
 
   // FAQs
-  const [faqs, setFaqs] = useState<{ q: string; a: string }[]>(
-    initialProgram?.faqs || (isEdit ? mockPrograms.find(m => m.id === params?.id)?.faqs : undefined) || []
-  );
+  const [faqs, setFaqs] = useState<{ q: string; a: string }[]>(initialData?.faqs || []);
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
 
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
     setMissingFields([]);
 
@@ -85,26 +75,21 @@ export default function ProgramForm() {
 
     setSaving(true);
 
-    setTimeout(() => {
-      const payload = {
-        title, desc, longDesc, img, icon, color,
-        variant, status: publishStatus, landingPage,
-        details: [detailDuration, detailSchedule, detailEligibility, ...detailOther].join(" | "),
-        skills,
-        faqs,
-      };
-      if (isEdit && params?.id) {
-        update<any>("programs", params.id as string, payload);
-        logActivity("admin", "update_program", "program", params.id as string, `Updated program: ${title}`);
-      } else {
-        const id = `program-${Date.now()}`;
-        create<any>("programs", { id, ...payload });
-        logActivity("admin", "create_program", "program", id, `Created program: ${title}`);
-      }
-      setSaving(false);
-      toast(isEdit ? "Program updated" : "Program created", "success");
-      router.push("/admin/programs");
-    }, 300);
+    const payload = {
+      title, desc, longDesc, img, icon, color,
+      variant, status: publishStatus, landingPage,
+      details: [detailDuration, detailSchedule, detailEligibility, ...detailOther].join(" | "),
+      skills,
+      faqs,
+    };
+    if (isEdit && params?.id) {
+      await updateItem("programs", params.id as string, payload);
+    } else {
+      await createItem("programs", payload);
+    }
+    setSaving(false);
+    toast(isEdit ? "Program updated" : "Program created", "success");
+    router.push("/admin/programs");
   }
 
   function addSkill() {
@@ -123,18 +108,7 @@ export default function ProgramForm() {
   }
 
   function handleLandingPageToggle() {
-    if (landingPage) {
-      setLandingPage(false);
-      setLandingPageError("");
-      return;
-    }
-    const all = getAll<any>("programs");
-    const landingCount = all.filter((p: any) => p.landingPage && p.id !== params?.id).length;
-    if (landingCount >= 3) {
-      setLandingPageError("Only 3 programs can appear on the homepage. Disable one first.");
-      return;
-    }
-    setLandingPage(true);
+    setLandingPage(!landingPage);
     setLandingPageError("");
   }
 
@@ -168,6 +142,7 @@ export default function ProgramForm() {
               disabled={saving}
               className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm"
             >
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{isEdit ? "Update & Publish" : "Publish"}</span>
             </button>
           </div>

@@ -1,31 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { MessageSquareQuote, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { deleteItem } from "@/actions/crud";
 
-export default function TestimonialTable() {
-  const [items, setItems] = useState<any[]>([]);
+export default function TestimonialTable({ initialData = [] }: { initialData?: any[] }) {
+  const [items, setItems] = useState<any[]>(() =>
+    initialData.map((t: any) => ({ ...t })).reverse()
+  );
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    setItems(getAll<any>("testimonials").reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this testimonial?");
     if (!ok) return;
-    const item = items.find(t => t.id === id);
-    remove("testimonials", id);
-    logActivity("admin", "delete_testimonial", "testimonial", id, `Deleted ${item?.name}`);
+    await deleteItem("testimonials", id);
+    setItems(prev => prev.filter(t => t.id !== id));
     toast("Testimonial deleted");
-    load();
   }
 
   const filtered = search
@@ -35,9 +28,12 @@ export default function TestimonialTable() {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Testimonials</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage testimonials</p>
+        <div className="flex items-center gap-3">
+          <MessageSquareQuote size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Testimonials</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage testimonials</p>
+          </div>
         </div>
         <Link href="/admin/testimonials/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
           <Plus size={16} /> <span className="hidden sm:inline">New Testimonial</span>
@@ -84,7 +80,7 @@ export default function TestimonialTable() {
                       <div className="flex items-center gap-3">
                         {t.src && (
                           <div className="w-9 h-9 rounded-full overflow-hidden bg-muted shrink-0">
-                            <img src={t.src} alt="" className="w-full h-full object-cover" />
+                            <img src={t.src} alt="" loading="lazy" className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div>

@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
+import TrackView from "@/components/TrackView";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -27,10 +28,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        />
         <script src="https://js.paystack.co/v1/inline.js" async></script>
       </head>
       <body
@@ -38,6 +35,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         {children}
+        <TrackView />
       </body>
     </html>
   );

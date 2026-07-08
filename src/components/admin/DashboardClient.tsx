@@ -2,11 +2,33 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Newspaper, Calendar, BookOpen, Image, Users, Star, TrendingUp, ArrowRight, Plus, Sparkle, Activity, ClipboardList } from "lucide-react";
-import { getAll, seedIfEmpty, create, setItem, getItem } from "@/data/store";
-import { getCurrentUserPermissions } from "@/lib/permissions";
-import { mockNews, mockEvents, mockPrograms, mockGallery, mockTeam, mockTestimonials, mockStats, mockPartners } from "@/data/mock-data";
-import type { NewsArticle, EventPass, Program, GalleryItem, TeamMember, Testimonial, Category } from "@/types/cms";
+import {
+  Newspaper, Calendar, BookOpen, Image, Users, Star,
+  ArrowRight, Plus, Sparkle, Activity, ClipboardList,
+  TrendingUp, UserCheck, RefreshCw, Globe,
+} from "lucide-react";
+import { useAdmin } from "@/lib/auth/admin-context";
+import type { NewsArticle, EventPass } from "@/types/cms";
+
+interface DashboardProps {
+  initialCounts: Record<string, number>;
+  recentNews: any[];
+  recentEvents: any[];
+  recentActivity: any[];
+  todayCount: number;
+}
+
+interface ActivitySummary {
+  topUsers: { name: string; count: number }[];
+  topActions: { action: string; count: number }[];
+}
+
+interface VisitorStats {
+  totalViews: number;
+  uniqueVisitors: number;
+  todayViews: number;
+  topPages: { path: string; count: number }[];
+}
 
 const quickActions = [
   { label: "New Article", href: "/admin/news/new", icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
@@ -15,99 +37,78 @@ const quickActions = [
   { label: "Upload Photo", href: "/admin/gallery/new", icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
 ];
 
-const hours = new Date().getHours();
-const greeting = hours < 12 ? "Good morning" : hours < 18 ? "Good afternoon" : "Good evening";
-
-export default function DashboardClient() {
-  const [counts, setCounts] = useState({ news: 0, events: 0, programs: 0, gallery: 0, team: 0, testimonials: 0 });
-  const [recentNews, setRecentNews] = useState<NewsArticle[]>([]);
-  const [recentEvents, setRecentEvents] = useState<EventPass[]>([]);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [todayCount, setTodayCount] = useState(0);
-  const [firstName, setFirstName] = useState("Admin");
+export default function DashboardClient({ initialCounts, recentNews, recentEvents, recentActivity, todayCount }: DashboardProps) {
+  const user = useAdmin();
+  const [greeting, setGreeting] = useState("Good day");
+  const [liveCounts, setLiveCounts] = useState(initialCounts);
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [visitorStats, setVisitorStats] = useState<VisitorStats | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const session = getItem<{ firstName?: string }>("session");
-    if (session?.firstName) setFirstName(session.firstName);
-    seedIfEmpty("news", mockNews.map(n => ({ ...n, desc: n.description, img: n.img_url })));
-    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-    seedIfEmpty("programs", mockPrograms);
-    seedIfEmpty("gallery", mockGallery);
-    seedIfEmpty("team", mockTeam);
-    seedIfEmpty("testimonials", mockTestimonials);
-    seedIfEmpty("stats", mockStats);
-    seedIfEmpty("partners", mockPartners);
-        seedIfEmpty("categories", [{ id: "default", name: "General" }]);
-
-    if (!getItem<any>("site_settings")) {
-      setItem("site_settings", {
-        id: "settings-1",
-        logo_text: "BMAC",
-        navigation: [
-          { name: "Home", href: "/" },
-          { name: "Programs", href: "/programs" },
-          { name: "Events", href: "/events" },
-          { name: "News", href: "/news" },
-          { name: "Gallery", href: "/gallery" },
-          { name: "About", href: "/about" },
-          { name: "Contact", href: "/contact" }
-        ],
-        social_links: [
-          { name: "Instagram", href: "https://instagram.com/bmacjos", icon: "Instagram" },
-          { name: "Twitter", href: "https://twitter.com/bmacjos", icon: "Twitter" },
-          { name: "YouTube", href: "https://youtube.com/@bmac", icon: "Youtube" }
-        ],
-        copyright: "Brilliant Minds Ambassadors Club. All rights reserved.",
-      });
-    }
-    seedIfEmpty("categories", [
-      "Achievements", "Programs", "Alumni", "Partnerships",
-      "Events", "Announcements", "Workshops", "Competition",
-      "Culture", "Mentorship", "Community",
-    ].map((name, i) => ({ id: `cat-${i}`, name })));
-
-    const news = getAll<NewsArticle>("news");
-    const events = getAll<any>("events").map(e => ({ ...e, date: e.date || e.event_date || "", desc: e.desc || e.description || "" }));
-    setCounts({
-      news: news.length,
-      events: events.length,
-      programs: getAll<Program>("programs").length,
-      gallery: getAll<GalleryItem>("gallery").length,
-      team: getAll<TeamMember>("team").length,
-      testimonials: getAll<Testimonial>("testimonials").length,
-    });
-    setRecentNews([...news].reverse().slice(0, 4));
-    setRecentEvents(events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 4));
-
-    const logs = getAll<any>("activity_logs");
-    setRecentActivity(logs.slice(0, 15));
-    const today = Date.now() - 86400000;
-    setTodayCount(logs.filter((l: any) => l.timestamp > today).length);
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
   }, []);
 
-  const perms = getCurrentUserPermissions();
-  const canViewActivity = perms.includes("manage_users");
+  useEffect(() => {
+    async function fetchLive() {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (!res.ok) return;
+        const data = await res.json();
+        setLiveCounts(prev => ({ ...prev, ...data.counts }));
+        if (data.activity) setActivitySummary(data.activity);
+        if (data.visitors) setVisitorStats(data.visitors);
+      } catch {}
+    }
+    fetchLive();
+    const id = setInterval(fetchLive, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setLiveCounts(prev => ({ ...prev, ...data.counts }));
+        if (data.activity) setActivitySummary(data.activity);
+        if (data.visitors) setVisitorStats(data.visitors);
+      }
+    } catch {}
+    setRefreshing(false);
+  }
+
+  const canViewActivity = user?.permissions.includes("manage_users") ?? false;
 
   const statCards = [
-    { label: "News", value: counts.news, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
-    { label: "Events", value: counts.events, icon: Calendar, color: "text-amber-500", bg: "bg-amber-50" },
-    { label: "Programs", value: counts.programs, icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-50" },
-    { label: "Gallery", value: counts.gallery, icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
-    { label: "Team", value: counts.team, icon: Users, color: "text-rose-500", bg: "bg-rose-50" },
-    { label: "Testimonials", value: counts.testimonials, icon: Star, color: "text-cyan-500", bg: "bg-cyan-50" },
+    { label: "News", value: liveCounts.news, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
+    { label: "Events", value: liveCounts.events, icon: Calendar, color: "text-amber-500", bg: "bg-amber-50" },
+    { label: "Programs", value: liveCounts.programs, icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-50" },
+    { label: "Gallery", value: liveCounts.gallery, icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
+    { label: "Team", value: liveCounts.team, icon: Users, color: "text-rose-500", bg: "bg-rose-50" },
+    { label: "Testimonials", value: liveCounts.testimonials, icon: Star, color: "text-cyan-500", bg: "bg-cyan-50" },
   ];
 
   return (
     <div className="space-y-8 max-w-[1400px]">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary">
-          {greeting}, {firstName}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1.5">Here is what is happening across your site.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary">
+            {greeting}, {user?.firstName ?? "Admin"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5">Here is what is happening across your site.</p>
+        </div>
+        <button onClick={handleRefresh} disabled={refreshing}
+          className="flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 bg-card border border-border/50 text-muted-foreground hover:text-secondary rounded-lg text-xs font-medium transition-colors disabled:opacity-50 shrink-0 mt-1">
+          <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+          Refresh
+        </button>
       </div>
 
-      {/* Stat cards — bento row */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
         {statCards.map(card => (
           <div key={card.label} className="bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
@@ -120,7 +121,41 @@ export default function DashboardClient() {
         ))}
       </div>
 
-      {/* Quick Actions — horizontal scroll on mobile, grid on desktop */}
+      {/* Visitor Stats */}
+      {visitorStats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-card rounded-2xl border border-border/50 p-5">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+              <TrendingUp size={20} className="text-blue-500" />
+            </div>
+            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.totalViews.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Total Page Views</p>
+          </div>
+          <div className="bg-card rounded-2xl border border-border/50 p-5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-4">
+              <Users size={20} className="text-emerald-500" />
+            </div>
+            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.uniqueVisitors.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Unique Visitors</p>
+          </div>
+          <div className="bg-card rounded-2xl border border-border/50 p-5">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-4">
+              <Activity size={20} className="text-amber-500" />
+            </div>
+            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.todayViews.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Views Today</p>
+          </div>
+          <div className="bg-card rounded-2xl border border-border/50 p-5">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-4">
+              <Globe size={20} className="text-purple-500" />
+            </div>
+            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.topPages.length}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Pages Tracked</p>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions */}
       <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
         <div className="flex items-center gap-2 mb-5">
           <Sparkle size={16} className="text-primary" />
@@ -143,9 +178,8 @@ export default function DashboardClient() {
         </div>
       </div>
 
-      {/* Recent content — asymmetric bento grid */}
+      {/* Recent content */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {/* Recent News — takes 3/5 on desktop */}
         <div className="xl:col-span-3 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -162,7 +196,7 @@ export default function DashboardClient() {
             </div>
           ) : (
             <div className="space-y-1">
-              {recentNews.map(a => (
+              {recentNews.map((a: any) => (
                 <Link key={a.id} href={`/admin/news/${a.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
                   <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
                     <Newspaper size={15} className="text-muted-foreground group-hover:text-blue-500 transition-colors" />
@@ -181,7 +215,6 @@ export default function DashboardClient() {
           </Link>
         </div>
 
-        {/* Upcoming Events — takes 2/5 on desktop */}
         <div className="xl:col-span-2 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -198,7 +231,7 @@ export default function DashboardClient() {
             </div>
           ) : (
             <div className="space-y-1">
-              {recentEvents.map(e => (
+              {recentEvents.map((e: any) => (
                 <Link key={e.id} href={`/admin/events/${e.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
                   <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-amber-50 transition-colors">
                     <Calendar size={15} className="text-muted-foreground group-hover:text-amber-500 transition-colors" />
@@ -218,41 +251,101 @@ export default function DashboardClient() {
         </div>
       </div>
 
-      {/* Recent Activity — full width */}
-      {canViewActivity && <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <Activity size={16} className="text-primary" />
-            <h2 className="text-sm font-semibold text-secondary">Recent Activity</h2>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{todayCount} today</span>
+      {/* Recent Activity */}
+      {canViewActivity && <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <div className="xl:col-span-3 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Activity size={16} className="text-primary" />
+              <h2 className="text-sm font-semibold text-secondary">Recent Activity</h2>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{todayCount} today</span>
+            </div>
+            <Link href="/admin/logs" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
           </div>
-          <Link href="/admin/logs" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
-        </div>
-        {recentActivity.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <ClipboardList size={32} className="text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">No activity logged yet</p>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {recentActivity.map((log: any) => (
-              <div key={log.id} className="flex items-start gap-3 py-2.5 border-b border-border/10 last:border-0">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 bg-primary/20 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-medium text-secondary">{log.user}</span>
-                    <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action}</span>
-                    <span className="text-[11px] text-muted-foreground">{log.resource}</span>
+          {recentActivity.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <ClipboardList size={32} className="text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground">No activity logged yet</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {recentActivity.map((log: any) => (
+                <div key={log.id} className="flex items-start gap-3 py-2.5 border-b border-border/10 last:border-0">
+                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 bg-primary/20 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-secondary">{log.user}</span>
+                      <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action}</span>
+                      <span className="text-[11px] text-muted-foreground">{log.resource}</span>
+                    </div>
+                    {log.details && <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate max-w-lg">{log.details}</p>}
                   </div>
-                  {log.details && <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate max-w-lg">{log.details}</p>}
+                  <span className="text-[10px] text-muted-foreground/40 whitespace-nowrap shrink-0">
+                    {new Date(log.timestamp || log.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </span>
                 </div>
-                <span className="text-[10px] text-muted-foreground/40 whitespace-nowrap shrink-0">
-                  {new Date(log.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Activity Summary */}
+        <div className="xl:col-span-2 space-y-6">
+          {/* Top Pages */}
+          {visitorStats?.topPages && visitorStats.topPages.length > 0 && (
+            <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe size={16} className="text-purple-500" />
+                <h2 className="text-sm font-semibold text-secondary">Top Pages</h2>
               </div>
-            ))}
-          </div>
-        )}
+              <div className="space-y-2">
+                {visitorStats.topPages.map((p, i) => (
+                  <div key={p.path} className="flex items-center gap-3 py-2 px-3 rounded-xl bg-muted/30">
+                    <span className="w-5 text-xs font-bold text-muted-foreground/50">#{i + 1}</span>
+                    <span className="flex-1 text-xs font-medium text-secondary truncate">{p.path}</span>
+                    <span className="text-xs font-semibold text-primary">{p.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activitySummary?.topUsers && activitySummary.topUsers.length > 0 && (
+            <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <UserCheck size={16} className="text-emerald-500" />
+                <h2 className="text-sm font-semibold text-secondary">Most Active Users</h2>
+              </div>
+              <div className="space-y-2">
+                {activitySummary.topUsers.map((u, i) => (
+                  <div key={u.name} className="flex items-center gap-3 py-2 px-3 rounded-xl bg-muted/30">
+                    <span className="w-5 text-xs font-bold text-muted-foreground/50">#{i + 1}</span>
+                    <span className="flex-1 text-sm font-medium text-secondary truncate">{u.name}</span>
+                    <span className="text-xs font-semibold text-primary">{u.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activitySummary?.topActions && activitySummary.topActions.length > 0 && (
+            <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={16} className="text-blue-500" />
+                <h2 className="text-sm font-semibold text-secondary">Top Actions</h2>
+              </div>
+              <div className="space-y-2">
+                {activitySummary.topActions.map((a, i) => (
+                  <div key={a.action} className="flex items-center gap-3 py-2 px-3 rounded-xl bg-muted/30">
+                    <span className="w-5 text-xs font-bold text-muted-foreground/50">#{i + 1}</span>
+                    <span className="flex-1 text-xs font-medium text-secondary capitalize truncate">{a.action.replace(/_/g, " ")}</span>
+                    <span className="text-xs font-semibold text-primary">{a.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>}
     </div>
   );

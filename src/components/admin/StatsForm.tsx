@@ -3,31 +3,32 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update, getAll } from "@/data/store";
+import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
+import { createItem, updateItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 import IconPicker from "@/components/ui/IconPicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
 
-export default function StatsForm() {
+export default function StatsForm({ initialData }: { initialData?: any | null }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
+  const user = useAdmin();
 
-  const initial = isEdit && params?.id
-    ? getById<any>("stats", params.id as string)
-    : null;
-
-  const [num, setNum] = useState(initial?.num || "");
-  const [label, setLabel] = useState(initial?.label || "");
-  const [icon, setIcon] = useState(initial?.icon || "");
-  const [status, setStatus] = useState<"draft" | "published">(initial?.status || "draft");
+  const [num, setNum] = useState(initialData?.num || "");
+  const [label, setLabel] = useState(initialData?.label || "");
+  const [icon, setIcon] = useState(initialData?.icon || "");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const { toast } = useToast();
 
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
+    if (!user?.permissions.includes("edit_content")) {
+      setError("You don't have permission to manage stats");
+      return;
+    }
     setError("");
     setMissingFields([]);
 
@@ -41,28 +42,27 @@ export default function StatsForm() {
       return;
     }
 
-    if (!isEdit && getAll<any>("stats").length >= 3) {
-      setError("Maximum of 3 stats allowed. Delete an existing stat first.");
-      setSaving(false);
-      return;
-    }
-
     setSaving(true);
-
-    setTimeout(() => {
-      const payload = { num, label, icon, status: publishStatus };
+    try {
       if (isEdit && params?.id) {
-        update<any>("stats", params.id as string, payload);
-        logActivity("admin", "update_stat", "stat", params.id as string, `Updated stat: ${label}`);
+        await updateItem("impact_stats", params.id as string, { num, label, icon, status: publishStatus });
+        toast("Stat updated", "success");
       } else {
-        const id = `stat-${Date.now()}`;
-        create<any>("stats", { id, ...payload });
-        logActivity("admin", "create_stat", "stat", id, `Created stat: ${label}`);
+        await createItem("impact_stats", {
+          id: `stat-${Date.now()}`,
+          num,
+          label,
+          icon,
+          status: publishStatus,
+        });
+        toast("Stat created", "success");
       }
-      setSaving(false);
-      toast(isEdit ? "Stat updated" : "Stat created", "success");
       router.push("/admin/stats");
-    }, 300);
+    } catch {
+      setError("Failed to save stat");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -116,6 +116,7 @@ export default function StatsForm() {
               disabled={saving}
               className="flex items-center justify-center gap-1 min-h-[36px] px-2.5 sm:px-3 py-1.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-[11px] sm:text-sm"
             >
+              <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span className="truncate">{saving ? "Saving..." : isEdit ? "Update" : "Publish"}</span>
             </button>
           </div>

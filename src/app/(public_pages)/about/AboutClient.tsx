@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Users } from "lucide-react";
@@ -9,24 +9,17 @@ import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getIcon } from "@/lib/iconMapper";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockTeam, mockStats } from "@/data/mock-data";
 
-export default function AboutClient() {
-  const [team, setTeam] = useState<any[]>([]);
-  const [impact, setImpact] = useState<any[]>([]);
+interface AboutClientProps {
+  initialTeam: any[];
+  initialStats: any[];
+}
 
-  useEffect(() => {
-    seedIfEmpty("team", mockTeam);
-    const all = getAll<any>("team").reverse();
-    const published = all.filter((m: any) => m.status === "published");
-    setTeam(published.length > 0 ? published : all);
-
-    seedIfEmpty("stats", mockStats);
-    const allStats = getAll<any>("stats").reverse();
-    const publishedStats = allStats.filter((s: any) => s.status === "published");
-    setImpact(publishedStats.length > 0 ? publishedStats : allStats);
-  }, []);
+export default function AboutClient({ initialTeam, initialStats }: AboutClientProps) {
+  const publishedTeam = initialTeam.filter((m: any) => m.status === "published");
+  const [team] = useState<any[]>(publishedTeam.length > 0 ? publishedTeam : initialTeam);
+  const publishedImpact = initialStats.filter((s: any) => s.status === "published");
+  const [impact] = useState<any[]>(publishedImpact.length > 0 ? publishedImpact : initialStats);
   return (
     <main suppressHydrationWarning className="bg-background">
       <section className="relative min-h-[60dvh] flex items-center justify-center overflow-hidden pt-20">

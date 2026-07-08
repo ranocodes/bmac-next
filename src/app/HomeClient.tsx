@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -13,39 +13,35 @@ import PartnersSection from "@/components/ui/PartnersSection";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import { getIcon } from "@/lib/iconMapper";
 import { Program } from "@/types/cms";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockPrograms, mockTestimonials, mockStats } from "@/data/mock-data";
 
-export default function HomeClient() {
-  const [programs, setPrograms] = useState<Program[]>([]);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
-  const [stats, setStats] = useState<any[]>([]);
+function normalizePrograms(raw: any[]): Program[] {
+  return raw.map(p => ({
+    ...p,
+    desc: (p as any).desc || (p as any).description || "",
+    img: (p as any).img || (p as any).img_url || "",
+    icon: (p as any).icon || (p as any).icon_name || "",
+    color: (p as any).color || (p as any).color_class || "",
+    landingPage: (p as any).landingPage || false,
+    status: (p as any).status || "draft",
+  }));
+}
+
+interface HomeClientProps {
+  initialPrograms: any[];
+  initialTestimonials: any[];
+  initialStats: any[];
+  initialPartners?: any[];
+}
+
+export default function HomeClient({ initialPrograms, initialTestimonials, initialStats, initialPartners }: HomeClientProps) {
+  const allPrograms = normalizePrograms(initialPrograms);
+  const landing = allPrograms.filter(p => p.landingPage && p.status === "published");
+  const [programs] = useState<Program[]>(landing.length > 0 ? landing.slice(0, 3) : allPrograms.filter(p => p.status === "published").slice(0, 3));
+  const publishedTestimonials = initialTestimonials.filter((t: any) => t.status === "published");
+  const [testimonials] = useState<any[]>(publishedTestimonials.length > 0 ? publishedTestimonials : initialTestimonials);
+  const publishedStats = initialStats.filter((s: any) => s.status === "published");
+  const [stats] = useState<any[]>(publishedStats.length > 0 ? publishedStats : initialStats);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  useEffect(() => {
-    seedIfEmpty("programs", mockPrograms.map(p => ({ ...p, desc: p.description, img: p.img_url, icon: p.icon_name, color: p.color_class, landingPage: p.landingPage || false })));
-    const all = getAll<Program>("programs").map(p => ({
-      ...p,
-      desc: (p as any).desc || (p as any).description || "",
-      img: (p as any).img || (p as any).img_url || "",
-      icon: (p as any).icon || (p as any).icon_name || "",
-      color: (p as any).color || (p as any).color_class || "",
-      landingPage: (p as any).landingPage || false,
-      status: (p as any).status || "draft",
-    }));
-    const landing = all.filter(p => p.landingPage && p.status === "published");
-    setPrograms(landing.length > 0 ? landing.slice(0, 3) : all.filter(p => p.status === "published").slice(0, 3));
-
-    seedIfEmpty("testimonials", mockTestimonials);
-    const allTestimonials = getAll<any>("testimonials").reverse();
-    const published = allTestimonials.filter(t => t.status === "published");
-    setTestimonials(published.length > 0 ? published : allTestimonials);
-
-    seedIfEmpty("stats", mockStats);
-    const allStats = getAll<any>("stats").reverse();
-    const publishedStats = allStats.filter((s: any) => s.status === "published");
-    setStats(publishedStats.length > 0 ? publishedStats : allStats);
-  }, []);
 
   return (
     <>
@@ -182,7 +178,7 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <PartnersSection />
+      <PartnersSection initialPartners={initialPartners} />
 
       <section className="py-16 lg:py-24 px-6 bg-background">
          <div className="max-w-4xl mx-auto w-full">

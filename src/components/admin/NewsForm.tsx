@@ -1,51 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update, getAll, seedIfEmpty } from "@/data/store";
-import type { NewsArticle, Category } from "@/types/cms";
+import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
+import type { Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { createItem, updateItem } from "@/actions/crud";
 
-export default function NewsForm() {
+const DEFAULT_CATEGORIES: Category[] = [
+  "Achievements", "Programs", "Alumni", "Partnerships",
+  "Events", "Announcements", "Workshops", "Competition",
+  "Culture", "Mentorship", "Community",
+].map((name, i) => ({ id: `cat-${i}`, name }));
+
+export default function NewsForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
 
-  const initialArticle = isEdit && params?.id
-    ? getById<NewsArticle>("news", params.id as string)
-    : null;
-
-  const [title, setTitle] = useState(initialArticle?.title || "");
-  const [date, setDate] = useState(initialArticle?.date || "");
-  const [category, setCategory] = useState(initialArticle?.category || "");
-  const [desc, setDesc] = useState(initialArticle?.desc || (initialArticle as any)?.description || "");
-  const [content, setContent] = useState(initialArticle?.content || "");
-  const [img, setImg] = useState(initialArticle?.img || "");
-  const [status, setStatus] = useState<"draft" | "published">(initialArticle?.status || "draft");
-  const [featured, setFeatured] = useState(initialArticle?.featured || false);
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [date, setDate] = useState(initialData?.date || "");
+  const [category, setCategory] = useState(initialData?.category || "");
+  const [desc, setDesc] = useState(initialData?.desc || initialData?.description || "");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [img, setImg] = useState(initialData?.img || "");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
+  const [featured, setFeatured] = useState(initialData?.featured || false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const defaultCategories = [
-      "Achievements", "Programs", "Alumni", "Partnerships",
-      "Events", "Announcements", "Workshops", "Competition",
-      "Culture", "Mentorship", "Community",
-    ];
-    seedIfEmpty("categories", defaultCategories.map((name, i) => ({ id: `cat-${i}`, name })));
-    const stored = getAll<Category>("categories");
-    setCategories(stored.length > 0 ? stored : defaultCategories.map((name, i) => ({ id: `cat-${i}`, name })));
-  }, []);
-
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
     setMissingFields([]);
 
@@ -62,25 +52,20 @@ export default function NewsForm() {
 
     setSaving(true);
 
-    setTimeout(() => {
-      const payload = {
-        title, date, category, desc, content,
-        img: img || "/images/placeholder.jpg",
-        featured,
-        status: publishStatus,
-      };
-      if (isEdit && params?.id) {
-        update<NewsArticle>("news", params.id as string, payload);
-        logActivity("admin", "update_news", "news", params.id as string, `Updated news: ${title}`);
-      } else {
-        const id = `news-${Date.now()}`;
-        create<NewsArticle>("news", { id, ...payload });
-        logActivity("admin", "create_news", "news", id, `Created news: ${title}`);
-      }
-      setSaving(false);
-      toast(isEdit ? "Article updated" : "Article created", "success");
-      router.push("/admin/news");
-    }, 300);
+    const payload = {
+      title, date, category, desc, content,
+      img: img || "/images/placeholder.jpg",
+      featured,
+      status: publishStatus,
+    };
+    if (isEdit && params?.id) {
+      await updateItem("news_articles", params.id as string, payload);
+    } else {
+      await createItem("news_articles", payload);
+    }
+    setSaving(false);
+    toast(isEdit ? "Article updated" : "Article created", "success");
+    router.push("/admin/news");
   }
 
   return (
@@ -109,6 +94,7 @@ export default function NewsForm() {
             disabled={saving}
             className="flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm"
           >
+            <CheckCircle className="w-3.5 h-3.5" />
             {isEdit ? "Update & Publish" : "Publish"}
           </button>
         </div>

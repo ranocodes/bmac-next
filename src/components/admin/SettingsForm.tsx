@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, User, Globe, Shield } from "lucide-react";
-import { getItem, setItem } from "@/data/store";
-import IconPicker from "@/components/ui/IconPicker";
+import { Plus, X, Save, User, Globe } from "lucide-react";
+import { saveSiteSettings, updateAdminProfile } from "@/actions/settings";
+import { useAdmin } from "@/lib/auth/admin-context";
+import SocialLinkSelector from "@/components/ui/SocialLinkSelector";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
-import { requirePermission, getSessionUser } from "@/lib/permissions";
 
 const DEFAULT = {
   logo_text: "BMAC",
@@ -26,90 +25,48 @@ const DEFAULT = {
   copyright: "Brilliant Minds Ambassadors Club. All rights reserved.",
 };
 
-export default function SettingsForm() {
+export default function SettingsForm({ initialData }: { initialData?: any | null }) {
+  const user = useAdmin();
   const [firstName, setFirstName] = useState("");
   const [logoText, setLogoText] = useState("");
   const [socialLinks, setSocialLinks] = useState<{ name: string; href: string; icon: string }[]>([]);
   const [copyright, setCopyright] = useState("");
-  const [credEmail, setCredEmail] = useState("");
-  const [credPassword, setCredPassword] = useState("");
   const [savingSite, setSavingSite] = useState(false);
-  const [savingCred, setSavingCred] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const session = getItem<{ email: string; firstName?: string }>("session");
-    if (session) setFirstName(session.firstName || "");
-
-    const stored = getItem<any>("site_settings");
-    const s = stored || DEFAULT;
+    if (user) setFirstName(user.firstName || "");
+    const s = initialData || DEFAULT;
     setLogoText(s.logo_text || "BMAC");
     setSocialLinks(s.social_links || DEFAULT.social_links);
     setCopyright(s.copyright || DEFAULT.copyright);
+  }, [initialData, user]);
 
-    const creds = getItem<{ email: string; password: string }>("admin_credentials");
-    if (creds) {
-      setCredEmail(creds.email);
-      setCredPassword(creds.password);
-    } else {
-      if (session) setCredEmail(session.email);
-    }
-  }, []);
-
-  function handleSaveProfile() {
-    const sessionCheck = getSessionUser();
-    if (!sessionCheck || !requirePermission(sessionCheck.email, "access_settings")) {
+  async function handleSaveProfile() {
+    if (!user?.permissions.includes("access_settings")) {
       toast("You don't have permission to change settings", "error");
       return;
     }
     if (!firstName) { toast("Name is required", "error"); return; }
     setSavingProfile(true);
-    setTimeout(() => {
-      const session = getItem<any>("session");
-      if (session) {
-        setItem("session", { ...session, firstName });
-        const users = getItem<any[]>("admin_users");
-        if (users) {
-          const updated = users.map(u => u.email === session.email ? { ...u, firstName } : u);
-          setItem("admin_users", updated);
-        }
-      }
-      setSavingProfile(false);
-      logActivity(firstName, "update", "profile", "session", "Updated display name");
-      toast("Profile updated", "success");
-    }, 300);
+    const result = await updateAdminProfile(user.email, firstName);
+    setSavingProfile(false);
+    if (result?.error) { toast(result.error, "error"); return; }
+    toast("Profile updated", "success");
   }
 
-  function handleSaveSite() {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "access_settings")) { toast("Permission denied", "error"); return; }
+  async function handleSaveSite() {
+    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
     setSavingSite(true);
-    setTimeout(() => {
-      setItem("site_settings", {
-        id: "settings-1",
-        logo_text: logoText,
-        navigation: DEFAULT.navigation,
-        social_links: socialLinks,
-        copyright,
-      });
-      setSavingSite(false);
-      logActivity("admin", "update", "settings", "settings-1", "Updated site settings");
-      toast("Settings saved", "success");
-    }, 300);
-  }
-
-  function handleSaveCredentials() {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "access_settings")) { toast("Permission denied", "error"); return; }
-    if (!credEmail || !credPassword) { toast("Email and password required", "error"); return; }
-    setSavingCred(true);
-    setTimeout(() => {
-      setItem("admin_credentials", { email: credEmail, password: credPassword });
-      setSavingCred(false);
-      logActivity("admin", "update", "credentials", "admin_credentials", "Updated login credentials");
-      toast("Login credentials updated", "success");
-    }, 300);
+    await saveSiteSettings({
+      logo_text: logoText,
+      navigation: DEFAULT.navigation,
+      social_links: socialLinks,
+      copyright,
+    });
+    setSavingSite(false);
+    toast("Settings saved", "success");
   }
 
   return (
@@ -172,15 +129,13 @@ export default function SettingsForm() {
                   const next = [...socialLinks]; next[i] = { ...next[i], href: e.target.value }; setSocialLinks(next);
                 }} placeholder="https://..."
                   className="flex-[2] px-3 py-2 min-h-[40px] bg-muted/50 border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
-                <div className="flex items-center gap-2 shrink-0">
-                  <IconPicker value={link.icon} onChange={(v) => {
-                    const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next);
-                  }} />
-                  <button type="button" onClick={() => setSocialLinks(socialLinks.filter((_, j) => j !== i))}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all shrink-0">
-                    <X size={14} />
-                  </button>
-                </div>
+                <SocialLinkSelector value={link.icon} onChange={(v) => {
+                  const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next);
+                }} />
+                <button type="button" onClick={() => setSocialLinks(socialLinks.filter((_, j) => j !== i))}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all shrink-0">
+                  <X size={14} />
+                </button>
               </div>
             ))}
           </div>
@@ -196,29 +151,6 @@ export default function SettingsForm() {
           className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
           <Save className="w-3.5 h-3.5" />
           {savingSite ? "Saving..." : "Save Site Settings"}
-        </button>
-      </div>
-
-      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
-          <Shield size={16} className="text-primary" />
-          <h2 className="font-display text-base font-bold text-secondary">Admin Credentials</h2>
-        </div>
-        <p className="text-xs text-muted-foreground -mt-1">Update your login email and password. Next login will require these credentials.</p>
-        <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Email</label>
-          <input type="email" value={credEmail} onChange={e => setCredEmail(e.target.value)} placeholder="admin@bmacjos.org"
-            className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Password</label>
-          <input type="password" value={credPassword} onChange={e => setCredPassword(e.target.value)} placeholder="New password"
-            className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
-        </div>
-        <button onClick={handleSaveCredentials} disabled={savingCred}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-          <Save className="w-3.5 h-3.5" />
-          {savingCred ? "Saving..." : "Update Credentials"}
         </button>
       </div>
     </div>

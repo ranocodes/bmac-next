@@ -1,35 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Users, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { deleteItem } from "@/actions/crud";
 
-export default function TeamTable() {
-  const [items, setItems] = useState<any[]>([]);
+export default function TeamTable({ initialData = [] }: { initialData?: any[] }) {
+  const [items, setItems] = useState<any[]>(() =>
+    initialData.map((m: any) => ({ ...m, status: m.status || "draft" })).reverse()
+  );
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    const all = getAll<any>("team").map((m: any) => ({
-      ...m,
-      status: m.status || "draft",
-    }));
-    setItems(all.reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this team member?");
     if (!ok) return;
-    const item = items.find(m => m.id === id);
-    remove("team", id);
-    logActivity("admin", "delete_team", "team", id, `Deleted ${item?.name}`);
+    await deleteItem("team_members", id);
+    setItems(prev => prev.filter(m => m.id !== id));
     toast("Team member deleted");
-    load();
   }
 
   const filtered = search
@@ -39,9 +28,12 @@ export default function TeamTable() {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Team</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage team members</p>
+        <div className="flex items-center gap-3">
+          <Users size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Team</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage team members</p>
+          </div>
         </div>
         <Link href="/admin/team/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
           <Plus size={16} /> <span className="hidden sm:inline">New Member</span>
@@ -88,7 +80,7 @@ export default function TeamTable() {
                       <div className="flex items-center gap-3">
                         {m.img && (
                           <div className="w-9 h-9 rounded-full overflow-hidden bg-muted shrink-0">
-                            <img src={m.img} alt="" className="w-full h-full object-cover" />
+                            <img src={m.img} alt="" loading="lazy" className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div>

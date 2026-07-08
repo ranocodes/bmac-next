@@ -113,12 +113,27 @@ export interface Partner {
 export interface AdminUser {
   id: string;
   email: string;
-  password: string;
   firstName: string;
   role: AdminRole;
   permissions: Permission[];
   createdAt: number;
-  invitedBy?: string;
+}
+
+export type PaymentStatus = "pending" | "completed" | "failed" | "refunded";
+
+export interface PaymentRecord {
+  id: string;
+  reference: string;
+  source_type: "event_registration" | "donation";
+  source_id: string;
+  amount: number;
+  currency: string;
+  payer_email: string;
+  payer_name: string;
+  status: PaymentStatus;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ActivityLog {

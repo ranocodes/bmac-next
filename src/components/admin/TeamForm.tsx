@@ -3,31 +3,26 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update } from "@/data/store";
+import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
+import { createItem, updateItem } from "@/actions/crud";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
 
-export default function TeamForm() {
+export default function TeamForm({ initialData }: { initialData?: any | null }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
 
-  const initial = isEdit && params?.id
-    ? getById<any>("team", params.id as string)
-    : null;
-
-  const [name, setName] = useState(initial?.name || "");
-  const [role, setRole] = useState(initial?.role || "");
-  const [img, setImg] = useState(initial?.img || "");
-  const [status, setStatus] = useState<"draft" | "published">(initial?.status || "draft");
+  const [name, setName] = useState(initialData?.name || "");
+  const [role, setRole] = useState(initialData?.role || "");
+  const [img, setImg] = useState(initialData?.img || "");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const { toast } = useToast();
 
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
     setMissingFields([]);
 
@@ -42,20 +37,21 @@ export default function TeamForm() {
 
     setSaving(true);
 
-    setTimeout(() => {
+    try {
       const payload = { name, role, img, status: publishStatus };
       if (isEdit && params?.id) {
-        update<any>("team", params.id as string, payload);
-        logActivity("admin", "update_team", "team", params.id as string, `Updated team member: ${name}`);
+        await updateItem("team_members", params.id as string, payload);
       } else {
         const id = `team-${Date.now()}`;
-        create<any>("team", { id, ...payload });
-        logActivity("admin", "create_team", "team", id, `Created team member: ${name}`);
+        await createItem("team_members", { id, ...payload });
       }
-      setSaving(false);
       toast(isEdit ? "Team member updated" : "Team member created", "success");
       router.push("/admin/team");
-    }, 300);
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -109,6 +105,7 @@ export default function TeamForm() {
               disabled={saving}
               className="flex items-center justify-center gap-1 min-h-[36px] px-2.5 sm:px-3 py-1.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-[11px] sm:text-sm"
             >
+              <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span className="truncate">{saving ? "Saving..." : isEdit ? "Update" : "Publish"}</span>
             </button>
           </div>

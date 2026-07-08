@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockEvents } from "@/data/mock-data";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import type { EventPass } from "@/types/cms";
 
 function formatDisplayDate(raw: string | undefined): string {
@@ -23,22 +20,21 @@ function formatDisplayDate(raw: string | undefined): string {
 
 interface EventDetailClientProps {
   id: string;
+  initialEvents: any[];
 }
 
-export default function EventDetailClient({ id }: EventDetailClientProps) {
-  const [event, setEvent] = useState<EventPass | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function EventDetailClient({ id, initialEvents }: EventDetailClientProps) {
+  const all = initialEvents.map(e => ({
+    ...e,
+    date: (e as any).event_date || e.date || "",
+    desc: e.desc || (e as any).description || "",
+    features: (e as any).features || [],
+  }));
+  const found = all.find(e => e.id === id) || null;
+  const [event] = useState<EventPass | null>(found);
   const [isReserved, setIsReserved] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
-
-  useEffect(() => {
-    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-    const all = getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] }));
-    const found = all.find(e => e.id === id) || null;
-    setEvent(found);
-    setLoading(false);
-  }, [id]);
 
   const handlePaystackPayment = () => {
     if (!event) return;
@@ -87,14 +83,6 @@ export default function EventDetailClient({ id }: EventDetailClientProps) {
       setIsReserved(true);
     }
   };
-
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </main>
-    );
-  }
 
   if (!event) {
     return (
@@ -172,7 +160,7 @@ export default function EventDetailClient({ id }: EventDetailClientProps) {
             <div className="prose prose-slate lg:prose-xl max-w-none mb-20 text-muted-foreground">
               <h3 className="font-display text-4xl font-extrabold text-secondary mb-10 tracking-tight">The Vision</h3>
               <div className="text-lg md:text-xl leading-[1.8] mb-12 font-medium">
-                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{event.longDesc}</ReactMarkdown>
+                <ReactMarkdown>{event.longDesc}</ReactMarkdown>
               </div>
 
               {(event.features && event.features.length > 0) && (

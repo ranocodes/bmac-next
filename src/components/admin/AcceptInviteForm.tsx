@@ -1,110 +1,111 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Eye, EyeOff, LogIn, AlertCircle, UserCheck } from "lucide-react";
-import { setItem, getItem } from "@/data/store";
-import { logActivity } from "@/lib/activity";
+import { useState } from "react";
+import { Eye, EyeOff, Shield, AlertCircle, CheckCircle } from "lucide-react";
+import { acceptInviteAction } from "@/actions/admin-auth";
 
-export default function AcceptInviteForm() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const code = searchParams.get("code");
+interface Props {
+  token: string;
+  email: string;
+  firstName: string;
+}
 
-  const [firstName, setFirstName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
+export default function AcceptInviteForm({ token, email, firstName: initialFirstName }: Props) {
+  const [tempPassword, setTempPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [showTemp, setShowTemp] = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [inviteRole, setInviteRole] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
-  useEffect(() => {
-    if (!code) return;
-    const invites = getItem<any[]>("invited_users") || [];
-    const found = invites.find(i => i.code === code && !i.used);
-    if (found) {
-      if (found.email) setEmail(found.email);
-      if (found.role) setInviteRole(found.role);
-    }
-  }, [code]);
-
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!firstName || !email || !password) { setError("All fields required"); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
+
+    if (!tempPassword) { setError("Temporary password is required"); return; }
+    if (!newPassword) { setError("New password is required"); return; }
+    if (newPassword.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (newPassword !== confirm) { setError("Passwords do not match"); return; }
 
     setLoading(true);
-    setTimeout(() => {
-      const users = getItem<any[]>("admin_users") || [];
-      if (users.find(u => u.email === email)) {
-        setError("An account with this email already exists");
-        setLoading(false);
-        return;
-      }
+    try {
+      const result = await acceptInviteAction(token, tempPassword, newPassword, firstName.trim());
+      if (result.error) { setError(result.error); setLoading(false); return; }
+      setDone(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+      setLoading(false);
+    }
+  }
 
-      const role = inviteRole || "administrator";
-      const defaultPermissions: string[] = role === "administrator"
-        ? ["manage_users", "edit_content", "manage_courses", "manage_partners", "view_analytics", "access_settings", "delete_records", "manage_moderators"]
-        : ["edit_content", "manage_courses", "manage_partners", "view_analytics"];
-
-      const newUser = {
-        id: `user-${Date.now()}`,
-        email,
-        password,
-        firstName,
-        role,
-        permissions: defaultPermissions,
-        createdAt: Date.now(),
-      };
-      setItem("admin_users", [...users, newUser]);
-
-      if (code) {
-        const invites = getItem<any[]>("invited_users") || [];
-        const updated = invites.map(i => i.code === code ? { ...i, used: true, usedAt: Date.now() } : i);
-        setItem("invited_users", updated);
-      }
-
-      setItem("session", { email, firstName, loggedInAt: Date.now() });
-      logActivity(email, "signup", "user", newUser.id, `Created account as ${role}`);
-      logActivity(email, "login", "session");
-      router.push("/admin");
-    }, 600);
+  if (done) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={28} className="text-emerald-500" />
+          </div>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary mb-2">Account created</h1>
+          <p className="text-sm text-muted-foreground mb-6">You are now logged in as admin.</p>
+          <a href="/admin"
+            className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all">
+            Go to dashboard
+          </a>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-sm text-center">
+        <div className="mb-10">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <UserCheck size={28} className="text-primary" />
+            <Shield size={28} className="text-primary" />
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Join BMAC<span className="text-primary">.</span></h1>
-          <p className="text-sm text-muted-foreground mt-2">Create your admin account</p>
-          {inviteRole && <p className="text-xs text-muted-foreground/60 mt-1">Invited as <span className="font-medium capitalize text-secondary">{inviteRole}</span></p>}
+          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Accept Invite</h1>
+          <p className="text-sm text-muted-foreground mt-2">Welcome{initialFirstName ? `, ${initialFirstName}` : ""}! Set up your admin account for <span className="text-secondary font-medium">{email}</span></p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Full Name</label>
-            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Jane Doe"
-              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@example.org"
-              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">Password</label>
+            <label className="block text-sm font-medium text-secondary">Temporary password</label>
             <div className="relative">
-              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters"
+              <input type={showTemp ? "text" : "password"} value={tempPassword} onChange={e => setTempPassword(e.target.value)}
+                placeholder="Provided by inviter"
                 className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-              <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
-                {show ? <EyeOff size={18} /> : <Eye size={18} />}
+              <button type="button" onClick={() => setShowTemp(!showTemp)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
+                {showTemp ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">New password</label>
+            <div className="relative">
+              <input type={showNew ? "text" : "password"} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              <button type="button" onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
+                {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">Confirm new password</label>
+            <input type={showNew ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)}
+              placeholder="Re-enter password"
+              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-secondary">Display name <span className="text-muted-foreground font-normal">(optional)</span></label>
+            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+              placeholder="Jane Doe"
+              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
           {error && (
             <div className="flex items-center gap-2.5 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
@@ -115,7 +116,7 @@ export default function AcceptInviteForm() {
           <button type="submit" disabled={loading}
             className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><LogIn size={16} /> Create Account</>}
+              : <><Shield size={16} /> Create Account</>}
           </button>
         </form>
       </div>

@@ -1,27 +1,23 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Expand, X } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockGallery } from "@/data/mock-data";
 
 const categories = ["all", "workshops", "competitions", "outreach", "events"];
 
-export default function GalleryClient() {
+interface GalleryClientProps {
+  initialGallery: any[];
+}
+
+export default function GalleryClient({ initialGallery }: GalleryClientProps) {
   const [filter, setFilter] = useState("all");
   const [selectedImg, setSelectedImg] = useState<any | null>(null);
-  const [galleryItems, setGalleryItems] = useState<any[]>([]);
-
-  useEffect(() => {
-    seedIfEmpty("gallery", mockGallery);
-    const all = getAll<any>("gallery").reverse();
-    const published = all.filter((g: any) => g.status === "published");
-    setGalleryItems(published.length > 0 ? published : all);
-  }, []);
+  const published = initialGallery.filter((g: any) => g.status === "published");
+  const [galleryItems] = useState<any[]>(published.length > 0 ? published : initialGallery);
 
   const filteredItems =
     filter === "all"

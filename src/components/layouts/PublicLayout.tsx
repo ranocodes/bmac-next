@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
-import { getItem } from "@/data/store";
 
 const DEFAULT_NAV = [
   { name: "Home", href: "/" },
@@ -23,21 +21,19 @@ const DEFAULT_SOCIAL = [
   { name: "Twitter", href: "https://twitter.com/bmacjos", icon: "Twitter" },
 ];
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [logoText, setLogoText] = useState("BMAC");
-  const [navLinks, setNavLinks] = useState(DEFAULT_NAV);
-  const [socialLinks, setSocialLinks] = useState(DEFAULT_SOCIAL);
-  const [copyright, setCopyright] = useState("Brilliant Minds Ambassadors Club. All rights reserved.");
+interface PublicLayoutProps {
+  children: React.ReactNode;
+  logoText?: string;
+  navLinks?: typeof DEFAULT_NAV;
+  socialLinks?: typeof DEFAULT_SOCIAL;
+  copyright?: string;
+}
 
-  useEffect(() => {
-    const s = getItem<any>("site_settings");
-    if (s) {
-      if (s.logo_text) setLogoText(s.logo_text);
-      if (s.navigation?.length) setNavLinks(s.navigation);
-      if (s.social_links?.length) setSocialLinks(s.social_links);
-      if (s.copyright) setCopyright(s.copyright);
-    }
-  }, []);
+export default function PublicLayout({ children, logoText: initialLogoText, navLinks: initialNavLinks, socialLinks: initialSocialLinks, copyright: initialCopyright }: PublicLayoutProps) {
+  const logoText = initialLogoText || "BMAC";
+  const navLinks = initialNavLinks || DEFAULT_NAV;
+  const socialLinks = initialSocialLinks || DEFAULT_SOCIAL;
+  const copyright = initialCopyright || "Brilliant Minds Ambassadors Club. All rights reserved.";
 
   return (
     <>

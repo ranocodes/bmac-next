@@ -1,92 +1,71 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
-import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
-import { setItem, getItem } from "@/data/store";
-import { logActivity } from "@/lib/activity";
+import { useState } from "react";
+import Link from "next/link";
+import { Eye, EyeOff, LogIn, AlertCircle, Shield, UserPlus } from "lucide-react";
+import { loginAdmin } from "@/actions/admin-auth";
 
-export default function LoginForm() {
+interface Props {
+  hasAdmins: boolean;
+}
+
+export default function LoginForm({ hasAdmins }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [hasCreds, setHasCreds] = useState(false);
 
-  useEffect(() => {
-    const creds = getItem<{ email: string; password: string }>("admin_credentials");
-    setHasCreds(!!creds);
-  }, []);
-
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!email || !password || !firstName) { setError("All fields required"); return; }
 
-    const creds = getItem<{ email: string; password: string }>("admin_credentials");
-    if (creds && (email !== creds.email || password !== creds.password)) {
-      setError("Invalid email or password");
-      return;
-    }
-
-    const users = getItem<any[]>("admin_users") || [];
-    if (users.length > 0) {
-      const found = users.find(u => u.email === email);
-      if (!found) { setError("Account not found. You may need an invite."); return; }
-    }
+    if (!email || !password) { setError("Email and password required"); return; }
 
     setLoading(true);
-    setTimeout(() => {
-      if (users.length === 0) {
-        const superAdmin = {
-          id: "admin-super",
-          email,
-          password,
-          firstName,
-          role: "super_admin" as const,
-          permissions: [
-            "manage_users", "edit_content", "manage_courses", "manage_partners",
-            "view_analytics", "access_settings", "delete_records", "manage_moderators",
-          ],
-          createdAt: Date.now(),
-        };
-        setItem("admin_users", [superAdmin]);
-      }
-
-      setItem("session", { email, firstName, loggedInAt: Date.now() });
-      logActivity(email, "login", "session");
+    try {
+      const result = await loginAdmin(email, password);
+      if (result.error) { setError(result.error); setLoading(false); return; }
       window.location.href = "/admin";
-    }, 600);
+    } catch {
+      setError("Something went wrong. Try again.");
+      setLoading(false);
+    }
   }
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
+      <div className="w-full max-w-sm text-center">
+        <div className="mb-10">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Shield size={28} className="text-primary" />
+          </div>
           <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">BMAC<span className="text-primary">.</span></h1>
           <p className="text-sm text-muted-foreground mt-2">Admin dashboard</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">{hasCreds ? "Use your saved admin credentials" : "First login? Any email + password works"}</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">First Name</label>
-            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="John"
-              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-          </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@bmacjos.org"
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="admin@example.org"
               className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Password</label>
             <div className="relative">
-              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password"
+              <input type={show ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Enter your password"
                 className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
-              <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
+              <button type="button" onClick={() => setShow(!show)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
+            <div className="text-right">
+              <Link href="/admin/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                Forgot password?
+              </Link>
             </div>
           </div>
           {error && (
@@ -98,9 +77,19 @@ export default function LoginForm() {
           <button type="submit" disabled={loading}
             className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><LogIn size={16} /> Sign in</>}
+              : <><LogIn size={16} /> Sign In</>}
           </button>
         </form>
+
+        {!hasAdmins && (
+          <div className="mt-8 pt-6 border-t border-input">
+            <Link href="/admin/setup"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors">
+              <UserPlus size={16} />
+              Create Super Administrator
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

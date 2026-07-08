@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock, Calendar, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import NewsletterModal from "@/components/ui/NewsletterModal";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockEvents } from "@/data/mock-data";
 import type { EventPass } from "@/types/cms";
 
 function formatEventDate(raw: string | undefined): { month: string; day: string } {
@@ -27,14 +25,18 @@ function formatEventDate(raw: string | undefined): { month: string; day: string 
   };
 }
 
-export default function EventsClient() {
-  const [events, setEvents] = useState<EventPass[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface EventsClientProps {
+  initialEvents: any[];
+}
 
-  useEffect(() => {
-    seedIfEmpty("events", mockEvents.map(e => ({ ...e, date: e.event_date, desc: e.description, isPaid: e.is_paid })));
-    setEvents(getAll<EventPass>("events").map(e => ({ ...e, date: (e as any).event_date || e.date || "", desc: e.desc || (e as any).description || "", features: (e as any).features || mockEvents.find(m => m.id === e.id)?.features || [] })).reverse());
-  }, []);
+export default function EventsClient({ initialEvents }: EventsClientProps) {
+  const [events] = useState<EventPass[]>(initialEvents.map(e => ({
+    ...e,
+    date: (e as any).event_date || e.date || "",
+    desc: e.desc || (e as any).description || "",
+    features: (e as any).features || [],
+  })));
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>

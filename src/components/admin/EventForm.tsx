@@ -1,55 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, AlertCircle } from "lucide-react";
-import { getById, create, update, getAll, seedIfEmpty } from "@/data/store";
-import { mockEvents } from "@/data/mock-data";
-import type { EventPass, Category } from "@/types/cms";
+import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
+import type { Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { createItem, updateItem } from "@/actions/crud";
 
-export default function EventForm() {
+const DEFAULT_CATEGORIES: Category[] = [
+  "Achievements", "Programs", "Alumni", "Partnerships",
+  "Events", "Announcements", "Workshops", "Competition",
+  "Culture", "Mentorship", "Community",
+].map((name, i) => ({ id: `cat-${i}`, name }));
+
+export default function EventForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
 
-  const initialEvent = isEdit && params?.id
-    ? getById<any>("events", params.id as string)
-    : null;
-
-  const [title, setTitle] = useState(initialEvent?.title || "");
-  const [date, setDate] = useState(initialEvent?.date || initialEvent?.event_date || "");
-  const [time, setTime] = useState(initialEvent?.time || "");
-  const [venue, setVenue] = useState(initialEvent?.venue || "");
-  const [category, setCategory] = useState(initialEvent?.category || "");
-  const [desc, setDesc] = useState(initialEvent?.desc || initialEvent?.description || "");
-  const [longDesc, setLongDesc] = useState(initialEvent?.longDesc || "");
-  const [status, setStatus] = useState<"draft" | "published">(initialEvent?.status || "draft");
-  const [isPaid, setIsPaid] = useState(initialEvent?.isPaid ?? initialEvent?.is_paid ?? false);
-  const [price, setPrice] = useState(initialEvent?.price ? String(initialEvent.price) : "");
-  const [features, setFeatures] = useState<string[]>(initialEvent?.features || (isEdit ? mockEvents.find(m => m.id === params?.id)?.features : undefined) || []);
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [date, setDate] = useState(initialData?.date || initialData?.event_date || "");
+  const [time, setTime] = useState(initialData?.time || "");
+  const [venue, setVenue] = useState(initialData?.venue || "");
+  const [category, setCategory] = useState(initialData?.category || "");
+  const [desc, setDesc] = useState(initialData?.desc || initialData?.description || "");
+  const [longDesc, setLongDesc] = useState(initialData?.longDesc || "");
+  const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
+  const [isPaid, setIsPaid] = useState(initialData?.isPaid ?? initialData?.is_paid ?? false);
+  const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
+  const [features, setFeatures] = useState<string[]>(initialData?.features || []);
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const defaultCategories = [
-      "Achievements", "Programs", "Alumni", "Partnerships",
-      "Events", "Announcements", "Workshops", "Competition",
-      "Culture", "Mentorship", "Community",
-    ];
-    seedIfEmpty("categories", defaultCategories.map((name, i) => ({ id: `cat-${i}`, name })));
-    const stored = getAll<Category>("categories");
-    setCategories(stored.length > 0 ? stored : defaultCategories.map((name, i) => ({ id: `cat-${i}`, name })));
-  }, []);
-
-  function handleSubmit(publishStatus: "draft" | "published") {
+  async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
     setMissingFields([]);
 
@@ -67,24 +56,19 @@ export default function EventForm() {
 
     setSaving(true);
 
-    setTimeout(() => {
-      const payload = {
-        title, date, time, venue, category, desc, longDesc, features,
-        isPaid, price: isPaid ? Number(price) : 0,
-        status: publishStatus,
-      };
-      if (isEdit && params?.id) {
-        update<any>("events", params.id as string, payload);
-        logActivity("admin", "update_event", "event", params.id as string, `Updated event: ${title}`);
-      } else {
-        const id = `event-${Date.now()}`;
-        create<any>("events", { id, ...payload });
-        logActivity("admin", "create_event", "event", id, `Created event: ${title}`);
-      }
-      setSaving(false);
-      toast(isEdit ? "Event updated" : "Event created", "success");
-      router.push("/admin/events");
-    }, 300);
+    const payload = {
+      title, date, time, venue, category, desc, longDesc, features,
+      isPaid, price: isPaid ? Number(price) : 0,
+      status: publishStatus,
+    };
+    if (isEdit && params?.id) {
+      await updateItem("events", params.id as string, payload);
+    } else {
+      await createItem("events", payload);
+    }
+    setSaving(false);
+    toast(isEdit ? "Event updated" : "Event created", "success");
+    router.push("/admin/events");
   }
 
   return (
@@ -113,6 +97,7 @@ export default function EventForm() {
             disabled={saving}
             className="flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs sm:text-sm"
           >
+            <CheckCircle className="w-3.5 h-3.5" />
             {isEdit ? "Update & Publish" : "Publish"}
           </button>
         </div>

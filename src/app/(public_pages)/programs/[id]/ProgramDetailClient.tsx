@@ -1,53 +1,36 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Users, Clock, Send, MapPin, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
-import { getAll, seedIfEmpty } from "@/data/store";
-import { mockPrograms } from "@/data/mock-data";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
 
 interface ProgramDetailClientProps {
   id: string;
+  initialPrograms: any[];
 }
 
-export default function ProgramDetailClient({ id }: ProgramDetailClientProps) {
-  const [program, setProgram] = useState<Program | null>(null);
-  const [otherPathways, setOtherPathways] = useState<Program[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ProgramDetailClient({ id, initialPrograms }: ProgramDetailClientProps) {
+  const all = initialPrograms.map(p => ({
+    ...p,
+    desc: (p as any).desc || (p as any).description || "",
+    img: (p as any).img || (p as any).img_url || "",
+    icon: (p as any).icon || (p as any).icon_name || "",
+    color: (p as any).color || (p as any).color_class || "",
+    skills: (p as any).skills || [],
+    faqs: (p as any).faqs || [],
+    landingPage: (p as any).landingPage || false,
+    status: (p as any).status || "draft",
+  }));
+  const [program] = useState<Program | null>(all.find(p => p.id === id && p.status === "published") || null);
+  const [otherPathways] = useState<Program[]>(all.filter(p => p.id !== id && p.status === "published").slice(0, 3));
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    seedIfEmpty("programs", mockPrograms.map(p => ({ ...p, desc: p.description, img: p.img_url, icon: p.icon_name, color: p.color_class, landingPage: p.landingPage || false })));
-    const all = getAll<Program>("programs").map(p => ({
-      ...p,
-      desc: (p as any).desc || (p as any).description || "",
-      img: (p as any).img || (p as any).img_url || "",
-      icon: (p as any).icon || (p as any).icon_name || "",
-      color: (p as any).color || (p as any).color_class || "",
-      skills: (p as any).skills || mockPrograms.find(m => m.id === p.id)?.skills || [],
-      faqs: (p as any).faqs || mockPrograms.find(m => m.id === p.id)?.faqs || [],
-      landingPage: (p as any).landingPage || false,
-      status: (p as any).status || "draft",
-    }));
-    setProgram(all.find(p => p.id === id && p.status === "published") || null);
-    setOtherPathways(all.filter(p => p.id !== id && p.status === "published").slice(0, 3));
-    setLoading(false);
-  }, [id]);
-
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </main>
-    );
-  }
 
   if (!program) {
     return (

@@ -4,35 +4,30 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { getById, create, update, getAll } from "@/data/store";
+import { createItem, updateItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
-import { requirePermission, getSessionUser } from "@/lib/permissions";
 import type { Partner } from "@/types/cms";
 
-export default function PartnerForm() {
+export default function PartnerForm({ initialData }: { initialData?: Partner | null }) {
   const router = useRouter();
   const params = useParams();
   const isEdit = !!params?.id;
+  const user = useAdmin();
 
-  const initial = isEdit && params?.id
-    ? getById<any>("partners", params.id as string)
-    : null;
-
-  const [name, setName] = useState(initial?.name || "");
-  const [url, setUrl] = useState(initial?.url || "");
-  const [logo, setLogo] = useState(initial?.logo || "");
-  const [status, setStatus] = useState<"active" | "hidden">(initial?.status || "active");
+  const [name, setName] = useState(initialData?.name || "");
+  const [url, setUrl] = useState(initialData?.url || "");
+  const [logo, setLogo] = useState(initialData?.logo || "");
+  const [status, setStatus] = useState<"active" | "hidden">(initialData?.status || "active");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const { toast } = useToast();
 
-  function handleSubmit() {
-    const session = getSessionUser();
-    if (!session || !requirePermission(session.email, "manage_partners")) {
+  async function handleSubmit() {
+    if (!user?.permissions.includes("manage_partners")) {
       setError("You don't have permission to manage partners");
       return;
     }
@@ -49,24 +44,21 @@ export default function PartnerForm() {
     }
 
     setSaving(true);
-    setTimeout(() => {
-      const payload = { name, url, logo, status };
-
+    try {
       if (isEdit && params?.id) {
-        update<any>("partners", params.id as string, payload);
-        logActivity("admin", "update", "partner", params.id as string, `Updated ${name}`);
+        await updateItem("partners", params.id as string, { name, url, logo, status });
         toast("Partner updated", "success");
       } else {
-        const all = getAll<any>("partners");
-        const order = all.length > 0 ? Math.max(...all.map(p => p.order ?? 0)) + 1 : 1;
         const id = `partner-${Date.now()}`;
-        create<any>("partners", { id, ...payload, order });
-        logActivity("admin", "create", "partner", id, `Created ${name}`);
+        await createItem("partners", { id, name, url, logo, status, order: 1 });
         toast("Partner created", "success");
       }
-
       router.push("/admin/partners");
-    }, 300);
+    } catch {
+      setError("Failed to save. Try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -141,11 +133,8 @@ export default function PartnerForm() {
       )}
 
       <div className="flex items-center gap-2">
-        <button
-          onClick={handleSubmit}
-          disabled={saving}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm"
-        >
+        <button onClick={handleSubmit} disabled={saving}
+          className="flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
           <Save className="w-3.5 h-3.5" />
           {saving ? "Saving..." : isEdit ? "Update Partner" : "Create Partner"}
         </button>

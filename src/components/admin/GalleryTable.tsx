@@ -1,35 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Image, Plus, Pencil, Trash2, Search } from "lucide-react";
-import { getAll, remove } from "@/data/store";
 import { useToast } from "@/components/ui/Toast";
-import { logActivity } from "@/lib/activity";
+import { deleteItem } from "@/actions/crud";
+import { useAdmin } from "@/lib/auth/admin-context";
 
-export default function GalleryTable() {
-  const [items, setItems] = useState<any[]>([]);
+export default function GalleryTable({ initialData = [] }: { initialData?: any[] }) {
+  const [items, setItems] = useState<any[]>(() =>
+    initialData.map((g: any) => ({ ...g, status: g.status || "draft" })).reverse()
+  );
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
-
-  function load() {
-    const all = getAll<any>("gallery").map((g: any) => ({
-      ...g,
-      status: g.status || "draft",
-    }));
-    setItems(all.reverse());
-  }
-
-  useEffect(() => { load(); }, []);
 
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this gallery item?");
     if (!ok) return;
-    const item = items.find(g => g.id === id);
-    remove("gallery", id);
-    logActivity("admin", "delete_gallery", "gallery", id, `Deleted ${item?.alt}`);
+    await deleteItem("gallery_items", id);
+    setItems(prev => prev.filter(g => g.id !== id));
     toast("Gallery item deleted");
-    load();
   }
 
   const filtered = search
@@ -39,9 +29,12 @@ export default function GalleryTable() {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Gallery</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage gallery images</p>
+        <div className="flex items-center gap-3">
+          <Image size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Gallery</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage gallery images</p>
+          </div>
         </div>
         <Link href="/admin/gallery/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
           <Plus size={16} /> <span className="hidden sm:inline">New Image</span>
@@ -88,7 +81,7 @@ export default function GalleryTable() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                          <img src={g.img} alt="" className="w-full h-full object-cover" />
+                          <img src={g.img} alt="" loading="lazy" className="w-full h-full object-cover" />
                         </div>
                         <p className="font-medium text-secondary hidden sm:inline truncate max-w-[120px]">{g.img.split("/").pop()}</p>
                       </div>

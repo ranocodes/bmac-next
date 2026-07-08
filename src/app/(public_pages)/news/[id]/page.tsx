@@ -1,6 +1,13 @@
+import { db } from "@/lib/db";
 import NewsDetailClient from "./NewsDetailClient";
+
+export const dynamic = "force-dynamic";
 
 export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <NewsDetailClient id={id} />;
+  const [news, events] = await Promise.all([
+    db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC" }),
+    db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" }),
+  ]);
+  return <NewsDetailClient id={id} initialNews={news || []} initialEvents={events || []} />;
 }

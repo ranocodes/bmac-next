@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
-  BarChart3, Settings, Tag, LogOut, Menu, ChevronRight, Send,
-  ChevronDown, Shield, Handshake, ClipboardList, PanelLeftClose, PanelLeftOpen,
-  UserCog
+  BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
+  ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
+  UserCog,
 } from "lucide-react";
-import { removeItem, getItem, setItem } from "@/data/store";
 import { ToastProvider } from "@/components/ui/Toast";
+import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
+import { logoutAdmin } from "@/actions/admin-auth";
 import { ShieldOff } from "lucide-react";
+
+interface AdminUser {
+  email: string;
+  firstName: string;
+  role: string;
+  permissions: Permission[];
+}
 
 interface NavItem {
   label: string;
@@ -27,10 +35,7 @@ interface NavGroup {
   children: NavItem[];
 }
 
-const defaultPermissions: Permission[] = [
-  "manage_users", "edit_content", "manage_courses", "manage_partners",
-  "view_analytics", "access_settings", "delete_records", "manage_moderators",
-];
+const defaultPermissions: Permission[] = [];
 
 const navGroups: NavGroup[] = [
   {
@@ -55,9 +60,8 @@ const navGroups: NavGroup[] = [
   {
     label: "System", icon: Shield,
     children: [
-      { label: "Activity Log", href: "/admin/logs", icon: ClipboardList, permission: "manage_users" },
-      { label: "Invite", href: "/admin/invite", icon: Send, permission: "manage_users" },
-      { label: "Users", href: "/admin/users", icon: UserCog, permission: "manage_users" },
+      { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_users" },
+      { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },
@@ -83,97 +87,83 @@ const routePermissions: Record<string, Permission> = {
   "/admin/partners": "manage_partners",
   "/admin/stats": "edit_content",
   "/admin/logs": "manage_users",
-  "/admin/invite": "manage_users",
+  "/admin/admins": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
 };
 
 function checkRouteAccess(pathname: string, permissions: Permission[]): boolean {
-  const exempt = ["/admin/login", "/admin/accept-invite", "/admin"];
+  const exempt = ["/admin/login", "/admin"];
   if (exempt.includes(pathname)) return true;
   const matched = Object.entries(routePermissions).find(([route]) => pathname.startsWith(route));
   if (!matched) return true;
   return permissions.includes(matched[1]);
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children, user: userProp, error }: { children: React.ReactNode; user?: AdminUser; error?: string }) {
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
-  const [authed, setAuthed] = useState(false);
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [permissions, setPermissions] = useState<Permission[]>(defaultPermissions);
-  const [role, setRole] = useState<string>("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    setSidebarCollapsed(getItem("sidebar_collapsed") === true);
-    const session = getItem<{ email: string; firstName?: string }>("session");
-    if (!session && pathname !== "/admin/login" && !pathname.startsWith("/admin/accept-invite")) {
-      window.location.href = "/admin/login";
-    } else if (session) {
-      setAuthed(true);
-      setEmail(session.email);
-      setFirstName(session.firstName || session.email.split("@")[0]);
-
-      const user = getItem<any[]>("admin_users")?.find((u: any) => u.email === session.email);
-      if (user) {
-        setPermissions(user.permissions || defaultPermissions);
-        setRole(user.role);
-      }
-    }
-    setReady(true);
-  }, [pathname]);
+    const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
+    if (saved === "true") setSidebarCollapsed(true);
+  }, []);
 
   useEffect(() => {
-    if (!ready || !authed) return;
-    const initial: Record<string, boolean> = {};
-    for (const g of navGroups) {
-      initial[g.label] = g.children.some(c => c.href && pathname.startsWith(c.href));
+    if (!error && !userProp && pathname !== "/admin/login") {
+      router.push("/admin/login");
     }
-    setOpenGroups(initial);
-  }, [ready, authed, pathname]);
+  }, [error, userProp, pathname, router]);
 
-  const toggleGroup = (label: string) => setOpenGroups(p => ({ ...p, [label]: !p[label] }));
-
-  const toggleCollapse = useCallback(() => {
-    setSidebarCollapsed(prev => {
-      const next = !prev;
-      setItem("sidebar_collapsed", next);
-      return next;
-    });
-  }, []);
+  const user = userProp;
+  const email = user?.email ?? "";
+  const firstName = user?.firstName ?? "";
+  const role = user?.role ?? "";
+  const permissions = user?.permissions ?? defaultPermissions;
 
   const filteredGroups = navGroups
     .map(g => ({ ...g, children: g.children.filter(c => hasAccess(permissions, c)) }))
     .filter(g => groupHasAccess(permissions, g));
 
-  const logout = useCallback(() => {
-    removeItem("session");
-    window.location.href = "/admin/login";
-  }, []);
-
-  const isLogin = pathname === "/admin/login";
-
-  if (!ready) {
-    return <div className="min-h-[100dvh] flex items-center justify-center bg-background"><span className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
-  }
-
-  if (isLogin || pathname.startsWith("/admin/accept-invite")) {
-    return <ToastProvider><>{children}</></ToastProvider>;
-  }
-  if (!authed) return null;
+  const toggleGroup = (label: string) => setOpenGroups(p => ({ ...p, [label]: !p[label] }));
 
   const denied = !checkRouteAccess(pathname, permissions);
+
+  if (pathname === "/admin/login") {
+    return <ToastProvider><>{children}</></ToastProvider>;
+  }
+
+  if (error) {
+    return (
+      <ToastProvider>
+        <div className="min-h-[100dvh] bg-[#fafbf9] flex items-center justify-center p-4">
+          <div className="max-w-md text-center">
+            <div className="w-16 h-16 rounded-2xl bg-destructive/5 flex items-center justify-center mx-auto mb-4">
+              <ShieldOff size={32} className="text-destructive" />
+            </div>
+            <h2 className="font-display text-xl font-bold text-secondary">Authentication Error</h2>
+            <p className="text-sm text-muted-foreground mt-3">{error}</p>
+            <div className="mt-6">
+              <button onClick={() => logoutAdmin()}
+                className="h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </ToastProvider>
+    );
+  }
 
   return (
     <ToastProvider>
     <div className="min-h-[100dvh] bg-[#fafbf9] flex">
       {sidebarOpen && <div className="fixed inset-0 bg-secondary/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border/50 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-[68px]' : 'w-[240px]'} ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border/50 flex flex-col transition-all duration-300 overflow-x-hidden ${sidebarCollapsed ? 'w-[68px]' : 'w-[240px]'} ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className={`h-16 flex items-center gap-3 border-b border-border/50 shrink-0 ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
           <div className="w-0.5 h-6 rounded-full bg-primary/40 shrink-0" />
           {!sidebarCollapsed && (
@@ -183,7 +173,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </>
           )}
         </div>
-        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-2">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-2">
           <Link href="/admin" onClick={() => setSidebarOpen(false)}
             className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'px-3'} ${pathname === "/admin" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-secondary hover:bg-muted"}`}>
             <LayoutDashboard size={18} />
@@ -241,7 +231,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">{role.replace("_", " ")}</span>
             </div>
           )}
-          <button onClick={logout} className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
+          <button onClick={() => logoutAdmin().catch(() => window.location.assign("/admin/login"))}
+            className={`flex items-center justify-center gap-3 h-10 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all ${sidebarCollapsed ? 'w-10 mx-auto' : 'w-full px-3'}`}>
             <LogOut size={18} /> {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </div>
@@ -249,13 +240,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-card border-b border-border/50 flex items-center gap-4 px-4 lg:px-6 sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted"><Menu size={20} /></button>
-          <button onClick={toggleCollapse} className="hidden lg:flex w-9 h-9 items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+          <button onClick={() => setSidebarCollapsed(p => { const next = !p; localStorage.setItem("bmac_admin_sidebar_collapsed", String(next)); return next; })} className="hidden lg:flex w-9 h-9 items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
           <div className="flex-1" />
           <div className="relative">
             <button onClick={() => setProfileOpen(p => !p)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-              <span className="text-xs font-bold text-primary">{firstName.charAt(0).toUpperCase()}</span>
+              <span className="text-xs font-bold text-primary">{firstName ? firstName.charAt(0).toUpperCase() : "?"}</span>
             </button>
             {profileOpen && (
               <>
@@ -266,7 +257,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <p className="text-sm font-medium text-secondary truncate">{email}</p>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mt-0.5">{role.replace("_", " ")}</p>
                   </div>
-                  <button onClick={() => { setProfileOpen(false); logout(); }} className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                  <button onClick={() => logoutAdmin().catch(() => window.location.assign("/admin/login"))}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
                     <LogOut size={15} /> Logout
                   </button>
                 </div>
@@ -286,7 +278,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 You don't have the required permissions to access this page.
               </p>
             </div>
-          ) : children}
+          ) : <AdminProvider value={user as any}>{children}</AdminProvider>}
         </main>
       </div>
     </div>
