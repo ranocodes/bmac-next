@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, AlertCircle, Shield, UserPlus } from "lucide-react";
 import { loginAdmin } from "@/actions/admin-auth";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function LoginForm({ hasAdmins }: Props) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -26,7 +28,7 @@ export default function LoginForm({ hasAdmins }: Props) {
     try {
       const result = await loginAdmin(email, password);
       if (result.error) { setError(result.error); setLoading(false); return; }
-      window.location.href = "/admin";
+      router.push("/admin");
     } catch {
       setError("Something went wrong. Try again.");
       setLoading(false);

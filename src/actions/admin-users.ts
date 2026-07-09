@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { sendInviteEmail } from "@/lib/email";
+import { logActivity } from "./activity-logs";
 
 export async function getAdminUsers() {
   await requirePermission("manage_users");
@@ -15,8 +16,22 @@ export async function updateUserPermissions(id: string, permissions: string[]) {
 }
 
 export async function deleteAdminUser(id: string) {
-  await requirePermission("manage_users");
-  return db.remove("admin_users", id);
+  const admin = await requirePermission("manage_users");
+  if (admin.email === admin.email && id === admin.adminId) return { error: "Cannot delete yourself" };
+
+  const rows = await db.query<{ email: string }>(
+    "SELECT email FROM public.admin_users WHERE id = $1", [id]);
+  if (rows.length === 0) return { error: "Admin not found" };
+  if (rows[0].email === admin.email) return { error: "Cannot delete yourself" };
+
+  const superRows = await db.query<{ id: string }>(
+    "SELECT id FROM public.super_admins WHERE email = $1", [rows[0].email]);
+  if (superRows.length > 0) {
+    await db.query("DELETE FROM public.super_admins WHERE id = $1", [superRows[0].id]);
+  }
+  await db.remove("admin_users", id);
+  logActivity(admin.email, "admin_delete", "auth", { details: `Deleted admin: ${rows[0].email}` }).catch(() => {});
+  return {};
 }
 
 export async function getInvites() {
@@ -27,14 +42,33 @@ export async function getInvites() {
 }
 
 export async function resendInviteAction(inviteId: string): Promise<{ error?: string }> {
-  await requirePermission("manage_users");
+  const admin = await requirePermission("manage_users");
 
-  const rows = await db.query<{ email: string; first_name: string; token: string }>(
-    "SELECT email, first_name, token FROM public.admin_invites WHERE id = $1", [inviteId]);
+  const rows = await db.query<{ email: string; first_name: string; token: string; expires_at: string }>(
+    "SELECT email, first_name, token, expires_at FROM public.admin_invites WHERE id = $1", [inviteId]);
   if (rows.length === 0) return { error: "Invite not found" };
+
+  if (new Date(rows[0].expires_at) < new Date()) {
+    return { error: "Invite has expired — revoke and create a new one" };
+  }
 
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
   const inviteLink = `${baseUrl}/admin/invite/${rows[0].token}`;
   const result = await sendInviteEmail(rows[0].email, inviteLink, rows[0].first_name);
+  if (!result.error) {
+    logActivity(admin.email, "invite_resend", "auth", { details: `Resent invite to ${rows[0].email}` }).catch(() => {});
+  }
   return result;
+}
+
+export async function deleteInviteAction(inviteId: string): Promise<{ error?: string }> {
+  const admin = await requirePermission("manage_users");
+
+  const rows = await db.query<{ email: string }>(
+    "SELECT email FROM public.admin_invites WHERE id = $1", [inviteId]);
+  if (rows.length === 0) return { error: "Invite not found" };
+
+  await db.query("DELETE FROM public.admin_invites WHERE id = $1", [inviteId]);
+  logActivity(admin.email, "invite_revoke", "auth", { details: `Revoked invite for ${rows[0].email}` }).catch(() => {});
+  return {};
 }

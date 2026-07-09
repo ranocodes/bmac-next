@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Search, Send, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Mail, Search, Send, Clock, CheckCircle2, XCircle, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { resendInviteAction } from "@/actions/admin-users";
+import { resendInviteAction, deleteInviteAction } from "@/actions/admin-users";
 
 export default function InvitesTable({ initialData = [] }: { initialData?: any[] }) {
   const [items, setItems] = useState<any[]>(() => initialData);
   const [search, setSearch] = useState("");
   const [resending, setResending] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { toast, confirm } = useToast();
 
   function statusBadge(invite: any) {
     if (invite.used_at) {
@@ -44,6 +44,15 @@ export default function InvitesTable({ initialData = [] }: { initialData?: any[]
     setResending(null);
     if (result.error) { toast(result.error, "error"); return; }
     toast("Invite re-sent", "success");
+  }
+
+  async function handleRevoke(id: string) {
+    const ok = await confirm("Revoke this invite?", { confirmText: "Revoke" });
+    if (!ok) return;
+    const result = await deleteInviteAction(id);
+    if (result.error) { toast(result.error, "error"); return; }
+    setItems(prev => prev.filter(i => i.id !== id));
+    toast("Invite revoked", "success");
   }
 
   const filtered = search
@@ -90,7 +99,7 @@ export default function InvitesTable({ initialData = [] }: { initialData?: any[]
                   <th className="text-left font-semibold text-secondary px-5 py-4 hidden md:table-cell">Role</th>
                   <th className="text-left font-semibold text-secondary px-5 py-4 hidden lg:table-cell">Created</th>
                   <th className="text-left font-semibold text-secondary px-5 py-4">Status</th>
-                  <th className="text-right font-semibold text-secondary px-5 py-4 w-32">Actions</th>
+                  <th className="text-right font-semibold text-secondary px-5 py-4 w-36">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,20 +130,31 @@ export default function InvitesTable({ initialData = [] }: { initialData?: any[]
                       {statusBadge(i)}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {!i.used_at && (
-                        <button
-                          disabled={resending === i.id}
-                          onClick={() => handleResend(i.id)}
-                          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-primary hover:bg-primary/5 transition-all disabled:opacity-50"
-                        >
-                          {resending === i.id ? (
-                            <span className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                          ) : (
-                            <Send size={12} />
-                          )}
-                          Resend
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {!i.used_at && (
+                          <>
+                            <button
+                              disabled={resending === i.id}
+                              onClick={() => handleResend(i.id)}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-primary hover:bg-primary/5 transition-all disabled:opacity-50"
+                            >
+                              {resending === i.id ? (
+                                <span className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                              ) : (
+                                <Send size={12} />
+                              )}
+                              Resend
+                            </button>
+                            <button
+                              onClick={() => handleRevoke(i.id)}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/5 transition-all"
+                            >
+                              <X size={12} />
+                              Revoke
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -22,7 +22,7 @@ export async function getDashboardStats() {
     db.getAll<any>("gallery_items", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
     db.getAll<any>("team_members", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
     db.getAll<any>("testimonials", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
-    db.query<any>("SELECT * FROM public.activity_logs ORDER BY created_at DESC LIMIT 15").catch(() => []),
+    db.query<any>("SELECT * FROM public.activity_logs ORDER BY timestamp DESC LIMIT 15").catch(() => []),
   ]);
 
   return {
@@ -77,4 +77,20 @@ export async function getVisitorStats() {
     todayViews: Number(recentViews[0]?.count ?? 0),
     topPages: topPages.map(p => ({ path: p.path, count: Number(p.count) })),
   };
+}
+
+export async function getDailyViews() {
+  const rows = await db.query<{ view_date: string; count: string }>(
+    `SELECT view_date, COUNT(*) AS count FROM public.page_views 
+     WHERE view_date >= CURRENT_DATE - INTERVAL '30 days' 
+     GROUP BY view_date ORDER BY view_date ASC`
+  ).catch(() => []);
+  return rows.map(r => ({ date: r.view_date, count: Number(r.count) }));
+}
+
+export async function getActivityBreakdown() {
+  const rows = await db.query<{ action: string; count: string }>(
+    "SELECT action, COUNT(*) AS count FROM public.activity_logs GROUP BY action ORDER BY count DESC"
+  ).catch(() => []);
+  return rows.map(r => ({ action: r.action.replace(/_/g, " "), count: Number(r.count) }));
 }

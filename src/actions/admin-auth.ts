@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { verifySuperAdminCredentials, setSuperAdminSession, clearSuperAdminSession, registerFirstAdmin, createInvite, acceptInvite, getSuperAdminCount, createPasswordResetToken, resetPassword } from "@/lib/auth/super-admin";
+import { verifySuperAdminCredentials, setSuperAdminSession, clearSuperAdminSession, registerFirstAdmin, createInvite, acceptInvite, getSuperAdminCount, createPasswordResetToken, resetPassword, getSuperAdminSession } from "@/lib/auth/super-admin";
 import { sendPasswordResetEmail, sendInviteEmail } from "@/lib/email";
+import { logActivity } from "./activity-logs";
 import type { AdminRole, Permission } from "@/types/cms";
 
 export async function loginAdmin(email: string, password: string): Promise<{ error?: string }> {
@@ -11,6 +12,7 @@ export async function loginAdmin(email: string, password: string): Promise<{ err
     const info = await verifySuperAdminCredentials(email, password);
     if (!info) return { error: "Invalid email or password" };
     await setSuperAdminSession(info.email, info.firstName, info.permissions, info.role);
+    logActivity(info.email, "login", "auth", { details: "Admin login" }).catch(() => {});
     return {};
   } catch (e) {
     console.error("loginAdmin error:", e);
@@ -19,12 +21,16 @@ export async function loginAdmin(email: string, password: string): Promise<{ err
 }
 
 export async function logoutAdmin(): Promise<void> {
+  const session = await getSuperAdminSession().catch(() => null);
   await clearSuperAdminSession();
+  if (session) logActivity(session.email, "logout", "auth", { details: "Admin logout" }).catch(() => {});
   redirect("/admin/login");
 }
 
 export async function registerFirstAdminAction(email: string, password: string, firstName: string): Promise<{ error?: string }> {
-  return registerFirstAdmin(email, password, firstName);
+  const result = await registerFirstAdmin(email, password, firstName);
+  if (!result.error) logActivity(email, "register", "auth", { details: `First admin registered: ${firstName}` }).catch(() => {});
+  return result;
 }
 
 export async function createInviteAction(
@@ -42,12 +48,18 @@ export async function createInviteAction(
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
   const inviteLink = `${baseUrl}/admin/invite/${result.token}`;
   await sendInviteEmail(email, inviteLink, opts.firstName);
+  logActivity(createdById, "invite_create", "auth", { details: `Invited ${email} as ${opts.role}` }).catch(() => {});
 
   return result;
 }
 
 export async function acceptInviteAction(token: string, tempPassword: string, newPassword: string, firstName: string = ""): Promise<{ error?: string }> {
-  return acceptInvite(token, tempPassword, newPassword, firstName);
+  const result = await acceptInvite(token, tempPassword, newPassword, firstName);
+  if (!result.error) {
+    const session = await getSuperAdminSession().catch(() => null);
+    if (session) logActivity(session.email, "invite_accept", "auth", { details: "Invite accepted" }).catch(() => {});
+  }
+  return result;
 }
 
 export async function hasAnyAdmins(): Promise<boolean> {
@@ -63,6 +75,7 @@ export async function requestPasswordReset(email: string): Promise<{ error?: str
       const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
       const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
       if (result.error) return { error: "Failed to send reset email. Try again later." };
+      logActivity("system", "password_reset_request", "auth", { details: `Reset email sent to ${email}` }).catch(() => {});
     }
     return {};
   } catch (e) {
@@ -74,26 +87,29 @@ export async function requestPasswordReset(email: string): Promise<{ error?: str
 export async function executePasswordReset(token: string, newPassword: string): Promise<{ error?: string }> {
   if (!token || !newPassword) return { error: "Token and password required" };
   if (newPassword.length < 8) return { error: "Password must be at least 8 characters" };
-  return resetPassword(token, newPassword);
+  const result = await resetPassword(token, newPassword);
+  if (!result.error) logActivity("system", "password_reset", "auth", { details: "Password reset completed" }).catch(() => {});
+  return result;
 }
 
 export async function adminResetPassword(adminUserId: string): Promise<{ error?: string }> {
   try {
     const { db } = await import("@/lib/db");
     const { requirePermission } = await import("@/lib/auth/server");
-    await requirePermission("manage_users");
+    const admin = await requirePermission("manage_users");
 
     const rows = await db.query<{ email: string }>(
       "SELECT email FROM public.admin_users WHERE id = $1", [adminUserId]);
     if (rows.length === 0) return { error: "Admin not found" };
 
-    const email = rows[0].email;
-    const token = await createPasswordResetToken(email);
+    const targetEmail = rows[0].email;
+    const token = await createPasswordResetToken(targetEmail);
     if (!token) return { error: "No account found with that email" };
 
     const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
-    const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
+    const result = await sendPasswordResetEmail(targetEmail, `${baseUrl}/admin/reset-password/${token}`);
     if (result.error) return { error: "Failed to send reset email. Try again later." };
+    logActivity(admin.email, "admin_password_reset", "auth", { details: `Reset email sent to ${targetEmail}` }).catch(() => {});
     return {};
   } catch (e) {
     console.error("adminResetPassword error:", e);

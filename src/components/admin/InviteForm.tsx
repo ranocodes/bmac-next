@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Send, AlertCircle, CheckCircle, Copy, Mail, UserPlus, Eye, EyeOff, Shield, ShieldCheck } from "lucide-react";
 import { createInviteAction } from "@/actions/admin-auth";
 import { useToast } from "@/components/ui/Toast";
@@ -189,7 +190,7 @@ export default function InviteForm({ email }: Props) {
         )}
 
         <p className="mt-6 text-xs text-muted-foreground">
-          <a href="/admin/admins" className="text-primary hover:text-primary/80 font-medium">Back to admins</a>
+          <Link href="/admin/admins" className="text-primary hover:text-primary/80 font-medium">Back to admins</Link>
         </p>
       </div>
     </div>

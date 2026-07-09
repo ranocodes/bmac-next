@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Eye, EyeOff, Shield, AlertCircle, CheckCircle } from "lucide-react";
 import { acceptInviteAction } from "@/actions/admin-auth";
 
@@ -50,10 +51,10 @@ export default function AcceptInviteForm({ token, email, firstName: initialFirst
           </div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-secondary mb-2">Account created</h1>
           <p className="text-sm text-muted-foreground mb-6">You are now logged in as admin.</p>
-          <a href="/admin"
+          <Link href="/admin"
             className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all">
             Go to dashboard
-          </a>
+          </Link>
         </div>
       </div>
     );

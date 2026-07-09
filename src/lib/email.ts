@@ -1,52 +1,33 @@
-import { Resend } from "resend";
+"use server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const SERVICE_URL = (process.env.EMAIL_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
+const API_KEY = process.env.EMAIL_SERVICE_API_KEY || "";
 
-export async function sendInviteEmail(email: string, inviteLink: string, firstName: string): Promise<{ error?: string }> {
+async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
   try {
-    await resend.emails.send({
-      from: "BMAC Admin <onboarding@resend.dev>",
-      to: [email],
-      subject: "You're invited to BMAC Admin",
-      text: [
-        `Hi ${firstName},`,
-        "",
-        "You've been invited to the BMAC Admin panel.",
-        "",
-        `Click the link below to accept the invite and set up your account:`,
-        "",
-        inviteLink,
-        "",
-        "This link expires in 7 days.",
-        "If you didn't expect this invite, you can safely ignore this email.",
-      ].join("\n"),
+    const res = await fetch(`${SERVICE_URL}/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+      },
+      body: JSON.stringify(body),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return { error: data.error || `Email service error (${res.status})` };
+    }
     return {};
-  } catch (err) {
-    console.error("Resend error:", err);
-    return { error: "Failed to send invite email" };
+  } catch (err: any) {
+    console.error("Email service error:", err);
+    return { error: "Failed to send email" };
   }
 }
 
+export async function sendInviteEmail(email: string, inviteLink: string, firstName: string): Promise<{ error?: string }> {
+  return sendRequest({ type: "invite", email, firstName, inviteLink });
+}
+
 export async function sendPasswordResetEmail(email: string, resetLink: string): Promise<{ error?: string }> {
-  try {
-    await resend.emails.send({
-      from: "BMAC Admin <onboarding@resend.dev>",
-      to: [email],
-      subject: "Reset your BMAC Admin password",
-      text: [
-        "You requested a password reset for the BMAC Admin panel.",
-        "",
-        `Click the link below to reset your password. This link expires in 1 hour.`,
-        "",
-        resetLink,
-        "",
-        "If you didn't request this, you can safely ignore this email.",
-      ].join("\n"),
-    });
-    return {};
-  } catch (err) {
-    console.error("Resend error:", err);
-    return { error: "Failed to send email" };
-  }
+  return sendRequest({ type: "password-reset", email, resetLink });
 }
