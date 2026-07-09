@@ -30,7 +30,7 @@ export async function deleteAdminUser(id: string) {
     await db.query("DELETE FROM public.super_admins WHERE id = $1", [superRows[0].id]);
   }
   await db.remove("admin_users", id);
-  logActivity(admin.email, "admin_delete", "auth", { details: `Deleted admin: ${rows[0].email}` }).catch(() => {});
+  logActivity(admin.email, "admin_delete", "auth", { details: `Deleted admin: ${rows[0].email}` });
   return {};
 }
 
@@ -56,7 +56,7 @@ export async function resendInviteAction(inviteId: string): Promise<{ error?: st
   const inviteLink = `${baseUrl}/admin/invite/${rows[0].token}`;
   const result = await sendInviteEmail(rows[0].email, inviteLink, rows[0].first_name);
   if (!result.error) {
-    logActivity(admin.email, "invite_resend", "auth", { details: `Resent invite to ${rows[0].email}` }).catch(() => {});
+    logActivity(admin.email, "invite_resend", "auth", { details: `Resent invite to ${rows[0].email}` });
   }
   return result;
 }
@@ -68,7 +68,9 @@ export async function deleteInviteAction(inviteId: string): Promise<{ error?: st
     "SELECT email FROM public.admin_invites WHERE id = $1", [inviteId]);
   if (rows.length === 0) return { error: "Invite not found" };
 
+  if (rows[0].email === admin.email) return { error: "Cannot revoke your own invite" };
+
   await db.query("DELETE FROM public.admin_invites WHERE id = $1", [inviteId]);
-  logActivity(admin.email, "invite_revoke", "auth", { details: `Revoked invite for ${rows[0].email}` }).catch(() => {});
+  logActivity(admin.email, "invite_revoke", "auth", { details: `Revoked invite for ${rows[0].email}` });
   return {};
 }

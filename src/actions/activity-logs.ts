@@ -10,12 +10,16 @@ export async function logActivity(
   resource: string,
   opts?: { resourceId?: string; details?: string }
 ) {
-  const id = `log-${action.slice(0, 24)}-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
-  await db.create("activity_logs", {
-    id, user, action, resource,
-    resource_id: opts?.resourceId || null,
-    details: opts?.details || null,
-  });
+  try {
+    const id = `log-${action.slice(0, 24)}-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
+    await db.create("activity_logs", {
+      id, user, action, resource,
+      resource_id: opts?.resourceId || null,
+      details: opts?.details || null,
+    });
+  } catch (e) {
+    console.error("logActivity error:", e);
+  }
 }
 
 export async function clearActivityLogs(search: string, actionFilter: string): Promise<{ deleted: number; error?: string }> {

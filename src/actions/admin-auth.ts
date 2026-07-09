@@ -12,7 +12,7 @@ export async function loginAdmin(email: string, password: string): Promise<{ err
     const info = await verifySuperAdminCredentials(email, password);
     if (!info) return { error: "Invalid email or password" };
     await setSuperAdminSession(info.email, info.firstName, info.permissions, info.role);
-    logActivity(info.email, "login", "auth", { details: "Admin login" }).catch(() => {});
+    logActivity(info.email, "login", "auth", { details: "Admin login" });
     return {};
   } catch (e) {
     console.error("loginAdmin error:", e);
@@ -23,13 +23,13 @@ export async function loginAdmin(email: string, password: string): Promise<{ err
 export async function logoutAdmin(): Promise<void> {
   const session = await getSuperAdminSession().catch(() => null);
   await clearSuperAdminSession();
-  if (session) logActivity(session.email, "logout", "auth", { details: "Admin logout" }).catch(() => {});
+  if (session) logActivity(session.email, "logout", "auth", { details: "Admin logout" });
   redirect("/admin/login");
 }
 
 export async function registerFirstAdminAction(email: string, password: string, firstName: string): Promise<{ error?: string }> {
   const result = await registerFirstAdmin(email, password, firstName);
-  if (!result.error) logActivity(email, "register", "auth", { details: `First admin registered: ${firstName}` }).catch(() => {});
+  if (!result.error) logActivity(email, "register", "auth", { details: `First admin registered: ${firstName}` });
   return result;
 }
 
@@ -48,7 +48,7 @@ export async function createInviteAction(
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
   const inviteLink = `${baseUrl}/admin/invite/${result.token}`;
   await sendInviteEmail(email, inviteLink, opts.firstName);
-  logActivity(createdById, "invite_create", "auth", { details: `Invited ${email} as ${opts.role}` }).catch(() => {});
+  logActivity(createdById, "invite_create", "auth", { details: `Invited ${email} as ${opts.role}` });
 
   return result;
 }
@@ -57,7 +57,7 @@ export async function acceptInviteAction(token: string, tempPassword: string, ne
   const result = await acceptInvite(token, tempPassword, newPassword, firstName);
   if (!result.error) {
     const session = await getSuperAdminSession().catch(() => null);
-    if (session) logActivity(session.email, "invite_accept", "auth", { details: "Invite accepted" }).catch(() => {});
+    if (session) logActivity(session.email, "invite_accept", "auth", { details: "Invite accepted" });
   }
   return result;
 }
@@ -75,7 +75,7 @@ export async function requestPasswordReset(email: string): Promise<{ error?: str
       const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
       const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
       if (result.error) return { error: "Failed to send reset email. Try again later." };
-      logActivity("system", "password_reset_request", "auth", { details: `Reset email sent to ${email}` }).catch(() => {});
+      logActivity("system", "password_reset_request", "auth", { details: `Reset email sent to ${email}` });
     }
     return {};
   } catch (e) {
@@ -88,7 +88,7 @@ export async function executePasswordReset(token: string, newPassword: string): 
   if (!token || !newPassword) return { error: "Token and password required" };
   if (newPassword.length < 8) return { error: "Password must be at least 8 characters" };
   const result = await resetPassword(token, newPassword);
-  if (!result.error) logActivity("system", "password_reset", "auth", { details: "Password reset completed" }).catch(() => {});
+  if (!result.error) logActivity("system", "password_reset", "auth", { details: "Password reset completed" });
   return result;
 }
 
@@ -109,7 +109,7 @@ export async function adminResetPassword(adminUserId: string): Promise<{ error?:
     const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
     const result = await sendPasswordResetEmail(targetEmail, `${baseUrl}/admin/reset-password/${token}`);
     if (result.error) return { error: "Failed to send reset email. Try again later." };
-    logActivity(admin.email, "admin_password_reset", "auth", { details: `Reset email sent to ${targetEmail}` }).catch(() => {});
+    logActivity(admin.email, "admin_password_reset", "auth", { details: `Reset email sent to ${targetEmail}` });
     return {};
   } catch (e) {
     console.error("adminResetPassword error:", e);

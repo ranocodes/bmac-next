@@ -13,7 +13,7 @@ export async function subscribeToNewsletter(email: string): Promise<{ error?: st
       "INSERT INTO public.newsletter_subscribers (email, source) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING",
       [email.toLowerCase(), "newsletter_modal"]
     );
-    logActivity(email, "newsletter_subscribe", "newsletter", { details: `Subscribed: ${email}` }).catch(() => {});
+    logActivity(email, "newsletter_subscribe", "newsletter", { details: `Subscribed: ${email}` });
     return {};
   } catch (err: any) {
     console.error("Newsletter subscribe error:", err);

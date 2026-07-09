@@ -32,7 +32,7 @@ export async function sendContactMessage(
         message,
       ].join("\n"),
     });
-    logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` }).catch(() => {});
+    logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` });
     return { success: true };
   } catch (err) {
     console.error("Resend error:", err);
