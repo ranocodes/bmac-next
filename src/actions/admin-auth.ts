@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { verifySuperAdminCredentials, setSuperAdminSession, clearSuperAdminSession, registerFirstAdmin, createInvite, acceptInvite, getSuperAdminCount, createPasswordResetToken, resetPassword, getSuperAdminSession } from "@/lib/auth/super-admin";
 import { sendPasswordResetEmail, sendInviteEmail } from "@/lib/email";
+import { getBaseUrl } from "@/lib/url";
 import { logActivity } from "./activity-logs";
 import type { AdminRole, Permission } from "@/types/cms";
 
@@ -45,9 +46,9 @@ export async function createInviteAction(
   const result = await createInvite(email, rows[0].id, opts);
   if (result.error || !result.token) return result;
 
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const baseUrl = await getBaseUrl();
   const inviteLink = `${baseUrl}/admin/invite/${result.token}`;
-  await sendInviteEmail(email, inviteLink, opts.firstName);
+  await sendInviteEmail(email, inviteLink, opts.firstName, opts.tempPassword);
   logActivity(createdById, "invite_create", "auth", { details: `Invited ${email} as ${opts.role}` });
 
   return result;
@@ -72,7 +73,7 @@ export async function requestPasswordReset(email: string): Promise<{ error?: str
     if (!email) return { error: "Email is required" };
     const token = await createPasswordResetToken(email);
     if (token) {
-      const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+      const baseUrl = await getBaseUrl();
       const result = await sendPasswordResetEmail(email, `${baseUrl}/admin/reset-password/${token}`);
       if (result.error) return { error: "Failed to send reset email. Try again later." };
       logActivity("system", "password_reset_request", "auth", { details: `Reset email sent to ${email}` });
@@ -106,7 +107,7 @@ export async function adminResetPassword(adminUserId: string): Promise<{ error?:
     const token = await createPasswordResetToken(targetEmail);
     if (!token) return { error: "No account found with that email" };
 
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+    const baseUrl = await getBaseUrl();
     const result = await sendPasswordResetEmail(targetEmail, `${baseUrl}/admin/reset-password/${token}`);
     if (result.error) return { error: "Failed to send reset email. Try again later." };
     logActivity(admin.email, "admin_password_reset", "auth", { details: `Reset email sent to ${targetEmail}` });

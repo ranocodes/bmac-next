@@ -24,8 +24,8 @@ async function sendRequest(body: Record<string, unknown>): Promise<{ error?: str
   }
 }
 
-export async function sendInviteEmail(email: string, inviteLink: string, firstName: string): Promise<{ error?: string }> {
-  return sendRequest({ type: "invite", email, firstName, inviteLink });
+export async function sendInviteEmail(email: string, inviteLink: string, firstName: string, tempPassword?: string): Promise<{ error?: string }> {
+  return sendRequest({ type: "invite", email, firstName, inviteLink, tempPassword });
 }
 
 export async function sendPasswordResetEmail(email: string, resetLink: string): Promise<{ error?: string }> {

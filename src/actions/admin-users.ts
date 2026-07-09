@@ -3,6 +3,8 @@
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { sendInviteEmail } from "@/lib/email";
+import { getBaseUrl } from "@/lib/url";
+import bcrypt from "bcryptjs";
 import { logActivity } from "./activity-logs";
 
 export async function getAdminUsers() {
@@ -52,9 +54,15 @@ export async function resendInviteAction(inviteId: string): Promise<{ error?: st
     return { error: "Invite has expired — revoke and create a new one" };
   }
 
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+  let tempPassword = "";
+  for (let i = 0; i < 14; i++) tempPassword += chars[Math.floor(Math.random() * chars.length)];
+  const tempHash = bcrypt.hashSync(tempPassword, 12);
+  await db.query("UPDATE public.admin_invites SET temp_password_hash = $1 WHERE id = $2", [tempHash, inviteId]);
+
+  const baseUrl = await getBaseUrl();
   const inviteLink = `${baseUrl}/admin/invite/${rows[0].token}`;
-  const result = await sendInviteEmail(rows[0].email, inviteLink, rows[0].first_name);
+  const result = await sendInviteEmail(rows[0].email, inviteLink, rows[0].first_name, tempPassword);
   if (!result.error) {
     logActivity(admin.email, "invite_resend", "auth", { details: `Resent invite to ${rows[0].email}` });
   }
