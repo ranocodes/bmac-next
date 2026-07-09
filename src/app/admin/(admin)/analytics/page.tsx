@@ -11,13 +11,17 @@ import { BarChart3, Eye, Users, MousePointerClick, TrendingUp } from "lucide-rea
 export const metadata: Metadata = { title: "Analytics - BMAC Admin" };
 
 export default async function AnalyticsPage() {
-  await requirePermission("view_analytics");
+  try {
+    await requirePermission("view_analytics");
+  } catch {
+    return <PermissionDenied />;
+  }
 
   const [dailyViews, tableCounts, activityBreakdown, visitorStats] = await Promise.all([
-    getDailyViews(),
-    getTableCounts(),
-    getActivityBreakdown(),
-    getVisitorStats(),
+    getDailyViews().catch(() => [] as { date: string; count: number }[]),
+    getTableCounts().catch(() => ({}) as Record<string, number>),
+    getActivityBreakdown().catch(() => [] as { action: string; count: number }[]),
+    getVisitorStats().catch(() => ({ totalViews: 0, uniqueVisitors: 0, todayViews: 0, topPages: [] })),
   ]);
 
   const contentData = [
@@ -112,6 +116,21 @@ function EmptyChart() {
     <div className="flex flex-col items-center justify-center h-full text-center">
       <p className="text-sm text-muted-foreground">No data yet</p>
       <p className="text-xs text-muted-foreground/60 mt-1">Start publishing content to see stats</p>
+    </div>
+  );
+}
+
+function PermissionDenied() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-6">
+      <div className="w-16 h-16 rounded-2xl bg-destructive/5 border border-destructive/15 flex items-center justify-center mb-5">
+        <span className="text-2xl font-bold text-destructive">!</span>
+      </div>
+      <h1 className="font-display text-xl font-bold text-secondary mb-2">Access Denied</h1>
+      <p className="text-sm text-muted-foreground max-w-md">
+        You do not have permission to view analytics. Contact a super admin to grant you the
+        &quot;View Analytics&quot; permission.
+      </p>
     </div>
   );
 }
