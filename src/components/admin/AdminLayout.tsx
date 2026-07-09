@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, Mail, TrendingUp,
+  UserCog, Mail,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -63,7 +63,6 @@ const navGroups: NavGroup[] = [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_users" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Invites", href: "/admin/invites", icon: Mail, permission: "manage_users" },
-      { label: "Analytics", href: "/admin/analytics", icon: TrendingUp, permission: "view_analytics" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },
@@ -91,7 +90,6 @@ const routePermissions: Record<string, Permission> = {
   "/admin/logs": "manage_users",
   "/admin/admins": "manage_users",
   "/admin/invites": "manage_users",
-  "/admin/analytics": "view_analytics",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
 };
