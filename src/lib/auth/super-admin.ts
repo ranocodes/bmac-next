@@ -131,9 +131,19 @@ export async function createInvite(
   const token = `${payloadUrl}~${sig}`;
 
   try {
-    await db.query(
-      "INSERT INTO public.admin_invites (email, token, created_by_id, expires_at, first_name, permissions, role, temp_password_hash) VALUES ($1, $2, $3, now() + interval '7 days', $4, $5, $6, $7)",
-      [email.toLowerCase(), token, createdById, opts.firstName, JSON.stringify(opts.permissions), opts.role, tempHash]);
+    const existing = await db.query<{ id: string }>(
+      "SELECT id FROM public.admin_invites WHERE email = $1 AND used_at IS NULL AND expires_at > now()",
+      [email.toLowerCase()]);
+
+    if (existing.length > 0) {
+      await db.query(
+        "UPDATE public.admin_invites SET token = $1, temp_password_hash = $2, first_name = $3, permissions = $4, role = $5, expires_at = now() + interval '7 days', created_at = now() WHERE id = $6",
+        [token, tempHash, opts.firstName, JSON.stringify(opts.permissions), opts.role, existing[0].id]);
+    } else {
+      await db.query(
+        "INSERT INTO public.admin_invites (email, token, created_by_id, expires_at, first_name, permissions, role, temp_password_hash) VALUES ($1, $2, $3, now() + interval '7 days', $4, $5, $6, $7)",
+        [email.toLowerCase(), token, createdById, opts.firstName, JSON.stringify(opts.permissions), opts.role, tempHash]);
+    }
     return { token };
   } catch (e: any) {
     return { error: e?.message || "Failed to create invite" };
