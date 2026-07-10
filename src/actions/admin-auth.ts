@@ -80,8 +80,9 @@ export async function requestPasswordReset(email: string): Promise<{ error?: str
     }
     return {};
   } catch (e) {
-    console.error("requestPasswordReset error:", e);
-    return { error: "Something went wrong. Try again." };
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("requestPasswordReset error:", msg);
+    return { error: "Email service error: " + msg };
   }
 }
 

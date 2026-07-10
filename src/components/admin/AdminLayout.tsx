@@ -128,12 +128,6 @@ export default function AdminLayout({ children, user: userProp, error }: { child
     );
   }, []);
 
-  useEffect(() => {
-    if (!error && !userProp && pathname !== "/admin/login") {
-      router.push("/admin/login");
-    }
-  }, [error, userProp, pathname, router]);
-
   const user = userProp;
   const email = user?.email ?? "";
   const firstName = user?.firstName ?? "";

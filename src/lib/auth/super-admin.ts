@@ -80,7 +80,7 @@ export async function verifySuperAdminCredentials(email: string, password: strin
         "SELECT role, permissions FROM public.admin_users WHERE email = $1", [admin.email]);
       if (userRows.length > 0) {
         role = userRows[0].role as AdminRole;
-        permissions = Array.isArray(userRows[0].permissions) ? userRows[0].permissions : ALL_PERMISSIONS;
+        permissions = role === "super_admin" ? ALL_PERMISSIONS : (Array.isArray(userRows[0].permissions) ? userRows[0].permissions : ALL_PERMISSIONS);
       }
     } catch { /* use defaults */ }
 
