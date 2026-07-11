@@ -67,22 +67,19 @@ export async function verifySuperAdminCredentials(email: string, password: strin
   if (!email || !password) return null;
 
   try {
-    const rows = await db.query<SuperAdminRow>(
-      "SELECT id, email, password_hash, first_name FROM public.super_admins WHERE LOWER(email) = LOWER($1)", [email]);
+    const rows = await db.query<SuperAdminRow & { au_role: string | null; au_permissions: Permission[] | null }>(
+      `SELECT sa.id, sa.email, sa.password_hash, sa.first_name,
+              au.role AS au_role, au.permissions AS au_permissions
+       FROM public.super_admins sa
+       LEFT JOIN public.admin_users au ON LOWER(au.email) = LOWER(sa.email)
+       WHERE LOWER(sa.email) = LOWER($1)`,
+      [email]);
     if (rows.length === 0) return null;
     if (!bcrypt.compareSync(password, rows[0].password_hash)) return null;
 
     const admin = rows[0];
-    let role: AdminRole = "super_admin";
-    let permissions: Permission[] = ALL_PERMISSIONS;
-    try {
-      const userRows = await db.query<{ role: string; permissions: Permission[] }>(
-        "SELECT role, permissions FROM public.admin_users WHERE email = $1", [admin.email]);
-      if (userRows.length > 0) {
-        role = userRows[0].role as AdminRole;
-        permissions = role === "super_admin" ? ALL_PERMISSIONS : (Array.isArray(userRows[0].permissions) ? userRows[0].permissions : ALL_PERMISSIONS);
-      }
-    } catch { /* use defaults */ }
+    const role = (admin.au_role || "super_admin") as AdminRole;
+    const permissions = role === "super_admin" ? ALL_PERMISSIONS : (Array.isArray(admin.au_permissions) ? admin.au_permissions : ALL_PERMISSIONS);
 
     return { email: admin.email, firstName: admin.first_name || "", role, permissions };
   } catch { return null; }
@@ -98,7 +95,7 @@ export async function getSuperAdminCount(): Promise<number> {
 export async function registerFirstAdmin(email: string, password: string, firstName: string): Promise<{ error?: string }> {
   const count = await getSuperAdminCount();
   if (count > 0) return { error: "Super admin already exists" };
-  const hash = bcrypt.hashSync(password, 12);
+  const hash = bcrypt.hashSync(password, 10);
   try {
     await db.query(
       "INSERT INTO public.super_admins (email, password_hash, first_name) VALUES ($1, $2, $3)",
@@ -119,7 +116,7 @@ export async function createInvite(
   email: string, createdById: string,
   opts: { firstName: string; role: AdminRole; permissions: Permission[]; tempPassword: string }
 ): Promise<{ token?: string; error?: string }> {
-  const tempHash = bcrypt.hashSync(opts.tempPassword, 12);
+  const tempHash = bcrypt.hashSync(opts.tempPassword, 10);
   const payload = JSON.stringify({
     email: email.toLowerCase(), firstName: opts.firstName,
     role: opts.role, permissions: opts.permissions,
@@ -201,7 +198,7 @@ export async function acceptInvite(token: string, tempPassword: string, newPassw
     if (!validTemp) return { error: "Invalid temporary password" };
 
     const name = firstName || invite.firstName;
-    const hash = bcrypt.hashSync(newPassword, 12);
+    const hash = bcrypt.hashSync(newPassword, 10);
 
     await db.query(
       "INSERT INTO public.super_admins (email, password_hash, created_by_id, first_name) VALUES ($1, $2, $3, $4)",
@@ -287,7 +284,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
   const email = await verifyPasswordResetToken(token);
   if (!email) return { error: "Invalid or expired reset token" };
 
-  const hash = bcrypt.hashSync(newPassword, 12);
+  const hash = bcrypt.hashSync(newPassword, 10);
   const tokenHash = await sha256(token);
 
   try {
