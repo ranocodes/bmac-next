@@ -1,90 +1,121 @@
 # BMAC Next
 
-Full-stack Next.js platform for Brilliant Minds Ambassadors Club (BMAC) Jos — a youth empowerment NGO.
+Full-stack web platform for Brilliant Minds Ambassadors Club (BMAC) Jos, a youth empowerment NGO in Plateau State, Nigeria. I built a public-facing site for programs, events, news, and donations, plus an admin CMS to manage everything.
 
-## Tech Stack
+## Screenshots
+
+**Homepage**
+![Homepage](screenshoot/homepage.png)
+
+**Programs**
+![Programs page](screenshoot/programs%20page.png)
+
+**Program detail**
+![Program detail page](screenshoot/programs%20detail%20page.png)
+
+**Events**
+![Event page](screenshoot/event%20page.png)
+
+**News**
+![News page](screenshoot/news%20page.png)
+
+**Get involved**
+![Get involved page](screenshoot/get-involved%20page.png)
+
+**Gallery**
+![Gallery page](screenshoot/gallery%20page.png)
+
+**About**
+![About page](screenshoot/about%20page.png)
+
+**Admin dashboard**
+![Admin dashboard](screenshoot/admin-dashboard.png)
+
+## What it does
+
+**Public site:** Visitors can browse programs (Public Speaking, Digital Literacy, Mentorship, etc.), read news articles, register for events, view a photo gallery, and get involved through five paths: join as a member, volunteer, start a school chapter, donate, or partner. Event registration handles both free and paid events through Paystack. Donations also go through Paystack with preset or custom amounts. The contact form sends emails via Resend, and a newsletter modal captures subscriber emails.
+
+**Admin dashboard:** Logged-in admins manage all site content (news, events, programs, gallery, team members, testimonials, partners, impact stats) through a CMS with create, edit, and publish workflows. The dashboard shows live stats: total views, unique visitors, today's activity, recent content, and top pages. Admins can invite other admins with role-based permissions (super_admin, administrator, moderator), and every action gets logged in an activity feed.
+
+## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 16 (App Router), React 19 |
-| Styling | Tailwind v4, CSS variables |
+| Styling | Tailwind CSS v4, CSS variables |
 | Database | Neon Postgres (HTTP driver) |
-| Auth | Clerk v7 |
-| Payments | Paystack |
-| Email | Resend |
+| Auth | Custom HMAC-signed cookies |
+| Payments | Paystack (inline.js) |
+| Email | Resend (contact forms), external service (invites, password resets) |
+| Rich text | TipTap editor (events, news articles) |
+| Charts | Chart.js (admin analytics) |
 | Hosting | Vercel |
 
-## Getting Started
+## Why I built it
+
+BMAC runs programs across schools in Jos and needed a single place to manage events, let the team update content, and handle membership and donations. Before this, content was scattered and admin work required a developer. I wanted to give the team a CMS they can actually use, and give members a site that works on their phones.
+
+Built as a [Horizons](https://horizons.dev) project.
+
+## How I built it
+
+I used coding agents (like GitHub Copilt & Opencode) to help scaffold components, boilerplate, and repetitive features like CRUD forms, table views, and API routes. The agents handled a lot of the tedious wiring, which let me focus on the parts that needed real decisions: the data layer, auth flow, and overall architecture.
+
+The data layer is a thin abstraction over Neon's HTTP driver (`src/lib/db.ts`). No ORM. I built a `db` object that exposes `getAll`, `getById`, `create`, `update`, `remove`, `exists`, `count`, and `query` functions that build parameterized SQL and auto-serialize objects/arrays to JSONB. Every admin CRUD operation goes through `src/actions/crud.ts`, which handles auth checks, database calls, and activity logging in one pass.
+
+The auth system uses HMAC-signed cookies instead of JWTs. On login, an external auth service verifies credentials and I sign a session cookie with a server-side secret. Admin middleware (`src/proxy.ts`) intercepts every `/admin/*` request, reads the cookie, and rejects unauthenticated access. Permission checks happen at both the layout level (nav items hidden based on role) and the action level (`requirePermission()` in server actions).
+
+## Local setup
+
+Clone and install:
 
 ```bash
+git clone <repo-url>
+cd bmac-next
 npm install
-cp .env.example .env.local  # fill in values
+```
+
+Set up environment variables:
+
+```bash
+cp .env.example .env.local
+```
+
+You need these services configured:
+
+| Variable | Service | Purpose |
+|---|---|---|
+| `NEON_DB_URL` | [Neon](https://console.neon.tech) | Postgres connection string (HTTP driver) |
+| `SUPER_ADMIN_EMAIL` | Any | First admin email |
+| `SUPER_ADMIN_PASSWORD_HASH` | Generate with `node scripts/generate-password-hash.mjs <password>` | Bcrypt hash |
+| `SUPER_ADMIN_COOKIE_SECRET` | Generate with `openssl rand -hex 32` | Cookie signing key |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | [Paystack](https://dashboard.paystack.com) | Payment processing (public key) |
+| `PAYSTACK_SECRET_KEY` | Paystack | Payment processing (secret key) |
+| `RESEND_API_KEY` | [Resend](https://resend.com) | Contact form emails |
+| `NEXT_PUBLIC_APP_URL` | Your domain | `http://localhost:3000` for local dev |
+
+See `SETUP.md` for detailed instructions on getting each key.
+
+Run the dev server:
+
+```bash
 npm run dev
 ```
 
-See `SETUP.md` for detailed setup instructions.
+Public site at `http://localhost:3000`, admin dashboard at `http://localhost:3000/admin`.
+
+Seed the database:
+
+```bash
+psql $NEON_DB_URL -f scripts/seed.sql
+```
 
 ## Commands
 
 ```bash
-npm run dev          # Turbopack dev server
+npm run dev          # Dev server
 npm run build        # Production build
-npm test             # Run tests
-npx tsc --noEmit     # Type check
+npm test             # Run tests (Vitest)
 npm run lint         # ESLint
+npx tsc --noEmit     # Type check
 ```
-
-## Production Deployment Checklist
-
-### Vercel
-
-- [ ] Create Vercel project linked to GitHub repo
-- [ ] Set Framework Preset: **Next.js**
-- [ ] Set Node.js version: **20+** (or match `.nvmrc`)
-- [ ] Set environment variables (see below)
-- [ ] Deploy: `vercel --prod` or via Git integration
-
-### Neon
-
-- [ ] Create production Neon project (paid tier recommended for production)
-- [ ] Copy `NEON_DB_URL` (HTTP connection string)
-- [ ] Run seed script: `psql $NEON_DB_URL -f scripts/seed.sql`
-
-### Clerk
-
-- [ ] Create production Clerk application
-- [ ] Copy `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
-- [ ] Enable **Custom sessions** in Clerk Dashboard → Sessions
-- [ ] Add production URL to **Application URLs** in Clerk Dashboard
-- [ ] Configure redirect URLs: `/admin` (after sign-in), `/` (after sign-out)
-
-### Paystack
-
-- [ ] Switch from test keys to live keys
-- [ ] Set webhook URL: `https://yourdomain.com/api/webhooks/paystack`
-- [ ] Enable `charge.success` event in webhook settings
-
-### Resend
-
-- [ ] Verify domain in Resend (required for production sending)
-- [ ] Update sender email from `onboarding@resend.dev` to your domain
-- [ ] Copy `RESEND_API_KEY`
-
-### Domain & DNS
-
-- [ ] Configure custom domain in Vercel
-- [ ] Add CNAME/A record pointing to Vercel
-- [ ] Update Clerk Application URLs with production domain
-- [ ] Update Paystack webhook URL with production domain
-
-### Environment Variables (Vercel)
-
-| Variable | Source |
-|---|---|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk Dashboard |
-| `CLERK_SECRET_KEY` | Clerk Dashboard |
-| `NEON_DB_URL` | Neon Console |
-| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Paystack Dashboard |
-| `PAYSTACK_SECRET_KEY` | Paystack Dashboard |
-| `RESEND_API_KEY` | Resend Dashboard |
-| `NEXT_PUBLIC_APP_URL` | Your production URL (e.g., `https://bmac.vercel.app`) |
