@@ -9,9 +9,13 @@ interface Toast {
   type: "success" | "error" | "info";
 }
 
+interface ConfirmOptions {
+  confirmText?: string;
+}
+
 interface ToastCtx {
   toast: (message: string, type?: Toast["type"]) => void;
-  confirm: (message: string) => Promise<boolean>;
+  confirm: (message: string, options?: ConfirmOptions) => Promise<boolean>;
 }
 
 const Ctx = createContext<ToastCtx>({ toast: () => {}, confirm: () => Promise.resolve(false) });
@@ -41,6 +45,7 @@ const typeDurations: Record<Toast["type"], number> = {
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
+  const [confirmBtn, setConfirmBtn] = useState("Delete");
   const [confirmResolve, setConfirmResolve] = useState<((v: boolean) => void) | null>(null);
 
   const toast = useCallback((message: string, type: Toast["type"] = "success") => {
@@ -49,9 +54,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), typeDurations[type]);
   }, []);
 
-  const confirm = useCallback((message: string): Promise<boolean> => {
+  const confirm = useCallback((message: string, options?: ConfirmOptions): Promise<boolean> => {
     return new Promise(resolve => {
       setConfirmMsg(message);
+      setConfirmBtn(options?.confirmText || "Delete");
       setConfirmResolve(() => (v: boolean) => {
         setConfirmMsg(null);
         resolve(v);
@@ -69,7 +75,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <p className="text-sm text-secondary font-medium mb-6">{confirmMsg}</p>
             <div className="flex items-center gap-3 justify-end">
               <button onClick={() => confirmResolve?.(false)} className="h-9 px-4 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all">Cancel</button>
-              <button onClick={() => confirmResolve?.(true)} className="h-9 px-4 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all">Delete</button>
+              <button onClick={() => confirmResolve?.(true)} className="h-9 px-4 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all">{confirmBtn}</button>
             </div>
           </div>
         </div>

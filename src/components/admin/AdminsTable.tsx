@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { UserCog, Plus, Search, ShieldCheck, Shield, Mail } from "lucide-react";
+import { UserCog, Plus, Search, ShieldCheck, Shield, Mail, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { adminResetPassword } from "@/actions/admin-auth";
+import { deleteAdminUser } from "@/actions/admin-users";
 
 export default function AdminsTable({ initialData = [] }: { initialData?: any[] }) {
-  const [items] = useState<any[]>(() => initialData.slice().reverse());
+  const [items, setItems] = useState<any[]>(() => initialData.slice().reverse());
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
 
@@ -21,6 +22,15 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
         {role === "super_admin" ? "Super Admin" : "Moderator"}
       </span>
     );
+  }
+
+  async function handleDelete(id: string) {
+    const ok = await confirm("Delete this admin account? This cannot be undone.", { confirmText: "Delete" });
+    if (!ok) return;
+    const result = await deleteAdminUser(id);
+    if (result.error) { toast(result.error, "error"); return; }
+    setItems(prev => prev.filter(u => u.id !== id));
+    toast("Admin deleted", "success");
   }
 
   const filtered = search
@@ -72,7 +82,7 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                   <th className="text-left font-semibold text-secondary px-5 py-4">Name</th>
                   <th className="text-left font-semibold text-secondary px-5 py-4 hidden sm:table-cell">Email</th>
                   <th className="text-left font-semibold text-secondary px-5 py-4 hidden md:table-cell">Role</th>
-                  <th className="text-right font-semibold text-secondary px-5 py-4 w-32">Actions</th>
+                  <th className="text-right font-semibold text-secondary px-5 py-4 w-40">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,18 +105,26 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                       {roleBadge(u.role)}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-                        title="Reset password"
-                        onClick={async () => {
-                          const ok = await confirm(`Send password reset email to ${u.email}?`);
-                          if (!ok) return;
-                          const res = await adminResetPassword(u.id);
-                          if (res.error) { toast(res.error, "error"); return; }
-                          toast("Reset link sent to their email", "success");
-                        }}>
-                        <Mail size={14} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                          title="Reset password"
+                          onClick={async () => {
+                            const ok = await confirm(`Send password reset email to ${u.email}?`, { confirmText: "Send" });
+                            if (!ok) return;
+                            const res = await adminResetPassword(u.id);
+                            if (res.error) { toast(res.error, "error"); return; }
+                            toast("Reset link sent to their email", "success");
+                          }}>
+                          <Mail size={14} />
+                        </button>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                          title="Delete admin"
+                          onClick={() => handleDelete(u.id)}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

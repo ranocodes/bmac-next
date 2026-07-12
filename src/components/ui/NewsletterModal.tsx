@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Heart, ArrowRight } from "lucide-react";
+import { X, Send, Heart, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { subscribeToNewsletter } from "@/actions/newsletter";
 
 interface NewsletterModalProps {
   isOpen: boolean;
@@ -11,10 +12,22 @@ interface NewsletterModalProps {
 }
 
 export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated with BMAC" }: NewsletterModalProps) {
-  const [step, setStep] = useState<'subscribe' | 'thankyou'>('subscribe');
+  const [step, setStep] = useState<'subscribe' | 'thankyou' | 'error'>('subscribe');
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    setError("");
+    const result = await subscribeToNewsletter(email);
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     setStep('thankyou');
   };
 
@@ -47,9 +60,18 @@ export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated
                 <h3 className="font-display text-2xl font-bold text-secondary mb-3">{title}</h3>
                 <p className="text-muted-foreground text-sm mb-8">Get the latest stories, workshop alerts, and leadership tips every Friday.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <input type="email" placeholder="Your Email Address" className="w-full px-5 py-4 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" required />
-                  <button className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-primary/10">
-                    Subscribe
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="Your Email Address"
+                    className="w-full px-5 py-4 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" required />
+                  {error && (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
+                      <AlertCircle size={16} className="shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+                  <button disabled={loading}
+                    className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold hover:bg-primary transition-all shadow-lg shadow-primary/10 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    {loading ? <><Loader2 size={16} className="animate-spin" /> Subscribing...</> : "Subscribe"}
                   </button>
                 </form>
               </div>

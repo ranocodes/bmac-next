@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog,
+  UserCog, Mail,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -62,6 +62,7 @@ const navGroups: NavGroup[] = [
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_users" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
+      { label: "Invites", href: "/admin/invites", icon: Mail, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },
@@ -88,6 +89,7 @@ const routePermissions: Record<string, Permission> = {
   "/admin/stats": "edit_content",
   "/admin/logs": "manage_users",
   "/admin/admins": "manage_users",
+  "/admin/invites": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
 };
@@ -111,13 +113,20 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   useEffect(() => {
     const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
     if (saved === "true") setSidebarCollapsed(true);
-  }, []);
 
-  useEffect(() => {
-    if (!error && !userProp && pathname !== "/admin/login") {
-      router.push("/admin/login");
+    const activeGroup = navGroups.find(g =>
+      g.children.some(c => c.href && pathname.startsWith(c.href))
+    );
+    if (activeGroup) {
+      setOpenGroups({ [activeGroup.label]: true });
     }
-  }, [error, userProp, pathname, router]);
+
+    navGroups.forEach(g =>
+      g.children.forEach(c => {
+        if (c.href) router.prefetch(c.href);
+      })
+    );
+  }, []);
 
   const user = userProp;
   const email = user?.email ?? "";

@@ -1,6 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
+import { logActivity } from "@/actions/activity-logs";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -31,6 +32,7 @@ export async function sendContactMessage(
         message,
       ].join("\n"),
     });
+    logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` });
     return { success: true };
   } catch (err) {
     console.error("Resend error:", err);

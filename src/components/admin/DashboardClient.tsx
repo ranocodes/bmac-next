@@ -121,39 +121,7 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
         ))}
       </div>
 
-      {/* Visitor Stats */}
-      {visitorStats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-card rounded-2xl border border-border/50 p-5">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-              <TrendingUp size={20} className="text-blue-500" />
-            </div>
-            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.totalViews.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Total Page Views</p>
-          </div>
-          <div className="bg-card rounded-2xl border border-border/50 p-5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-4">
-              <Users size={20} className="text-emerald-500" />
-            </div>
-            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.uniqueVisitors.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Unique Visitors</p>
-          </div>
-          <div className="bg-card rounded-2xl border border-border/50 p-5">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-4">
-              <Activity size={20} className="text-amber-500" />
-            </div>
-            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.todayViews.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Views Today</p>
-          </div>
-          <div className="bg-card rounded-2xl border border-border/50 p-5">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-4">
-              <Globe size={20} className="text-purple-500" />
-            </div>
-            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{visitorStats.topPages.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Pages Tracked</p>
-          </div>
-        </div>
-      )}
+
 
       {/* Quick Actions */}
       <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
