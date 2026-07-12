@@ -12,11 +12,11 @@ export async function logActivity(
 ) {
   try {
     const id = `log-${action.slice(0, 24)}-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
-    await db.create("activity_logs", {
-      id, user, action, resource,
-      resource_id: opts?.resourceId || null,
-      details: opts?.details || null,
-    });
+    await db.query(
+      `INSERT INTO public.activity_logs (id, "user", action, resource, resource_id, details)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [id, user, action, resource, opts?.resourceId || null, opts?.details || null]
+    );
   } catch (e) {
     console.error("logActivity error:", e);
   }
