@@ -47,8 +47,8 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
             <p className="text-sm text-muted-foreground mt-1">Manage administrator accounts</p>
           </div>
         </div>
-        <Link href="/admin/admins/invite" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
-          <Plus size={16} /> <span className="hidden sm:inline">Invite Admin</span>
+        <Link href="/admin/admins/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
+          <Plus size={16} /> <span className="hidden sm:inline">New Admin</span>
         </Link>
       </div>
 
@@ -65,11 +65,11 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
             {search ? "No admins match your search" : "No admins yet"}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {search ? "Try a different term" : "Invite your first admin to get started"}
+            {search ? "Try a different term" : "Create your first admin to get started"}
           </p>
           {!search && (
-            <Link href="/admin/admins/invite" className="mt-5 flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
-              <Plus size={15} /> Invite Admin
+            <Link href="/admin/admins/new" className="mt-5 flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
+              <Plus size={15} /> New Admin
             </Link>
           )}
         </div>

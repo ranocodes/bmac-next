@@ -39,26 +39,19 @@ export async function registerFirstAdminAction(email: string, password: string, 
   }
 }
 
-export async function createInviteAction(
-  email: string, createdByEmail: string,
-  opts: { firstName: string; role: AdminRole; permissions: Permission[]; tempPassword: string }
-): Promise<{ token?: string; error?: string }> {
-  const result = await authClient.createInvite(createdByEmail, { ...opts, email });
-  if (!result.error) logActivity(createdByEmail, "invite_create", "auth", { details: `Invited ${email} as ${opts.role}` });
+export async function createAdminAction(
+  createdByEmail: string,
+  opts: { email: string; firstName: string; role: AdminRole; permissions: Permission[]; password: string }
+): Promise<{ error?: string }> {
+  const result = await authClient.createAdmin(createdByEmail, opts);
+  if (!result.error) logActivity(createdByEmail, "admin_create", "auth", { details: `Created ${opts.email} as ${opts.role}` });
   return result;
 }
 
-export async function acceptInviteAction(token: string, tempPassword: string, newPassword: string, firstName: string = ""): Promise<{ error?: string }> {
-  try {
-    const info = await authClient.acceptInvite(token, tempPassword, newPassword, firstName);
-    if (info.error) return { error: info.error };
-    await setSuperAdminSession(info.email!, info.firstName || "", info.permissions, info.role);
-    const session = await getSuperAdminSession().catch(() => null);
-    if (session) logActivity(session.email, "invite_accept", "auth", { details: "Invite accepted" });
-    return {};
-  } catch (e: any) {
-    return { error: e?.message || "Failed to accept invite" };
-  }
+export async function sendCredentialsAction(opts: { email: string; firstName: string; password: string; role: AdminRole }): Promise<{ error?: string }> {
+  const result = await authClient.sendCredentials(opts);
+  if (!result.error) logActivity(opts.email, "credentials_sent", "auth", { details: `Credentials emailed to ${opts.email}` });
+  return result;
 }
 
 export async function hasAnyAdmins(): Promise<boolean> {

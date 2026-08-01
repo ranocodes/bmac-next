@@ -9,7 +9,6 @@ interface AuthResponse {
   role?: AdminRole;
   permissions?: Permission[];
   error?: string;
-  valid?: boolean;
 }
 
 interface AdminsCountResponse {
@@ -17,17 +16,16 @@ interface AdminsCountResponse {
   error?: string;
 }
 
-interface InviteResponse {
+interface CreateAdminResponse {
   email?: string;
   firstName?: string;
   role?: AdminRole;
   permissions?: Permission[];
-  valid: boolean;
   error?: string;
 }
 
-interface CreateInviteResponse {
-  token?: string;
+interface SendCredentialsResponse {
+  success?: boolean;
   error?: string;
 }
 
@@ -64,25 +62,31 @@ export async function registerFirstAdmin(email: string, password: string, firstN
   return post<AuthResponse>("/api/auth/register-first-admin", { email, password, firstName });
 }
 
-export async function getInviteByToken(token: string): Promise<InviteResponse> {
-  return get<InviteResponse>(`/api/auth/invite/${encodeURIComponent(token)}`);
-}
-
-export async function acceptInvite(token: string, tempPassword: string, newPassword: string, firstName?: string): Promise<AuthResponse> {
-  return post<AuthResponse>("/api/auth/accept-invite", { token, tempPassword, newPassword, firstName });
-}
-
-export async function createInvite(
+export async function createAdmin(
   createdByEmail: string,
-  opts: { email: string; firstName: string; role: AdminRole; permissions: Permission[]; tempPassword: string }
-): Promise<CreateInviteResponse> {
-  return post<CreateInviteResponse>("/api/auth/create-invite", {
+  opts: { email: string; firstName: string; role: AdminRole; permissions: Permission[]; password: string }
+): Promise<CreateAdminResponse> {
+  return post<CreateAdminResponse>("/api/auth/create-admin", {
     email: opts.email,
-    createdByEmail,
     firstName: opts.firstName,
     role: opts.role,
     permissions: opts.permissions,
-    tempPassword: opts.tempPassword,
+    password: opts.password,
+    createdByEmail,
+    baseUrl:
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  });
+}
+
+export async function sendCredentials(opts: { email: string; firstName: string; password: string; role: AdminRole }): Promise<SendCredentialsResponse> {
+  return post<SendCredentialsResponse>("/send", {
+    type: "credentials",
+    email: opts.email,
+    firstName: opts.firstName,
+    password: opts.password,
+    role: opts.role,
     baseUrl:
       typeof window !== "undefined"
         ? window.location.origin

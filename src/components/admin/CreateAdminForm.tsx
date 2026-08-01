@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Send, AlertCircle, CheckCircle, Copy, Mail, UserPlus, Eye, EyeOff, Shield, ShieldCheck } from "lucide-react";
-import { createInviteAction } from "@/actions/admin-auth";
+import { Send, AlertCircle, CheckCircle, Mail, UserPlus, Eye, EyeOff, Shield, ShieldCheck, RefreshCw } from "lucide-react";
+import { createAdminAction, sendCredentialsAction } from "@/actions/admin-auth";
 import { useToast } from "@/components/ui/Toast";
 import type { Permission } from "@/types/cms";
 
@@ -22,17 +22,18 @@ interface Props {
   email: string;
 }
 
-export default function InviteForm({ email }: Props) {
+export default function CreateAdminForm({ email }: Props) {
   const { toast } = useToast();
   const [firstName, setFirstName] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [role, setRole] = useState<"super_admin" | "moderator">("moderator");
   const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [tempPassword, setTempPassword] = useState("");
-  const [showTemp, setShowTemp] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [inviteUrl, setInviteUrl] = useState("");
+  const [created, setCreated] = useState<{ email: string; firstName: string; role: "super_admin" | "moderator" } | null>(null);
+  const [sending, setSending] = useState(false);
 
   function togglePermission(p: Permission) {
     setPermissions(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -42,33 +43,31 @@ export default function InviteForm({ email }: Props) {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
     let pwd = "";
     for (let i = 0; i < 14; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
-    setTempPassword(pwd);
+    setPassword(pwd);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setInviteUrl("");
 
     if (!firstName.trim()) { setError("Name is required"); return; }
-    if (!inviteEmail) { setError("Email is required"); return; }
-    if (!tempPassword) { setError("Temporary password is required"); return; }
-    if (tempPassword.length < 8) { setError("Temporary password must be at least 8 characters"); return; }
+    if (!adminEmail) { setError("Email is required"); return; }
+    if (!password) { setError("Password is required"); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     if (role === "moderator" && permissions.length === 0) { setError("Select at least one permission for moderators"); return; }
 
     setLoading(true);
     try {
-      const result = await createInviteAction(inviteEmail, email, {
+      const result = await createAdminAction(email, {
+        email: adminEmail,
         firstName: firstName.trim(),
         role,
         permissions: role === "super_admin" ? [] : permissions,
-        tempPassword,
+        password,
       });
       if (result.error) { setError(result.error); setLoading(false); return; }
-      if (result.token) {
-        setInviteUrl(`${window.location.origin}/admin/invite/${result.token}`);
-        toast("Invite email sent", "success");
-      }
+      setCreated({ email: adminEmail, firstName: firstName.trim(), role });
+      toast("Admin created", "success");
       setLoading(false);
     } catch {
       setError("Something went wrong. Try again.");
@@ -76,22 +75,58 @@ export default function InviteForm({ email }: Props) {
     }
   }
 
-  async function copyLink() {
-    try { await navigator.clipboard.writeText(inviteUrl); } catch { /* fallback */ }
+  async function resendCredentials() {
+    if (!created) return;
+    setSending(true);
+    try {
+      const result = await sendCredentialsAction({
+        email: created.email,
+        firstName: created.firstName,
+        password,
+        role: created.role,
+      });
+      if (result.error) { toast(result.error, "error"); setSending(false); return; }
+      toast("Credentials sent to " + created.email, "success");
+      setSending(false);
+    } catch {
+      toast("Something went wrong. Try again.", "error");
+      setSending(false);
+    }
   }
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm text-center">
-        <div className="mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <UserPlus size={28} className="text-primary" />
-          </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Invite Admin</h1>
-          <p className="text-sm text-muted-foreground mt-2">Create an invite for a new administrator</p>
+    <div className="space-y-6 max-w-[1400px]">
+      <div className="flex items-center gap-3">
+        <UserPlus size={24} className="text-primary shrink-0" />
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">New Admin</h1>
+          <p className="text-sm text-muted-foreground mt-1">Create an administrator account</p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 text-left">
+      {created ? (
+        <div className="max-w-md p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/15">
+          <div className="flex items-center gap-2.5 text-emerald-600 text-sm font-medium mb-3">
+            <CheckCircle size={16} />
+            <span>Admin account created</span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-5">
+            {created.firstName} can now sign in at{" "}
+            <Link href="/admin/login" className="text-primary hover:text-primary/80 font-medium">/admin/login</Link> with the
+            password you set. Credentials were emailed to{" "}
+            <span className="text-secondary font-medium">{created.email}</span>.
+          </p>
+          <button onClick={resendCredentials} disabled={sending}
+            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+            {sending ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              : <><RefreshCw size={16} /> Email Credentials</>}
+          </button>
+          <Link href="/admin/admins" className="mt-3 block w-full h-10 flex items-center justify-center rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+            Back to Admins
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5 text-left max-w-md">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Name</label>
             <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
@@ -102,7 +137,7 @@ export default function InviteForm({ email }: Props) {
             <label className="block text-sm font-medium text-secondary">Email</label>
             <div className="relative">
               <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+              <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)}
                 placeholder="newadmin@example.org"
                 className="w-full h-11 pl-11 pr-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
             </div>
@@ -123,19 +158,17 @@ export default function InviteForm({ email }: Props) {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-secondary">
-              Temporary password
-            </label>
+            <label className="block text-sm font-medium text-secondary">Password</label>
             <div className="relative">
-              <input type={showTemp ? "text" : "password"} value={tempPassword} onChange={e => setTempPassword(e.target.value)}
+              <input type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
                 className="w-full h-11 px-4 pr-20 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button type="button" onClick={generatePassword}
                   className="text-xs text-primary hover:text-primary/80 font-medium">Generate</button>
-                <button type="button" onClick={() => setShowTemp(!showTemp)}
+                <button type="button" onClick={() => setShowPwd(!showPwd)}
                   className="text-muted-foreground hover:text-secondary">
-                  {showTemp ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -168,31 +201,10 @@ export default function InviteForm({ email }: Props) {
           <button type="submit" disabled={loading}
             className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><Send size={16} /> Create Invite</>}
+              : <><Send size={16} /> Create Admin</>}
           </button>
         </form>
-
-        {inviteUrl && (
-          <div className="mt-6 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-left">
-            <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium mb-3">
-              <CheckCircle size={16} />
-              <span>Invite sent to {inviteEmail}</span>
-            </div>
-            <p className="text-xs text-emerald-600/70 mb-3">If you don't receive the email, use the link below instead:</p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs text-muted-foreground bg-card px-3 py-2 rounded-lg truncate">{inviteUrl}</code>
-              <button onClick={copyLink}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-card hover:bg-border transition-colors text-muted-foreground hover:text-secondary">
-                <Copy size={14} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        <p className="mt-6 text-xs text-muted-foreground">
-          <Link href="/admin/admins" className="text-primary hover:text-primary/80 font-medium">Back to admins</Link>
-        </p>
-      </div>
+      )}
     </div>
   );
 }
