@@ -4,7 +4,7 @@ Guidance for Claude when working on this repository.
 
 ## Project Overview
 
-Full-stack Next.js 16 website for Brilliant Minds Ambassadors Club (BMAC) Jos — a youth empowerment NGO. Public-facing site (programs, events, gallery, news) + admin dashboard for content management with Clerk auth + Neon Postgres.
+Full-stack Next.js 16 website for Brilliant Minds Ambassadors Club (BMAC) Jos — a youth empowerment NGO. Public-facing site (programs, events, gallery, news) + admin dashboard for content management with custom session auth (Express backend) + Neon Postgres.
 
 ---
 
@@ -16,11 +16,12 @@ Full-stack Next.js 16 website for Brilliant Minds Ambassadors Club (BMAC) Jos �
 | React 19.2.4, Node 24 | Runtime |
 | Tailwind v4 (`@tailwindcss/postcss`) | Styling — `@theme` tokens in `globals.css` |
 | Neon Postgres (`@neondatabase/serverless`) | Database — HTTP driver, NOT pg pool. IPv4 forced in `lib/db.ts` |
-| Clerk v7 (`@clerk/nextjs`, `@clerk/ui`) | Admin auth — hosted pages, middleware in `proxy.ts` |
+| Express backend (`bmac-express-server`) | Admin auth + admin email — HMAC-signed cookie sessions, bcrypt admins, Nodemailer SMTP |
 | Vitest v4.1.8 + jsdom + React Testing Library | Testing — `pool: "forks"` required |
 | Tiptap (`@tiptap/react`) | Rich text editor for CMS content |
 | Paystack | Payment gateway (inline.js loaded in root layout) |
-| Resend | Transactional email |
+| Nodemailer SMTP (via Express) | Admin credentials/reset/security email |
+| Resend | Public contact form email only |
 | Framer Motion, Embla Carousel | Animations, carousels |
 | Lucide React | Icons — mapped via `lib/iconMapper.ts` |
 | Plus Jakarta Sans + Outfit (Google Fonts) | Body + display fonts via `next/font` |
@@ -46,8 +47,8 @@ npm run lint       # ESLint
 src/
   app/
     (public_pages)/   # Route group — SSR public pages, fetch via lib/db
-    admin/            # Clerk-protected dashboard pages
-    layout.tsx        # Root: ClerkProvider + fonts + Paystack script
+    admin/            # Custom-session protected dashboard pages (Express-backed auth)
+    layout.tsx        # Root: fonts + Paystack script
     globals.css       # Tailwind v4 @theme tokens + legacy utility classes
   components/
     layouts/PublicLayout.tsx   # Shared public layout (Navbar + Footer)
@@ -56,13 +57,15 @@ src/
   actions/            # Server actions (crud.ts, admin-auth.ts, invitations, settings)
   lib/
     db.ts             # Neon HTTP driver helper — CRUD helpers + raw query
-    auth/server.ts    # Clerk session helpers
+    auth/super-admin.ts  # HMAC session cookie sign/verify (bmac_admin_session)
+    auth/client.ts    # Express backend client (login, create-admin, resend, reset)
+    auth/server.ts    # Session/permission helpers (requirePermission)
     auth/admin-context.tsx  # React context for admin user
     iconMapper.ts     # Lucide icon name → component mapping
     utils.ts          # cn() utility (clsx + tailwind-merge)
   types/cms.ts        # Shared types (Program, Event, Partner, AdminUser, etc.)
-  proxy.ts            # Clerk middleware (renamed from middleware.ts — Next.js 16 compat)
-  __tests__/          # Tests with global Clerk mocks
+  proxy.ts            # Session guard — allowlists public admin routes, protects the rest (Next.js 16 renamed from middleware.ts)
+  __tests__/          # Tests with global auth/session mocks
 scripts/seed.sql      # Full DB seed (TRUNCATE + INSERT for all 10+ tables)
 ```
 
@@ -91,11 +94,13 @@ scripts/seed.sql      # Full DB seed (TRUNCATE + INSERT for all 10+ tables)
 - Tables: programs, events, news_articles, testimonials, team_members, impact_stats, gallery_items, partners, site_settings, activity_logs, admin_users
 
 ### Auth
-- **No** `middleware.ts` — renamed to `proxy.ts` (Next.js 16 breaks on `middleware.ts` with Clerk)
-- Clerk middleware protects `/admin(.*)` via `auth.protect()`
-- `admin/layout.tsx` uses `currentUser()` → looks up `admin_users` by email
-- First admin auto-created as `super_admin` when `admin_users` table is empty
-- Subsequent admins: invite-only + Clerk allowlist
+- **No** `middleware.ts` — renamed to `proxy.ts` (Next.js 16 compatibility)
+- `proxy.ts` is a session guard: allowlists public admin routes (`/admin/login`, `/admin/setup`, `/admin/forgot-password`, `/admin/reset-password/*`), protects everything else, verifies the `bmac_admin_session` HMAC cookie
+- Auth backend is the **bmac-express-server** repo (Express, Vercel): `/api/auth/login`, `create-admin`, `update-admin`, `resend-credentials`, `request-password-reset`, `reset-password`, and `/send` (email). All endpoints require the shared `EMAIL_SERVICE_API_KEY`
+- Next calls it via `src/lib/auth/client.ts`, then sets the HMAC session cookie (`super-admin.ts`) and logs activity
+- Admins stored in `admin_users` (role, permissions) + `super_admins` (bcrypt `password_hash`) via the Express backend — no external identity provider
+- First admin auto-created as `super_admin` via `/admin/setup` when `admin_users` is empty
+- Subsequent admins created from the Admins page; credentials emailed by the Express backend (Nodemailer SMTP)
 - Admin permissions stored as string array in `admin_users.permissions` jsonb
 - Admin context via `useAdmin()` hook from `lib/auth/admin-context.tsx`
 
@@ -113,7 +118,7 @@ scripts/seed.sql      # Full DB seed (TRUNCATE + INSERT for all 10+ tables)
 - **Run**: `npm test` or `npx vitest run`
 - **Single file**: `npx vitest run src/__tests__/HomeClient.test.tsx --reporter=verbose`
 - **Location**: `src/__tests__/`
-- **Setup**: `src/__tests__/setup.tsx` globally mocks Clerk modules
+- **Setup**: `src/__tests__/setup.tsx` globally mocks auth/session modules
 - **Each test file** imports `./mocks` for Next.js/framer-motion mocks
 - **Gotchas**: `pool: "forks"` required (threads hangs on Node 24). `setup.tsx` must be `.tsx` (JSX). jsdom env takes ~17s to init.
 
@@ -132,7 +137,7 @@ npx tsc --noEmit && npm run lint && npm test
 | File | Purpose |
 |---|---|
 | `src/lib/db.ts` | Neon HTTP driver — CRUD helpers, IPv4 monkey-patch |
-| `src/proxy.ts` | Clerk middleware (renamed from middleware.ts) |
+| `src/proxy.ts` | Session guard (renamed from middleware.ts — Next.js 16) |
 | `src/types/cms.ts` | All shared TypeScript interfaces |
 | `src/actions/crud.ts` | Generic `createItem`/`updateItem`/`deleteItem` server actions |
 | `src/app/globals.css` | Tailwind v4 `@theme` tokens, brand colors, legacy utilities |
