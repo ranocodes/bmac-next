@@ -32,7 +32,7 @@ export default function CreateAdminForm({ email }: Props) {
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [created, setCreated] = useState<{ email: string; firstName: string; role: "super_admin" | "moderator" } | null>(null);
+  const [created, setCreated] = useState<{ email: string; firstName: string; role: "super_admin" | "moderator"; warning?: string } | null>(null);
   const [sending, setSending] = useState(false);
 
   function togglePermission(p: Permission) {
@@ -66,8 +66,12 @@ export default function CreateAdminForm({ email }: Props) {
         password,
       });
       if (result.error) { setError(result.error); setLoading(false); return; }
-      setCreated({ email: adminEmail, firstName: firstName.trim(), role });
-      toast("Admin created", "success");
+      setCreated({ email: adminEmail, firstName: firstName.trim(), role, warning: result.warning });
+      if (result.warning) {
+        toast("Admin created, but the email failed to send. Resend below.", "error");
+      } else {
+        toast("Admin created", "success");
+      }
       setLoading(false);
     } catch {
       setError("Something went wrong. Try again.");
@@ -116,6 +120,12 @@ export default function CreateAdminForm({ email }: Props) {
             password you set. Credentials were emailed to{" "}
             <span className="text-secondary font-medium">{created.email}</span>.
           </p>
+          {created.warning && (
+            <div className="flex items-center gap-2.5 px-4 py-3 mb-4 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{created.warning}</span>
+            </div>
+          )}
           <button onClick={resendCredentials} disabled={sending}
             className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             {sending ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

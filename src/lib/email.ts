@@ -27,3 +27,11 @@ async function sendRequest(body: Record<string, unknown>): Promise<{ error?: str
 export async function sendPasswordResetEmail(email: string, resetLink: string): Promise<{ error?: string }> {
   return sendRequest({ type: "password-reset", email, resetLink });
 }
+
+export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string): Promise<{ error?: string }> {
+  return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy });
+}
+
+export async function sendAdminDeleteAttemptAlert(email: string, actor: string): Promise<{ error?: string }> {
+  return sendRequest({ type: "admin-delete-attempt", email, actor });
+}

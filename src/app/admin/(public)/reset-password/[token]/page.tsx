@@ -22,11 +22,15 @@ export default function ResetPasswordPage() {
     if (password !== confirm) { setError("Passwords don't match"); return; }
 
     setLoading(true);
-    const result = await executePasswordReset(token, password);
-    setLoading(false);
-
-    if (result.error) { setError(result.error); return; }
-    setDone(true);
+    try {
+      const result = await executePasswordReset(token, password);
+      if (result.error) { setError(result.error); return; }
+      setDone(true);
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (done) {

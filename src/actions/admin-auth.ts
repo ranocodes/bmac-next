@@ -42,7 +42,7 @@ export async function registerFirstAdminAction(email: string, password: string, 
 export async function createAdminAction(
   createdByEmail: string,
   opts: { email: string; firstName: string; role: AdminRole; permissions: Permission[]; password: string }
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; warning?: string }> {
   const result = await authClient.createAdmin(createdByEmail, opts);
   if (!result.error) logActivity(createdByEmail, "admin_create", "auth", { details: `Created ${opts.email} as ${opts.role}` });
   return result;

@@ -28,6 +28,7 @@ export default function LoginForm({ hasAdmins }: Props) {
     try {
       const result = await loginAdmin(email, password);
       if (result.error) { setError(result.error); setLoading(false); return; }
+      setLoading(false);
       router.push("/admin");
     } catch {
       setError("Something went wrong. Try again.");

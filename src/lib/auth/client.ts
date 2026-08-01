@@ -22,6 +22,22 @@ interface CreateAdminResponse {
   role?: AdminRole;
   permissions?: Permission[];
   error?: string;
+  warning?: string;
+}
+
+interface UpdateAdminResponse {
+  email?: string;
+  firstName?: string;
+  error?: string;
+}
+
+interface ResendCredentialsResponse {
+  email?: string;
+  password?: string;
+  firstName?: string;
+  role?: AdminRole;
+  error?: string;
+  warning?: string;
 }
 
 interface SendCredentialsResponse {
@@ -106,4 +122,25 @@ export async function requestPasswordReset(email: string): Promise<{ success?: b
 
 export async function resetPassword(token: string, newPassword: string): Promise<{ success?: boolean; error?: string }> {
   return post<{ success?: boolean; error?: string }>("/api/auth/reset-password", { token, newPassword });
+}
+
+export async function updateAdmin(
+  adminId: string,
+  opts: { firstName?: string; email?: string }
+): Promise<UpdateAdminResponse> {
+  return post<UpdateAdminResponse>("/api/auth/update-admin", {
+    adminId,
+    firstName: opts.firstName,
+    email: opts.email,
+  });
+}
+
+export async function resendCredentials(adminId: string): Promise<ResendCredentialsResponse> {
+  return post<ResendCredentialsResponse>("/api/auth/resend-credentials", {
+    adminId,
+    baseUrl:
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  });
 }

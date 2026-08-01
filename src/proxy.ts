@@ -37,7 +37,7 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
 
   try {
     const payload = JSON.parse(base64Decode(payloadB64));
-    return payload.role === "super_admin";
+    return payload.role === "super_admin" || payload.role === "moderator";
   } catch {
     return false;
   }
@@ -47,7 +47,12 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    if (pathname === "/admin/login" || pathname === "/admin/setup" || pathname.startsWith("/admin/invite/")) return NextResponse.next();
+    if (
+      pathname === "/admin/login" ||
+      pathname === "/admin/setup" ||
+      pathname === "/admin/forgot-password" ||
+      pathname.startsWith("/admin/reset-password/")
+    ) return NextResponse.next();
 
     const authed = await verifyCookie(request);
     if (!authed) {

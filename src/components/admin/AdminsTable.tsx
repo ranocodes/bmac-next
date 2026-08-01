@@ -2,15 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { UserCog, Plus, Search, ShieldCheck, Shield, Mail, Trash2 } from "lucide-react";
+import { UserCog, Plus, Search, ShieldCheck, Shield, Mail, Trash2, RefreshCw, Pencil, X, KeyRound } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { useAdmin } from "@/lib/auth/admin-context";
 import { adminResetPassword } from "@/actions/admin-auth";
-import { deleteAdminUser } from "@/actions/admin-users";
+import { deleteAdminUser, updateAdminUser, resendCredentialsAction } from "@/actions/admin-users";
 
 export default function AdminsTable({ initialData = [] }: { initialData?: any[] }) {
   const [items, setItems] = useState<any[]>(() => initialData.slice().reverse());
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
+  const currentUser = useAdmin();
+
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [credentials, setCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
 
   function roleBadge(role: string) {
     const isSuper = role === "super_admin";
@@ -19,18 +27,52 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
         isSuper ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-500"
       }`}>
         {isSuper ? <ShieldCheck size={12} /> : <Shield size={12} />}
-        {role === "super_admin" ? "Super Admin" : "Moderator"}
+        {isSuper ? "Super Admin" : "Moderator"}
       </span>
     );
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, email: string) {
+    if (email === currentUser?.email) {
+      toast("You cannot delete your own account", "error");
+      return;
+    }
     const ok = await confirm("Delete this admin account? This cannot be undone.", { confirmText: "Delete" });
     if (!ok) return;
     const result = await deleteAdminUser(id);
     if (result.error) { toast(result.error, "error"); return; }
     setItems(prev => prev.filter(u => u.id !== id));
     toast("Admin deleted", "success");
+  }
+
+  function openEdit(u: any) {
+    setEditing(u);
+    setEditName(u.first_name || "");
+    setEditEmail(u.email || "");
+  }
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    setEditSaving(true);
+    const result = await updateAdminUser(editing.id, { firstName: editName.trim(), email: editEmail.trim() });
+    setEditSaving(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    setItems(prev => prev.map(u => u.id === editing.id ? { ...u, first_name: editName.trim(), email: editEmail.trim() } : u));
+    setEditing(null);
+    toast("Admin updated", "success");
+  }
+
+  async function handleResendCredentials(id: string, email: string) {
+    const ok = await confirm(`Send a new password to ${email}? The old password will stop working.`, { confirmText: "Send" });
+    if (!ok) return;
+    const result = await resendCredentialsAction(id);
+    if (result.error) { toast(result.error, "error"); return; }
+    if (result.password) {
+      setCredentials({ email: result.email || email, password: result.password, warning: result.warning });
+    } else {
+      toast("Credentials sent to " + (result.email || email), "success");
+    }
   }
 
   const filtered = search
@@ -51,6 +93,29 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
           <Plus size={16} /> <span className="hidden sm:inline">New Admin</span>
         </Link>
       </div>
+
+      {credentials && (
+        <div className="p-6 rounded-3xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-secondary">
+                <KeyRound size={16} className="text-primary" />
+                New credentials for {credentials.email}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Password: <span className="font-mono font-bold text-secondary select-all">{credentials.password}</span>
+              </p>
+              {credentials.warning && (
+                <p className="mt-1 text-xs text-destructive">Email failed to send — share the password manually.</p>
+              )}
+            </div>
+            <button onClick={() => setCredentials(null)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all shrink-0">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="relative max-w-xs">
         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -82,55 +147,120 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                   <th className="text-left font-semibold text-secondary px-5 py-4">Name</th>
                   <th className="text-left font-semibold text-secondary px-5 py-4 hidden sm:table-cell">Email</th>
                   <th className="text-left font-semibold text-secondary px-5 py-4 hidden md:table-cell">Role</th>
-                  <th className="text-right font-semibold text-secondary px-5 py-4 w-40">Actions</th>
+                  <th className="text-right font-semibold text-secondary px-5 py-4 w-44">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(u => (
-                  <tr key={u.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-primary">
-                            {(u.first_name || u.email || "?").charAt(0).toUpperCase()}
-                          </span>
+                {filtered.map(u => {
+                  const isSelf = u.email === currentUser?.email;
+                  return (
+                    <tr key={u.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-primary">
+                              {(u.first_name || u.email || "?").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="font-medium text-secondary">
+                            {u.first_name || "—"}
+                            {isSelf && <span className="text-[10px] text-muted-foreground ml-1.5">(you)</span>}
+                          </p>
                         </div>
-                        <p className="font-medium text-secondary">{u.first_name || "—"}</p>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 hidden sm:table-cell">
-                      <span className="text-muted-foreground text-xs">{u.email}</span>
-                    </td>
-                    <td className="px-5 py-4 hidden md:table-cell">
-                      {roleBadge(u.role)}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-                          title="Reset password"
-                          onClick={async () => {
-                            const ok = await confirm(`Send password reset email to ${u.email}?`, { confirmText: "Send" });
-                            if (!ok) return;
-                            const res = await adminResetPassword(u.id);
-                            if (res.error) { toast(res.error, "error"); return; }
-                            toast("Reset link sent to their email", "success");
-                          }}>
-                          <Mail size={14} />
-                        </button>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
-                          title="Delete admin"
-                          onClick={() => handleDelete(u.id)}>
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-5 py-4 hidden sm:table-cell">
+                        <span className="text-muted-foreground text-xs">{u.email}</span>
+                      </td>
+                      <td className="px-5 py-4 hidden md:table-cell">
+                        {roleBadge(u.role)}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                            title="Edit name / email"
+                            onClick={() => openEdit(u)}>
+                            <Pencil size={14} />
+                          </button>
+                          {!isSelf && (
+                            <>
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                                title="Resend login credentials"
+                                onClick={() => handleResendCredentials(u.id, u.email)}>
+                                <RefreshCw size={14} />
+                              </button>
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                                title="Send password reset email"
+                                onClick={async () => {
+                                  const ok = await confirm(`Send password reset email to ${u.email}?`, { confirmText: "Send" });
+                                  if (!ok) return;
+                                  const res = await adminResetPassword(u.id);
+                                  if (res.error) { toast(res.error, "error"); return; }
+                                  toast("Reset link sent to their email", "success");
+                                }}>
+                                <Mail size={14} />
+                              </button>
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                                title="Delete admin"
+                                onClick={() => handleDelete(u.id, u.email)}>
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary/20 backdrop-blur-sm p-4" onClick={() => setEditing(null)}>
+          <form onSubmit={saveEdit} className="bg-card rounded-2xl shadow-xl border border-border/50 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-border/30">
+              <div>
+                <h3 className="font-display text-lg font-bold text-secondary">Edit Admin</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{editing.first_name || editing.email}</p>
+              </div>
+              <button type="button" onClick={() => setEditing(null)} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-secondary">Name</label>
+                <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                  placeholder="Jane Doe"
+                  className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-secondary">Email</label>
+                <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)}
+                  placeholder="admin@example.org"
+                  className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                {editing.email === currentUser?.email && (
+                  <p className="text-xs text-muted-foreground">You cannot change your own email.</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-5 border-t border-border/30">
+              <button type="button" onClick={() => setEditing(null)}
+                className="flex-1 h-10 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={editSaving}
+                className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
+                {editSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
