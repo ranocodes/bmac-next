@@ -49,11 +49,10 @@ export async function deleteAdminUser(id: string) {
   await db.remove("admin_users", id);
   logActivity(admin.email, "admin_delete", "auth", { details: `Deleted admin: ${target.email}` });
 
-  if (isSuper) {
-    const remaining = await db.query<{ email: string }>(
-      "SELECT email FROM public.super_admins WHERE LOWER(email) != LOWER($1)", [target.email]);
-    Promise.allSettled(remaining.map(r => sendAdminDeletedNotification(r.email, target.email, admin.email)));
-  }
+  const remaining = await db.query<{ email: string }>(
+    "SELECT email FROM public.admin_users WHERE LOWER(email) NOT IN (LOWER($1), LOWER($2))",
+    [target.email, admin.email]);
+  Promise.allSettled(remaining.map(r => sendAdminDeletedNotification(r.email, target.email, admin.email)));
 
   return {};
 }

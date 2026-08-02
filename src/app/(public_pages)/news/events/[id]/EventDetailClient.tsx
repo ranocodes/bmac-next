@@ -46,6 +46,9 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
       currency: "NGN",
       ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
       metadata: {
+        source_type: "event_registration",
+        source_id: event.id,
+        payer_name: formData.name,
         custom_fields: [
           {
             display_name: "Event Title",
