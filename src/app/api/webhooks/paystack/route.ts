@@ -13,7 +13,10 @@ export async function POST(request: Request) {
 
   const hash = crypto.createHmac('sha512', secret).update(body).digest('hex');
 
-  if (hash !== signature) {
+  const hashBuf = Buffer.from(hash, 'hex');
+  const sigBuf = Buffer.from(signature, 'hex');
+
+  if (hashBuf.length !== sigBuf.length || !crypto.timingSafeEqual(hashBuf, sigBuf)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
@@ -32,7 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ status: 'already_processed' });
     }
 
-    const paymentId = `pay-${Date.now()}`;
+    const paymentId = `pay-${crypto.randomUUID()}`;
     await db.create("paystack_payments", {
       id: paymentId,
       reference,
@@ -47,7 +50,7 @@ export async function POST(request: Request) {
     });
 
     await db.create("activity_logs", {
-      id: `log-pay-${Date.now()}`,
+      id: `log-pay-${crypto.randomUUID()}`,
       user: "system",
       action: "payment_verified",
       resource: "paystack_payments",

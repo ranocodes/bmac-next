@@ -82,13 +82,26 @@
     --radius: 0.5rem;
   }
 
+  html {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+
+  .prose :where(p, li, a, h1, h2, h3, h4, h5, h6) {
+    overflow-wrap: break-word;
+  }
+
+  .prose pre {
+    overflow-x: auto;
   }
 }
 

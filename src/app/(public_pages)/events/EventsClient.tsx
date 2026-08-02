@@ -61,7 +61,7 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
         </div>
       </section>
 
-      <section className="py-12 md:py-20 px-4 md:px-6 relative">
+      <section className="py-12 md:py-20 px-4 md:px-6 relative overflow-x-clip">
         <div className="max-w-7xl mx-auto space-y-16">
           {events.map((event, i) => {
             const fd = formatEventDate(event.date);
@@ -128,7 +128,7 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
                                       </div>
                                       <div>
                                          <p className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest">Venue</p>
-                                         <p className="text-xs font-bold text-secondary truncate max-w-[160px]">{event.venue}</p>
+                                          <p className="text-xs font-bold text-secondary truncate sm:max-w-[160px]">{event.venue}</p>
                                       </div>
                                    </div>
                                 </div>

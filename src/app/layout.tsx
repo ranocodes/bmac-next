@@ -1,5 +1,5 @@
 import React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import TrackView from "@/components/TrackView";
@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "BMAC Jos — Brilliant Minds Ambassadors Club",
   description:
     "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

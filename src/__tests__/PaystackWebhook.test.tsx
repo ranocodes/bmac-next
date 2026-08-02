@@ -82,9 +82,40 @@ describe("Paystack Webhook", () => {
       reference: "BMAC-TEST-001",
       status: "completed",
       payer_email: "test@example.com",
+      source_type: "event_registration",
+      source_id: "event-1",
+      payer_name: "Test User",
     }));
+    const paymentArgs = mockCreate.mock.calls.find(c => c[0] === "paystack_payments")?.[1];
+    expect(paymentArgs?.id).toMatch(/^pay-/);
+    expect(paymentArgs?.id).not.toContain("NaN");
     expect(mockCreate).toHaveBeenCalledWith("activity_logs", expect.objectContaining({
       action: "payment_verified",
+    }));
+  });
+
+  it("stores unknown source when metadata lacks source_type/source_id", async () => {
+    mockQuery.mockResolvedValue([]);
+    mockCreate.mockResolvedValue({ id: "pay-456" });
+
+    const payload = {
+      event: "charge.success",
+      data: {
+        reference: "BMAC-TEST-003",
+        amount: 100000,
+        currency: "NGN",
+        customer: { email: "no-meta@example.com" },
+        metadata: {},
+      },
+    };
+
+    const signature = signPayload(JSON.stringify(payload));
+    const res = await postWebhook(payload, signature);
+    expect(res.status).toBe(200);
+
+    expect(mockCreate).toHaveBeenCalledWith("paystack_payments", expect.objectContaining({
+      source_type: "unknown",
+      source_id: "",
     }));
   });
 

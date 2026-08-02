@@ -51,6 +51,9 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
         
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center relative z-10">
           <div className="lg:col-span-7 order-2 lg:order-1">
+            <Link href="/programs" className="lg:hidden inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Curriculum
+            </Link>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

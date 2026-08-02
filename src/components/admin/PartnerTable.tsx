@@ -90,7 +90,7 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
           )}
         </div>
       ) : (
-        <div className="bg-card/50 border border-border/50 rounded-xl overflow-hidden">
+        <div className="bg-card/50 border border-border/50 rounded-xl overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border/30">
@@ -117,18 +117,23 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {item.logo && !item.logo.includes("placeholder") ? (
-                          <img src={item.logo} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">
-                            {item.name.split(" ").map(w => w[0]).join("").slice(0, 2)}
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {item.logo && !item.logo.includes("placeholder") ? (
+                            <img src={item.logo} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">
+                              {item.name.split(" ").map(w => w[0]).join("").slice(0, 2)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium text-secondary block truncate">{item.name}</span>
+                          <span className="text-xs text-muted-foreground/60 block truncate sm:hidden">
+                            {item.url || "—"}
                           </span>
-                        )}
+                        </div>
                       </div>
-                      <span className="text-sm font-medium text-secondary">{item.name}</span>
-                    </div>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
                     {item.url ? (

@@ -27,8 +27,8 @@ On the admin side, the team gets a dashboard where they can manage all of that t
 - Next.js 16 (App Router), React 19
 - Tailwind CSS v4
 - Neon Postgres, no ORM, just raw SQL through a small `db` helper I wrote
-- Custom HMAC-signed cookie sessions for auth
-- Paystack for payments, Resend for email
+- Custom HMAC-signed cookie sessions for auth, backed by an Express auth service (`bmac-express-server`)
+- Paystack for payments; Nodemailer SMTP via the Express backend for admin email, Resend for the public contact form
 - TipTap for the CMS editor, Chart.js for the admin analytics
 - Deployed on Vercel
 
@@ -55,7 +55,8 @@ cd bmac-next
 ```sh
 npm install
 ```
-3. Set up environment variables
+3. Set up the Express auth backend first (it owns admin auth + admin email). See [SETUP.md](SETUP.md).
+4. Set up environment variables
 ```sh
 cp .env.example .env.local
 ```
@@ -64,23 +65,23 @@ Fill in the values below (see `SETUP.md` for where to get each one):
 | Variable | Purpose |
 |---|---|
 | `NEON_DB_URL` | Postgres connection string |
-| `SUPER_ADMIN_EMAIL` | First admin email |
-| `SUPER_ADMIN_PASSWORD_HASH` | Generate with `node scripts/generate-password-hash.mjs <password>` |
 | `SUPER_ADMIN_COOKIE_SECRET` | Generate with `openssl rand -hex 32` |
+| `EMAIL_SERVICE_URL` | Express backend URL (`http://localhost:3001` locally) |
+| `EMAIL_SERVICE_API_KEY` | Shared key, must match the backend's `EMAIL_SERVICE_API_KEY` |
 | `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Paystack public key |
 | `PAYSTACK_SECRET_KEY` | Paystack secret key |
-| `RESEND_API_KEY` | Resend API key |
+| `RESEND_API_KEY` | Resend API key (contact form only) |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` for local dev |
 
-4. Seed the database
+5. Seed the database
 ```sh
 psql $NEON_DB_URL -f scripts/seed.sql
 ```
-5. Start the dev server
+6. Start the dev server
 ```sh
 npm run dev
 ```
-Public site at `localhost:3000`, admin at `localhost:3000/admin`.
+Public site at `localhost:3000`, admin at `localhost:3000/admin`. First admin is registered at `localhost:3000/admin/setup`.
 
 Other commands: `npm run build`, `npm test`, `npm run lint`, `npx tsc --noEmit`.
 
