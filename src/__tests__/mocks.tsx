@@ -1,9 +1,12 @@
 import { vi } from "vitest";
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => {
+  default: (props: any) => {
+    const { src, alt, fill, priority, ...rest } = props;
+    void fill;
+    void priority;
     const NextImage = "img";
-    return <NextImage src={src} alt={alt} {...props} />;
+    return <NextImage src={src} alt={alt} {...rest} />;
   },
 }));
 
@@ -15,21 +18,54 @@ vi.mock("next/link", () => ({
 }));
 
 const mockUsePathname = vi.fn().mockReturnValue("/");
+const mockUseRouter = vi.fn(() => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }));
+const mockRedirect = vi.fn();
 vi.mock("next/navigation", () => ({
   usePathname: (...args: any[]) => mockUsePathname(...args),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  useRouter: (...args: any[]) => mockUseRouter(...args),
+  redirect: (...args: any[]) => mockRedirect(...args),
 }));
 
-export { mockUsePathname };
+export { mockUsePathname, mockUseRouter, mockRedirect };
+
+const motionOnlyProps = [
+  "animate", "whileHover", "whileTap", "whileInView", "whileFocus", "whileDrag",
+  "initial", "transition", "variants", "viewport", "exit", "layout", "layoutId",
+];
+
+function domProps(props: any) {
+  const rest = { ...props };
+  motionOnlyProps.forEach((p) => delete rest[p]);
+  return rest;
+}
+
+const motionTag = (Tag: string) => {
+  const Comp = ({ children, ...props }: any) => {
+    const El = Tag as any;
+    return <El {...domProps(props)}>{children}</El>;
+  };
+  Comp.displayName = `motion.${Tag}`;
+  return Comp;
+};
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
-    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
-    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
-    h2: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
-    h3: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
+    div: motionTag("div"),
+    section: motionTag("section"),
+    span: motionTag("span"),
+    p: motionTag("p"),
+    h2: motionTag("h2"),
+    h3: motionTag("h3"),
+    button: motionTag("button"),
+    img: motionTag("img"),
+    a: motionTag("a"),
+    ul: motionTag("ul"),
+    li: motionTag("li"),
+    circle: motionTag("circle"),
+    g: motionTag("g"),
+    path: motionTag("path"),
+    rect: motionTag("rect"),
+    text: motionTag("text"),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
