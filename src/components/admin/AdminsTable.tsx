@@ -7,6 +7,31 @@ import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
 import { adminResetPassword } from "@/actions/admin-auth";
 import { deleteAdminUser, updateAdminUser, resendCredentialsAction } from "@/actions/admin-users";
+import type { AdminRole, Permission } from "@/types/cms";
+
+const allPermissions: { key: Permission; label: string }[] = [
+  { key: "manage_users", label: "Manage Users" },
+  { key: "edit_content", label: "Edit Content" },
+  { key: "manage_courses", label: "Manage Courses" },
+  { key: "manage_partners", label: "Manage Partners" },
+  { key: "view_analytics", label: "View Analytics" },
+  { key: "access_settings", label: "Access Settings" },
+  { key: "delete_records", label: "Delete Records" },
+  { key: "manage_moderators", label: "Manage Moderators" },
+];
+
+function parsePerms(p: unknown): Permission[] {
+  if (Array.isArray(p)) return p as Permission[];
+  if (typeof p === "string") {
+    try {
+      const arr = JSON.parse(p);
+      return Array.isArray(arr) ? (arr as Permission[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
 
 export default function AdminsTable({ initialData = [] }: { initialData?: any[] }) {
   const [items, setItems] = useState<any[]>(() => initialData.slice().reverse());
@@ -17,6 +42,8 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
   const [editing, setEditing] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState<AdminRole>("moderator");
+  const [editPerms, setEditPerms] = useState<Permission[]>([]);
   const [editSaving, setEditSaving] = useState(false);
   const [credentials, setCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
 
@@ -49,16 +76,26 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
     setEditing(u);
     setEditName(u.first_name || "");
     setEditEmail(u.email || "");
+    setEditRole((u.role === "super_admin" ? "super_admin" : "moderator") as AdminRole);
+    setEditPerms(parsePerms(u.permissions));
   }
 
   async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing) return;
     setEditSaving(true);
-    const result = await updateAdminUser(editing.id, { firstName: editName.trim(), email: editEmail.trim() });
+    const opts: { firstName?: string; email?: string; role?: AdminRole; permissions?: Permission[] } = {
+      firstName: editName.trim(),
+      email: editEmail.trim(),
+    };
+    const isSuper = editRole === "super_admin";
+    const nextPerms = isSuper ? allPermissions.map(p => p.key) : editPerms;
+    if (editRole !== editing.role) opts.role = editRole;
+    if (JSON.stringify(nextPerms) !== JSON.stringify(parsePerms(editing.permissions))) opts.permissions = nextPerms;
+    const result = await updateAdminUser(editing.id, opts);
     setEditSaving(false);
     if (result.error) { toast(result.error, "error"); return; }
-    setItems(prev => prev.map(u => u.id === editing.id ? { ...u, first_name: editName.trim(), email: editEmail.trim() } : u));
+    setItems(prev => prev.map(u => u.id === editing.id ? { ...u, first_name: editName.trim(), email: editEmail.trim(), role: editRole, permissions: nextPerms } : u));
     setEditing(null);
     toast("Admin updated", "success");
   }
@@ -178,7 +215,7 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                         <div className="flex items-center justify-end gap-1">
                           <button
                             className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-                            title="Edit name / email"
+                            title="Edit admin"
                             onClick={() => openEdit(u)}>
                             <Pencil size={14} />
                           </button>
@@ -247,6 +284,40 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                   className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                 {editing.email === currentUser?.email && (
                   <p className="text-xs text-muted-foreground">You cannot change your own email.</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-secondary">Role</label>
+                <select value={editRole} onChange={e => setEditRole(e.target.value as AdminRole)} disabled={editing.email === currentUser?.email}
+                  className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-60">
+                  <option value="moderator">Moderator</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+                {editing.email === currentUser?.email && (
+                  <p className="text-xs text-muted-foreground">You cannot change your own role.</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-secondary">Permissions</label>
+                {editRole === "super_admin" ? (
+                  <p className="text-xs text-muted-foreground">Super admins automatically receive all permissions.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {allPermissions.map(perm => {
+                      const checked = editPerms.includes(perm.key);
+                      return (
+                        <label key={perm.key}
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm cursor-pointer transition-all ${
+                            checked ? "border-primary/40 bg-primary/5 text-secondary" : "border-input bg-background text-muted-foreground hover:border-primary/30"
+                          }`}>
+                          <input type="checkbox" checked={checked} disabled={editing.email === currentUser?.email}
+                            onChange={() => setEditPerms(p => p.includes(perm.key) ? p.filter(k => k !== perm.key) : [...p, perm.key])}
+                            className="h-4 w-4 rounded border-input accent-primary" />
+                          <span>{perm.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>

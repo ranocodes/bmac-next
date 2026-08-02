@@ -13,6 +13,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
 import { logoutAdmin } from "@/actions/admin-auth";
+import ProfileDropdown from "@/components/admin/ProfileDropdown";
 import { ShieldOff } from "lucide-react";
 
 interface AdminUser {
@@ -107,7 +108,6 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -253,27 +253,12 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
           <div className="flex-1" />
-          <div className="relative">
-            <button onClick={() => setProfileOpen(p => !p)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-              <span className="text-xs font-bold text-primary">{firstName ? firstName.charAt(0).toUpperCase() : "?"}</span>
-            </button>
-            {profileOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border/50 rounded-xl shadow-lg z-50 py-2 overflow-hidden">
-                  <div className="px-4 py-2 border-b border-border/30">
-                    <p className="text-xs text-muted-foreground">Signed in as</p>
-                    <p className="text-sm font-medium text-secondary truncate">{email}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 mt-0.5">{role.replace("_", " ")}</p>
-                  </div>
-                  <button onClick={() => logoutAdmin().catch(() => window.location.assign("/admin/login"))}
-                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
-                    <LogOut size={15} /> Logout
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <ProfileDropdown
+            firstName={firstName}
+            email={email}
+            role={role}
+            onLogout={() => logoutAdmin().catch(() => window.location.assign("/admin/login"))}
+          />
           <span className="text-sm font-medium text-secondary hidden sm:block">{firstName}</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">

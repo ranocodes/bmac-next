@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { logActivity } from "./activity-logs";
 import { sendAdminDeletedNotification, sendAdminDeleteAttemptAlert } from "@/lib/email";
+import type { AdminRole, Permission } from "@/types/cms";
 
 export async function getAdminUsers() {
   await requirePermission("manage_users");
@@ -59,7 +60,7 @@ export async function deleteAdminUser(id: string) {
 
 export async function updateAdminUser(
   id: string,
-  opts: { firstName?: string; email?: string }
+  opts: { firstName?: string; email?: string; role?: AdminRole; permissions?: Permission[] }
 ): Promise<{ error?: string }> {
   const admin = await requirePermission("manage_users");
   const { updateAdmin } = await import("@/lib/auth/client");
@@ -68,9 +69,26 @@ export async function updateAdminUser(
     return { error: "Cannot change your own email" };
   }
 
+  if (opts.role && opts.role !== "super_admin" && admin.role === "super_admin") {
+    const rows = await db.query<{ count: string }>(
+      "SELECT COUNT(*) AS count FROM public.admin_users WHERE role = 'super_admin'"
+    );
+    if (Number(rows[0]?.count ?? 0) <= 1) {
+      return { error: "Cannot demote the last super admin" };
+    }
+  }
+
+  if (opts.role && admin.role !== "super_admin") {
+    return { error: "Only a super admin can change roles" };
+  }
+
   const result = await updateAdmin(id, opts);
   if (result.error) return { error: result.error };
-  logActivity(admin.email, "admin_update", "auth", { details: `Updated ${result.email || id}` });
+  if (opts.role !== undefined || opts.permissions !== undefined) {
+    logActivity(admin.email, "admin_role_update", "auth", { details: `Role/permissions updated for ${result.email || id}` });
+  } else {
+    logActivity(admin.email, "admin_update", "auth", { details: `Updated ${result.email || id}` });
+  }
   return {};
 }
 

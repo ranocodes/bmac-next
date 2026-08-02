@@ -1,5 +1,9 @@
 # BMAC Next — Setup Guide
 
+> For **production** deployment, see [`DEPLOYMENT.md`](./DEPLOYMENT.md) — the
+> production checklist (env matrix, `/health`, shared-key auth, first-admin
+> bootstrap).
+
 ## Prerequisites
 
 - Node.js 20+
@@ -58,7 +62,7 @@ Then in `bmac-next/.env.local`:
 - `EMAIL_SERVICE_URL=http://localhost:3001`
 - `EMAIL_SERVICE_API_KEY=<the exact same key as the backend .env>`
 
-**Deployed**: both apps run on Vercel. `EMAIL_SERVICE_URL` must point to the deployed Express service (e.g. `https://bmac-express-server.vercel.app`).
+**Deployed**: both apps run on Vercel. `EMAIL_SERVICE_URL` must point to the deployed Express service (e.g. `https://bmac-express-server.vercel.app`). Verify the deployed backend with `curl https://<express-url>/health` → `{"status":"ok"}`. All auth calls use the shared `x-api-key` header (`EMAIL_SERVICE_API_KEY`).
 
 ---
 
