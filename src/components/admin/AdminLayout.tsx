@@ -259,7 +259,6 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             role={role}
             onLogout={() => logoutAdmin().catch(() => window.location.assign("/admin/login"))}
           />
-          <span className="text-sm font-medium text-secondary hidden sm:block">{firstName}</span>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           {denied ? (
