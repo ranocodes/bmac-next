@@ -66,7 +66,7 @@ export default function TestimonialForm({ initialData }: { initialData?: any | n
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back</span>
           </Link>
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end min-w-0 flex-nowrap overflow-x-auto">
             <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg border border-border/30 shrink-0">
               <button
                 type="button"

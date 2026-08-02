@@ -162,7 +162,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
           <div className="lg:col-span-7">
             <div className="prose prose-slate lg:prose-xl max-w-none mb-20 text-muted-foreground">
               <h3 className="font-display text-4xl font-extrabold text-secondary mb-10 tracking-tight">The Vision</h3>
-              <div className="text-lg md:text-xl leading-[1.8] mb-12 font-medium">
+              <div className="text-lg md:text-xl leading-[1.8] mb-12 font-medium overflow-x-auto">
                 <ReactMarkdown>{event.longDesc}</ReactMarkdown>
               </div>
 

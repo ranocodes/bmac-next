@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
 
 
 interface NavLink {
@@ -43,9 +44,9 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
   const toggleMenu = (open: boolean) => {
     setIsOpen(open);
     if (open) {
-      document.body.style.overflow = "hidden";
+      lockScroll();
     } else {
-      document.body.style.overflow = "unset";
+      unlockScroll();
     }
   };
 
