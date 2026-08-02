@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Settings, User, LogOut } from "lucide-react";
+import { Settings, User, LogOut, Globe } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface ProfileDropdownProps {
@@ -15,6 +15,7 @@ interface ProfileDropdownProps {
 const menuItems = [
   { label: "Profile", href: "/admin", icon: User },
   { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "View Site", href: "/", icon: Globe },
 ];
 
 export default function ProfileDropdown({ firstName, email, role, onLogout }: ProfileDropdownProps) {
@@ -28,9 +29,9 @@ export default function ProfileDropdown({ firstName, email, role, onLogout }: Pr
         onClick={() => setIsOpen(p => !p)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-2 pl-3 transition-all duration-200 hover:border-border hover:bg-muted/40 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        className="flex items-center gap-3 border border-border/60 bg-card p-1.5 sm:p-2 sm:pl-3 transition-all duration-200 hover:border-border hover:bg-muted/40 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
-        <div className="flex-1 text-left">
+        <div className="hidden sm:block flex-1 text-left">
           <div className="font-medium text-sm text-secondary leading-tight tracking-tight">
             {firstName || "Admin"}
           </div>
@@ -57,7 +58,7 @@ export default function ProfileDropdown({ firstName, email, role, onLogout }: Pr
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.12 }}
               role="menu"
-              className="absolute right-0 top-full z-50 mt-2 w-64 origin-top-right rounded-2xl border border-border/60 bg-card/95 p-2 shadow-xl backdrop-blur-sm"
+              className="absolute right-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] origin-top-right border border-border/60 bg-card/95 p-2 shadow-xl backdrop-blur-sm"
             >
               <div className="rounded-xl bg-muted/40 px-3 py-2.5">
                 <p className="truncate text-sm font-medium leading-tight text-secondary">
