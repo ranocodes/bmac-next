@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import crypto from "crypto";
 
 const mockQuery = vi.fn();
@@ -19,7 +19,10 @@ function signPayload(body: string): string {
 }
 
 async function postWebhook(payload: object, signature?: string) {
-  const body = JSON.stringify(payload);
+  return postRaw(JSON.stringify(payload), signature);
+}
+
+async function postRaw(body: string, signature?: string) {
   const { POST } = await import("@/app/api/webhooks/paystack/route");
   const req = new Request("http://localhost:3000/api/webhooks/paystack", {
     method: "POST",
@@ -148,5 +151,69 @@ describe("Paystack Webhook", () => {
     expect(res.status).toBe(200);
     expect(mockQuery).not.toHaveBeenCalled();
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when PAYSTACK_SECRET_KEY is unset", async () => {
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "");
+    const res = await postWebhook({ event: "charge.success" });
+    expect(res.status).toBe(401);
+    const json = await res.json();
+    expect(json.error).toBe("Unauthorized");
+    expect(mockQuery).not.toHaveBeenCalled();
+  });
+
+  it("rejects on malformed JSON body", async () => {
+    const body = "not-json{";
+    const signature = signPayload(body);
+    // Route has no try/catch around JSON.parse; prod surfaces a 500.
+    await expect(postRaw(body, signature)).rejects.toThrow();
+  });
+
+  it("rejects when dedup query fails", async () => {
+    mockQuery.mockRejectedValue(new Error("db down"));
+
+    const payload = {
+      event: "charge.success",
+      data: {
+        reference: "BMAC-TEST-004",
+        amount: 500000,
+        currency: "NGN",
+        customer: { email: "db-down@example.com" },
+        metadata: { source_type: "donation", source_id: "don-2" },
+      },
+    };
+
+    const signature = signPayload(JSON.stringify(payload));
+    await expect(postWebhook(payload, signature)).rejects.toThrow("db down");
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it("defaults currency and stamps verified_at", async () => {
+    mockQuery.mockResolvedValue([]);
+    mockCreate.mockResolvedValue({ id: "pay-789" });
+
+    const payload = {
+      event: "charge.success",
+      data: {
+        reference: "BMAC-TEST-005",
+        amount: 75000,
+        customer: { email: "default-currency@example.com" },
+        metadata: { source_type: "donation", source_id: "don-3" },
+      },
+    };
+
+    const signature = signPayload(JSON.stringify(payload));
+    const res = await postWebhook(payload, signature);
+    expect(res.status).toBe(200);
+
+    expect(mockCreate).toHaveBeenCalledWith("paystack_payments", expect.objectContaining({
+      currency: "NGN",
+    }));
+    const paymentArgs = mockCreate.mock.calls.find(c => c[0] === "paystack_payments")?.[1];
+    expect(paymentArgs?.metadata?.verified_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 });

@@ -28,6 +28,8 @@ interface CreateAdminResponse {
 interface UpdateAdminResponse {
   email?: string;
   firstName?: string;
+  role?: AdminRole;
+  permissions?: Permission[];
   error?: string;
 }
 
@@ -126,12 +128,14 @@ export async function resetPassword(token: string, newPassword: string): Promise
 
 export async function updateAdmin(
   adminId: string,
-  opts: { firstName?: string; email?: string }
+  opts: { firstName?: string; email?: string; role?: AdminRole; permissions?: Permission[] }
 ): Promise<UpdateAdminResponse> {
   return post<UpdateAdminResponse>("/api/auth/update-admin", {
     adminId,
     firstName: opts.firstName,
     email: opts.email,
+    role: opts.role,
+    permissions: opts.permissions,
   });
 }
 

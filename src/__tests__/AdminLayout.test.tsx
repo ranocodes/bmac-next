@@ -54,4 +54,31 @@ describe("AdminLayout", () => {
     );
     expect(screen.getByText("login content")).toBeInTheDocument();
   });
+
+  it("denied route renders Access Denied and not children", () => {
+    mockUsePathname.mockReturnValue("/admin/settings");
+    render(
+      <AdminLayout
+        user={{ email: "denied@test.com", firstName: "Denied", role: "super_admin", permissions: [] }}
+      >
+        <p>dashboard content</p>
+      </AdminLayout>
+    );
+    expect(screen.getByRole("heading", { name: "Access Denied" })).toBeInTheDocument();
+    expect(screen.getByText(/required permissions/)).toBeInTheDocument();
+    expect(screen.queryByText("dashboard content")).not.toBeInTheDocument();
+  });
+
+  it("permitted route renders children", () => {
+    mockUsePathname.mockReturnValue("/admin/settings");
+    render(
+      <AdminLayout
+        user={{ email: "admin@test.com", firstName: "Admin", role: "super_admin", permissions: ["access_settings"] }}
+      >
+        <p>settings content</p>
+      </AdminLayout>
+    );
+    expect(screen.getByText("settings content")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Access Denied" })).not.toBeInTheDocument();
+  });
 });
