@@ -13,7 +13,36 @@ CREATE TABLE IF NOT EXISTS public.paystack_payments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-TRUNCATE TABLE public.programs, public.events, public.news_articles, public.testimonials, public.team_members, public.impact_stats, public.gallery_items, public.partners, public.site_settings, public.activity_logs, public.paystack_payments RESTART IDENTITY CASCADE;
+CREATE TABLE IF NOT EXISTS public.people (
+  id TEXT PRIMARY KEY,
+  first_name TEXT NOT NULL DEFAULT '',
+  last_name TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  roles JSONB NOT NULL DEFAULT '[]',
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS people_email_lower_idx ON public.people (lower(email)) WHERE (email <> '');
+CREATE UNIQUE INDEX IF NOT EXISTS people_phone_idx ON public.people (phone) WHERE (phone <> '');
+
+CREATE TABLE IF NOT EXISTS public.person_records (
+  id TEXT PRIMARY KEY,
+  person_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  ref_id TEXT NOT NULL DEFAULT '',
+  ref_title TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',
+  meta JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS person_records_person_idx ON public.person_records (person_id);
+CREATE INDEX IF NOT EXISTS person_records_kind_idx ON public.person_records (kind);
+
+TRUNCATE TABLE public.programs, public.events, public.news_articles, public.testimonials, public.team_members, public.impact_stats, public.gallery_items, public.partners, public.site_settings, public.activity_logs, public.paystack_payments, public.people, public.person_records RESTART IDENTITY CASCADE;
 
 INSERT INTO public.programs (id, title, description, long_desc, img, icon, color, details, variant, status, skills, faqs, landing_page) VALUES
 ('public-speaking', 'Public Speaking', 'Master the art of confident communication...', 'Our Public Speaking program is designed to transform shy individuals into confident orators...', '/images/public-speaking.jpg', 'MicVocal', 'text-emerald-400', '12 weeks | Saturdays 10am-12pm | Open to ages 13-18', 'default', 'published', '["Commanding presence","Rhetorical techniques","Critical thinking","Emotional connection","Storytelling","Leadership communication"]', '[{"q":"Is this for beginners?","a":"Yes."},{"q":"Any fees?","a":"Free for members."}]', true),

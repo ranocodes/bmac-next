@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
+import { applyAsPerson } from "@/actions/people";
 
 const ways = [
   {
@@ -64,12 +65,72 @@ export default function GetInvolved() {
   const [selectedWay, setSelectedWay] = useState<any>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
 
-  const handleDonate = (e: any) => {
-    e.preventDefault();
+  const handlePaystackDonation = () => {
     const finalAmount = donateAmount === "custom" ? customAmount : donateAmount;
-    setSubmitted(`Initiating Paystack payment for ₦${finalAmount}`);
+    const amountN = parseInt(finalAmount || "0", 10);
+    if (!amountN || amountN <= 0) {
+      setFormError("Enter a valid amount");
+      setIsSubmitting(false);
+      return;
+    }
+    // @ts-ignore
+    const handler = window.PaystackPop.setup({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+      email: formData.email,
+      amount: amountN * 100,
+      currency: "NGN",
+      ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+      metadata: {
+        source_type: "donation",
+        source_id: "get-involved",
+        payer_name: formData.name,
+      },
+      callback: function() {
+        setIsSubmitting(false);
+        setSubmitted("Donation received. Thank you!");
+      },
+      onClose: function() {
+        setIsSubmitting(false);
+      },
+    });
+    handler.openIframe();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWay) return;
+    setFormError("");
+    setIsSubmitting(true);
+
+    if (selectedWay.id === "donate") {
+      handlePaystackDonation();
+      return;
+    }
+
+    const kindMap: Record<string, "member" | "volunteer" | "partner" | "program"> = {
+      join: "member",
+      volunteer: "volunteer",
+      partner: "partner",
+      school: "program",
+    };
+
+    const res = await applyAsPerson({
+      kind: kindMap[selectedWay.id] || "member",
+      name: formData.name,
+      email: formData.email,
+    });
+    if (res.error) {
+      setFormError(res.error);
+      setIsSubmitting(false);
+      return;
+    }
+    setIsSubmitting(false);
+    setSubmitted("success");
   };
 
   return (
@@ -232,18 +293,41 @@ export default function GetInvolved() {
                     </button>
                   </div>
                 ) : (
-                  <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={selectedWay.id === "donate" ? handleDonate : (e) => { e.preventDefault(); setSubmitted("success"); }}>
+                  <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={handleSubmit}>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Your Identity</label>
-                    <input type="text" placeholder="Full Name" className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all" required />
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all"
+                      required
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Communication</label>
-                    <input type="email" placeholder="Email Address" className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all" required />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all"
+                      required
+                    />
                   </div>
-                  <button className="w-full py-4 md:py-5 bg-accent text-accent-foreground font-bold rounded-xl md:rounded-2xl text-sm hover:bg-card hover:text-accent transition-all flex items-center justify-center gap-3 mt-6 shadow-xl shadow-accent/10 active:scale-[0.98]">
-                    {selectedWay.id === "donate" ? "Complete Donation" : "Initiate Partnership"} 
-                    <ArrowRight size={18} />
+                  {formError && (
+                    <p className="text-xs font-bold text-red-300 px-2">{formError}</p>
+                  )}
+                  <button
+                    disabled={isSubmitting}
+                    className="w-full py-4 md:py-5 bg-accent text-accent-foreground font-bold rounded-xl md:rounded-2xl text-sm hover:bg-card hover:text-accent transition-all flex items-center justify-center gap-3 mt-6 shadow-xl shadow-accent/10 active:scale-[0.98] disabled:opacity-70"
+                  >
+                    {isSubmitting ? (
+                      <div className="w-5 h-5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>{selectedWay.id === "donate" ? "Complete Donation" : "Initiate Partnership"} <ArrowRight size={18} /></>
+                    )}
                   </button>
                 </form>)}
               </div>
