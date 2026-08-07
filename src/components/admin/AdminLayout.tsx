@@ -63,6 +63,7 @@ const navGroups: NavGroup[] = [
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_users" },
       { label: "Payments", href: "/admin/payments", icon: CreditCard, permission: "manage_users" },
+      { label: "People", href: "/admin/people", icon: Users, permission: "manage_users" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
@@ -90,6 +91,7 @@ const routePermissions: Record<string, Permission> = {
   "/admin/stats": "edit_content",
   "/admin/logs": "manage_users",
   "/admin/payments": "manage_users",
+  "/admin/people": "manage_users",
   "/admin/admins": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",

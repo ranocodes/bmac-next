@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
+import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from '@/actions/people';
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -57,6 +58,24 @@ export async function POST(request: Request) {
       resource_id: paymentId,
       details: `Payment ${reference} verified: ${currency}${amount} from ${customer?.email}`,
     });
+
+    const isDonation = metadata?.source_type === "donation";
+    const payerEmail = customer?.email || "";
+    if (payerEmail) {
+      const person = await findOrCreatePerson({
+        firstName: metadata?.payer_name || payerEmail,
+        email: payerEmail,
+      });
+      if (person) {
+        await ensurePersonRoles(person.id, isDonation ? ["donor"] : ["attendee"]);
+        await upsertPersonRecord(person.id, isDonation ? "donation" : "event_registration", {
+          refId: reference,
+          refTitle: isDonation ? "Donation" : metadata?.custom_fields?.[0]?.value || "",
+          status: "completed",
+          meta: { amount, currency, reference },
+        });
+      }
+    }
   }
 
   return NextResponse.json({ status: 'success' });

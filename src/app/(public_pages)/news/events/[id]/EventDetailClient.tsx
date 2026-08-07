@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-r
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
+import { registerForFreeEvent } from "@/actions/people";
 import type { EventPass } from "@/types/cms";
 
 function formatDisplayDate(raw: string | undefined): string {
@@ -34,6 +35,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const [event] = useState<EventPass | null>(found);
   const [isReserved, setIsReserved] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
 
   const handlePaystackPayment = () => {
@@ -77,11 +79,22 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
     e.preventDefault();
     if (!event) return;
     setIsPending(true);
+    setFormError("");
 
     if (event.isPaid) {
       handlePaystackPayment();
     } else {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const res = await registerForFreeEvent({
+        eventId: event.id,
+        eventTitle: event.title,
+        name: formData.name,
+        email: formData.email,
+      });
+      if (res.error) {
+        setFormError(res.error);
+        setIsPending(false);
+        return;
+      }
       setIsPending(false);
       setIsReserved(true);
     }
@@ -220,9 +233,13 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
                                className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
                                required 
                              />
-                          </div>
-                          
-                          <button 
+                           </div>
+
+                           {formError && (
+                             <p className="text-sm font-bold text-red-500 px-2">{formError}</p>
+                           )}
+
+                           <button 
                             disabled={isPending}
                             className="group relative w-full py-4 md:py-6 bg-gradient-to-r from-secondary to-primary text-card rounded-[1.5rem] md:rounded-[2rem] font-extrabold text-sm md:text-base hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-4 mt-5 md:mt-8 shadow-2xl disabled:opacity-70 active:scale-[0.98] overflow-hidden"
                           >

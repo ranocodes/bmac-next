@@ -2,6 +2,7 @@
 
 import { Resend } from "resend";
 import { logActivity } from "@/actions/activity-logs";
+import { findOrCreatePerson, upsertPersonRecord } from "@/actions/people";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -33,6 +34,19 @@ export async function sendContactMessage(
       ].join("\n"),
     });
     logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` });
+
+    try {
+      const person = await findOrCreatePerson({ firstName: name, email, phone });
+      if (person) {
+        await upsertPersonRecord(person.id, "contact", {
+          status: "received",
+          meta: { message: message.slice(0, 500) },
+        });
+      }
+    } catch (err) {
+      console.error("Contact persistence error:", err);
+    }
+
     return { success: true };
   } catch (err) {
     console.error("Resend error:", err);

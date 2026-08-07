@@ -146,3 +146,47 @@ export interface ActivityLog {
   timestamp: number;
   ip?: string;
 }
+
+export type PersonRole =
+  | "attendee"
+  | "donor"
+  | "applicant"
+  | "volunteer"
+  | "partner contact"
+  | "member"
+  | "admin";
+
+export type PersonRecordKind =
+  | "event_registration"
+  | "donation"
+  | "member"
+  | "volunteer"
+  | "partner"
+  | "program"
+  | "contact"
+  | "admin";
+
+export interface Person {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  roles: PersonRole[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PersonRecord {
+  id: string;
+  personId: string;
+  kind: PersonRecordKind;
+  refId: string;
+  refTitle: string;
+  status: string;
+  meta: Record<string, unknown>;
+  createdAt: string;
+}
+
+export type PersonRow = Person & { recordCount: number };

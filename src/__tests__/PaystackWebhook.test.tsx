@@ -3,12 +3,20 @@ import crypto from "crypto";
 
 const mockQuery = vi.fn();
 const mockCreate = vi.fn();
+const mockFindOrCreate = vi.fn();
+const mockEnsureRoles = vi.fn();
+const mockUpsertRecord = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: {
-    query: (...args: any[]) => mockQuery(...args),
-    create: (...args: any[]) => mockCreate(...args),
+    query: (...args: unknown[]) => mockQuery(...args),
+    create: (...args: unknown[]) => mockCreate(...args),
   },
+}));
+vi.mock("@/actions/people", () => ({
+  findOrCreatePerson: (...args: unknown[]) => mockFindOrCreate(...args),
+  ensurePersonRoles: (...args: unknown[]) => mockEnsureRoles(...args),
+  upsertPersonRecord: (...args: unknown[]) => mockUpsertRecord(...args),
 }));
 
 const PAYSTACK_SECRET = "test-secret-key";
@@ -95,6 +103,64 @@ describe("Paystack Webhook", () => {
     expect(mockCreate).toHaveBeenCalledWith("activity_logs", expect.objectContaining({
       action: "payment_verified",
     }));
+  });
+
+  it("links person, role, and record on valid charge.success", async () => {
+    mockQuery.mockResolvedValue([]);
+    mockCreate.mockResolvedValue({ id: "pay-person" });
+    mockFindOrCreate.mockResolvedValue({ id: "person-1", email: "person@example.com" });
+
+    const payload = {
+      event: "charge.success",
+      data: {
+        reference: "BMAC-TEST-PERSON",
+        amount: 100000,
+        currency: "NGN",
+        customer: { email: "person@example.com" },
+        metadata: { source_type: "donation", source_id: "get-involved", payer_name: "Jane Doe" },
+      },
+    };
+
+    const signature = signPayload(JSON.stringify(payload));
+    const res = await postWebhook(payload, signature);
+    expect(res.status).toBe(200);
+
+    expect(mockFindOrCreate).toHaveBeenCalledWith({
+      firstName: "Jane Doe",
+      email: "person@example.com",
+    });
+    expect(mockEnsureRoles).toHaveBeenCalledWith("person-1", ["donor"]);
+    expect(mockUpsertRecord).toHaveBeenCalledWith(
+      "person-1",
+      "donation",
+      expect.objectContaining({
+        refId: "BMAC-TEST-PERSON",
+        status: "completed",
+        meta: expect.objectContaining({ amount: 100000, currency: "NGN" }),
+      })
+    );
+  });
+
+  it("skips person linking when payment has no customer email", async () => {
+    mockQuery.mockResolvedValue([]);
+    mockCreate.mockResolvedValue({ id: "pay-noemail" });
+
+    const payload = {
+      event: "charge.success",
+      data: {
+        reference: "BMAC-TEST-NOEMAIL",
+        amount: 100000,
+        currency: "NGN",
+        customer: { email: "" },
+        metadata: {},
+      },
+    };
+
+    const signature = signPayload(JSON.stringify(payload));
+    const res = await postWebhook(payload, signature);
+    expect(res.status).toBe(200);
+    expect(mockFindOrCreate).not.toHaveBeenCalled();
+    expect(mockUpsertRecord).not.toHaveBeenCalled();
   });
 
   it("stores unknown source when metadata lacks source_type/source_id", async () => {
