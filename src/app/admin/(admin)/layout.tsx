@@ -1,5 +1,5 @@
 import AdminLayout from "@/components/admin/AdminLayout";
-import { getSuperAdminSession } from "@/lib/auth/super-admin";
+import { getSuperAdminSession, ALL_PERMISSIONS } from "@/lib/auth/super-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         email: session.email,
         firstName: session.firstName || session.email.split("@")[0],
         role: session.role,
-        permissions: session.permissions,
+        permissions: session.role === "super_admin" ? ALL_PERMISSIONS : session.permissions,
       }}
     >
       {children}
