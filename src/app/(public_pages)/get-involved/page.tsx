@@ -71,6 +71,17 @@ export default function GetInvolved() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
 
+  const openWay = (way: any) => {
+    setFormError("");
+    setSubmitted(null);
+    setSelectedWay(way);
+  };
+
+  const closeModal = () => {
+    setSubmitted(null);
+    setSelectedWay(null);
+  };
+
   const handlePaystackDonation = async () => {
     const finalAmount = donateAmount === "custom" ? customAmount : donateAmount;
     const amountN = parseInt(finalAmount || "0", 10);
@@ -174,7 +185,7 @@ export default function GetInvolved() {
                 key={way.id}
                 delay={i * 0.1}
                 className="flex flex-col h-full bg-card border-none shadow-sm hover:shadow-xl transition-all"
-                onClick={() => setSelectedWay(way)}
+                onClick={() => openWay(way)}
               >
                 <div className="flex flex-col h-full">
                   <div className={`w-12 h-12 rounded-2xl ${way.color} flex items-center justify-center mb-6`}>
@@ -203,7 +214,7 @@ export default function GetInvolved() {
       </section>
 
       {/* Unified Modal */}
-      <Modal isOpen={!!selectedWay} onClose={() => setSelectedWay(null)}>
+      <Modal isOpen={!!selectedWay} onClose={closeModal}>
         {selectedWay && (
           <div className="bg-card">
             {/* Modal Header */}
