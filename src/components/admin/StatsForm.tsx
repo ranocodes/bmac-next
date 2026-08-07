@@ -25,7 +25,7 @@ export default function StatsForm({ initialData }: { initialData?: any | null })
   const { toast } = useToast();
 
   async function handleSubmit(publishStatus: "draft" | "published") {
-    if (!user?.permissions.includes("edit_content")) {
+    if (!user?.permissions.includes("manage_stats")) {
       setError("You don't have permission to manage stats");
       return;
     }

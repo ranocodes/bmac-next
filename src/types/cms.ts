@@ -92,14 +92,22 @@ export interface Category {
 export type AdminRole = "super_admin" | "administrator" | "moderator";
 
 export type Permission =
-  | "manage_users"
-  | "edit_content"
-  | "manage_courses"
+  | "manage_news"
+  | "manage_events"
+  | "manage_programs"
+  | "manage_gallery"
+  | "manage_team"
+  | "manage_testimonials"
+  | "manage_categories"
   | "manage_partners"
-  | "view_analytics"
+  | "manage_stats"
+  | "manage_payments"
+  | "manage_people"
+  | "manage_logs"
+  | "manage_users"
   | "access_settings"
-  | "delete_records"
-  | "manage_moderators";
+  | "export_data"
+  | "view_analytics";
 
 export interface Partner {
   id: string;

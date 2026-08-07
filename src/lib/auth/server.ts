@@ -1,4 +1,5 @@
-import { getSuperAdminSession } from "@/lib/auth/super-admin";
+import { redirect } from "next/navigation";
+import { getSuperAdminSession, ALL_PERMISSIONS } from "@/lib/auth/super-admin";
 import type { Permission } from "@/types/cms";
 
 export const auth = {
@@ -41,6 +42,15 @@ export async function requireAdmin() {
 
 export async function requirePermission(permission: Permission) {
   const admin = await requireAdmin();
+  if (admin.role === "super_admin") return admin;
   if (!admin.permissions?.includes(permission)) throw new Error("Forbidden: insufficient permissions");
   return admin;
+}
+
+export async function requirePage(permission: Permission) {
+  try {
+    return await requirePermission(permission);
+  } catch (e) {
+    redirect(e instanceof Error && e.message === "Unauthorized" ? "/admin/login" : "/admin");
+  }
 }

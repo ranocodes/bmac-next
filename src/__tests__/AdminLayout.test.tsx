@@ -81,4 +81,30 @@ describe("AdminLayout", () => {
     expect(screen.getByText("settings content")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Access Denied" })).not.toBeInTheDocument();
   });
+
+  it("events route requires manage_events", () => {
+    mockUsePathname.mockReturnValue("/admin/events");
+    render(
+      <AdminLayout
+        user={{ email: "editor@test.com", firstName: "Editor", role: "moderator", permissions: ["manage_events"] }}
+      >
+        <p>events content</p>
+      </AdminLayout>
+    );
+    expect(screen.getByText("events content")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Access Denied" })).not.toBeInTheDocument();
+  });
+
+  it("payments route without manage_payments renders Access Denied", () => {
+    mockUsePathname.mockReturnValue("/admin/payments");
+    render(
+      <AdminLayout
+        user={{ email: "editor@test.com", firstName: "Editor", role: "moderator", permissions: ["manage_events"] }}
+      >
+        <p>payments content</p>
+      </AdminLayout>
+    );
+    expect(screen.getByRole("heading", { name: "Access Denied" })).toBeInTheDocument();
+    expect(screen.queryByText("payments content")).not.toBeInTheDocument();
+  });
 });

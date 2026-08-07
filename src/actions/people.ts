@@ -228,14 +228,14 @@ async function fetchPeopleRows(): Promise<PersonRow[]> {
 }
 
 export async function getPeople(): Promise<PersonRow[]> {
-  await requirePermission("manage_users");
+  await requirePermission("manage_people");
   return fetchPeopleRows();
 }
 
 export async function getPerson(
   id: string
 ): Promise<{ person: Person; records: PersonRecord[]; isAdmin: boolean } | null> {
-  await requirePermission("manage_users");
+  await requirePermission("manage_people");
   const rows = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [id]);
   if (!rows.length) return null;
   const recRows = await db.query<PersonRecordDbRow>(
@@ -252,7 +252,7 @@ export async function getPerson(
 }
 
 export async function exportPeople(): Promise<PersonRow[]> {
-  await requirePermission("manage_users");
+  await requirePermission("export_data");
   return fetchPeopleRows();
 }
 
