@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
 import { registerForFreeEvent } from "@/actions/people";
+import { loadPaystack } from "@/lib/paystack";
 import type { EventPass } from "@/types/cms";
 
 function formatDisplayDate(raw: string | undefined): string {
@@ -38,41 +39,46 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
 
-  const handlePaystackPayment = () => {
+  const handlePaystackPayment = async () => {
     if (!event) return;
-    // @ts-ignore
-    const handler = window.PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
-      email: formData.email,
-      amount: (event.price || 0) * 100,
-      currency: "NGN",
-      ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
-      metadata: {
-        source_type: "event_registration",
-        source_id: event.id,
-        payer_name: formData.name,
-        custom_fields: [
-          {
-            display_name: "Event Title",
-            variable_name: "event_title",
-            value: event.title
-          },
-          {
-            display_name: "Attendee Name",
-            variable_name: "attendee_name",
-            value: formData.name
-          }
-        ]
-      },
-      callback: function(response: any) {
-        console.log("Payment successful. Reference: " + response.reference);
-        setIsReserved(true);
-      },
-      onClose: function() {
-        setIsPending(false);
-      }
-    });
-    handler.openIframe();
+    try {
+      const PaystackPop = await loadPaystack();
+      const handler = PaystackPop.setup({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+        email: formData.email,
+        amount: (event.price || 0) * 100,
+        currency: "NGN",
+        ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+        metadata: {
+          source_type: "event_registration",
+          source_id: event.id,
+          payer_name: formData.name,
+          custom_fields: [
+            {
+              display_name: "Event Title",
+              variable_name: "event_title",
+              value: event.title
+            },
+            {
+              display_name: "Attendee Name",
+              variable_name: "attendee_name",
+              value: formData.name
+            }
+          ]
+        },
+        callback: function(response: any) {
+          console.log("Payment successful. Reference: " + response.reference);
+          setIsReserved(true);
+        },
+        onClose: function() {
+          setIsPending(false);
+        }
+      });
+      handler.openIframe();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Payment could not start. Please try again.");
+      setIsPending(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +88,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
     setFormError("");
 
     if (event.isPaid) {
-      handlePaystackPayment();
+      await handlePaystackPayment();
     } else {
       const res = await registerForFreeEvent({
         eventId: event.id,

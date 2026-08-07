@@ -17,6 +17,7 @@ import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { applyAsPerson } from "@/actions/people";
+import { loadPaystack } from "@/lib/paystack";
 
 const ways = [
   {
@@ -70,7 +71,7 @@ export default function GetInvolved() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
 
-  const handlePaystackDonation = () => {
+  const handlePaystackDonation = async () => {
     const finalAmount = donateAmount === "custom" ? customAmount : donateAmount;
     const amountN = parseInt(finalAmount || "0", 10);
     if (!amountN || amountN <= 0) {
@@ -78,27 +79,32 @@ export default function GetInvolved() {
       setIsSubmitting(false);
       return;
     }
-    // @ts-ignore
-    const handler = window.PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
-      email: formData.email,
-      amount: amountN * 100,
-      currency: "NGN",
-      ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
-      metadata: {
-        source_type: "donation",
-        source_id: "get-involved",
-        payer_name: formData.name,
-      },
-      callback: function() {
-        setIsSubmitting(false);
-        setSubmitted("Donation received. Thank you!");
-      },
-      onClose: function() {
-        setIsSubmitting(false);
-      },
-    });
-    handler.openIframe();
+    try {
+      const PaystackPop = await loadPaystack();
+      const handler = PaystackPop.setup({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+        email: formData.email,
+        amount: amountN * 100,
+        currency: "NGN",
+        ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+        metadata: {
+          source_type: "donation",
+          source_id: "get-involved",
+          payer_name: formData.name,
+        },
+        callback: function() {
+          setIsSubmitting(false);
+          setSubmitted("Donation received. Thank you!");
+        },
+        onClose: function() {
+          setIsSubmitting(false);
+        },
+      });
+      handler.openIframe();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Payment could not start. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +114,7 @@ export default function GetInvolved() {
     setIsSubmitting(true);
 
     if (selectedWay.id === "donate") {
-      handlePaystackDonation();
+      await handlePaystackDonation();
       return;
     }
 
@@ -119,11 +125,18 @@ export default function GetInvolved() {
       school: "program",
     };
 
-    const res = await applyAsPerson({
-      kind: kindMap[selectedWay.id] || "member",
-      name: formData.name,
-      email: formData.email,
-    });
+    let res;
+    try {
+      res = await applyAsPerson({
+        kind: kindMap[selectedWay.id] || "member",
+        name: formData.name,
+        email: formData.email,
+      });
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
     if (res.error) {
       setFormError(res.error);
       setIsSubmitting(false);
@@ -132,7 +145,6 @@ export default function GetInvolved() {
     setIsSubmitting(false);
     setSubmitted("success");
   };
-
   return (
     <main suppressHydrationWarning className="bg-background">
       <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
