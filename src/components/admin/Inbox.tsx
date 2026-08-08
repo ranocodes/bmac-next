@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { replyToSubmission } from "@/actions/workflows";
@@ -78,16 +78,12 @@ function timeAgo(iso?: string): string {
 
 export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
   const [items, setItems] = useState<WorkflowItem[]>(() => initialData.map(normalize));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => (initialData.length ? normalize(initialData[0]).id : null));
   const [search, setSearch] = useState("");
   const [filterKind, setFilterKind] = useState<string>("all");
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!selectedId && items.length > 0) setSelectedId(items[0].id);
-  }, [items, selectedId]);
 
   const selected = useMemo(() => items.find(i => i.id === selectedId) || null, [items, selectedId]);
 
