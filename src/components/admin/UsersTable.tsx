@@ -5,6 +5,7 @@ import { Users, Search, Trash2, Shield, ShieldAlert, ShieldCheck, ShieldEllipsis
 import { useAdmin } from "@/lib/auth/admin-context";
 import { updateUserPermissions, deleteAdminUser, refreshSessionPermissions } from "@/actions/admin-users";
 import { useToast } from "@/components/ui/Toast";
+import DeleteReasonModal from "./DeleteReasonModal";
 import type { Permission } from "@/types/cms";
 import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
@@ -28,7 +29,9 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
   const currentUser = useAdmin();
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editPerms, setEditPerms] = useState<Permission[]>([]);
-  const { toast, confirm } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const mapped = initialData.map(u => ({
@@ -73,10 +76,17 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
       toast("Only Super Admin can delete users", "error");
       return;
     }
-    const ok = await confirm(`Delete user ${target?.firstName || userEmail}?`);
-    if (!ok) return;
-    await deleteAdminUser(id);
-    setUsers(p => p.filter(u => u.id !== id));
+    setDeleteTarget({ id, name: target?.firstName || userEmail });
+  }
+
+  async function handleConfirmDelete(reason: string) {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const result = await deleteAdminUser(deleteTarget.id, reason);
+    setDeleting(false);
+    if (result.error) { toast(result.error, "error"); setDeleteTarget(null); return; }
+    setUsers(p => p.filter(u => u.id !== deleteTarget.id));
+    setDeleteTarget(null);
     toast("User deleted", "success");
   }
 
@@ -227,6 +237,15 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
           </div>
         </div>
       )}
+
+      <DeleteReasonModal
+        open={!!deleteTarget}
+        title={`Delete user ${deleteTarget?.name || ""}?`}
+        description="This action cannot be undone."
+        busy={deleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

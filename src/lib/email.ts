@@ -28,8 +28,23 @@ export async function sendPasswordResetEmail(email: string, resetLink: string): 
   return sendRequest({ type: "password-reset", email, resetLink });
 }
 
-export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string): Promise<{ error?: string }> {
-  return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy });
+export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string, reason?: string): Promise<{ error?: string }> {
+  return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy, reason: reason || "" });
+}
+
+export async function sendAdminReplyEmail(opts: {
+  email: string;
+  subject: string;
+  body: string;
+  originalTitle?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "admin-reply",
+    email: opts.email,
+    subject: opts.subject,
+    body: opts.body,
+    originalTitle: opts.originalTitle || "",
+  });
 }
 
 export async function sendAdminDeleteAttemptAlert(email: string, actor: string): Promise<{ error?: string }> {
