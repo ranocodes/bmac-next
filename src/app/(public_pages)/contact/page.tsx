@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import LocationMap from "@/components/ui/expand-map";
+import ConsentCheckbox from "@/components/ConsentCheckbox";
 import { sendContactMessage } from "./actions";
 
 const faqs = [
@@ -106,6 +107,8 @@ export default function Contact() {
                         <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Detailed Message</label>
                         <textarea name="message" rows={4} placeholder="How can we help?" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 resize-none placeholder:text-muted-foreground/40" required />
                      </div>
+
+                     <ConsentCheckbox consentId="contact" />
 
                      <button className="group relative w-full py-4 md:py-5 bg-gradient-to-r from-secondary to-primary rounded-xl md:rounded-2xl font-bold text-card hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-secondary/10 active:scale-[0.98] disabled:opacity-70" disabled={pending}>
                         <span className="relative z-10 flex items-center gap-3">

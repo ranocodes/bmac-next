@@ -112,6 +112,7 @@ export async function POST(request: Request) {
         title: "New donation received",
         message: `${payerName} donated ${amountLabel}${reference ? ` (${reference})` : ""}.`,
         type: "donation",
+        link: "/admin/payments",
       });
     }
   }

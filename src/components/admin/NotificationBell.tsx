@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, CheckCheck, HeartHandshake, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { Bell, CheckCheck, HeartHandshake, UserPlus, ArrowRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getNotifications, markNotificationsRead } from "@/actions/notifications";
 import type { AdminNotification } from "@/lib/notifications";
@@ -104,27 +105,46 @@ export default function NotificationBell() {
                     No notifications yet.
                   </p>
                 ) : (
-                  items.map(item => (
-                    <div
-                      key={item.id}
-                      className={`flex items-start gap-3 rounded-xl border border-transparent p-3 transition-colors ${
-                        item.read ? "opacity-70" : "bg-muted/40"
-                      }`}
-                    >
-                      <div className="mt-0.5 shrink-0">{typeIcon(item.type)}</div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-secondary">{item.title}</p>
-                        {item.message && (
-                          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                            {item.message}
+                  items.map(item => {
+                    const inner = (
+                      <>
+                        <div className="mt-0.5 shrink-0">{typeIcon(item.type)}</div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-secondary">{item.title}</p>
+                          {item.message && (
+                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                              {item.message}
+                            </p>
+                          )}
+                          <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+                            {timeAgo(item.createdAt)}
                           </p>
+                        </div>
+                        {item.link && (
+                          <div className="mt-1 shrink-0 text-muted-foreground/60">
+                            <ArrowRight size={14} />
+                          </div>
                         )}
-                        <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
-                          {timeAgo(item.createdAt)}
-                        </p>
+                      </>
+                    );
+                    const cls = `flex items-start gap-3 rounded-xl border border-transparent p-3 transition-colors ${
+                      item.read ? "opacity-70" : "bg-muted/40"
+                    } ${item.link ? "hover:border-border/50 hover:bg-muted/60" : ""}`;
+                    return item.link ? (
+                      <Link
+                        key={item.id}
+                        href={item.link}
+                        onClick={() => setOpen(false)}
+                        className={cls}
+                      >
+                        {inner}
+                      </Link>
+                    ) : (
+                      <div key={item.id} className={cls}>
+                        {inner}
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
               {items.length > 0 && (

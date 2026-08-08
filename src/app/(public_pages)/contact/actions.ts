@@ -5,6 +5,7 @@ import { findOrCreatePerson, upsertPersonRecord } from "@/actions/people";
 import { createWorkflowRecord } from "@/lib/workflows";
 import { getSuperAdminEmails } from "@/lib/notifications";
 import { sendContactAdminAlertEmail, sendContactAutoreplyEmail } from "@/lib/email";
+import { recordConsent } from "@/lib/consent";
 
 export async function sendContactMessage(
   prev: { success?: boolean; error?: string } | null,
@@ -14,9 +15,14 @@ export async function sendContactMessage(
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
   const message = formData.get("message") as string;
+  const privacy = formData.get("privacy") as string;
+  const marketing = formData.get("marketing") as string;
 
   if (!name || !email || !message) {
     return { error: "Name, email, and message are required." };
+  }
+  if (privacy !== "on" && privacy !== "true" && privacy !== "1") {
+    return { error: "Please accept the privacy policy to continue" };
   }
 
   try {
@@ -41,9 +47,17 @@ export async function sendContactMessage(
     try {
       const person = await findOrCreatePerson({ firstName: name, email, phone });
       if (person) {
+        await recordConsent(
+          person.id,
+          { privacy: true, marketing: marketing === "on", contact: true },
+          "contact-form"
+        );
         await upsertPersonRecord(person.id, "contact", {
           status: "received",
-          meta: { message: message.slice(0, 500) },
+          meta: {
+            message: message.slice(0, 500),
+            consent: { privacy: true, marketing: marketing === "on" },
+          },
         });
         await createWorkflowRecord({
           kind: "contact",
@@ -54,7 +68,11 @@ export async function sendContactMessage(
           submitterName: name,
           submitterEmail: email,
           source: "contact-form",
-          details: { phone: phone || "", message: message.slice(0, 500) },
+          details: {
+            phone: phone || "",
+            message: message.slice(0, 500),
+            consent: { privacy: true, marketing: marketing === "on" },
+          },
         });
       }
     } catch (err) {

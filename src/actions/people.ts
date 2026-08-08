@@ -7,6 +7,7 @@ import { logActivity } from "./activity-logs";
 import { sendFormSubmitAlertEmail, sendGoogleFormLinkEmail } from "@/lib/email";
 import { createAdminNotification, getSuperAdminEmails } from "@/lib/notifications";
 import { createWorkflowRecord } from "@/lib/workflows";
+import { recordConsent } from "@/lib/consent";
 import type { Person, PersonRecord, PersonRecordKind, PersonRole, PersonRow, WorkflowKind } from "@/types/cms";
 
 interface PersonDbRow {
@@ -311,6 +312,8 @@ export async function applyAsPerson(opts: {
   email: string;
   phone?: string;
   notes?: string;
+  privacy?: boolean;
+  marketing?: boolean;
 }): Promise<{ error?: string; formLink?: string; emailSent?: boolean; kindLabel?: string }> {
   if (!opts.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.email)) {
     return { error: "Valid email required" };
@@ -318,8 +321,16 @@ export async function applyAsPerson(opts: {
   if (!opts.name?.trim()) {
     return { error: "Name required" };
   }
+  if (!opts.privacy) {
+    return { error: "Please accept the privacy policy to continue" };
+  }
   const person = await findOrCreatePerson({ firstName: opts.name, email: opts.email, phone: opts.phone });
   if (!person) return { error: "Something went wrong. Try again." };
+  await recordConsent(
+    person.id,
+    { privacy: opts.privacy, marketing: opts.marketing, contact: true },
+    "get-involved"
+  );
 
   const roleMap: Record<string, PersonRole[]> = {
     member: ["member"],
@@ -360,6 +371,10 @@ export async function applyAsPerson(opts: {
       personRecordId: record?.id || "",
       phone: opts.phone || "",
       notes: opts.notes ? opts.notes.slice(0, 500) : "",
+      consent: {
+        privacy: Boolean(opts.privacy),
+        marketing: Boolean(opts.marketing),
+      },
     },
   });
 
@@ -400,6 +415,7 @@ export async function applyAsPerson(opts: {
     title: "New application received",
     message: `${opts.name.trim()} submitted a ${kindLabel} application (${person.email}).`,
     type: "form_submission",
+    link: "/admin/inbox",
   });
 
   return { formLink, emailSent, kindLabel };
