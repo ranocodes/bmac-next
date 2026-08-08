@@ -12,7 +12,8 @@ export type EmailTemplateKey =
   | "google-forms-link"
   | "donation-thanks"
   | "donation-alert"
-  | "form-submit-alert";
+  | "form-submit-alert"
+  | "admin-reply";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   credentials: "Admin credentials",
@@ -23,6 +24,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "donation-thanks": "Donation thank-you",
   "donation-alert": "Donation alert (admins)",
   "form-submit-alert": "Application alert (admins)",
+  "admin-reply": "Admin reply to a submission",
 };
 
 const shell = (heading: string, message: string, cta?: { label: string; url: string }, footer?: string) => `<!DOCTYPE html>
@@ -132,10 +134,10 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
     subject: "Admin account deleted — BMAC Admin Panel",
     html: shell(
       "Admin account deleted",
-      "The super admin account <strong>{{deletedAdmin}}</strong> was deleted by {{deletedBy}}. If you did not expect this, review your admin accounts.",
+      "The super admin account <strong>{{deletedAdmin}}</strong> was deleted by {{deletedBy}}.{{reason}} If you did not expect this, review your admin accounts.",
       { label: "Go to Admin Panel", url: "{{loginLink}}" }
     ),
-    text: "The super admin account {{deletedAdmin}} was deleted by {{deletedBy}}. If you did not expect this, review your admin accounts.\n\nSign in at: {{loginLink}}",
+    text: "The super admin account {{deletedAdmin}} was deleted by {{deletedBy}}.{{reason}} If you did not expect this, review your admin accounts.\n\nSign in at: {{loginLink}}",
   },
   "admin-delete-attempt": {
     subject: "Self-deletion attempt blocked — BMAC Admin Panel",
@@ -214,6 +216,21 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "View in dashboard: {{dashboardUrl}}",
     ].join("\n"),
   },
+  "admin-reply": {
+    subject: "Re: {{originalTitle}}",
+    html: shell(
+      "{{originalTitle}}",
+      "{{body}}",
+      undefined,
+      "You are receiving this because you contacted BMAC. This email is a direct reply from our team."
+    ),
+    text: [
+      "{{body}}",
+      "",
+      "—",
+      "You are receiving this because you contacted BMAC. This email is a direct reply from our team.",
+    ].join("\n"),
+  },
 };
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
@@ -225,4 +242,5 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "donation-thanks",
   "donation-alert",
   "form-submit-alert",
+  "admin-reply",
 ];
