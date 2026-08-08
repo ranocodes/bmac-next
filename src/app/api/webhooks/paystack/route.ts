@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const { data } = event;
     const { reference, customer, metadata, amount, currency } = data;
 
-    const existing = await db.query<any>(
+    const existing = await db.query<{ id: string }>(
       "SELECT id FROM public.paystack_payments WHERE reference = $1",
       [reference]
     );

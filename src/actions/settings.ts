@@ -3,21 +3,27 @@
 import { db } from "@/lib/db";
 import { requireAdmin, requirePermission } from "@/lib/auth/server";
 import { getSuperAdminSession, setSuperAdminSession } from "@/lib/auth/super-admin";
+import type { SiteSettings } from "@/types/cms";
 import {
   DEFAULT_EMAIL_TEMPLATES,
   EMAIL_TEMPLATE_KEYS,
   type EmailTemplate,
 } from "@/lib/email-templates";
 
+export interface SiteSettingsRow extends SiteSettings {
+  google_forms?: Record<string, string>;
+  email_templates?: Record<string, Partial<EmailTemplate>>;
+}
+
 export async function getSiteSettings() {
   await requireAdmin();
-  const rows = await db.getAll<any>("site_settings").catch(() => []);
+  const rows = await db.getAll<SiteSettingsRow>("site_settings").catch(() => []);
   return rows.length > 0 ? rows[0] : null;
 }
 
 export async function saveSiteSettings(data: Record<string, unknown>) {
   await requirePermission("access_settings");
-  const existing = await db.getAll<any>("site_settings").catch(() => []);
+  const existing = await db.getAll<SiteSettingsRow>("site_settings").catch(() => []);
   if (existing.length > 0) {
     return db.update("site_settings", existing[0].id, data);
   }
@@ -107,7 +113,7 @@ export async function updateAdminProfile(email: string, firstName: string) {
       [firstName, email]);
   } catch { /* may not exist yet — ok */ }
 
-  const users = await db.query<any>(
+  const users = await db.query<{ id: string }>(
     "SELECT id FROM public.admin_users WHERE email = $1", [email]);
   if (users.length > 0) {
     await db.update("admin_users", users[0].id, { first_name: firstName });

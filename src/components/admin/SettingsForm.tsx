@@ -13,6 +13,7 @@ import {
 import { useAdmin } from "@/lib/auth/admin-context";
 import SocialLinkSelector from "@/components/ui/SocialLinkSelector";
 import { useToast } from "@/components/ui/Toast";
+import type { SiteSettings } from "@/types/cms";
 import {
   DEFAULT_EMAIL_TEMPLATES,
   EMAIL_TEMPLATE_KEYS,
@@ -49,12 +50,14 @@ function inputCls() {
   return "w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors";
 }
 
-export default function SettingsForm({ initialData }: { initialData?: any | null }) {
+export default function SettingsForm({ initialData }: { initialData?: SiteSettings | null }) {
   const user = useAdmin();
-  const [firstName, setFirstName] = useState("");
-  const [logoText, setLogoText] = useState("");
-  const [socialLinks, setSocialLinks] = useState<{ name: string; href: string; icon: string }[]>([]);
-  const [copyright, setCopyright] = useState("");
+  const [firstName, setFirstName] = useState(user?.firstName || "");
+  const [logoText, setLogoText] = useState(initialData?.logo_text || "BMAC");
+  const [socialLinks, setSocialLinks] = useState<{ name: string; href: string; icon: string }[]>(
+    initialData?.social_links || DEFAULT.social_links
+  );
+  const [copyright, setCopyright] = useState(initialData?.copyright || DEFAULT.copyright);
   const [savingSite, setSavingSite] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const { toast } = useToast();
@@ -71,14 +74,6 @@ export default function SettingsForm({ initialData }: { initialData?: any | null
   const [activeTemplate, setActiveTemplate] = useState(EMAIL_TEMPLATE_KEYS[0]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
   const [savingTemplates, setSavingTemplates] = useState(false);
-
-  useEffect(() => {
-    if (user) setFirstName(user.firstName || "");
-    const s = initialData || DEFAULT;
-    setLogoText(s.logo_text || "BMAC");
-    setSocialLinks(s.social_links || DEFAULT.social_links);
-    setCopyright(s.copyright || DEFAULT.copyright);
-  }, [initialData, user]);
 
   useEffect(() => {
     getGoogleForms()

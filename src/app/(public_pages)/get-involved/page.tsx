@@ -1,27 +1,33 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import {
   Users,
   HeartHandshake,
   Banknote,
   Handshake,
   School,
-  Send,
   ArrowRight,
   CheckCircle2,
   Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
 import { applyAsPerson, resendGoogleFormLink } from "@/actions/people";
 import { loadPaystack } from "@/lib/paystack";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 
-const ways = [
+interface Way {
+  id: string;
+  title: string;
+  desc: string;
+  icon: React.ReactElement<{ size?: number | string }>;
+  color: string;
+  details: string;
+}
+
+const ways: Way[] = [
   {
     id: "join",
     title: "Join BMAC",
@@ -65,7 +71,7 @@ const ways = [
 ];
 
 function GetInvolvedInner() {
-  const [selectedWay, setSelectedWay] = useState<any>(null);
+  const [selectedWay, setSelectedWay] = useState<Way | null>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
@@ -87,7 +93,7 @@ function GetInvolvedInner() {
     if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
   }, []);
 
-  const openWay = (way: any) => {
+  const openWay = (way: Way) => {
     setFormError("");
     setSubmitted(null);
     setSelectedWay(way);
@@ -289,7 +295,7 @@ function GetInvolvedInner() {
                    </h2>
                  </div>
                  <div className={`p-4 md:p-5 rounded-2xl md:rounded-3xl ${selectedWay.color} order-1 md:order-2 mx-auto md:mx-0 shadow-sm`}>
-                   {React.cloneElement(selectedWay.icon as React.ReactElement<any>, { size: 32 })}
+                   {React.cloneElement(selectedWay.icon, { size: 32 })}
                  </div>
                </div>
                

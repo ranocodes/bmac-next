@@ -18,7 +18,7 @@ async function sendRequest(body: Record<string, unknown>): Promise<{ error?: str
       return { error: data.error || `Email service error (${res.status})` };
     }
     return {};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Email service error:", err);
     return { error: "Failed to send email" };
   }

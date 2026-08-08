@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard,
+  UserCog, CreditCard, ShieldOff, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -15,7 +15,6 @@ import type { Permission } from "@/types/cms";
 import { logoutAdmin } from "@/actions/admin-auth";
 import ProfileDropdown from "@/components/admin/ProfileDropdown";
 import NotificationBell from "@/components/admin/NotificationBell";
-import { ShieldOff } from "lucide-react";
 
 interface AdminUser {
   email: string;
@@ -27,13 +26,13 @@ interface AdminUser {
 interface NavItem {
   label: string;
   href?: string;
-  icon?: any;
+  icon?: LucideIcon;
   permission?: Permission;
 }
 
 interface NavGroup {
   label: string;
-  icon: any;
+  icon: LucideIcon;
   children: NavItem[];
 }
 
@@ -111,25 +110,27 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
-    if (saved === "true") setSidebarCollapsed(true);
-
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const activeGroup = navGroups.find(g =>
       g.children.some(c => c.href && pathname.startsWith(c.href))
     );
-    if (activeGroup) {
-      setOpenGroups({ [activeGroup.label]: true });
-    }
+    return activeGroup ? { [activeGroup.label]: true } : {};
+  });
 
+  useEffect(() => {
+    const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
+    if (saved !== "true") return;
+    const id = setTimeout(() => setSidebarCollapsed(true), 0);
+    return () => clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
     navGroups.forEach(g =>
       g.children.forEach(c => {
         if (c.href) router.prefetch(c.href);
       })
     );
-  }, []);
+  }, [router]);
 
   const user = userProp;
   const email = user?.email ?? "";
@@ -272,10 +273,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
               </div>
               <h2 className="font-display text-xl font-bold text-secondary">Access Denied</h2>
               <p className="text-sm text-muted-foreground mt-1.5 max-w-sm">
-                You don't have the required permissions to access this page.
+                You don&apos;t have the required permissions to access this page.
               </p>
             </div>
-          ) : <AdminProvider value={user as any}>{children}</AdminProvider>}
+          ) : <AdminProvider value={user ?? null}>{children}</AdminProvider>}
         </main>
       </div>
     </div>
