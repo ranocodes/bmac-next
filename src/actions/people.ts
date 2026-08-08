@@ -6,7 +6,8 @@ import { requirePermission } from "@/lib/auth/server";
 import { logActivity } from "./activity-logs";
 import { sendFormSubmitAlertEmail, sendGoogleFormLinkEmail } from "@/lib/email";
 import { createAdminNotification, getSuperAdminEmails } from "@/lib/notifications";
-import type { Person, PersonRecord, PersonRecordKind, PersonRole, PersonRow } from "@/types/cms";
+import { createWorkflowRecord } from "@/lib/workflows";
+import type { Person, PersonRecord, PersonRecordKind, PersonRole, PersonRow, WorkflowKind } from "@/types/cms";
 
 interface PersonDbRow {
   id: string;
@@ -338,6 +339,28 @@ export async function applyAsPerson(opts: {
   const record = await upsertPersonRecord(person.id, kindMap[opts.kind] || "program", {
     status: "pending",
     meta: opts.notes ? { notes: opts.notes.slice(0, 500) } : {},
+  });
+  const workflowKindMap: Record<string, WorkflowKind> = {
+    member: "member",
+    volunteer: "volunteer",
+    partner: "partner",
+    program: "program",
+  };
+  await createWorkflowRecord({
+    kind: workflowKindMap[opts.kind] || "member",
+    refId: person.id,
+    title: `${kindLabel} application: ${opts.name.trim()}`,
+    summary: `${opts.name.trim()} submitted a ${kindLabel} application.`,
+    status: "open",
+    priority: "normal",
+    submitterName: opts.name.trim(),
+    submitterEmail: person.email,
+    source: "get-involved",
+    details: {
+      personRecordId: record?.id || "",
+      phone: opts.phone || "",
+      notes: opts.notes ? opts.notes.slice(0, 500) : "",
+    },
   });
 
   let formLink = "";

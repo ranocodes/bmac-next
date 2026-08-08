@@ -29,6 +29,74 @@ export interface EventPass {
   price?: number;
   features?: string[];
   status?: "draft" | "published";
+  capacity?: number;
+  capacityUsed?: number;
+  registrationDeadline?: string;
+  maxPerPerson?: number;
+  allowPublicRegistration?: boolean;
+  remindersEnabled?: boolean;
+}
+
+export type WorkflowStatus = "open" | "in_progress" | "resolved" | "closed";
+export type WorkflowKind =
+  | "contact"
+  | "member"
+  | "volunteer"
+  | "partner"
+  | "program"
+  | "event_registration"
+  | "donation"
+  | "ticket";
+export type WorkflowPriority = "low" | "normal" | "high" | "urgent";
+
+export interface WorkflowRecord {
+  id: string;
+  kind: WorkflowKind;
+  refId: string;
+  title: string;
+  summary: string;
+  status: WorkflowStatus;
+  priority: WorkflowPriority;
+  assigneeEmail: string;
+  submitterName: string;
+  submitterEmail: string;
+  source: string;
+  details: Record<string, unknown>;
+  outcome: string;
+  lastContactedAt?: string;
+  dueAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export type TicketStatus = "pending" | "confirmed" | "cancelled" | "refunded";
+
+export interface EventTicket {
+  id: string;
+  reference: string;
+  eventId: string;
+  personId: string;
+  payerName: string;
+  payerEmail: string;
+  quantity: number;
+  amount: number;
+  currency: string;
+  status: TicketStatus;
+  qrToken?: string;
+  checkedIn: boolean;
+  checkedInAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConsentRecord {
+  marketing?: boolean;
+  contact?: boolean;
+  privacy?: boolean;
+  acceptedAt: string;
+  source: string;
+  ip?: string;
 }
 
 export interface NewsArticle {
@@ -107,7 +175,9 @@ export type Permission =
   | "manage_users"
   | "access_settings"
   | "export_data"
-  | "view_analytics";
+  | "view_analytics"
+  | "manage_workflows"
+  | "check_in_attendees";
 
 export interface Partner {
   id: string;

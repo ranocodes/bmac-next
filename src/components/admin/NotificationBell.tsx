@@ -88,7 +88,7 @@ export default function NotificationBell() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.12 }}
-              className="fixed inset-x-2 bottom-2 z-50 max-h-[calc(100dvh-1rem)] origin-bottom rounded-2xl border border-border/60 bg-card/95 p-2 shadow-xl backdrop-blur-sm sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:max-w-[calc(100vw-1.5rem)] sm:max-h-none sm:origin-top-right sm:rounded-none"
+              className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-xl border border-border/60 bg-card/95 p-2 shadow-xl backdrop-blur-sm"
             >
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-sm font-bold text-secondary">Notifications</span>
@@ -98,7 +98,7 @@ export default function NotificationBell() {
                   </span>
                 )}
               </div>
-              <div className="max-h-[55dvh] space-y-1 overflow-y-auto sm:max-h-96">
+              <div className="max-h-96 space-y-1 overflow-y-auto">
                 {items.length === 0 ? (
                   <p className="px-3 py-8 text-center text-sm text-muted-foreground">
                     No notifications yet.
