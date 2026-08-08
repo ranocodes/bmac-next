@@ -35,3 +35,65 @@ export async function sendAdminDeletedNotification(email: string, deletedAdmin: 
 export async function sendAdminDeleteAttemptAlert(email: string, actor: string): Promise<{ error?: string }> {
   return sendRequest({ type: "admin-delete-attempt", email, actor });
 }
+
+export async function sendGoogleFormLinkEmail(opts: {
+  email: string;
+  firstName?: string;
+  kindLabel: string;
+  formLink: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "google-forms-link",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    kindLabel: opts.kindLabel,
+    formLink: opts.formLink,
+  });
+}
+
+export async function sendDonationThanksEmail(opts: {
+  email: string;
+  firstName?: string;
+  amountLabel: string;
+  reference: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "donation-thanks",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    amountLabel: opts.amountLabel,
+    reference: opts.reference,
+  });
+}
+
+export async function sendDonationAlertEmail(opts: {
+  email: string;
+  donorName?: string;
+  donorEmail?: string;
+  amountLabel: string;
+  reference: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "donation-alert",
+    email: opts.email,
+    donorName: opts.donorName || "",
+    donorEmail: opts.donorEmail || "",
+    amountLabel: opts.amountLabel,
+    reference: opts.reference,
+  });
+}
+
+export async function sendFormSubmitAlertEmail(opts: {
+  email: string;
+  submitterName?: string;
+  submitterEmail?: string;
+  kindLabel: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "form-submit-alert",
+    email: opts.email,
+    submitterName: opts.submitterName || "",
+    submitterEmail: opts.submitterEmail || "",
+    kindLabel: opts.kindLabel,
+  });
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   Users,
@@ -11,13 +11,15 @@ import {
   Send,
   ArrowRight,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
-import { applyAsPerson } from "@/actions/people";
+import { applyAsPerson, resendGoogleFormLink } from "@/actions/people";
 import { loadPaystack } from "@/lib/paystack";
+import { ToastProvider, useToast } from "@/components/ui/Toast";
 
 const ways = [
   {
@@ -62,14 +64,28 @@ const ways = [
   },
 ];
 
-export default function GetInvolved() {
+function GetInvolvedInner() {
   const [selectedWay, setSelectedWay] = useState<any>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<{
+    title: string;
+    message: string;
+    formLink?: string;
+    email?: string;
+    kind?: "member" | "volunteer" | "partner" | "program";
+  } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendCooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => () => {
+    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+  }, []);
 
   const openWay = (way: any) => {
     setFormError("");
@@ -80,6 +96,8 @@ export default function GetInvolved() {
   const closeModal = () => {
     setSubmitted(null);
     setSelectedWay(null);
+    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+    setResendCooldown(0);
   };
 
   const handlePaystackDonation = async () => {
@@ -105,7 +123,7 @@ export default function GetInvolved() {
         },
         callback: function() {
           setIsSubmitting(false);
-          setSubmitted("Donation received. Thank you!");
+          setSubmitted({ title: "Payment Initiated", message: "Donation received. Thank you! 🎉" });
         },
         onClose: function() {
           setIsSubmitting(false);
@@ -135,11 +153,12 @@ export default function GetInvolved() {
       partner: "partner",
       school: "program",
     };
+    const kind = kindMap[selectedWay.id] || "member";
 
     let res;
     try {
       res = await applyAsPerson({
-        kind: kindMap[selectedWay.id] || "member",
+        kind,
         name: formData.name,
         email: formData.email,
       });
@@ -154,7 +173,48 @@ export default function GetInvolved() {
       return;
     }
     setIsSubmitting(false);
-    setSubmitted("success");
+    if (res.emailSent && res.formLink) {
+      toast("Application sent! Check your email for your form link.", "success");
+      setSubmitted({
+        title: "Application Sent!",
+        message: "Check your email — we've sent you a link to complete the next step.",
+        formLink: res.formLink,
+        email: formData.email.trim(),
+        kind,
+      });
+    } else {
+      setSubmitted({
+        title: "Application Sent!",
+        message: "We'll review your application and get back to you within 48 hours.",
+      });
+    }
+  };
+
+  const handleResendLink = async () => {
+    if (!submitted?.email || !submitted.kind || resending || resendCooldown > 0) return;
+    setResending(true);
+    try {
+      const res = await resendGoogleFormLink({
+        kind: submitted.kind,
+        email: submitted.email,
+      });
+      if (res.error) {
+        toast(res.error, "error");
+      } else {
+        toast("Link sent! Check your email inbox.", "success");
+        setResendCooldown(60);
+        resendCooldownRef.current = setInterval(() => {
+          setResendCooldown(prev => {
+            if (prev <= 1 && resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+            return prev <= 1 ? 0 : prev - 1;
+          });
+        }, 1000);
+      }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Could not resend the link. Please try again.", "error");
+    } finally {
+      setResending(false);
+    }
   };
   return (
     <main suppressHydrationWarning className="bg-background">
@@ -303,11 +363,40 @@ export default function GetInvolved() {
                       <CheckCircle2 size={32} className="text-emerald-600" />
                     </div>
                     <p className="font-display text-2xl font-bold text-white mb-2">
-                      {selectedWay?.id === "donate" ? "Payment Initiated" : "Application Sent!"}
+                      {submitted.title}
                     </p>
                     <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
-                      {selectedWay?.id === "donate" ? submitted : "We'll review your application and get back to you within 48 hours."}
+                      {submitted.message}
                     </p>
+                    {submitted.formLink && (
+                      <a
+                        href={submitted.formLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-accent-foreground text-sm font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:opacity-90"
+                      >
+                        Open Application Form <ArrowRight size={16} />
+                      </a>
+                    )}
+                    {submitted.email && submitted.kind && (
+                      <button
+                        onClick={handleResendLink}
+                        disabled={resending || resendCooldown > 0}
+                        className="mt-4 w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Mail size={15} />
+                        {resending ? (
+                          <span className="flex items-center gap-2">
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Sending...
+                          </span>
+                        ) : resendCooldown > 0 ? (
+                          `Request link again (${resendCooldown}s)`
+                        ) : (
+                          "Request link again"
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={() => { setSubmitted(null); setSelectedWay(null); }}
                       className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
@@ -359,5 +448,13 @@ export default function GetInvolved() {
         )}
       </Modal>
     </main>
+  );
+}
+
+export default function GetInvolved() {
+  return (
+    <ToastProvider>
+      <GetInvolvedInner />
+    </ToastProvider>
   );
 }

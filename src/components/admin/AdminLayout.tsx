@@ -14,6 +14,7 @@ import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
 import { logoutAdmin } from "@/actions/admin-auth";
 import ProfileDropdown from "@/components/admin/ProfileDropdown";
+import NotificationBell from "@/components/admin/NotificationBell";
 import { ShieldOff } from "lucide-react";
 
 interface AdminUser {
@@ -255,6 +256,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
           <div className="flex-1" />
+          <NotificationBell />
           <ProfileDropdown
             firstName={firstName}
             email={email}
