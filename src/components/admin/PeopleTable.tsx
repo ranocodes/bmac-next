@@ -16,7 +16,7 @@ const roleColors: Record<string, string> = {
   admin: "bg-secondary/10 text-secondary",
 };
 
-export default function PeopleTable({ initialData }: { initialData: PersonRow[] }) {
+export default function PeopleTable({ initialData, canExport }: { initialData: PersonRow[]; canExport?: boolean }) {
   const [people] = useState<PersonRow[]>(initialData);
   const [search, setSearch] = useState("");
 
@@ -64,12 +64,14 @@ export default function PeopleTable({ initialData }: { initialData: PersonRow[] 
             <p className="text-sm text-muted-foreground mt-1">Unified profiles across events, donations, and programs</p>
           </div>
         </div>
-        <button
-          onClick={handleExport}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all self-start sm:self-auto"
-        >
-          <Download size={16} /> Export CSV
-        </button>
+        {canExport && (
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all self-start sm:self-auto"
+          >
+            <Download size={16} /> Export CSV
+          </button>
+        )}
       </div>
 
       <div className="relative max-w-xs">

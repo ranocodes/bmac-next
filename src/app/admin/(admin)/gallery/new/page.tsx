@@ -1,5 +1,7 @@
 import GalleryForm from "@/components/admin/GalleryForm";
+import { requirePage } from "@/lib/auth/server";
 
-export default function NewGalleryPage() {
+export default async function NewGalleryPage() {
+  await requirePage("manage_gallery");
   return <GalleryForm />;
 }

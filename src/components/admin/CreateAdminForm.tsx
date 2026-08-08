@@ -6,17 +6,9 @@ import { Send, AlertCircle, CheckCircle, Mail, UserPlus, Eye, EyeOff, Shield, Sh
 import { createAdminAction, sendCredentialsAction } from "@/actions/admin-auth";
 import { useToast } from "@/components/ui/Toast";
 import type { Permission } from "@/types/cms";
+import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
-const ALL_PERMISSIONS_LIST: { id: Permission; label: string }[] = [
-  { id: "manage_users", label: "Manage Users" },
-  { id: "edit_content", label: "Edit Content" },
-  { id: "manage_courses", label: "Manage Courses" },
-  { id: "manage_partners", label: "Manage Partners" },
-  { id: "view_analytics", label: "View Analytics" },
-  { id: "access_settings", label: "Access Settings" },
-  { id: "delete_records", label: "Delete Records" },
-  { id: "manage_moderators", label: "Manage Moderators" },
-];
+const ALL_PERMISSIONS_LIST: { id: Permission; label: string }[] = PERMISSION_LABELS.map(p => ({ id: p.key, label: p.label }));
 
 interface Props {
   email: string;

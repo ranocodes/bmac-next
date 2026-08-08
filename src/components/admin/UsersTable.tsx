@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { Users, Search, Trash2, Shield, ShieldAlert, ShieldCheck, ShieldEllipsis, X, Check } from "lucide-react";
 import { useAdmin } from "@/lib/auth/admin-context";
-import { updateUserPermissions, deleteAdminUser } from "@/actions/admin-users";
+import { updateUserPermissions, deleteAdminUser, refreshSessionPermissions } from "@/actions/admin-users";
 import { useToast } from "@/components/ui/Toast";
 import type { Permission } from "@/types/cms";
+import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
 const roleIcons: Record<string, any> = {
   super_admin: ShieldAlert,
@@ -19,16 +20,7 @@ const roleColors: Record<string, string> = {
   moderator: "text-emerald-600 bg-emerald-100",
 };
 
-const allPermissions: { key: Permission; label: string }[] = [
-  { key: "manage_users", label: "Manage Users" },
-  { key: "edit_content", label: "Edit Content" },
-  { key: "manage_courses", label: "Manage Courses" },
-  { key: "manage_partners", label: "Manage Partners" },
-  { key: "view_analytics", label: "View Analytics" },
-  { key: "access_settings", label: "Access Settings" },
-  { key: "delete_records", label: "Delete Records" },
-  { key: "manage_moderators", label: "Manage Moderators" },
-];
+const allPermissions = PERMISSION_LABELS;
 
 export default function UsersTable({ initialData }: { initialData: any[] }) {
   const [users, setUsers] = useState<any[]>([]);
@@ -60,6 +52,9 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
     if (!editingUser) return;
     await updateUserPermissions(editingUser.id, editPerms);
     setUsers(p => p.map(u => u.id === editingUser.id ? { ...u, permissions: editPerms } : u));
+    if (editingUser.email === currentUser?.email) {
+      await refreshSessionPermissions();
+    }
     toast("Permissions updated", "success");
     setEditingUser(null);
   }

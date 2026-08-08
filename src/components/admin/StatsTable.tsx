@@ -31,7 +31,7 @@ export default function StatsTable({ initialData }: { initialData: any[] }) {
     setItems(mapped);
   }, [initialData]);
 
-  const canDelete = user?.permissions.includes("edit_content");
+  const canDelete = user?.permissions.includes("manage_stats");
 
   async function handleDelete(id: string) {
     if (!canDelete) { toast("You don't have permission to delete stats", "error"); return; }

@@ -1,11 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, User, Globe } from "lucide-react";
-import { saveSiteSettings, updateAdminProfile } from "@/actions/settings";
+import { Plus, X, Save, User, Globe, FileText, ExternalLink } from "lucide-react";
+import {
+  saveSiteSettings,
+  updateAdminProfile,
+  getGoogleForms,
+  saveGoogleForms,
+  getEmailTemplates,
+  saveEmailTemplates,
+} from "@/actions/settings";
 import { useAdmin } from "@/lib/auth/admin-context";
 import SocialLinkSelector from "@/components/ui/SocialLinkSelector";
 import { useToast } from "@/components/ui/Toast";
+import type { SiteSettings } from "@/types/cms";
+import {
+  DEFAULT_EMAIL_TEMPLATES,
+  EMAIL_TEMPLATE_KEYS,
+  EMAIL_TEMPLATE_LABELS,
+  type EmailTemplate,
+} from "@/lib/email-templates";
 
 const DEFAULT = {
   logo_text: "BMAC",
@@ -25,23 +39,51 @@ const DEFAULT = {
   copyright: "Brilliant Minds Ambassadors Club. All rights reserved.",
 };
 
-export default function SettingsForm({ initialData }: { initialData?: any | null }) {
+const GOOGLE_FORM_FIELDS = [
+  { key: "join", label: "Join BMAC (membership)" },
+  { key: "volunteer", label: "Volunteer" },
+  { key: "school", label: "School Chapter" },
+  { key: "partner", label: "Partner With Us" },
+];
+
+function inputCls() {
+  return "w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors";
+}
+
+export default function SettingsForm({ initialData }: { initialData?: SiteSettings | null }) {
   const user = useAdmin();
-  const [firstName, setFirstName] = useState("");
-  const [logoText, setLogoText] = useState("");
-  const [socialLinks, setSocialLinks] = useState<{ name: string; href: string; icon: string }[]>([]);
-  const [copyright, setCopyright] = useState("");
+  const [firstName, setFirstName] = useState(user?.firstName || "");
+  const [logoText, setLogoText] = useState(initialData?.logo_text || "BMAC");
+  const [socialLinks, setSocialLinks] = useState<{ name: string; href: string; icon: string }[]>(
+    initialData?.social_links || DEFAULT.social_links
+  );
+  const [copyright, setCopyright] = useState(initialData?.copyright || DEFAULT.copyright);
   const [savingSite, setSavingSite] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const { toast } = useToast();
 
+  const [googleForms, setGoogleForms] = useState<Record<string, string>>({
+    join: "",
+    volunteer: "",
+    school: "",
+    partner: "",
+  });
+  const [savingForms, setSavingForms] = useState(false);
+
+  const [templates, setTemplates] = useState<Record<string, EmailTemplate>>(DEFAULT_EMAIL_TEMPLATES);
+  const [activeTemplate, setActiveTemplate] = useState(EMAIL_TEMPLATE_KEYS[0]);
+  const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const [savingTemplates, setSavingTemplates] = useState(false);
+
   useEffect(() => {
-    if (user) setFirstName(user.firstName || "");
-    const s = initialData || DEFAULT;
-    setLogoText(s.logo_text || "BMAC");
-    setSocialLinks(s.social_links || DEFAULT.social_links);
-    setCopyright(s.copyright || DEFAULT.copyright);
-  }, [initialData, user]);
+    getGoogleForms()
+      .then(setGoogleForms)
+      .catch(() => {});
+    getEmailTemplates()
+      .then(setTemplates)
+      .catch(() => {})
+      .finally(() => setLoadingTemplates(false));
+  }, []);
 
   async function handleSaveProfile() {
     if (!user?.permissions.includes("access_settings")) {
@@ -69,6 +111,30 @@ export default function SettingsForm({ initialData }: { initialData?: any | null
     toast("Settings saved", "success");
   }
 
+  async function handleSaveForms() {
+    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
+    setSavingForms(true);
+    const res = await saveGoogleForms(googleForms);
+    setSavingForms(false);
+    if (res?.error) { toast(res.error, "error"); return; }
+    toast("Google Forms links saved", "success");
+  }
+
+  async function handleSaveTemplates() {
+    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
+    setSavingTemplates(true);
+    const res = await saveEmailTemplates(templates);
+    setSavingTemplates(false);
+    if (res?.error) { toast(res.error, "error"); return; }
+    toast("Email templates saved", "success");
+  }
+
+  const active = templates[activeTemplate] || DEFAULT_EMAIL_TEMPLATES[activeTemplate];
+
+  function patchActive(patch: Partial<EmailTemplate>) {
+    setTemplates(prev => ({ ...prev, [activeTemplate]: { ...prev[activeTemplate], ...patch } }));
+  }
+
   return (
     <div className="w-full max-w-2xl space-y-6">
       <div>
@@ -88,7 +154,7 @@ export default function SettingsForm({ initialData }: { initialData?: any | null
           </div>
           <div className="flex-1">
             <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Your name"
-              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+              className={inputCls()} />
           </div>
           <button onClick={handleSaveProfile} disabled={savingProfile}
             className="flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm shrink-0">
@@ -106,7 +172,7 @@ export default function SettingsForm({ initialData }: { initialData?: any | null
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Logo Text</label>
           <input type="text" value={logoText} onChange={e => setLogoText(e.target.value)} placeholder="BMAC"
-            className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+            className={inputCls()} />
           <p className="text-xs text-muted-foreground/60 mt-1">Preview: <span className="font-display font-extrabold text-secondary">{logoText || "BMAC"}<span className="text-primary">.</span></span></p>
         </div>
 
@@ -144,13 +210,98 @@ export default function SettingsForm({ initialData }: { initialData?: any | null
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Copyright</label>
           <input type="text" value={copyright} onChange={e => setCopyright(e.target.value)} placeholder="Brilliant Minds Ambassadors Club. All rights reserved."
-            className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+            className={inputCls()} />
         </div>
 
         <button onClick={handleSaveSite} disabled={savingSite}
           className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
           <Save className="w-3.5 h-3.5" />
           {savingSite ? "Saving..." : "Save Site Settings"}
+        </button>
+      </div>
+
+      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
+          <ExternalLink size={16} className="text-primary" />
+          <h2 className="font-display text-base font-bold text-secondary">Google Forms Links</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">
+          Each get-involved option emails applicants a link to complete the next step. Paste your Google Form URLs below.
+        </p>
+        <div className="space-y-3">
+          {GOOGLE_FORM_FIELDS.map(field => (
+            <div key={field.key}>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">{field.label}</label>
+              <input
+                type="url"
+                value={googleForms[field.key] || ""}
+                onChange={e => setGoogleForms(prev => ({ ...prev, [field.key]: e.target.value }))}
+                placeholder="https://forms.gle/..."
+                className={inputCls()}
+              />
+            </div>
+          ))}
+        </div>
+        <button onClick={handleSaveForms} disabled={savingForms}
+          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
+          <Save className="w-3.5 h-3.5" />
+          {savingForms ? "Saving..." : "Save Google Forms Links"}
+        </button>
+      </div>
+
+      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
+          <FileText size={16} className="text-primary" />
+          <h2 className="font-display text-base font-bold text-secondary">Email Templates</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">
+          Edit subjects and bodies for automated emails. Placeholders like <code className="text-primary">{"{{formLink}}"}</code>,{" "}
+          <code className="text-primary">{"{{firstName}}"}</code>, <code className="text-primary">{"{{amountLabel}}"}</code> are filled automatically.
+        </p>
+        <div>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Template</label>
+          <select
+            value={activeTemplate}
+            onChange={e => setActiveTemplate(e.target.value as (typeof EMAIL_TEMPLATE_KEYS)[number])}
+            disabled={loadingTemplates}
+            className={inputCls()}
+          >
+            {EMAIL_TEMPLATE_KEYS.map(key => (
+              <option key={key} value={key}>{EMAIL_TEMPLATE_LABELS[key]}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Subject</label>
+          <input
+            type="text"
+            value={active?.subject || ""}
+            onChange={e => patchActive({ subject: e.target.value })}
+            className={inputCls()}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">HTML Body</label>
+          <textarea
+            value={active?.html || ""}
+            onChange={e => patchActive({ html: e.target.value })}
+            rows={10}
+            className="w-full px-3 py-2.5 bg-background border border-input rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Plain Text Body</label>
+          <textarea
+            value={active?.text || ""}
+            onChange={e => patchActive({ text: e.target.value })}
+            rows={5}
+            className="w-full px-3 py-2.5 bg-background border border-input rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+          />
+        </div>
+        <button onClick={handleSaveTemplates} disabled={savingTemplates}
+          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
+          <Save className="w-3.5 h-3.5" />
+          {savingTemplates ? "Saving..." : "Save Email Templates"}
         </button>
       </div>
     </div>

@@ -1,24 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Users,
   HeartHandshake,
   Banknote,
   Handshake,
   School,
-  Send,
   ArrowRight,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import FadeIn from "@/components/FadeIn";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
-import { applyAsPerson } from "@/actions/people";
+import { applyAsPerson, resendGoogleFormLink } from "@/actions/people";
+import { loadPaystack } from "@/lib/paystack";
+import { ToastProvider, useToast } from "@/components/ui/Toast";
 
-const ways = [
+interface Way {
+  id: string;
+  title: string;
+  desc: string;
+  icon: React.ReactElement<{ size?: number | string }>;
+  color: string;
+  details: string;
+}
+
+const ways: Way[] = [
   {
     id: "join",
     title: "Join BMAC",
@@ -61,16 +70,43 @@ const ways = [
   },
 ];
 
-export default function GetInvolved() {
-  const [selectedWay, setSelectedWay] = useState<any>(null);
+function GetInvolvedInner() {
+  const [selectedWay, setSelectedWay] = useState<Way | null>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<{
+    title: string;
+    message: string;
+    formLink?: string;
+    email?: string;
+    kind?: "member" | "volunteer" | "partner" | "program";
+  } | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendCooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { toast } = useToast();
 
-  const handlePaystackDonation = () => {
+  useEffect(() => () => {
+    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+  }, []);
+
+  const openWay = (way: Way) => {
+    setFormError("");
+    setSubmitted(null);
+    setSelectedWay(way);
+  };
+
+  const closeModal = () => {
+    setSubmitted(null);
+    setSelectedWay(null);
+    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+    setResendCooldown(0);
+  };
+
+  const handlePaystackDonation = async () => {
     const finalAmount = donateAmount === "custom" ? customAmount : donateAmount;
     const amountN = parseInt(finalAmount || "0", 10);
     if (!amountN || amountN <= 0) {
@@ -78,27 +114,32 @@ export default function GetInvolved() {
       setIsSubmitting(false);
       return;
     }
-    // @ts-ignore
-    const handler = window.PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
-      email: formData.email,
-      amount: amountN * 100,
-      currency: "NGN",
-      ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
-      metadata: {
-        source_type: "donation",
-        source_id: "get-involved",
-        payer_name: formData.name,
-      },
-      callback: function() {
-        setIsSubmitting(false);
-        setSubmitted("Donation received. Thank you!");
-      },
-      onClose: function() {
-        setIsSubmitting(false);
-      },
-    });
-    handler.openIframe();
+    try {
+      const PaystackPop = await loadPaystack();
+      const handler = PaystackPop.setup({
+        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+        email: formData.email,
+        amount: amountN * 100,
+        currency: "NGN",
+        ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+        metadata: {
+          source_type: "donation",
+          source_id: "get-involved",
+          payer_name: formData.name,
+        },
+        callback: function() {
+          setIsSubmitting(false);
+          setSubmitted({ title: "Payment Initiated", message: "Donation received. Thank you! 🎉" });
+        },
+        onClose: function() {
+          setIsSubmitting(false);
+        },
+      });
+      handler.openIframe();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Payment could not start. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +149,7 @@ export default function GetInvolved() {
     setIsSubmitting(true);
 
     if (selectedWay.id === "donate") {
-      handlePaystackDonation();
+      await handlePaystackDonation();
       return;
     }
 
@@ -118,21 +159,69 @@ export default function GetInvolved() {
       partner: "partner",
       school: "program",
     };
+    const kind = kindMap[selectedWay.id] || "member";
 
-    const res = await applyAsPerson({
-      kind: kindMap[selectedWay.id] || "member",
-      name: formData.name,
-      email: formData.email,
-    });
+    let res;
+    try {
+      res = await applyAsPerson({
+        kind,
+        name: formData.name,
+        email: formData.email,
+      });
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
     if (res.error) {
       setFormError(res.error);
       setIsSubmitting(false);
       return;
     }
     setIsSubmitting(false);
-    setSubmitted("success");
+    if (res.emailSent && res.formLink) {
+      toast("Application sent! Check your email for your form link.", "success");
+      setSubmitted({
+        title: "Application Sent!",
+        message: "Check your email — we've sent you a link to complete the next step.",
+        formLink: res.formLink,
+        email: formData.email.trim(),
+        kind,
+      });
+    } else {
+      setSubmitted({
+        title: "Application Sent!",
+        message: "We'll review your application and get back to you within 48 hours.",
+      });
+    }
   };
 
+  const handleResendLink = async () => {
+    if (!submitted?.email || !submitted.kind || resending || resendCooldown > 0) return;
+    setResending(true);
+    try {
+      const res = await resendGoogleFormLink({
+        kind: submitted.kind,
+        email: submitted.email,
+      });
+      if (res.error) {
+        toast(res.error, "error");
+      } else {
+        toast("Link sent! Check your email inbox.", "success");
+        setResendCooldown(60);
+        resendCooldownRef.current = setInterval(() => {
+          setResendCooldown(prev => {
+            if (prev <= 1 && resendCooldownRef.current) clearInterval(resendCooldownRef.current);
+            return prev <= 1 ? 0 : prev - 1;
+          });
+        }, 1000);
+      }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Could not resend the link. Please try again.", "error");
+    } finally {
+      setResending(false);
+    }
+  };
   return (
     <main suppressHydrationWarning className="bg-background">
       <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
@@ -162,7 +251,7 @@ export default function GetInvolved() {
                 key={way.id}
                 delay={i * 0.1}
                 className="flex flex-col h-full bg-card border-none shadow-sm hover:shadow-xl transition-all"
-                onClick={() => setSelectedWay(way)}
+                onClick={() => openWay(way)}
               >
                 <div className="flex flex-col h-full">
                   <div className={`w-12 h-12 rounded-2xl ${way.color} flex items-center justify-center mb-6`}>
@@ -191,7 +280,7 @@ export default function GetInvolved() {
       </section>
 
       {/* Unified Modal */}
-      <Modal isOpen={!!selectedWay} onClose={() => setSelectedWay(null)}>
+      <Modal isOpen={!!selectedWay} onClose={closeModal}>
         {selectedWay && (
           <div className="bg-card">
             {/* Modal Header */}
@@ -206,7 +295,7 @@ export default function GetInvolved() {
                    </h2>
                  </div>
                  <div className={`p-4 md:p-5 rounded-2xl md:rounded-3xl ${selectedWay.color} order-1 md:order-2 mx-auto md:mx-0 shadow-sm`}>
-                   {React.cloneElement(selectedWay.icon as React.ReactElement<any>, { size: 32 })}
+                   {React.cloneElement(selectedWay.icon, { size: 32 })}
                  </div>
                </div>
                
@@ -280,11 +369,40 @@ export default function GetInvolved() {
                       <CheckCircle2 size={32} className="text-emerald-600" />
                     </div>
                     <p className="font-display text-2xl font-bold text-white mb-2">
-                      {selectedWay?.id === "donate" ? "Payment Initiated" : "Application Sent!"}
+                      {submitted.title}
                     </p>
                     <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
-                      {selectedWay?.id === "donate" ? submitted : "We'll review your application and get back to you within 48 hours."}
+                      {submitted.message}
                     </p>
+                    {submitted.formLink && (
+                      <a
+                        href={submitted.formLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-accent-foreground text-sm font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:opacity-90"
+                      >
+                        Open Application Form <ArrowRight size={16} />
+                      </a>
+                    )}
+                    {submitted.email && submitted.kind && (
+                      <button
+                        onClick={handleResendLink}
+                        disabled={resending || resendCooldown > 0}
+                        className="mt-4 w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Mail size={15} />
+                        {resending ? (
+                          <span className="flex items-center gap-2">
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Sending...
+                          </span>
+                        ) : resendCooldown > 0 ? (
+                          `Request link again (${resendCooldown}s)`
+                        ) : (
+                          "Request link again"
+                        )}
+                      </button>
+                    )}
                     <button
                       onClick={() => { setSubmitted(null); setSelectedWay(null); }}
                       className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
@@ -336,5 +454,13 @@ export default function GetInvolved() {
         )}
       </Modal>
     </main>
+  );
+}
+
+export default function GetInvolved() {
+  return (
+    <ToastProvider>
+      <GetInvolvedInner />
+    </ToastProvider>
   );
 }

@@ -7,14 +7,14 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard,
+  UserCog, CreditCard, ShieldOff, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
 import { logoutAdmin } from "@/actions/admin-auth";
 import ProfileDropdown from "@/components/admin/ProfileDropdown";
-import { ShieldOff } from "lucide-react";
+import NotificationBell from "@/components/admin/NotificationBell";
 
 interface AdminUser {
   email: string;
@@ -26,13 +26,13 @@ interface AdminUser {
 interface NavItem {
   label: string;
   href?: string;
-  icon?: any;
+  icon?: LucideIcon;
   permission?: Permission;
 }
 
 interface NavGroup {
   label: string;
-  icon: any;
+  icon: LucideIcon;
   children: NavItem[];
 }
 
@@ -42,28 +42,28 @@ const navGroups: NavGroup[] = [
   {
     label: "Content", icon: Newspaper,
     children: [
-      { label: "News", href: "/admin/news", icon: Newspaper, permission: "edit_content" },
-      { label: "Events", href: "/admin/events", icon: Calendar, permission: "edit_content" },
-      { label: "Programs", href: "/admin/programs", icon: BookOpen, permission: "manage_courses" },
-      { label: "Gallery", href: "/admin/gallery", icon: Image, permission: "edit_content" },
-      { label: "Team", href: "/admin/team", icon: Users, permission: "edit_content" },
-      { label: "Testimonials", href: "/admin/testimonials", icon: Star, permission: "edit_content" },
+      { label: "News", href: "/admin/news", icon: Newspaper, permission: "manage_news" },
+      { label: "Events", href: "/admin/events", icon: Calendar, permission: "manage_events" },
+      { label: "Programs", href: "/admin/programs", icon: BookOpen, permission: "manage_programs" },
+      { label: "Gallery", href: "/admin/gallery", icon: Image, permission: "manage_gallery" },
+      { label: "Team", href: "/admin/team", icon: Users, permission: "manage_team" },
+      { label: "Testimonials", href: "/admin/testimonials", icon: Star, permission: "manage_testimonials" },
     ],
   },
   {
     label: "Management", icon: ClipboardList,
     children: [
-      { label: "Categories", href: "/admin/categories", icon: Tag, permission: "edit_content" },
+      { label: "Categories", href: "/admin/categories", icon: Tag, permission: "manage_categories" },
       { label: "Partners", href: "/admin/partners", icon: Handshake, permission: "manage_partners" },
-      { label: "Stats", href: "/admin/stats", icon: BarChart3, permission: "edit_content" },
+      { label: "Stats", href: "/admin/stats", icon: BarChart3, permission: "manage_stats" },
     ],
   },
   {
     label: "System", icon: Shield,
     children: [
-      { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_users" },
-      { label: "Payments", href: "/admin/payments", icon: CreditCard, permission: "manage_users" },
-      { label: "People", href: "/admin/people", icon: Users, permission: "manage_users" },
+      { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
+      { label: "Payments", href: "/admin/payments", icon: CreditCard, permission: "manage_payments" },
+      { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
@@ -80,18 +80,18 @@ function groupHasAccess(permissions: Permission[], group: NavGroup): boolean {
 }
 
 const routePermissions: Record<string, Permission> = {
-  "/admin/news": "edit_content",
-  "/admin/events": "edit_content",
-  "/admin/programs": "manage_courses",
-  "/admin/gallery": "edit_content",
-  "/admin/team": "edit_content",
-  "/admin/testimonials": "edit_content",
-  "/admin/categories": "edit_content",
+  "/admin/news": "manage_news",
+  "/admin/events": "manage_events",
+  "/admin/programs": "manage_programs",
+  "/admin/gallery": "manage_gallery",
+  "/admin/team": "manage_team",
+  "/admin/testimonials": "manage_testimonials",
+  "/admin/categories": "manage_categories",
   "/admin/partners": "manage_partners",
-  "/admin/stats": "edit_content",
-  "/admin/logs": "manage_users",
-  "/admin/payments": "manage_users",
-  "/admin/people": "manage_users",
+  "/admin/stats": "manage_stats",
+  "/admin/logs": "manage_logs",
+  "/admin/payments": "manage_payments",
+  "/admin/people": "manage_people",
   "/admin/admins": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
@@ -110,25 +110,27 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
-    if (saved === "true") setSidebarCollapsed(true);
-
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const activeGroup = navGroups.find(g =>
       g.children.some(c => c.href && pathname.startsWith(c.href))
     );
-    if (activeGroup) {
-      setOpenGroups({ [activeGroup.label]: true });
-    }
+    return activeGroup ? { [activeGroup.label]: true } : {};
+  });
 
+  useEffect(() => {
+    const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
+    if (saved !== "true") return;
+    const id = setTimeout(() => setSidebarCollapsed(true), 0);
+    return () => clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
     navGroups.forEach(g =>
       g.children.forEach(c => {
         if (c.href) router.prefetch(c.href);
       })
     );
-  }, []);
+  }, [router]);
 
   const user = userProp;
   const email = user?.email ?? "";
@@ -255,6 +257,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
           <div className="flex-1" />
+          <NotificationBell />
           <ProfileDropdown
             firstName={firstName}
             email={email}
@@ -270,10 +273,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
               </div>
               <h2 className="font-display text-xl font-bold text-secondary">Access Denied</h2>
               <p className="text-sm text-muted-foreground mt-1.5 max-w-sm">
-                You don't have the required permissions to access this page.
+                You don&apos;t have the required permissions to access this page.
               </p>
             </div>
-          ) : <AdminProvider value={user as any}>{children}</AdminProvider>}
+          ) : <AdminProvider value={user ?? null}>{children}</AdminProvider>}
         </main>
       </div>
     </div>

@@ -8,17 +8,9 @@ import { useAdmin } from "@/lib/auth/admin-context";
 import { adminResetPassword } from "@/actions/admin-auth";
 import { deleteAdminUser, updateAdminUser, resendCredentialsAction } from "@/actions/admin-users";
 import type { AdminRole, Permission } from "@/types/cms";
+import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
-const allPermissions: { key: Permission; label: string }[] = [
-  { key: "manage_users", label: "Manage Users" },
-  { key: "edit_content", label: "Edit Content" },
-  { key: "manage_courses", label: "Manage Courses" },
-  { key: "manage_partners", label: "Manage Partners" },
-  { key: "view_analytics", label: "View Analytics" },
-  { key: "access_settings", label: "Access Settings" },
-  { key: "delete_records", label: "Delete Records" },
-  { key: "manage_moderators", label: "Manage Moderators" },
-];
+const allPermissions = PERMISSION_LABELS;
 
 function parsePerms(p: unknown): Permission[] {
   if (Array.isArray(p)) return p as Permission[];

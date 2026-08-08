@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from '@/actions/people';
+import { sendDonationAlertEmail, sendDonationThanksEmail } from '@/lib/email';
+import { createAdminNotification, getSuperAdminEmails } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -27,7 +29,7 @@ export async function POST(request: Request) {
     const { data } = event;
     const { reference, customer, metadata, amount, currency } = data;
 
-    const existing = await db.query<any>(
+    const existing = await db.query<{ id: string }>(
       "SELECT id FROM public.paystack_payments WHERE reference = $1",
       [reference]
     );
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
 
     const isDonation = metadata?.source_type === "donation";
     const payerEmail = customer?.email || "";
+    const payerName = metadata?.payer_name || customer?.email || "";
     if (payerEmail) {
       const person = await findOrCreatePerson({
         firstName: metadata?.payer_name || payerEmail,
@@ -75,6 +78,41 @@ export async function POST(request: Request) {
           meta: { amount, currency, reference },
         });
       }
+    }
+
+    if (isDonation) {
+      const amountN = Number(amount || 0);
+      const amountLabel = `${currency === "NGN" ? "₦" : `${currency} `}${(amountN / 100).toLocaleString("en-NG", {
+        maximumFractionDigits: 2,
+      })}`;
+
+      if (payerEmail) {
+        const sent = await sendDonationThanksEmail({
+          email: payerEmail,
+          firstName: payerName,
+          amountLabel,
+          reference,
+        });
+        if (sent.error) console.error("donation-thanks email error:", sent.error);
+      }
+
+      const adminEmails = await getSuperAdminEmails();
+      await Promise.all(
+        adminEmails.map(adminEmail =>
+          sendDonationAlertEmail({
+            email: adminEmail,
+            donorName: payerName,
+            donorEmail: payerEmail,
+            amountLabel,
+            reference,
+          }).catch(() => ({ error: "alert email failed" }))
+        )
+      );
+      await createAdminNotification({
+        title: "New donation received",
+        message: `${payerName} donated ${amountLabel}${reference ? ` (${reference})` : ""}.`,
+        type: "donation",
+      });
     }
   }
 

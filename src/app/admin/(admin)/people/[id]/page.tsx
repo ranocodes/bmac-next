@@ -1,9 +1,11 @@
 import { getPerson } from "@/actions/people";
+import { requirePage } from "@/lib/auth/server";
 import PersonDetail from "@/components/admin/PersonDetail";
 
 export const dynamic = "force-dynamic";
 
 export default async function PersonDetailPage(props: { params: Promise<{ id: string }> }) {
+  await requirePage("manage_people");
   const { id } = await props.params;
   const data = await getPerson(id).catch(() => null);
 

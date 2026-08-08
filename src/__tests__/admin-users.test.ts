@@ -74,10 +74,10 @@ describe("updateAdminUser", () => {
     mockRequirePermission.mockResolvedValue(superCaller);
     mockUpdateAdmin.mockResolvedValue({ success: true, email: "target@x.com", firstName: "Target", error: undefined });
 
-    const result = await updateAdminUser("id-1", { permissions: ["edit_content"] });
+    const result = await updateAdminUser("id-1", { permissions: ["manage_news"] });
 
     expect(result).toEqual({});
-    expect(mockUpdateAdmin).toHaveBeenCalledWith("id-1", { permissions: ["edit_content"] });
+    expect(mockUpdateAdmin).toHaveBeenCalledWith("id-1", { permissions: ["manage_news"] });
     expect(mockLog).toHaveBeenCalledWith("boss@x.com", "admin_role_update", "auth", {
       details: "Role/permissions updated for target@x.com",
     });

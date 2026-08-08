@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
 vi.mock("next/image", () => ({
@@ -18,7 +19,7 @@ vi.mock("next/link", () => ({
 }));
 
 const mockUsePathname = vi.fn().mockReturnValue("/");
-const mockUseRouter = vi.fn(() => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }));
+const mockUseRouter = vi.fn((...args: any[]) => { void args; return { push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }; });
 const mockRedirect = vi.fn();
 vi.mock("next/navigation", () => ({
   usePathname: (...args: any[]) => mockUsePathname(...args),

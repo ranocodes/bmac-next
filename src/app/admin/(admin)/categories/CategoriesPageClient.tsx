@@ -13,7 +13,7 @@ export default function CategoriesPageClient({ initialData }: { initialData: Cat
   const user = useAdmin();
   const { toast, confirm } = useToast();
 
-  const canManage = user?.permissions.includes("edit_content");
+  const canManage = user?.permissions.includes("manage_categories");
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();

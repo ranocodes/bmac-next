@@ -5,8 +5,10 @@ import type { AdminRole, Permission } from "@/types/cms";
 const COOKIE_NAME = "bmac_admin_session";
 
 export const ALL_PERMISSIONS: Permission[] = [
-  "manage_users", "edit_content", "manage_courses", "manage_partners",
-  "view_analytics", "access_settings", "delete_records", "manage_moderators",
+  "manage_news", "manage_events", "manage_programs", "manage_gallery",
+  "manage_team", "manage_testimonials", "manage_categories", "manage_partners",
+  "manage_stats", "manage_payments", "manage_people", "manage_logs",
+  "manage_users", "access_settings", "export_data", "view_analytics",
 ];
 
 export interface SuperAdminSession {

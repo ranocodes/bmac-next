@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
+import { getSuperAdminSession, setSuperAdminSession, ALL_PERMISSIONS } from "@/lib/auth/super-admin";
 import { logActivity } from "./activity-logs";
 import { sendAdminDeletedNotification, sendAdminDeleteAttemptAlert } from "@/lib/email";
 import type { AdminRole, Permission } from "@/types/cms";
@@ -14,6 +15,23 @@ export async function getAdminUsers() {
 export async function updateUserPermissions(id: string, permissions: string[]) {
   await requirePermission("manage_users");
   return db.update("admin_users", id, { permissions });
+}
+
+export async function refreshSessionPermissions(): Promise<{ error?: string }> {
+  await requirePermission("manage_users");
+  const session = await getSuperAdminSession();
+  if (!session) return { error: "Not authenticated" };
+
+  const rows = await db.query<any>(
+    "SELECT email, first_name, role, permissions FROM public.admin_users WHERE LOWER(email) = LOWER($1)",
+    [session.email]);
+  if (rows.length === 0) return { error: "No local admin record for this account" };
+
+  const row = rows[0];
+  const permissions: Permission[] =
+    row.role === "super_admin" ? ALL_PERMISSIONS : (Array.isArray(row.permissions) ? row.permissions : []);
+  await setSuperAdminSession(row.email, row.first_name || "", permissions, row.role);
+  return {};
 }
 
 export async function deleteAdminUser(id: string) {
