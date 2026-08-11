@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard, ShieldOff, Inbox, type LucideIcon,
+  UserCog, CreditCard, ShieldOff, Inbox, QrCode, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -62,6 +62,7 @@ const navGroups: NavGroup[] = [
     label: "Operations", icon: Inbox,
     children: [
       { label: "Inbox", href: "/admin/inbox", icon: Inbox, permission: "manage_workflows" },
+      { label: "Check-In", href: "/admin/checkin", icon: QrCode, permission: "check_in_attendees" },
     ],
   },
   {
@@ -102,6 +103,7 @@ const routePermissions: Record<string, Permission> = {
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
   "/admin/inbox": "manage_workflows",
+  "/admin/checkin": "check_in_attendees",
 };
 
 function checkRouteAccess(pathname: string, permissions: Permission[]): boolean {

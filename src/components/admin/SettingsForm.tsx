@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, User, Globe, FileText, ExternalLink } from "lucide-react";
+import { Plus, X, Save, RotateCcw, User, Globe, FileText, ExternalLink } from "lucide-react";
 import {
   saveSiteSettings,
   updateAdminProfile,
@@ -9,6 +9,7 @@ import {
   saveGoogleForms,
   getEmailTemplates,
   saveEmailTemplates,
+  resetEmailTemplate,
 } from "@/actions/settings";
 import { useAdmin } from "@/lib/auth/admin-context";
 import SocialLinkSelector from "@/components/ui/SocialLinkSelector";
@@ -127,6 +128,15 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
     setSavingTemplates(false);
     if (res?.error) { toast(res.error, "error"); return; }
     toast("Email templates saved", "success");
+  }
+
+  async function handleResetTemplate() {
+    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
+    const res = await resetEmailTemplate(activeTemplate);
+    if (res?.error) { toast(res.error, "error"); return; }
+    const defaults = await getEmailTemplates();
+    setTemplates(defaults);
+    toast("Template reset to default", "success");
   }
 
   const active = templates[activeTemplate] || DEFAULT_EMAIL_TEMPLATES[activeTemplate];
@@ -298,11 +308,19 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
             className="w-full px-3 py-2.5 bg-background border border-input rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
           />
         </div>
-        <button onClick={handleSaveTemplates} disabled={savingTemplates}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-          <Save className="w-3.5 h-3.5" />
-          {savingTemplates ? "Saving..." : "Save Email Templates"}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleSaveTemplates} disabled={savingTemplates}
+            className="flex items-center justify-center gap-1.5 min-h-[44px] flex-1 px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
+            <Save className="w-3.5 h-3.5" />
+            {savingTemplates ? "Saving..." : "Save Email Templates"}
+          </button>
+          <button onClick={handleResetTemplate} disabled={savingTemplates}
+            title={`Reset ${EMAIL_TEMPLATE_LABELS[activeTemplate]} to default`}
+            className="flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 text-sm font-semibold rounded-lg border border-input bg-background text-secondary hover:bg-accent transition-colors disabled:opacity-50">
+            <RotateCcw className="w-3.5 h-3.5" />
+            Reset
+          </button>
+        </div>
       </div>
     </div>
   );

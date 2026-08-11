@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from '@/actions/people';
-import { sendDonationAlertEmail, sendDonationThanksEmail } from '@/lib/email';
+import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail } from '@/lib/email';
 import { createAdminNotification, getSuperAdminEmails } from '@/lib/notifications';
 
 export async function POST(request: Request) {
@@ -60,6 +60,86 @@ export async function POST(request: Request) {
       resource_id: paymentId,
       details: `Payment ${reference} verified: ${currency}${amount} from ${customer?.email}`,
     });
+
+    const isEventTicket = metadata?.source_type === "event_ticket";
+    if (isEventTicket) {
+      const ticketRows = await db.query<{
+        id: string;
+        event_id: string;
+        reference: string;
+        qr_token: string;
+        payer_name: string;
+        payer_email: string;
+        quantity: number;
+        status: string;
+      }>(
+        `SELECT id, event_id, reference, qr_token, payer_name, payer_email, quantity, status
+         FROM public.event_tickets
+         WHERE id = $1 OR reference = $2
+         ORDER BY (id = $1) DESC
+         LIMIT 1`,
+        [metadata?.ticket_id || "", metadata?.reference || reference]
+      );
+      const ticket = ticketRows[0];
+      if (!ticket || ticket.status === "confirmed") {
+        return NextResponse.json({ status: 'already_processed' });
+      }
+      const confirmed = await db.query<{ id: string }>(
+        `UPDATE public.event_tickets
+            SET status = 'confirmed', updated_at = now()
+          WHERE id = $1 AND status <> 'confirmed'
+          RETURNING id`,
+        [ticket.id]
+      );
+      if (confirmed.length) {
+        await db.query(
+          "UPDATE public.person_records SET status = 'completed' WHERE ref_id = $1 AND kind = 'event_registration'",
+          [ticket.reference]
+        );
+        await db.create("activity_logs", {
+          id: `log-ticket-${crypto.randomUUID()}`,
+          user: "system",
+          action: "ticket_confirmed",
+          resource: "event_tickets",
+          resource_id: ticket.id,
+          details: `Ticket ${ticket.reference} confirmed after payment verification`,
+        });
+        const eventRows = await db.query<{ title: string }>(
+          "SELECT title FROM public.events WHERE id = $1",
+          [ticket.event_id]
+        );
+        const eventTitle = eventRows[0]?.title || "Event";
+        const passUrl = ticket.qr_token
+          ? `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || ""}/pass/${ticket.qr_token}`
+          : "";
+        const amountN = Number(amount || 0);
+        const amountLabel = `${currency === "NGN" ? "₦" : `${currency} `}${(amountN / 100).toLocaleString("en-NG", {
+          maximumFractionDigits: 2,
+        })}`;
+        await sendTicketReceiptEmail({
+          email: ticket.payer_email || customer?.email || "",
+          firstName: ticket.payer_name?.split(" ")[0] || "",
+          eventName: eventTitle,
+          quantity: ticket.quantity,
+          amountLabel,
+          passUrl,
+          reference: ticket.reference,
+        }).catch(err => console.error("ticket-receipt email error:", err));
+        await createAdminNotification({
+          title: "Paid ticket confirmed",
+          message: `${ticket.payer_name || customer?.email} confirmed for ${eventTitle} (${ticket.reference}).`,
+          type: "ticket",
+          link: "/admin/events",
+        });
+        await db.query(
+          `UPDATE public.workflow_records
+              SET status = 'resolved', outcome = 'Payment verified, ticket confirmed', resolved_at = now(), updated_at = now()
+            WHERE kind = 'ticket' AND ref_id = $1 AND status IN ('open', 'in_progress')`,
+          [ticket.id]
+        );
+      }
+      return NextResponse.json({ status: 'success' });
+    }
 
     const isDonation = metadata?.source_type === "donation";
     const payerEmail = customer?.email || "";

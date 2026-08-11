@@ -466,14 +466,14 @@ pnpm test
 
 ## Acceptance Criteria
 
-- [ ] BMAC-11: `workflow_records` + `people.consent` migration applied; types + lib exist; build passes
-- [ ] BMAC-12: contact/get-involved/event-registration/donation all create durable workflow records; contact record persists even when email fails
-- [ ] BMAC-13: privacy checkbox required on contact + get-involved + event forms; consent stored on person + record meta; `/privacy` page exists
-- [ ] BMAC-14: `/admin/workflow` queue with status/kind filters, assignee, notes, outcome, open counts on dashboard; gated by `manage_workflows` server-side
-- [ ] BMAC-15: 5 new template keys + defaults + senders; admin template editor on Settings persists to `site_settings.email_templates`
-- [ ] BMAC-16: event ops fields (capacity, deadline, max per person, public toggle) editable; `/admin/events/[id]` shows capacity, registrants, checked-in, revenue; attendee CSV export gated `export_data`
-- [ ] BMAC-17: free registration capacity-aware, confirmed instantly, issues pass link + confirmation email
-- [ ] BMAC-18: paid ticket confirmed only after signed webhook; dedupe by reference; capacity increments once; ticket-receipt email includes pass link
-- [ ] BMAC-19: `/pass/<token>` renders scannable QR; inactive/cancelled passes show non-scannable state
-- [ ] BMAC-20: `/admin/checkin` scans QR + manual search; second scan returns already-checked-in; gated by `check_in_attendees`
+- [x] BMAC-11: `workflow_records` + `people.consent` migration applied; types + lib exist; build passes
+- [x] BMAC-12: contact/get-involved/event-registration/donation all create durable workflow records; contact record persists even when email fails
+- [x] BMAC-13: privacy checkbox required on contact + get-involved + event forms; consent stored on person + record meta; `/privacy` page exists
+- [x] BMAC-14: `/admin/workflow` queue with status/kind filters, assignee, notes, outcome, open counts on dashboard; gated by `manage_workflows` server-side
+- [x] BMAC-15: 5 new template keys + defaults + senders; admin template editor on Settings persists to `site_settings.email_templates`
+- [x] BMAC-16: event ops fields (capacity, deadline, max per person, public toggle) editable; `/admin/events/[id]` shows capacity, registrants, checked-in, revenue; attendee CSV export gated `export_data`
+- [x] BMAC-17: free registration capacity-aware, confirmed instantly, issues pass link + confirmation email
+- [x] BMAC-18: paid ticket confirmed only after signed webhook; dedupe by reference; capacity increments once; ticket-receipt email includes pass link
+- [x] BMAC-19: `/pass/<token>` renders scannable QR; inactive/cancelled passes show non-scannable state
+- [x] BMAC-20: `/admin/checkin` scans QR + manual search; second scan returns already-checked-in; gated by `check_in_attendees`
 - [ ] All builds/lints/tests pass; migrations idempotent; existing donation + free-registration tests still green

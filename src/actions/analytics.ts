@@ -1,13 +1,14 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { countOpenWorkflows } from "@/lib/workflows";
 
 export async function getDashboardStats() {
   const today = Date.now() - 86400000 * 1000;
 
   const [
     newsCount, eventsCount, programsCount, galleryCount,
-    teamCount, testimonialsCount,
+    teamCount, testimonialsCount, workflowOpenCount,
     news, events, gallery, team, testimonials,
     logs,
   ] = await Promise.all([
@@ -17,6 +18,7 @@ export async function getDashboardStats() {
     db.count("gallery_items").catch(() => 0),
     db.count("team_members").catch(() => 0),
     db.count("testimonials").catch(() => 0),
+    countOpenWorkflows(),
     db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
     db.getAll<any>("events", { orderBy: "date", orderDir: "DESC", limit: 4 }).catch(() => []),
     db.getAll<any>("gallery_items", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
@@ -33,6 +35,7 @@ export async function getDashboardStats() {
       gallery: galleryCount,
       team: teamCount,
       testimonials: testimonialsCount,
+      workflowOpen: workflowOpenCount,
     },
     recentNews: news,
     recentEvents: events.slice().sort((a: any, b: any) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime()),
@@ -44,7 +47,9 @@ export async function getDashboardStats() {
 export async function getTableCounts() {
   const tables = ["news_articles", "events", "programs", "gallery_items", "team_members", "testimonials"];
   const results = await Promise.all(tables.map(t => db.count(t).catch(() => 0)));
-  return Object.fromEntries(tables.map((t, i) => [t, results[i]]));
+  const counts = Object.fromEntries(tables.map((t, i) => [t, results[i]]));
+  counts.workflowOpen = await countOpenWorkflows();
+  return counts;
 }
 
 export async function getActivitySummary() {

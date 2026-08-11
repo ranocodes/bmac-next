@@ -1,0 +1,258 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, Users, CheckCircle2, TicketCheck, Wallet, Download, Bell, RefreshCcw, Calendar, MapPin } from "lucide-react";
+import { getEventAdminDetail, exportEventRegistrants, setEventCheckedIn, setCapacityUsedOverride, sendEventReminders } from "@/actions/events";
+import { useToast } from "@/components/ui/Toast";
+import { useAdmin } from "@/lib/auth/admin-context";
+import type { EventAdminDetail } from "@/actions/events";
+
+export default function EventAdminDetailClient({ initialData, eventId }: { initialData: EventAdminDetail; eventId: string }) {
+  const [data, setData] = useState<EventAdminDetail>(initialData);
+  const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [capacityInput, setCapacityInput] = useState<string>(String(initialData.event.capacity_used));
+  const { toast, confirm } = useToast();
+  const admin = useAdmin();
+  const canExport = admin?.permissions?.includes("export_data");
+
+  const { event, registrants } = data;
+
+  async function refresh() {
+    const next = await getEventAdminDetail(eventId);
+    if (next) setData(next);
+  }
+
+  async function toggleCheckIn(ticketId: string, checkedIn: boolean, name: string) {
+    if (checkedIn) {
+      const ok = await confirm(`Undo check-in for ${name}?`);
+      if (!ok) return;
+    }
+    setBusy(true);
+    const res = await setEventCheckedIn(ticketId, checkedIn);
+    if (res.error) {
+      toast(res.error, "error");
+    } else {
+      toast(checkedIn ? "Check-in undone" : "Checked in");
+    }
+    await refresh();
+    setBusy(false);
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    const rows = await exportEventRegistrants(eventId);
+    const header = ["Reference", "Name", "Email", "Phone", "Quantity", "Amount", "Status", "Checked In", "Registered At"];
+    const csv = [
+      header.join(","),
+      ...rows.map(r => [
+        r.reference,
+        `"${(r.payerName || "").replace(/"/g, '""')}"`,
+        `"${(r.payerEmail || "").replace(/"/g, '""')}"`,
+        `"${(r.phone || "").replace(/"/g, '""')}"`,
+        r.quantity,
+        r.amount,
+        r.status,
+        r.checkedIn ? "yes" : "no",
+        new Date(r.createdAt).toISOString(),
+      ].join(",")),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${event.title.replace(/[^a-z0-9]+/gi, "-")}-registrants.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`Exported ${rows.length} registrants`);
+    setExporting(false);
+  }
+
+  async function handleCapacityOverride() {
+    const n = Number(capacityInput);
+    if (isNaN(n) || n < 0) {
+      toast("Enter a valid number", "error");
+      return;
+    }
+    setBusy(true);
+    const res = await setCapacityUsedOverride(eventId, n);
+    if (res.error) {
+      toast(res.error, "error");
+    } else {
+      toast("Capacity used updated");
+      await refresh();
+    }
+    setBusy(false);
+  }
+
+  async function handleSendReminders() {
+    const ok = await confirm("Send event reminder emails to all confirmed attendees?");
+    if (!ok) return;
+    setBusy(true);
+    const res = await sendEventReminders(eventId);
+    setBusy(false);
+    if (res.error) {
+      toast(res.error, "error");
+    } else {
+      toast(`Sent ${res.sent} reminders`);
+    }
+  }
+
+  const pct = event.capacity > 0 ? Math.min(100, Math.round((event.capacity_used / event.capacity) * 100)) : 0;
+  const currency = "₦";
+  const revenueLabel = `${currency}${event.revenue.toLocaleString("en-NG")}`;
+
+  const stats = [
+    { label: "Total registrations", value: String(event.registrations), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Confirmed", value: String(event.confirmed), icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Checked in", value: String(event.checkedIn), icon: TicketCheck, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: "Revenue", value: revenueLabel, icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
+  ];
+
+  return (
+    <div className="space-y-6 max-w-[1400px]">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <Link href="/admin/events" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-secondary transition-colors mb-2">
+            <ArrowLeft size={14} /> Events
+          </Link>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">{event.title}</h1>
+          <p className="text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="inline-flex items-center gap-1.5"><Calendar size={13} /> {event.date || "—"}</span>
+            <span className="inline-flex items-center gap-1.5"><MapPin size={13} /> {event.venue || "—"}</span>
+            <span className="inline-block px-2.5 py-0.5 rounded-lg bg-muted text-xs font-medium text-muted-foreground">{event.category}</span>
+            <span className={`inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold ${event.status === "published" ? "bg-green-500/10 text-green-600" : "bg-amber-500/10 text-amber-600"}`}>{event.status}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/events/${eventId}/edit`} className="flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-semibold hover:bg-muted transition-colors">
+            Edit
+          </Link>
+          <button onClick={handleSendReminders} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
+            <Bell size={15} /> Send Reminders
+          </button>
+          {canExport && (
+            <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
+              <Download size={15} /> {exporting ? "Exporting…" : "Export CSV"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map(s => (
+          <div key={s.label} className="bg-card rounded-3xl border border-border/50 p-5">
+            <div className={`w-10 h-10 rounded-2xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
+              <s.icon size={18} />
+            </div>
+            <p className="text-2xl font-bold text-secondary">{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-card rounded-3xl border border-border/50 p-6 lg:col-span-2">
+          <h2 className="font-semibold text-secondary mb-4">Capacity</h2>
+          <div className="flex items-end justify-between mb-2">
+            <p className="text-3xl font-bold text-secondary">
+              {event.capacity_used.toLocaleString()}
+              <span className="text-base font-medium text-muted-foreground"> / {event.capacity > 0 ? event.capacity.toLocaleString() : "∞"}</span>
+            </p>
+            <p className="text-sm font-semibold text-muted-foreground">{pct}%</p>
+          </div>
+          <div className="h-3 rounded-full bg-muted overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="flex items-center gap-3 mt-5">
+            <div className="flex-1 max-w-[180px]">
+              <input
+                type="number"
+                min={0}
+                value={capacityInput}
+                onChange={e => setCapacityInput(e.target.value)}
+                className="w-full h-10 px-3 rounded-xl border border-input bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+            </div>
+            <button onClick={handleCapacityOverride} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
+              <RefreshCcw size={14} /> Override used count
+            </button>
+            <span className="text-xs text-muted-foreground hidden md:block">For manual corrections</span>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <h2 className="font-semibold text-secondary mb-4">Registration</h2>
+          <dl className="space-y-3 text-sm">
+            <div className="flex justify-between"><dt className="text-muted-foreground">Deadline</dt><dd className="font-semibold text-secondary">{event.registration_deadline || "None"}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">Max per person</dt><dd className="font-semibold text-secondary">{event.max_per_person}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">Public registration</dt><dd className="font-semibold text-secondary">{event.allow_public_registration ? "Open" : "Closed"}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">Reminders</dt><dd className="font-semibold text-secondary">{event.reminders_enabled ? "On" : "Off"}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">Pricing</dt><dd className="font-semibold text-secondary">{event.is_paid ? `${currency}${Number(event.price).toLocaleString("en-NG")}` : "Free"}</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+          <h2 className="font-semibold text-secondary">Registrants</h2>
+          <span className="text-xs text-muted-foreground">{registrants.length} total</span>
+        </div>
+        {registrants.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Users size={40} className="text-muted-foreground/20 mb-3" />
+            <p className="text-sm font-medium text-secondary">No registrations yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Registrations will appear here once people sign up.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50">
+                  <th className="text-left font-semibold text-secondary px-5 py-4">Attendee</th>
+                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden sm:table-cell">Reference</th>
+                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden md:table-cell">Status</th>
+                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden lg:table-cell">Qty</th>
+                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden lg:table-cell">Amount</th>
+                  <th className="text-right font-semibold text-secondary px-5 py-4 w-24">Check-in</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registrants.map(r => (
+                  <tr key={r.ticketId} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
+                    <td className="px-5 py-4">
+                      <div>
+                        <p className="font-medium text-secondary">{r.payerName || "—"}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{r.payerEmail}</p>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs hidden sm:table-cell">{r.reference}</td>
+                    <td className="px-5 py-4 hidden md:table-cell">
+                      <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                        r.status === "confirmed" ? "bg-green-500/10 text-green-600" : r.status === "pending" ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
+                      }`}>{r.status}</span>
+                    </td>
+                    <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.quantity}</td>
+                    <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.amount ? `${currency}${(Number(r.amount) * r.quantity / 100).toLocaleString("en-NG")}` : "—"}</td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        onClick={() => toggleCheckIn(r.ticketId, r.checkedIn, r.payerName || "attendee")}
+                        disabled={busy || r.status !== "confirmed"}
+                        className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-semibold transition-colors disabled:opacity-40 ${
+                          r.checkedIn ? "bg-green-500/10 text-green-600 hover:bg-green-500/20" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                        }`}
+                      >
+                        <TicketCheck size={13} /> {r.checkedIn ? "Checked in" : "Check in"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

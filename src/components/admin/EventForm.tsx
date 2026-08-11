@@ -32,6 +32,11 @@ export default function EventForm({ initialData }: { initialData?: any }) {
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
   const [features, setFeatures] = useState<string[]>(initialData?.features || []);
   const [featureInput, setFeatureInput] = useState("");
+  const [capacity, setCapacity] = useState(initialData?.capacity != null ? String(initialData.capacity) : "");
+  const [registrationDeadline, setRegistrationDeadline] = useState(initialData?.registrationDeadline || initialData?.registration_deadline || "");
+  const [maxPerPerson, setMaxPerPerson] = useState(initialData?.maxPerPerson ?? initialData?.max_per_person ?? 1);
+  const [allowPublicRegistration, setAllowPublicRegistration] = useState(initialData?.allowPublicRegistration ?? initialData?.allow_public_registration ?? false);
+  const [remindersEnabled, setRemindersEnabled] = useState(initialData?.remindersEnabled ?? initialData?.reminders_enabled ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
@@ -57,9 +62,15 @@ export default function EventForm({ initialData }: { initialData?: any }) {
     setSaving(true);
 
     const payload = {
-      title, date, time, venue, category, desc, longDesc, features,
-      isPaid, price: isPaid ? Number(price) : 0,
+      title, date, time, venue, category,
+      description: desc, long_desc: longDesc, features,
+      is_paid: isPaid, price: isPaid ? Number(price) : 0,
       status: publishStatus,
+      capacity: capacity ? Number(capacity) : 0,
+      registration_deadline: registrationDeadline,
+      max_per_person: maxPerPerson,
+      allow_public_registration: allowPublicRegistration,
+      reminders_enabled: remindersEnabled,
     };
     if (isEdit && params?.id) {
       await updateItem("events", params.id as string, payload);
@@ -232,6 +243,66 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 )}
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+                Capacity
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={capacity}
+                onChange={e => setCapacity(e.target.value)}
+                placeholder="0 = unlimited"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+                Registration deadline
+              </label>
+              <input
+                type="date"
+                value={registrationDeadline}
+                onChange={e => setRegistrationDeadline(e.target.value)}
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+                Max passes per person
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={maxPerPerson}
+                onChange={e => setMaxPerPerson(Math.max(1, Number(e.target.value) || 1))}
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px] px-4 bg-background border border-input rounded-lg flex-1">
+              <input
+                type="checkbox"
+                checked={allowPublicRegistration}
+                onChange={e => setAllowPublicRegistration(e.target.checked)}
+                className="w-4 h-4 rounded border-input text-primary focus:ring-primary/20"
+              />
+              <span className="text-sm text-secondary/80">Allow public registration</span>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px] px-4 bg-background border border-input rounded-lg flex-1">
+              <input
+                type="checkbox"
+                checked={remindersEnabled}
+                onChange={e => setRemindersEnabled(e.target.checked)}
+                className="w-4 h-4 rounded border-input text-primary focus:ring-primary/20"
+              />
+              <span className="text-sm text-secondary/80">Send event reminders</span>
+            </label>
           </div>
 
           <div>

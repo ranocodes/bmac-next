@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Calendar, Plus, Pencil, Trash2, Search, ExternalLink } from "lucide-react";
 import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
@@ -97,6 +97,10 @@ export default function EventTable({ initialData }: { initialData: any[] }) {
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Link href={`/admin/events/${e.id}`}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+                          <ExternalLink size={14} />
+                        </Link>
                         <Link href={`/admin/events/${e.id}/edit`}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                           <Pencil size={14} />

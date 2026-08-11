@@ -201,6 +201,20 @@ export async function countOpenWorkflows(): Promise<number> {
   }
 }
 
+export async function countWorkflowsByStatus(): Promise<Record<string, number>> {
+  try {
+    const rows = await db.query<{ status: string; count: string }>(
+      "SELECT status, COUNT(*)::int AS count FROM public.workflow_records GROUP BY status"
+    );
+    const out: Record<string, number> = {};
+    for (const r of rows) out[r.status] = Number(r.count ?? 0);
+    return out;
+  } catch (err) {
+    console.error("countWorkflowsByStatus error:", err);
+    return {};
+  }
+}
+
 export async function resolveWorkflow(id: string, outcome: string): Promise<WorkflowRecord | null> {
   try {
     const rows = await db.query<WorkflowRow>(
