@@ -13,7 +13,7 @@ interface ProfileDropdownProps {
 }
 
 const menuItems = [
-  { label: "Profile", href: "/admin", icon: User },
+  { label: "Dashboard", href: "/admin", icon: User },
   { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "View Site", href: "/", icon: Globe },
 ];
