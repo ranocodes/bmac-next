@@ -102,9 +102,8 @@ export default function AvatarNotifications() {
               {items.map(item => (
                 <li key={item.id}>
                   <Link
-                    href={item.link || "#"}
+                    href={item.link || "/admin"}
                     onClick={() => item.link && setOpen(false)}
-                    aria-disabled={!item.link}
                     className={cn(
                       "flex items-start gap-3 rounded-xl border border-transparent p-3 transition-colors",
                       item.read ? "opacity-70" : "bg-muted/40",
