@@ -476,4 +476,4 @@ pnpm test
 - [x] BMAC-18: paid ticket confirmed only after signed webhook; dedupe by reference; capacity increments once; ticket-receipt email includes pass link
 - [x] BMAC-19: `/pass/<token>` renders scannable QR; inactive/cancelled passes show non-scannable state
 - [x] BMAC-20: `/admin/checkin` scans QR + manual search; second scan returns already-checked-in; gated by `check_in_attendees`
-- [ ] All builds/lints/tests pass; migrations idempotent; existing donation + free-registration tests still green
+- [x] All builds/lints/tests pass; migrations idempotent; existing donation + free-registration tests still green
