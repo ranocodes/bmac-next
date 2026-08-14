@@ -104,7 +104,9 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
                                 </div>
                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border/50 shadow-inner">
                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                   <span className="text-[9px] font-bold uppercase tracking-widest text-secondary">Reservations Open</span>
+                                   <span className="text-[9px] font-bold uppercase tracking-widest text-secondary">
+                                      {event.isPaid ? `₦${(event.price || 0).toLocaleString()}` : "Free Entry"}
+                                   </span>
                                 </div>
                              </div>
 

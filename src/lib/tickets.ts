@@ -28,8 +28,7 @@ export function genQrToken(): string {
 }
 
 export function passUrlFor(token: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "";
-  return `${base}/pass/${token}`;
+  return `/pass/${token}`;
 }
 
 export interface CreateTicketInput {

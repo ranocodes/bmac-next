@@ -3,6 +3,12 @@
 const SERVICE_URL = (process.env.EMAIL_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
 const API_KEY = process.env.EMAIL_SERVICE_API_KEY || "";
 
+function absolutizeUrl(path: string): string {
+  if (!path || /^https?:\/\//.test(path)) return path;
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+  return base ? `${base}${path.startsWith("/") ? path : `/${path}`}` : path;
+}
+
 async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
   try {
     const res = await fetch(`${SERVICE_URL}/send`, {
@@ -167,7 +173,7 @@ export async function sendRegistrationConfirmedEmail(opts: {
     eventName: opts.eventName,
     eventDate: opts.eventDate || "",
     eventLocation: opts.eventLocation || "",
-    passUrl: opts.passUrl || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
   });
 }
 
@@ -187,7 +193,7 @@ export async function sendTicketReceiptEmail(opts: {
     eventName: opts.eventName,
     quantity: opts.quantity || 0,
     amountLabel: opts.amountLabel || "",
-    passUrl: opts.passUrl || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
     reference: opts.reference || "",
   });
 }
@@ -222,6 +228,6 @@ export async function sendEventReminderEmail(opts: {
     eventName: opts.eventName,
     eventDate: opts.eventDate || "",
     eventLocation: opts.eventLocation || "",
-    passUrl: opts.passUrl || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
   });
 }

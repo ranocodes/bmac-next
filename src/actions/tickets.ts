@@ -109,7 +109,7 @@ export async function getTicketStatus(reference: string): Promise<{
   );
   if (!rows.length) return { status: "not_found" };
   const t = rows[0];
-  return { status: t.status, passUrl: t.qr_token ? `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || ""}/pass/${t.qr_token}` : undefined };
+  return { status: t.status, passUrl: t.qr_token ? `/pass/${t.qr_token}` : undefined };
 }
 
 export async function cancelTicket(ticketId: string): Promise<{ error?: string }> {

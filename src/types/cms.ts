@@ -14,6 +14,62 @@ export interface Program {
   skills?: string[];
   faqs?: { q: string; a: string }[];
   landingPage?: boolean;
+  applicationsOpen?: boolean;
+  isPaid?: boolean;
+  price?: number;
+}
+
+export interface ProgramApplication {
+  id: string;
+  programId: string;
+  personId: string;
+  status: "submitted" | "in_review" | "accepted" | "waitlisted" | "rejected" | "withdrawn";
+  motivation: string;
+  dateOfBirth?: string;
+  consent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Cohort {
+  id: string;
+  programId: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  capacity: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Participant {
+  id: string;
+  cohortId: string;
+  personId: string;
+  status: "enrolled" | "completed" | "dropped" | "suspended";
+  joinedAt: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  cohortId: string;
+  personId: string;
+  sessionDate: string;
+  present: boolean;
+  markedBy: string;
+  markedAt: string;
+}
+
+export interface Donation {
+  id: string;
+  personId: string;
+  amount: number;
+  currency: string;
+  reference: string;
+  status: "pending" | "completed" | "failed" | "refunded";
+  receiptSent: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface EventPass {
@@ -46,7 +102,8 @@ export type WorkflowKind =
   | "program"
   | "event_registration"
   | "donation"
-  | "ticket";
+  | "ticket"
+  | "application-status";
 export type WorkflowPriority = "low" | "normal" | "high" | "urgent";
 
 export interface WorkflowRecord {

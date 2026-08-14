@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from '@/actions/people';
 import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail } from '@/lib/email';
+import { sendWorkflowEmail } from '@/actions/emails';
 import { createAdminNotification, getSuperAdminEmails } from '@/lib/notifications';
 
 export async function POST(request: Request) {
@@ -138,6 +139,57 @@ export async function POST(request: Request) {
           [ticket.id]
         );
       }
+      return NextResponse.json({ status: 'success' });
+    }
+
+    const isProgram = metadata?.source_type === "program";
+    if (isProgram) {
+      const appRows = await db.query<{
+        id: string;
+        program_id: string;
+        person_id: string;
+      }>(
+        `SELECT id, program_id, person_id
+         FROM public.program_applications
+         WHERE payment_reference = $1 OR id = $2
+         ORDER BY (id = $2) DESC
+         LIMIT 1`,
+        [reference, metadata?.application_id || ""]
+      );
+      const app = appRows[0];
+      if (!app) {
+        return NextResponse.json({ status: 'already_processed' });
+      }
+      await db.query(
+        `UPDATE public.workflow_records
+            SET status = 'resolved', outcome = 'Payment verified, application received', resolved_at = now(), updated_at = now()
+          WHERE kind = 'program' AND ref_id = $1 AND status IN ('open', 'in_progress')`,
+        [app.id]
+      );
+      const personRows = await db.query<{ first_name: string; last_name: string; email: string }>(
+        "SELECT first_name, last_name, email FROM public.people WHERE id = $1",
+        [app.person_id]
+      );
+      const person = personRows[0];
+      const programRows = await db.query<{ title: string }>(
+        "SELECT title FROM public.programs WHERE id = $1",
+        [app.program_id]
+      );
+      const programTitle = programRows[0]?.title || "Program";
+      if (person?.email) {
+        await sendWorkflowEmail(
+          "program",
+          person.email,
+          `${person.first_name || ""} ${person.last_name || ""}`.trim(),
+          { programTitle, applicationId: app.id, status: "received" }
+        ).catch(err => console.error("program-receipt email error:", err));
+      }
+      await createAdminNotification({
+        title: "Paid program application",
+        message: `${metadata?.payer_name || person?.email || "Applicant"} paid & applied to ${programTitle} (${reference}).`,
+        type: "program",
+        link: `/admin/programs/${app.program_id}`,
+      });
       return NextResponse.json({ status: 'success' });
     }
 
