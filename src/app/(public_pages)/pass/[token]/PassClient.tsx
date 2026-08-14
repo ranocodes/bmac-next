@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, User, Ticket, CheckCircle2, AlertTriangle, QrCode } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, User, Ticket, CheckCircle2, AlertTriangle } from "lucide-react";
 
 interface PassTicket {
   id: string;
@@ -32,6 +32,29 @@ function formatDate(raw: string): string {
   return raw;
 }
 
+function StatusPill({ ticket }: { ticket: PassTicket }) {
+  const inactive = ticket.status !== "confirmed";
+  if (inactive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+        <AlertTriangle size={12} /> {ticket.status}
+      </span>
+    );
+  }
+  if (ticket.checked_in) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+        <CheckCircle2 size={12} /> Checked In
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+    </span>
+  );
+}
+
 export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
   if (!ticket) {
     return (
@@ -55,65 +78,58 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
           <ArrowLeft size={14} /> Back to Events
         </Link>
 
-        <div className="bg-gradient-to-br from-primary via-primary to-secondary rounded-[2rem] p-8 text-card shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08)_0%,transparent_70%)]" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-8">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-70">Digital Pass</span>
-              {inactive ? (
-                <span className="bg-amber-400 text-amber-950 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
-                  {ticket.status}
-                </span>
-              ) : ticket.checked_in ? (
-                <span className="bg-green-400 text-green-950 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
-                  Checked In
-                </span>
-              ) : (
-                <span className="bg-emerald-300 text-emerald-950 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
-                  Active
-                </span>
-              )}
+        <div className="bg-white border border-border rounded-3xl shadow-sm">
+          <div className="px-6 pt-6 pb-5 border-b border-border/60 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">Digital Pass</p>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">{ticket.event_title}</h1>
             </div>
+            <StatusPill ticket={ticket} />
+          </div>
 
-            <h1 className="font-display text-2xl font-extrabold tracking-tight mb-1">{ticket.event_title}</h1>
-            <p className="text-card/70 text-sm font-medium mb-8 flex items-center gap-1.5">
-              <Calendar size={14} /> {formatDate(ticket.event_date)}
-              <MapPin size={14} className="ml-3" /> {ticket.event_venue || "—"}
-            </p>
-
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-card/15 border border-card/20 flex items-center justify-center shrink-0">
-                <User size={24} />
+          <div className="px-6 py-5 space-y-3 text-sm">
+            <div className="flex items-center gap-3">
+              <Calendar size={15} className="text-muted-foreground shrink-0" />
+              <span className="text-secondary">{formatDate(ticket.event_date)}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <MapPin size={15} className="text-muted-foreground shrink-0" />
+              <span className="text-secondary">{ticket.event_venue || "—"}</span>
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                <User size={16} className="text-muted-foreground" />
               </div>
               <div>
-                <p className="text-card/60 text-[10px] font-bold uppercase tracking-widest mb-0.5">Attendee</p>
-                <p className="font-bold text-base">{ticket.payer_name || ticket.payer_email || "—"}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Attendee</p>
+                <p className="font-semibold text-secondary">{ticket.payer_name || ticket.payer_email || "—"}</p>
               </div>
             </div>
+          </div>
 
-            <div className="bg-card/10 border border-card/20 rounded-3xl p-6 mb-6 flex flex-col items-center">
-              <QrCode className="w-6 h-6 text-accent mb-3" />
+          <div className="px-6 pb-6">
+            <div className="rounded-2xl border border-border bg-background/50 p-5 flex flex-col items-center">
               {inactive ? (
-                <div className="flex flex-col items-center gap-3 py-6">
-                  <AlertTriangle className="w-10 h-10 text-amber-300" />
-                  <p className="text-sm font-bold text-center">This pass is not active. Contact the event organizers.</p>
+                <div className="flex flex-col items-center gap-3 py-6 text-center">
+                  <AlertTriangle className="w-10 h-10 text-amber-500" />
+                  <p className="text-sm font-bold text-secondary">This pass is not active. Contact the event organizers.</p>
                 </div>
               ) : qrDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={qrDataUrl} alt="Entry QR code" width={200} height={200} className="rounded-2xl bg-white p-3" />
+                <img src={qrDataUrl} alt="Entry QR code" width={200} height={200} className="rounded-xl bg-white p-3 border border-border" />
               ) : (
-                <div className="w-48 h-48 rounded-2xl bg-white/10 flex items-center justify-center">
-                  <div className="w-8 h-8 border-2 border-card/40 border-t-card rounded-full animate-spin" />
+                <div className="w-48 h-48 rounded-xl bg-white flex items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-border border-t-muted-foreground rounded-full animate-spin" />
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="flex items-center justify-between text-card/70 text-xs font-bold uppercase tracking-widest">
-              <span className="flex items-center gap-1.5">
-                <Ticket size={13} /> {ticket.reference}
-              </span>
-              <span>×{ticket.quantity}</span>
-            </div>
+          <div className="px-6 py-4 border-t border-border/60 flex items-center justify-between text-xs font-bold text-muted-foreground">
+            <span className="flex items-center gap-1.5 uppercase tracking-wider">
+              <Ticket size={13} /> {ticket.reference}
+            </span>
+            <span>×{ticket.quantity}</span>
           </div>
         </div>
 

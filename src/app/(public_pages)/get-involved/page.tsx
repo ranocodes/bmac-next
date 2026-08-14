@@ -85,6 +85,7 @@ function GetInvolvedInner() {
     formLink?: string;
     email?: string;
     kind?: "member" | "volunteer" | "partner" | "program";
+    emailError?: string;
   } | null>(null);
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -185,15 +186,22 @@ function GetInvolvedInner() {
       return;
     }
     setIsSubmitting(false);
-    if (res.emailSent && res.formLink) {
-      toast("Application sent! Check your email for your form link.", "success");
+    if (res.formLink) {
+      const emailOk = res.emailSent;
       setSubmitted({
         title: "Application Sent!",
-        message: "Check your email — we've sent you a link to complete the next step.",
+        message: emailOk
+          ? "Check your email — we've sent you a link to complete the next step."
+          : "We couldn't email your form link, but you can open it below.",
         formLink: res.formLink,
         email: formData.email.trim(),
         kind,
+        emailError: emailOk ? "" : res.emailError || "Email delivery failed",
       });
+      toast(
+        emailOk ? "Application sent! Check your email for your form link." : "Application saved — open your form link below.",
+        emailOk ? "success" : "error"
+      );
     } else {
       setSubmitted({
         title: "Application Sent!",
@@ -380,6 +388,11 @@ function GetInvolvedInner() {
                     <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
                       {submitted.message}
                     </p>
+                    {submitted.emailError && (
+                      <p className="mt-3 mx-auto max-w-sm text-xs text-amber-300 bg-amber-400/10 border border-amber-400/20 rounded-lg px-4 py-2.5">
+                        We couldn&apos;t email the form link to <span className="font-semibold">{submitted.email}</span>. Use the button below to open it now, or resend the link to your email.
+                      </p>
+                    )}
                     {submitted.formLink && (
                       <a
                         href={submitted.formLink}

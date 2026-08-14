@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from '@/actions/people';
-import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail } from '@/lib/email';
+import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail, sendTicketAlertEmail } from '@/lib/email';
 import { sendWorkflowEmail } from '@/actions/emails';
-import { createAdminNotification, getSuperAdminEmails } from '@/lib/notifications';
+import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -132,6 +132,16 @@ export async function POST(request: Request) {
           type: "ticket",
           link: "/admin/events",
         });
+        await emailSuperAdmins(adminEmail =>
+          sendTicketAlertEmail({
+            email: adminEmail,
+            attendeeName: ticket.payer_name || customer?.email || "",
+            attendeeEmail: ticket.payer_email || customer?.email || "",
+            eventName: eventTitle,
+            amountLabel,
+            reference: ticket.reference,
+          })
+        );
         await db.query(
           `UPDATE public.workflow_records
               SET status = 'resolved', outcome = 'Payment verified, ticket confirmed', resolved_at = now(), updated_at = now()

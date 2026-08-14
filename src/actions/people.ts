@@ -314,7 +314,7 @@ export async function applyAsPerson(opts: {
   notes?: string;
   privacy?: boolean;
   marketing?: boolean;
-}): Promise<{ error?: string; formLink?: string; emailSent?: boolean; kindLabel?: string }> {
+}): Promise<{ error?: string; formLink?: string; emailSent?: boolean; emailError?: string; kindLabel?: string }> {
   if (!opts.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.email)) {
     return { error: "Valid email required" };
   }
@@ -380,6 +380,7 @@ export async function applyAsPerson(opts: {
 
   let formLink = "";
   let emailSent = false;
+  let emailError = "";
   formLink = await getConfiguredFormLink(formKeyMap[opts.kind] || "join");
   if (record && formLink) {
     const sent = await sendGoogleFormLinkEmail({
@@ -389,7 +390,10 @@ export async function applyAsPerson(opts: {
       formLink,
     });
     emailSent = !sent.error;
-    if (sent.error) console.error("google-forms-link email error:", sent.error);
+    if (sent.error) {
+      emailError = sent.error;
+      console.error("google-forms-link email error:", sent.error);
+    }
     try {
       await db.query(
         "UPDATE public.person_records SET meta = jsonb_set(meta, '{form_link_sent_at}', to_jsonb($2::text), true) WHERE id = $1",
@@ -398,6 +402,13 @@ export async function applyAsPerson(opts: {
     } catch (err) {
       console.error("store form_link_sent_at error:", err);
     }
+  } else if (!formLink) {
+    await createAdminNotification({
+      title: "Google Form link missing",
+      message: `${kindLabel} applications have no configured Google Form link — applicants cannot proceed past this step.`,
+      type: "config",
+      link: "/admin/settings",
+    });
   }
 
   const adminEmails = await getSuperAdminEmails();
@@ -418,7 +429,7 @@ export async function applyAsPerson(opts: {
     link: "/admin/inbox",
   });
 
-  return { formLink, emailSent, kindLabel };
+  return { formLink, emailSent, emailError, kindLabel };
 }
 
 export async function resendGoogleFormLink(opts: {

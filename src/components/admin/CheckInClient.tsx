@@ -16,6 +16,8 @@ interface CheckInResult {
   alreadyCheckedIn?: boolean;
   notFound?: boolean;
   notConfirmed?: boolean;
+  wrongEvent?: boolean;
+  wrongEventTitle?: string;
   checkedInAt?: string;
   attendeeName?: string;
   eventTitle?: string;
@@ -23,6 +25,7 @@ interface CheckInResult {
 
 export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
   const [query, setQuery] = useState("");
+  const [selectedEventId, setSelectedEventId] = useState(events[0]?.id || "");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [flash, setFlash] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -30,6 +33,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
   const scannerRef = useRef<HTMLDivElement>(null);
   const html5Ref = useRef<unknown>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scanCooldownRef = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -65,6 +69,11 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 240, height: 240 } },
         (decodedText: string) => {
+          if (scanCooldownRef.current) return;
+          scanCooldownRef.current = true;
+          setTimeout(() => {
+            scanCooldownRef.current = false;
+          }, 1500);
           stopScanner();
           runCheckin(decodedText);
         },
@@ -81,13 +90,17 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
   async function runCheckin(q: string) {
     const trimmed = q.trim();
     if (!trimmed) return;
+    if (!selectedEventId) {
+      setFlash({ ok: false, msg: "Pick an event before checking in" });
+      return;
+    }
     setBusy(true);
     setResult(null);
     setFlash(null);
     const token = trimmed.length > 30 ? trimmed : undefined;
     const reference = /^BMAC-EVT-/i.test(trimmed) ? trimmed : undefined;
     const email = trimmed.includes("@") ? trimmed : undefined;
-    const res = await checkInAttendee({ token, reference, email });
+    const res = await checkInAttendee({ token, reference, email, eventId: selectedEventId });
     setBusy(false);
     const r = res.result;
     if (res.error) {
@@ -99,6 +112,8 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
       setFlash({ ok: true, msg: "Checked in" });
     } else if (r?.alreadyCheckedIn) {
       setFlash({ ok: false, msg: "Already checked in" });
+    } else if (r?.wrongEvent) {
+      setFlash({ ok: false, msg: `Ticket is for another event${r.wrongEventTitle ? `: ${r.wrongEventTitle}` : ""}` });
     } else if (r?.notConfirmed) {
       setFlash({ ok: false, msg: "Pass not confirmed" });
     } else if (r?.notFound) {
@@ -122,6 +137,25 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
         <p className="text-sm text-muted-foreground mt-1">Scan a pass QR, enter a reference, or search by email.</p>
       </div>
 
+      <div className="bg-card rounded-3xl border border-border/50 p-6">
+        <label className="block text-sm font-medium text-secondary mb-2">Event</label>
+        <select
+          value={selectedEventId}
+          onChange={e => {
+            setSelectedEventId(e.target.value);
+            setResult(null);
+            setFlash(null);
+          }}
+          className="w-full h-12 px-4 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+        >
+          <option value="">Pick an event…</option>
+          {events.map(e => (
+            <option key={e.id} value={e.id}>{e.title}{e.date ? ` — ${e.date}` : ""}</option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground mt-2">Tickets for other events are rejected with a clear message.</p>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-card rounded-3xl border border-border/50 p-6">
@@ -133,13 +167,19 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
                 </button>
               )}
             </div>
-            <div ref={scannerRef} className={`rounded-2xl overflow-hidden bg-background border border-border/50 ${scanning ? "block" : "hidden"}`}>
-              <div id="bmac-checkin-scanner" className="w-full" />
+            <div ref={scannerRef} className="relative rounded-2xl overflow-hidden bg-background border border-border/50 aspect-[4/3]">
+              {!scanning && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <Camera size={24} />
+                  <p className="text-sm">Camera preview appears here</p>
+                </div>
+              )}
+              <div id="bmac-checkin-scanner" className={`w-full h-full ${scanning ? "" : "opacity-0 pointer-events-none"}`} />
             </div>
             {!scanning && (
               <button
                 onClick={startScanner}
-                className="flex items-center gap-2 h-11 px-5 rounded-xl border border-input bg-background text-sm font-semibold hover:bg-muted transition-colors"
+                className="flex items-center gap-2 h-11 px-5 rounded-xl border border-input bg-background text-sm font-semibold hover:bg-muted transition-colors mt-4"
               >
                 <Camera size={16} /> Start camera scan
               </button>
@@ -162,7 +202,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
               </div>
               <button
                 type="submit"
-                disabled={busy || !query.trim()}
+                disabled={busy || !query.trim() || !selectedEventId}
                 className="flex items-center gap-2 h-12 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Check In
@@ -183,6 +223,10 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
               <h2 className="font-semibold text-secondary mb-4">Result</h2>
               {result.notFound ? (
                 <p className="text-sm text-muted-foreground">No ticket matched that input.</p>
+              ) : result.wrongEvent ? (
+                <p className="text-sm text-amber-600 font-medium">
+                  This ticket is for a different event{result.wrongEventTitle ? `: ${result.wrongEventTitle}` : ""}. Pick that event to check in this attendee.
+                </p>
               ) : result.notConfirmed ? (
                 <p className="text-sm text-amber-600 font-medium">This pass is not confirmed — it cannot be checked in.</p>
               ) : (
