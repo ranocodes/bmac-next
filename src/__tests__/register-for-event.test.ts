@@ -88,7 +88,9 @@ describe("registerForEvent paid-event guard", () => {
   });
 
   it("still registers free published events (regression)", async () => {
-    mockQuery.mockResolvedValueOnce([baseRow]);
+    mockQuery
+      .mockResolvedValueOnce([baseRow])
+      .mockResolvedValueOnce([]); // duplicate-email check
     mockReserveCapacity.mockResolvedValueOnce(1);
     mockFindOrCreatePerson.mockResolvedValueOnce({ id: "p-1", first_name: "Jane" });
     mockCreateTicket.mockResolvedValueOnce(ticket);

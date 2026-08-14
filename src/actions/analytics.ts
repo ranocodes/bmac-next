@@ -4,8 +4,6 @@ import { db } from "@/lib/db";
 import { countOpenWorkflows } from "@/lib/workflows";
 
 export async function getDashboardStats() {
-  const today = Date.now() - 86400000 * 1000;
-
   const [
     newsCount, eventsCount, programsCount, galleryCount,
     teamCount, testimonialsCount, workflowOpenCount,
@@ -98,4 +96,77 @@ export async function getActivityBreakdown() {
     "SELECT action, COUNT(*) AS count FROM public.activity_logs GROUP BY action ORDER BY count DESC"
   ).catch(() => []);
   return rows.map(r => ({ action: r.action.replace(/_/g, " "), count: Number(r.count) }));
+}
+
+export async function getOperationalAnalytics() {
+  const [
+    ticketStats,
+    revenueRow,
+    donationRow,
+    donationStats,
+    programStats,
+    workflowStats,
+  ] = await Promise.all([
+    db.query<{ status: string; count: string }>(
+      "SELECT status, COUNT(*) AS count FROM public.event_tickets GROUP BY status"
+    ).catch(() => []),
+    db.query<{ total: string }>(
+      `SELECT COALESCE(SUM(t.amount * t.quantity), 0)::text AS total
+       FROM public.event_tickets t WHERE t.status = 'confirmed'`
+    ).catch(() => [{ total: "0" }]),
+    db.query<{ total: string; count: string }>(
+      `SELECT COALESCE(SUM((pr.meta->>'amount')::numeric), 0)::text AS total, COUNT(*)::text AS count
+       FROM public.person_records pr WHERE pr.kind = 'donation' AND pr.status = 'completed'`
+    ).catch(() => [{ total: "0", count: "0" }]),
+    db.query<{ status: string; count: string }>(
+      "SELECT status, COUNT(*) AS count FROM public.person_records WHERE kind = 'donation' GROUP BY status"
+    ).catch(() => []),
+    db.query<{ count: string }>(
+      "SELECT COUNT(*) AS count FROM public.program_applications"
+    ).catch(() => [{ count: "0" }]),
+    db.query<{ kind: string; count: string }>(
+      "SELECT kind, COUNT(*) AS count FROM public.workflow_records GROUP BY kind"
+    ).catch(() => []),
+  ]);
+
+  const checkedIn = await db.query<{ count: string }>(
+    "SELECT COUNT(*) AS count FROM public.event_tickets WHERE status = 'confirmed' AND checked_in = true"
+  ).catch(() => [{ count: "0" }]);
+
+  const participants = await db.query<{ count: string }>(
+    "SELECT COUNT(*) AS count FROM public.participants"
+  ).catch(() => [{ count: "0" }]);
+
+  const applicationsByStatus = await db.query<{ status: string; count: string }>(
+    "SELECT status, COUNT(*) AS count FROM public.program_applications GROUP BY status"
+  ).catch(() => []);
+
+  const ticketMap = Object.fromEntries(ticketStats.map(r => [r.status, Number(r.count)]));
+  const confirmed = ticketMap.confirmed || 0;
+
+  return {
+    tickets: {
+      byStatus: ticketMap,
+      confirmed,
+      pending: ticketMap.pending || 0,
+      cancelled: ticketMap.cancelled || 0,
+      checkedIn: Number(checkedIn[0]?.count ?? 0),
+      attendanceRate: confirmed ? Math.round((Number(checkedIn[0]?.count ?? 0) / confirmed) * 100) : 0,
+    },
+    revenue: {
+      events: Number(revenueRow[0]?.total ?? 0),
+      donations: Number(donationRow[0]?.total ?? 0),
+    },
+    donations: {
+      total: Number(donationRow[0]?.total ?? 0),
+      count: Number(donationRow[0]?.count ?? 0),
+      byStatus: Object.fromEntries(donationStats.map(r => [r.status, Number(r.count)])),
+    },
+    programs: {
+      applications: Number(programStats[0]?.count ?? 0),
+      participants: Number(participants[0]?.count ?? 0),
+      applicationsByStatus: Object.fromEntries(applicationsByStatus.map(r => [r.status, Number(r.count)])),
+    },
+    workflows: Object.fromEntries(workflowStats.map(r => [r.kind, Number(r.count)])),
+  };
 }

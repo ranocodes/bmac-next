@@ -229,13 +229,47 @@ export async function POST(request: Request) {
       })}`;
 
       if (payerEmail) {
+        const updated = await db.query<{ id: string }>(
+          `UPDATE public.person_records
+              SET status = 'completed',
+                  meta = jsonb_set(jsonb_set(jsonb_set(meta, '{amount}', to_jsonb($2::numeric), true),
+                                            '{currency}', to_jsonb($3::text), true),
+                                            '{verified_at}', to_jsonb($4::text), true),
+                  updated_at = now()
+            WHERE kind = 'donation' AND ref_id = $1 AND status = 'pending'
+            RETURNING id`,
+          [reference, amount, currency, new Date().toISOString()]
+        );
+        if (!updated.length) {
+          const person = await findOrCreatePerson({ firstName: payerName, email: payerEmail });
+          if (person) {
+            await ensurePersonRoles(person.id, ["donor"]);
+            await upsertPersonRecord(person.id, "donation", {
+              refId: reference,
+              refTitle: "Donation",
+              status: "completed",
+              meta: { amount, currency, reference },
+            });
+          }
+        }
+      }
+
+      if (payerEmail) {
         const sent = await sendDonationThanksEmail({
           email: payerEmail,
           firstName: payerName,
           amountLabel,
           reference,
         });
-        if (sent.error) console.error("donation-thanks email error:", sent.error);
+        if (sent.error) {
+          console.error("donation-thanks email error:", sent.error);
+          await createAdminNotification({
+            title: "Donation thank-you email failed",
+            message: `Receipt email to ${payerEmail} for ${reference} failed: ${sent.error}`,
+            type: "donation",
+            link: "/admin/payments",
+          });
+        }
       }
 
       const adminEmails = await getSuperAdminEmails();
@@ -247,7 +281,9 @@ export async function POST(request: Request) {
             donorEmail: payerEmail,
             amountLabel,
             reference,
-          }).catch(() => ({ error: "alert email failed" }))
+          }).catch(err => {
+            console.error("donation-alert email error:", err);
+          })
         )
       );
       await createAdminNotification({

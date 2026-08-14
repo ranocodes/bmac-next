@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
+import { subscribeToNewsletter } from "@/actions/newsletter";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
 function formatEventDate(raw: string | undefined): { month: string; day: string } {
@@ -60,6 +61,45 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
   );
   const [events] = useState<EventPass[]>(normalizeEvents(initialEvents));
   const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterError, setNewsletterError] = useState("");
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [bookmarked, setBookmarked] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const saved = JSON.parse(localStorage.getItem("bmac-bookmarks") || "[]");
+      return Array.isArray(saved) && saved.includes(id);
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleBookmark = () => {
+    try {
+      const saved: string[] = JSON.parse(localStorage.getItem("bmac-bookmarks") || "[]");
+      const next = bookmarked
+        ? saved.filter(s => s !== id)
+        : Array.from(new Set([...saved, id]));
+      localStorage.setItem("bmac-bookmarks", JSON.stringify(next));
+      setBookmarked(!bookmarked);
+    } catch {
+      setBookmarked(!bookmarked);
+    }
+  };
+
+  const handleNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newsletterLoading) return;
+    setNewsletterLoading(true);
+    setNewsletterError("");
+    const res = await subscribeToNewsletter(newsletterEmail);
+    setNewsletterLoading(false);
+    if (res.error) {
+      setNewsletterError(res.error);
+      return;
+    }
+    setNewsletterSubmitted(true);
+  };
 
   if (!article) {
     return (
@@ -74,6 +114,20 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
       </main>
     );
   }
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = article.title;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch {
+      // user cancelled native share; ignore
+    }
+  };
 
   return (
     <main suppressHydrationWarning className="bg-background">
@@ -139,10 +193,10 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
             <div className="mt-12 md:mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
                <div className="flex flex-col sm:flex-row items-center gap-4">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Share story</span>
-                  <div className="flex gap-2">
-                     <button className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-all"><Share2 size={18} /></button>
-                     <button className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-all"><Bookmark size={18} /></button>
-                  </div>
+                   <div className="flex gap-2">
+                      <button onClick={handleShare} aria-label="Share story" className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-all"><Share2 size={18} /></button>
+                      <button onClick={toggleBookmark} aria-label={bookmarked ? "Remove bookmark" : "Save story"} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${bookmarked ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"}`}><Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} /></button>
+                   </div>
                </div>
                <Link href="/get-involved" className="text-xs md:text-sm font-bold text-primary hover:gap-3 transition-all flex items-center gap-2">
                   Be part of the next story <ArrowLeft size={16} className="rotate-180 text-accent" />
@@ -200,10 +254,18 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
                         <p className="font-bold text-accent mb-1">You're In!</p>
                         <p className="text-xs text-accent-foreground/60">Check your inbox every Friday.</p>
                       </div>
-                    ) : (
-                      <form className="space-y-3 md:space-y-4" onSubmit={(e) => { e.preventDefault(); setNewsletterSubmitted(true); }}>
-                     <input type="email" placeholder="Your Email" className="w-full px-5 py-3.5 md:py-4 bg-card/30 border border-accent-foreground/10 rounded-xl text-sm placeholder:text-accent-foreground/40 focus:outline-none" required />
-                      <button className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold shadow-lg active:scale-[0.98] transition-transform">Join 500+ Readers</button>
+                     ) : (
+                      <form className="space-y-3 md:space-y-4" onSubmit={handleNewsletter}>
+                     <input type="email" placeholder="Your Email" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} className="w-full px-5 py-3.5 md:py-4 bg-card/30 border border-accent-foreground/10 rounded-xl text-sm placeholder:text-accent-foreground/40 focus:outline-none" required />
+                     {newsletterError && (
+                       <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-300">
+                         <AlertCircle size={14} className="shrink-0" />
+                         <span>{newsletterError}</span>
+                       </div>
+                     )}
+                      <button type="submit" disabled={newsletterLoading} className="w-full py-4 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold shadow-lg active:scale-[0.98] transition-transform disabled:opacity-70 flex items-center justify-center gap-2">
+                        {newsletterLoading ? <><Loader2 size={16} className="animate-spin" /> Subscribing...</> : <>Get Friday Updates <Send size={15} /></>}
+                     </button>
                    </form>)}
                 </div>
             </div>

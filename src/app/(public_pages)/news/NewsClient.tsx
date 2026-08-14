@@ -193,7 +193,7 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
                 <div className="bg-card border border-border/50 rounded-bento p-8 relative overflow-hidden group shadow-lg">
                    <div className="relative z-10">
                       <h3 className="font-display text-xl font-extrabold text-secondary mb-3">Stay Notified.</h3>
-                      <p className="text-muted-foreground text-xs leading-relaxed mb-6">Join 500+ readers getting our official Friday updates.</p>
+                      <p className="text-muted-foreground text-xs leading-relaxed mb-6">Get our official Friday updates with the latest stories, workshop alerts, and leadership tips.</p>
                       <button onClick={() => setIsModalOpen(true)} className="w-full py-4 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-primary transition-all shadow-lg active:scale-[0.98]">
                          Subscribe Now
                       </button>

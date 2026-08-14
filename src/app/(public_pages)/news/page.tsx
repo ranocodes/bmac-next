@@ -8,5 +8,10 @@ export default async function NewsPage() {
     db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC" }),
     db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" }),
   ]);
-  return <NewsClient initialNews={news || []} initialEvents={events || []} />;
+  return (
+    <NewsClient
+      initialNews={(news || []).filter((n: any) => n.status === "published")}
+      initialEvents={(events || []).filter((e: any) => e.status === "published")}
+    />
+  );
 }
