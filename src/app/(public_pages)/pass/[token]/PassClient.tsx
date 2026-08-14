@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, User, Ticket, CheckCircle2, AlertTriangle } from "lucide-react";
+import { toPng } from "html-to-image";
+import { ArrowLeft, Calendar, MapPin, User, Ticket, CheckCircle2, AlertTriangle, Download } from "lucide-react";
 
 interface PassTicket {
   id: string;
@@ -56,6 +58,28 @@ function StatusPill({ ticket }: { ticket: PassTicket }) {
 }
 
 export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
+  const passRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
+  const handleDownload = async () => {
+    if (!passRef.current) return;
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      const dataUrl = await toPng(passRef.current, { pixelRatio: 2, cacheBust: true });
+      const link = document.createElement("a");
+      link.download = `bmac-pass-${ticket?.reference || "pass"}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Pass download error:", err);
+      setDownloadError("Could not generate the image. Try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (!ticket) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -78,7 +102,7 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
           <ArrowLeft size={14} /> Back to Events
         </Link>
 
-        <div className="bg-white border border-border rounded-3xl shadow-sm">
+        <div ref={passRef} className="bg-white border border-border rounded-3xl shadow-sm">
           <div className="px-6 pt-6 pb-5 border-b border-border/60 flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">Digital Pass</p>
@@ -132,6 +156,15 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
             <span>×{ticket.quantity}</span>
           </div>
         </div>
+
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          <Download size={14} /> {downloading ? "Preparing…" : "Download pass"}
+        </button>
+        {downloadError && <p className="mt-2 text-center text-red-500 text-xs font-bold">{downloadError}</p>}
 
         {ticket.checked_in && ticket.checked_in_at && (
           <div className="mt-4 flex items-center gap-2 text-green-600 text-sm font-bold justify-center">

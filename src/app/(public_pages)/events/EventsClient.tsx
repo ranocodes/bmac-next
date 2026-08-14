@@ -35,6 +35,8 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
     date: (e as any).event_date || e.date || "",
     desc: e.desc || (e as any).description || "",
     features: (e as any).features || [],
+    isPaid: (e as any).is_paid ?? (e as any).isPaid ?? false,
+    price: Number((e as any).price || 0),
   })));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
