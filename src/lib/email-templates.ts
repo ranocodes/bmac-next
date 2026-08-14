@@ -12,7 +12,13 @@ export type EmailTemplateKey =
   | "google-forms-link"
   | "donation-thanks"
   | "donation-alert"
-  | "form-submit-alert";
+  | "form-submit-alert"
+  | "admin-reply"
+  | "contact-autoreply"
+  | "registration-confirmed"
+  | "ticket-receipt"
+  | "application-status"
+  | "event-reminder";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   credentials: "Admin credentials",
@@ -23,6 +29,12 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "donation-thanks": "Donation thank-you",
   "donation-alert": "Donation alert (admins)",
   "form-submit-alert": "Application alert (admins)",
+  "admin-reply": "Admin reply to a submission",
+  "contact-autoreply": "Contact form acknowledgement",
+  "registration-confirmed": "Event registration confirmed",
+  "ticket-receipt": "Event ticket receipt",
+  "application-status": "Application status update",
+  "event-reminder": "Event reminder",
 };
 
 const shell = (heading: string, message: string, cta?: { label: string; url: string }, footer?: string) => `<!DOCTYPE html>
@@ -132,10 +144,10 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
     subject: "Admin account deleted — BMAC Admin Panel",
     html: shell(
       "Admin account deleted",
-      "The super admin account <strong>{{deletedAdmin}}</strong> was deleted by {{deletedBy}}. If you did not expect this, review your admin accounts.",
+      "The super admin account <strong>{{deletedAdmin}}</strong> was deleted by {{deletedBy}}.{{reason}} If you did not expect this, review your admin accounts.",
       { label: "Go to Admin Panel", url: "{{loginLink}}" }
     ),
-    text: "The super admin account {{deletedAdmin}} was deleted by {{deletedBy}}. If you did not expect this, review your admin accounts.\n\nSign in at: {{loginLink}}",
+    text: "The super admin account {{deletedAdmin}} was deleted by {{deletedBy}}.{{reason}} If you did not expect this, review your admin accounts.\n\nSign in at: {{loginLink}}",
   },
   "admin-delete-attempt": {
     subject: "Self-deletion attempt blocked — BMAC Admin Panel",
@@ -214,6 +226,108 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "View in dashboard: {{dashboardUrl}}",
     ].join("\n"),
   },
+  "admin-reply": {
+    subject: "Re: {{originalTitle}}",
+    html: shell(
+      "{{originalTitle}}",
+      "{{body}}",
+      undefined,
+      "You are receiving this because you contacted BMAC. This email is a direct reply from our team."
+    ),
+    text: [
+      "{{body}}",
+      "",
+      "—",
+      "You are receiving this because you contacted BMAC. This email is a direct reply from our team.",
+    ].join("\n"),
+  },
+  "contact-autoreply": {
+    subject: "We received your message — BMAC",
+    html: shell(
+      "Thanks for reaching out, {{firstName}}!",
+      "We've received your message and a member of our team will get back to you within 1–2 business days. If your inquiry is urgent, reply to this email.",
+      undefined,
+      "This is an automated acknowledgement. No action is needed on your part."
+    ),
+    text: [
+      "Thanks for reaching out, {{firstName}}!",
+      "",
+      "We've received your message and a member of our team will get back to you within 1–2 business days.",
+      "",
+      "This is an automated acknowledgement. No action is needed on your part.",
+    ].join("\n"),
+  },
+  "registration-confirmed": {
+    subject: "You're registered for {{eventName}} — BMAC",
+    html: shell(
+      "Registration confirmed",
+      "Hi <strong>{{firstName}}</strong>, your registration for <strong>{{eventName}}</strong> is confirmed. We can't wait to see you there!",
+      { label: "View Your Pass", url: "{{passUrl}}" },
+      "Event date: {{eventDate}} · Location: {{eventLocation}}"
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Your registration for {{eventName}} is confirmed.",
+      "Event date: {{eventDate}}",
+      "Location: {{eventLocation}}",
+      "",
+      "View your pass: {{passUrl}}",
+    ].join("\n"),
+  },
+  "ticket-receipt": {
+    subject: "Your ticket for {{eventName}} — BMAC",
+    html: shell(
+      "Here's your ticket",
+      "Hi <strong>{{firstName}}</strong>, thanks for getting your ticket for <strong>{{eventName}}</strong>. Your reference is <strong>{{reference}}</strong>. Show the QR code at the door to check in.",
+      { label: "View Your Pass", url: "{{passUrl}}" },
+      "Need help? Reply to this email and we will sort you out."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Thanks for getting your ticket for {{eventName}}.",
+      "Reference: {{reference}}",
+      "",
+      "View your pass: {{passUrl}}",
+      "",
+      "Show the QR code at the door to check in.",
+    ].join("\n"),
+  },
+  "application-status": {
+    subject: "Update on your BMAC application",
+    html: shell(
+      "Application status update",
+      "Hi <strong>{{firstName}}</strong>, there's an update on your <strong>{{kindLabel}}</strong> application: your status is now <strong>{{status}}</strong>.{{note}}",
+      undefined,
+      "If you have questions about this update, reply to this email."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "There's an update on your {{kindLabel}} application: your status is now {{status}}.{{note}}",
+      "",
+      "If you have questions about this update, reply to this email.",
+    ].join("\n"),
+  },
+  "event-reminder": {
+    subject: "Reminder: {{eventName}} is coming up — BMAC",
+    html: shell(
+      "Don't forget {{eventName}}!",
+      "Hi <strong>{{firstName}}</strong>, just a friendly reminder that <strong>{{eventName}}</strong> is happening soon. We look forward to seeing you there!",
+      { label: "View Your Pass", url: "{{passUrl}}" },
+      "Event date: {{eventDate}} · Location: {{eventLocation}}"
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Just a friendly reminder that {{eventName}} is happening soon.",
+      "Event date: {{eventDate}}",
+      "Location: {{eventLocation}}",
+      "",
+      "View your pass: {{passUrl}}",
+    ].join("\n"),
+  },
 };
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
@@ -225,4 +339,10 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "donation-thanks",
   "donation-alert",
   "form-submit-alert",
+  "admin-reply",
+  "contact-autoreply",
+  "registration-confirmed",
+  "ticket-receipt",
+  "application-status",
+  "event-reminder",
 ];

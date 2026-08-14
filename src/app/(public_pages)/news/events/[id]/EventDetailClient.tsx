@@ -6,7 +6,8 @@ import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-r
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
-import { registerForFreeEvent } from "@/actions/people";
+import { registerForEvent } from "@/actions/events";
+import { createTicketOrder, getTicketStatus } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
 import type { EventPass } from "@/types/cms";
 
@@ -38,20 +39,35 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const [isPending, setIsPending] = useState(false);
   const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
+  const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
 
   const handlePaystackPayment = async () => {
     if (!event) return;
     try {
+      const order = await createTicketOrder({
+        eventId: event.id,
+        name: formData.name,
+        email: formData.email,
+        quantity: 1,
+        consent: true,
+      });
+      if (order.error) {
+        setFormError(order.error);
+        setIsPending(false);
+        return;
+      }
       const PaystackPop = await loadPaystack();
       const handler = PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
         email: formData.email,
-        amount: (event.price || 0) * 100,
+        amount: order.amountKobo || (event.price || 0) * 100,
         currency: "NGN",
-        ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+        ref: order.reference,
         metadata: {
-          source_type: "event_registration",
+          source_type: "event_ticket",
           source_id: event.id,
+          ticket_id: order.ticketId,
+          reference: order.reference,
           payer_name: formData.name,
           custom_fields: [
             {
@@ -68,10 +84,21 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
         },
         callback: function(response: any) {
           console.log("Payment successful. Reference: " + response.reference);
-          setIsReserved(true);
+          setIsPending(true);
+          const poll = setInterval(async () => {
+            const res = await getTicketStatus(order.reference || "");
+            if (res.status === "confirmed" && res.passUrl) {
+              clearInterval(poll);
+              setPassInfo({ passUrl: res.passUrl, reference: order.reference || "" });
+              setIsPending(false);
+              setIsReserved(true);
+            }
+          }, 3000);
+          setTimeout(() => clearInterval(poll), 60000);
         },
         onClose: function() {
           setIsPending(false);
+          setFormError("Payment not confirmed yet — we're verifying your payment. Check back shortly.");
         }
       });
       handler.openIframe();
@@ -90,17 +117,18 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
     if (event.isPaid) {
       await handlePaystackPayment();
     } else {
-      const res = await registerForFreeEvent({
+      const res = await registerForEvent({
         eventId: event.id,
-        eventTitle: event.title,
         name: formData.name,
         email: formData.email,
+        consent: true,
       });
       if (res.error) {
         setFormError(res.error);
         setIsPending(false);
         return;
       }
+      setPassInfo({ passUrl: res.passUrl || "", reference: res.reference || "" });
       setIsPending(false);
       setIsReserved(true);
     }
@@ -277,16 +305,16 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
                           Your digital pass has been generated. Check your email for the official QR code and entry details.
                        </p>
                        
-                       <div className="p-6 bg-card/10 rounded-3xl border border-card/20 backdrop-blur-md mb-8">
-                          <p className="text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">Entry ID</p>
-                          <p className="font-mono text-xl font-extrabold text-accent">BMAC-2026-{Math.random().toString(36).substring(7).toUpperCase()}</p>
-                       </div>
+                        <div className="p-6 bg-card/10 rounded-3xl border border-card/20 backdrop-blur-md mb-8">
+                           <p className="text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">Entry ID</p>
+                           <p className="font-mono text-xl font-extrabold text-accent">{passInfo?.reference || "—"}</p>
+                        </div>
 
-                       <div className="flex flex-col gap-3">
-                          <button className="w-full py-4 bg-card text-primary font-bold rounded-2xl text-sm hover:bg-accent hover:text-secondary transition-all">
-                             Add to Calendar
-                          </button>
-                       </div>
+                        <div className="flex flex-col gap-3">
+                           <a href={passInfo?.passUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-card text-primary font-bold rounded-2xl text-sm hover:bg-accent hover:text-secondary transition-all text-center">
+                              View Digital Pass
+                           </a>
+                        </div>
                     </div>
                   </motion.div>
                )}

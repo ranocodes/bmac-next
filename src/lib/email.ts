@@ -3,6 +3,12 @@
 const SERVICE_URL = (process.env.EMAIL_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
 const API_KEY = process.env.EMAIL_SERVICE_API_KEY || "";
 
+function absolutizeUrl(path: string): string {
+  if (!path || /^https?:\/\//.test(path)) return path;
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+  return base ? `${base}${path.startsWith("/") ? path : `/${path}`}` : path;
+}
+
 async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
   try {
     const res = await fetch(`${SERVICE_URL}/send`, {
@@ -28,8 +34,23 @@ export async function sendPasswordResetEmail(email: string, resetLink: string): 
   return sendRequest({ type: "password-reset", email, resetLink });
 }
 
-export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string): Promise<{ error?: string }> {
-  return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy });
+export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string, reason?: string): Promise<{ error?: string }> {
+  return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy, reason: reason || "" });
+}
+
+export async function sendAdminReplyEmail(opts: {
+  email: string;
+  subject: string;
+  body: string;
+  originalTitle?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "admin-reply",
+    email: opts.email,
+    subject: opts.subject,
+    body: opts.body,
+    originalTitle: opts.originalTitle || "",
+  });
 }
 
 export async function sendAdminDeleteAttemptAlert(email: string, actor: string): Promise<{ error?: string }> {
@@ -95,5 +116,118 @@ export async function sendFormSubmitAlertEmail(opts: {
     submitterName: opts.submitterName || "",
     submitterEmail: opts.submitterEmail || "",
     kindLabel: opts.kindLabel,
+  });
+}
+
+export async function sendContactAutoreplyEmail(opts: {
+  email: string;
+  firstName?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "contact-autoreply",
+    email: opts.email,
+    firstName: opts.firstName || "",
+  });
+}
+
+export async function sendContactAdminAlertEmail(opts: {
+  email: string;
+  name?: string;
+  senderEmail?: string;
+  phone?: string;
+  message?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "contact-admin-alert",
+    email: opts.email,
+    name: opts.name || "",
+    senderEmail: opts.senderEmail || "",
+    phone: opts.phone || "",
+    message: opts.message || "",
+  });
+}
+
+export async function sendNewsletterWelcomeEmail(opts: {
+  email: string;
+  firstName?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "newsletter-welcome",
+    email: opts.email,
+    firstName: opts.firstName || "",
+  });
+}
+
+export async function sendRegistrationConfirmedEmail(opts: {
+  email: string;
+  firstName?: string;
+  eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
+  passUrl?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "registration-confirmed",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    eventName: opts.eventName,
+    eventDate: opts.eventDate || "",
+    eventLocation: opts.eventLocation || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
+  });
+}
+
+export async function sendTicketReceiptEmail(opts: {
+  email: string;
+  firstName?: string;
+  eventName: string;
+  quantity?: number;
+  amountLabel?: string;
+  passUrl?: string;
+  reference?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "ticket-receipt",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    eventName: opts.eventName,
+    quantity: opts.quantity || 0,
+    amountLabel: opts.amountLabel || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
+    reference: opts.reference || "",
+  });
+}
+
+export async function sendApplicationStatusEmail(opts: {
+  email: string;
+  firstName?: string;
+  kindLabel?: string;
+  status?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "application-status",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    kindLabel: opts.kindLabel || "",
+    status: opts.status || "",
+  });
+}
+
+export async function sendEventReminderEmail(opts: {
+  email: string;
+  firstName?: string;
+  eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
+  passUrl?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "event-reminder",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    eventName: opts.eventName,
+    eventDate: opts.eventDate || "",
+    eventLocation: opts.eventLocation || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
   });
 }

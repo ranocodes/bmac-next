@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
+import ConsentCheckbox from "@/components/ConsentCheckbox";
 import { applyAsPerson, resendGoogleFormLink } from "@/actions/people";
 import { loadPaystack } from "@/lib/paystack";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
@@ -76,6 +77,7 @@ function GetInvolvedInner() {
   const [customAmount, setCustomAmount] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [formError, setFormError] = useState("");
+  const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{
     title: string;
@@ -96,12 +98,14 @@ function GetInvolvedInner() {
   const openWay = (way: Way) => {
     setFormError("");
     setSubmitted(null);
+    setConsent({ privacy: false, marketing: false });
     setSelectedWay(way);
   };
 
   const closeModal = () => {
     setSubmitted(null);
     setSelectedWay(null);
+    setConsent({ privacy: false, marketing: false });
     if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
     setResendCooldown(0);
   };
@@ -167,6 +171,8 @@ function GetInvolvedInner() {
         kind,
         name: formData.name,
         email: formData.email,
+        privacy: consent.privacy,
+        marketing: consent.marketing,
       });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -437,6 +443,13 @@ function GetInvolvedInner() {
                   {formError && (
                     <p className="text-xs font-bold text-red-300 px-2">{formError}</p>
                   )}
+                  <ConsentCheckbox
+                    privacy={consent.privacy}
+                    marketing={consent.marketing}
+                    onChange={setConsent}
+                    consentId={`get-involved-${selectedWay.id}`}
+                    dark
+                  />
                   <button
                     disabled={isSubmitting}
                     className="w-full py-4 md:py-5 bg-accent text-accent-foreground font-bold rounded-xl md:rounded-2xl text-sm hover:bg-card hover:text-accent transition-all flex items-center justify-center gap-3 mt-6 shadow-xl shadow-accent/10 active:scale-[0.98] disabled:opacity-70"

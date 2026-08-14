@@ -36,6 +36,11 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [landingPage, setLandingPage] = useState(initialData?.landingPage || false);
   const [landingPageError, setLandingPageError] = useState("");
+  const [applicationsOpen, setApplicationsOpen] = useState(
+    initialData?.applications_open ?? initialData?.applicationsOpen ?? false
+  );
+  const [isPaid, setIsPaid] = useState(initialData?.is_paid ?? initialData?.isPaid ?? false);
+  const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
@@ -78,6 +83,9 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
     const payload = {
       title, desc, longDesc, img, icon, color,
       variant, status: publishStatus, landingPage,
+      applicationsOpen,
+      isPaid,
+      price: isPaid ? Math.max(0, Number(price) || 0) : 0,
       details: [detailDuration, detailSchedule, detailEligibility, ...detailOther].join(" | "),
       skills,
       faqs,
@@ -111,7 +119,6 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
     setLandingPage(!landingPage);
     setLandingPageError("");
   }
-
   return (
     <div className="w-full">
       <div className="sticky top-0 z-40 bg-background border-b border-border/50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 -mt-2">
@@ -481,6 +488,79 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                   </button>
                 ))}
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">Applications</label>
+              <button
+                type="button"
+                onClick={() => setApplicationsOpen(!applicationsOpen)}
+                className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
+                  applicationsOpen
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "bg-background border-input text-secondary/70"
+                }`}
+              >
+                <div className={`w-10 h-6 rounded-full relative transition-colors shrink-0 ${
+                  applicationsOpen ? "bg-primary" : "bg-muted-foreground/30"
+                }`}>
+                  <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                    applicationsOpen ? "translate-x-5" : "translate-x-1"
+                  }`} />
+                </div>
+                <div className="text-left min-w-0">
+                  <span className="block text-sm font-medium truncate">
+                    {applicationsOpen ? "Open for Applications" : "Applications Closed"}
+                  </span>
+                  <span className="block text-[10px] mt-0.5 opacity-60 truncate">
+                    {applicationsOpen
+                      ? "Public registration form is live"
+                      : "Public form shows 'Applications Closed'"}
+                  </span>
+                </div>
+              </button>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">Pricing</label>
+              <button
+                type="button"
+                onClick={() => setIsPaid(!isPaid)}
+                className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
+                  isPaid
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "bg-background border-input text-secondary/70"
+                }`}
+              >
+                <div className={`w-10 h-6 rounded-full relative transition-colors shrink-0 ${
+                  isPaid ? "bg-primary" : "bg-muted-foreground/30"
+                }`}>
+                  <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
+                    isPaid ? "translate-x-5" : "translate-x-1"
+                  }`} />
+                </div>
+                <div className="text-left min-w-0">
+                  <span className="block text-sm font-medium truncate">
+                    {isPaid ? "Paid Program" : "Free Program"}
+                  </span>
+                  <span className="block text-[10px] mt-0.5 opacity-60 truncate">
+                    {isPaid
+                      ? "Applicants pay via Paystack on registration"
+                      : "Toggle to charge a registration fee"}
+                  </span>
+                </div>
+              </button>
+              {isPaid && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">₦</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

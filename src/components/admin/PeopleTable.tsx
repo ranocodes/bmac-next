@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Users, Search, Download } from "lucide-react";
 import { exportPeople } from "@/actions/people";
 import type { PersonRow } from "@/types/cms";
+
+function nameOf(p: PersonRow): string {
+  return [p.firstName, p.lastName].filter(Boolean).join(" ") || "—";
+}
 
 const roleColors: Record<string, string> = {
   attendee: "bg-blue-500/10 text-blue-600",
@@ -17,6 +21,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function PeopleTable({ initialData, canExport }: { initialData: PersonRow[]; canExport?: boolean }) {
+  const router = useRouter();
   const [people] = useState<PersonRow[]>(initialData);
   const [search, setSearch] = useState("");
 
@@ -106,11 +111,13 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
               </thead>
               <tbody>
                 {filtered.map(p => (
-                  <tr key={p.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={p.id}
+                    onClick={() => router.push(`/admin/people/${p.id}`)}
+                    className="cursor-pointer border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors"
+                  >
                     <td className="px-5 py-4">
-                      <Link href={`/admin/people/${p.id}`} className="font-medium text-secondary hover:text-primary transition-colors">
-                        {[p.firstName, p.lastName].filter(Boolean).join(" ") || "—"}
-                      </Link>
+                      <span className="font-medium text-secondary transition-colors">{nameOf(p)}</span>
                     </td>
                     <td className="px-5 py-4 hidden sm:table-cell text-muted-foreground text-xs">{p.email || "—"}</td>
                     <td className="px-5 py-4 hidden lg:table-cell text-muted-foreground text-xs">{p.phone || "—"}</td>

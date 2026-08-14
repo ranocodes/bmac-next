@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
 import { adminResetPassword } from "@/actions/admin-auth";
 import { deleteAdminUser, updateAdminUser, resendCredentialsAction } from "@/actions/admin-users";
+import DeleteReasonModal from "./DeleteReasonModal";
 import type { AdminRole, Permission } from "@/types/cms";
 import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
@@ -38,6 +39,8 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
   const [editPerms, setEditPerms] = useState<Permission[]>([]);
   const [editSaving, setEditSaving] = useState(false);
   const [credentials, setCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   function roleBadge(role: string) {
     const isSuper = role === "super_admin";
@@ -51,16 +54,22 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
     );
   }
 
-  async function handleDelete(id: string, email: string) {
+  async function handleDelete(id: string, email: string, name: string) {
     if (email === currentUser?.email) {
       toast("You cannot delete your own account", "error");
       return;
     }
-    const ok = await confirm("Delete this admin account? This cannot be undone.", { confirmText: "Delete" });
-    if (!ok) return;
-    const result = await deleteAdminUser(id);
-    if (result.error) { toast(result.error, "error"); return; }
-    setItems(prev => prev.filter(u => u.id !== id));
+    setDeleteTarget({ id, email, name });
+  }
+
+  async function handleConfirmDelete(reason: string) {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const result = await deleteAdminUser(deleteTarget.id, reason);
+    setDeleting(false);
+    if (result.error) { toast(result.error, "error"); setDeleteTarget(null); return; }
+    setItems(prev => prev.filter(u => u.id !== deleteTarget.id));
+    setDeleteTarget(null);
     toast("Admin deleted", "success");
   }
 
@@ -234,7 +243,7 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                               <button
                                 className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
                                 title="Delete admin"
-                                onClick={() => handleDelete(u.id, u.email)}>
+                                onClick={() => handleDelete(u.id, u.email, u.first_name || u.email)}>
                                 <Trash2 size={14} />
                               </button>
                             </>
@@ -326,6 +335,15 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
           </form>
         </div>
       )}
+
+      <DeleteReasonModal
+        open={!!deleteTarget}
+        title={`Delete admin ${deleteTarget?.name || ""}?`}
+        description="This action cannot be undone."
+        busy={deleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

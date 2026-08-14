@@ -27,6 +27,8 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
     faqs: (p as any).faqs || [],
     landingPage: (p as any).landingPage || false,
     status: (p as any).status || "draft",
+    isPaid: (p as any).is_paid ?? (p as any).isPaid ?? false,
+    price: Number((p as any).price || 0),
   })).filter(p => p.status === "published"));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -71,6 +73,13 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
                         <div className={cn(prog.color, "w-6 h-6 flex items-center justify-center")}>
                           {getIcon(prog.icon, { size: 24 })}
                         </div>
+                      </div>
+                      <div className={`absolute top-4 lg:top-6 right-4 lg:right-6 px-3 py-1.5 rounded-full backdrop-blur-md shadow-sm text-[9px] font-bold uppercase tracking-widest border ${
+                        prog.isPaid
+                          ? "bg-card/90 text-accent border-accent/30"
+                          : "bg-card/90 text-emerald-600 border-emerald-500/30"
+                      }`}>
+                        {prog.isPaid ? `₦${(prog.price || 0).toLocaleString()}` : "Free"}
                       </div>
                     </div>
                     

@@ -82,13 +82,21 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
 
   const canViewActivity = user?.permissions.includes("manage_users") ?? false;
 
-  const statCards = [
+  const statCards: {
+    label: string;
+    value: number;
+    icon: typeof Newspaper;
+    color: string;
+    bg: string;
+    href?: string;
+  }[] = [
     { label: "News", value: liveCounts.news, icon: Newspaper, color: "text-blue-500", bg: "bg-blue-50" },
     { label: "Events", value: liveCounts.events, icon: Calendar, color: "text-amber-500", bg: "bg-amber-50" },
     { label: "Programs", value: liveCounts.programs, icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-50" },
     { label: "Gallery", value: liveCounts.gallery, icon: Image, color: "text-purple-500", bg: "bg-purple-50" },
     { label: "Team", value: liveCounts.team, icon: Users, color: "text-rose-500", bg: "bg-rose-50" },
     { label: "Testimonials", value: liveCounts.testimonials, icon: Star, color: "text-cyan-500", bg: "bg-cyan-50" },
+    { label: "Open Workflows", value: liveCounts.workflowOpen ?? 0, icon: ClipboardList, color: "text-indigo-500", bg: "bg-indigo-50", href: "/admin/workflow" },
   ];
 
   return (
@@ -109,16 +117,23 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
-        {statCards.map(card => (
-          <div key={card.label} className="bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
-            <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-4`}>
-              <card.icon size={20} className={card.color} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-4">
+        {statCards.map(card => {
+          const body = (
+            <div className="bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
+              <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-4`}>
+                <card.icon size={20} className={card.color} />
+              </div>
+              <p className="text-2xl font-bold font-display tracking-tight text-secondary">{card.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{card.label}</p>
             </div>
-            <p className="text-2xl font-bold font-display tracking-tight text-secondary">{card.value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{card.label}</p>
-          </div>
-        ))}
+          );
+          return card.href ? (
+            <Link key={card.label} href={card.href} className="block">{body}</Link>
+          ) : (
+            <div key={card.label}>{body}</div>
+          );
+        })}
       </div>
 
 

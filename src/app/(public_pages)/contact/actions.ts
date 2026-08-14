@@ -1,10 +1,11 @@
 "use server";
 
-import { Resend } from "resend";
 import { logActivity } from "@/actions/activity-logs";
 import { findOrCreatePerson, upsertPersonRecord } from "@/actions/people";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { createWorkflowRecord } from "@/lib/workflows";
+import { getSuperAdminEmails } from "@/lib/notifications";
+import { sendContactAdminAlertEmail, sendContactAutoreplyEmail } from "@/lib/email";
+import { recordConsent } from "@/lib/consent";
 
 export async function sendContactMessage(
   prev: { success?: boolean; error?: string } | null,
@@ -14,33 +15,64 @@ export async function sendContactMessage(
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
   const message = formData.get("message") as string;
+  const privacy = formData.get("privacy") as string;
+  const marketing = formData.get("marketing") as string;
 
   if (!name || !email || !message) {
     return { error: "Name, email, and message are required." };
   }
+  if (privacy !== "on" && privacy !== "true" && privacy !== "1") {
+    return { error: "Please accept the privacy policy to continue" };
+  }
 
   try {
-    await resend.emails.send({
-      from: "BMAC Contact <onboarding@resend.dev>",
-      to: ["hello@bmacjos.org"],
-      subject: `Contact Form: ${name}`,
-      text: [
-        `Name: ${name}`,
-        `Email: ${email}`,
-        `Phone: ${phone || "N/A"}`,
-        ``,
-        `Message:`,
-        message,
-      ].join("\n"),
-    });
+    const autoReply = await sendContactAutoreplyEmail({ email, firstName: name });
+    if (autoReply.error) console.error("contact-autoreply email error:", autoReply.error);
+
+    const adminEmails = await getSuperAdminEmails();
+    await Promise.all(
+      adminEmails.map(adminEmail =>
+        sendContactAdminAlertEmail({
+          email: adminEmail,
+          name,
+          senderEmail: email,
+          phone: phone || "",
+          message,
+        }).catch(() => ({ error: "alert email failed" }))
+      )
+    );
+
     logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` });
 
     try {
       const person = await findOrCreatePerson({ firstName: name, email, phone });
       if (person) {
+        await recordConsent(
+          person.id,
+          { privacy: true, marketing: marketing === "on", contact: true },
+          "contact-form"
+        );
         await upsertPersonRecord(person.id, "contact", {
           status: "received",
-          meta: { message: message.slice(0, 500) },
+          meta: {
+            message: message.slice(0, 500),
+            consent: { privacy: true, marketing: marketing === "on" },
+          },
+        });
+        await createWorkflowRecord({
+          kind: "contact",
+          refId: person.id,
+          title: `Contact: ${name}`,
+          summary: message.slice(0, 300),
+          priority: "normal",
+          submitterName: name,
+          submitterEmail: email,
+          source: "contact-form",
+          details: {
+            phone: phone || "",
+            message: message.slice(0, 500),
+            consent: { privacy: true, marketing: marketing === "on" },
+          },
         });
       }
     } catch (err) {
@@ -49,7 +81,7 @@ export async function sendContactMessage(
 
     return { success: true };
   } catch (err) {
-    console.error("Resend error:", err);
+    console.error("Contact email error:", err);
     return { error: "Failed to send message. Please try again later." };
   }
 }

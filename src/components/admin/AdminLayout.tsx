@@ -7,14 +7,14 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard, ShieldOff, type LucideIcon,
+  UserCog, CreditCard, ShieldOff, Inbox, QrCode, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
 import type { Permission } from "@/types/cms";
 import { logoutAdmin } from "@/actions/admin-auth";
 import ProfileDropdown from "@/components/admin/ProfileDropdown";
-import NotificationBell from "@/components/admin/NotificationBell";
+import AvatarNotifications from "@/components/ui/avatar-notifications";
 
 interface AdminUser {
   email: string;
@@ -59,6 +59,13 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Operations", icon: Inbox,
+    children: [
+      { label: "Inbox", href: "/admin/inbox", icon: Inbox, permission: "manage_workflows" },
+      { label: "Check-In", href: "/admin/checkin", icon: QrCode, permission: "check_in_attendees" },
+    ],
+  },
+  {
     label: "System", icon: Shield,
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
@@ -95,6 +102,8 @@ const routePermissions: Record<string, Permission> = {
   "/admin/admins": "manage_users",
   "/admin/users": "manage_users",
   "/admin/settings": "access_settings",
+  "/admin/inbox": "manage_workflows",
+  "/admin/checkin": "check_in_attendees",
 };
 
 function checkRouteAccess(pathname: string, permissions: Permission[]): boolean {
@@ -257,7 +266,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
             {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
           <div className="flex-1" />
-          <NotificationBell />
+          <AvatarNotifications />
           <ProfileDropdown
             firstName={firstName}
             email={email}

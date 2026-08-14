@@ -34,7 +34,7 @@ export async function refreshSessionPermissions(): Promise<{ error?: string }> {
   return {};
 }
 
-export async function deleteAdminUser(id: string) {
+export async function deleteAdminUser(id: string, reason?: string) {
   const admin = await requirePermission("manage_users");
 
   const rows = await db.query<{ email: string; role: string }>(
@@ -66,12 +66,13 @@ export async function deleteAdminUser(id: string) {
     await db.query("DELETE FROM public.super_admins WHERE LOWER(email) = LOWER($1)", [target.email]);
   }
   await db.remove("admin_users", id);
-  logActivity(admin.email, "admin_delete", "auth", { details: `Deleted admin: ${target.email}` });
+  const reasonNote = reason?.trim() ? ` Reason: ${reason.trim()}` : "";
+  logActivity(admin.email, "admin_delete", "auth", { details: `Deleted admin: ${target.email}.${reasonNote}` });
 
   const remaining = await db.query<{ email: string }>(
     "SELECT email FROM public.admin_users WHERE LOWER(email) NOT IN (LOWER($1), LOWER($2))",
     [target.email, admin.email]);
-  Promise.allSettled(remaining.map(r => sendAdminDeletedNotification(r.email, target.email, admin.email)));
+  Promise.allSettled(remaining.map(r => sendAdminDeletedNotification(r.email, target.email, admin.email, reason)));
 
   return {};
 }

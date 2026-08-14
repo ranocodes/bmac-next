@@ -6,6 +6,7 @@ export interface AdminNotification {
   title: string;
   message: string;
   type: string;
+  link: string;
   read: boolean;
   createdAt: string;
 }
@@ -15,6 +16,7 @@ interface NotificationRow {
   title: string;
   message: string;
   type: string;
+  link: string;
   read: boolean;
   created_at: string;
 }
@@ -25,6 +27,7 @@ function rowToNotification(row: NotificationRow): AdminNotification {
     title: row.title,
     message: row.message || "",
     type: row.type || "info",
+    link: row.link || "",
     read: row.read,
     createdAt: row.created_at,
   };
@@ -46,6 +49,7 @@ export async function createAdminNotification(input: {
   title: string;
   message?: string;
   type?: string;
+  link?: string;
 }): Promise<void> {
   try {
     await db.create("admin_notifications", {
@@ -53,6 +57,7 @@ export async function createAdminNotification(input: {
       title: input.title,
       message: input.message || "",
       type: input.type || "info",
+      link: input.link || "",
       read: false,
     });
   } catch (err) {

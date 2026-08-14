@@ -9,6 +9,7 @@ import {
   EMAIL_TEMPLATE_KEYS,
   type EmailTemplate,
 } from "@/lib/email-templates";
+import { logActivity } from "@/actions/activity-logs";
 
 export interface SiteSettingsRow extends SiteSettings {
   google_forms?: Record<string, string>;
@@ -99,6 +100,25 @@ export async function saveEmailTemplates(
   } else {
     await db.create("site_settings", { id: `settings-${Date.now()}`, email_templates: clean });
   }
+  try { await logActivity("admin", "settings_email_templates_update", "settings"); } catch {}
+  return {};
+}
+
+export async function resetEmailTemplate(key: string): Promise<{ error?: string }> {
+  await requirePermission("access_settings");
+  if (!(EMAIL_TEMPLATE_KEYS as string[]).includes(key)) {
+    return { error: "Unknown template" };
+  }
+  const settings = await getSiteSettings();
+  const stored = (settings?.email_templates as Record<string, Partial<EmailTemplate>> | undefined) || {};
+  const next: Record<string, Partial<EmailTemplate>> = { ...stored };
+  delete next[key];
+  if (settings) {
+    await db.update("site_settings", settings.id, { email_templates: next });
+  } else {
+    await db.create("site_settings", { id: `settings-${Date.now()}`, email_templates: next });
+  }
+  try { await logActivity("admin", "settings_email_template_reset", "settings", { details: key }); } catch {}
   return {};
 }
 
