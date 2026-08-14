@@ -271,6 +271,7 @@ export async function registerForEvent(opts: {
   const event = await eventById(opts.eventId);
   if (!event) return { error: "Event not found" };
   if (event.status !== "published") return { error: "This event is not open for registration." };
+  if (event.is_paid) return { error: "This event requires a paid pass — purchase your ticket instead." };
 
   const used = await reserveCapacity(opts.eventId, 1);
   if (used === null) return { error: "This event is sold out" };
