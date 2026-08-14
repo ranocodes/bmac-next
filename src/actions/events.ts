@@ -5,8 +5,8 @@ import { requirePermission } from "@/lib/auth/server";
 import { logActivity } from "./activity-logs";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./people";
 import { createWorkflowRecord } from "@/lib/workflows";
-import { createAdminNotification } from "@/lib/notifications";
-import { sendRegistrationConfirmedEmail, sendEventReminderEmail } from "@/lib/email";
+import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
+import { sendRegistrationConfirmedEmail, sendEventReminderEmail, sendRegistrationAlertEmail, sendCheckInAlertEmail } from "@/lib/email";
 import {
   createTicket,
   reserveCapacity,
@@ -320,6 +320,20 @@ export async function registerForEvent(opts: {
       eventLocation: event.venue,
       passUrl,
     });
+    await createAdminNotification({
+      title: "New registration",
+      message: `${opts.name} registered for ${event.title} (${ticket.reference}).`,
+      type: "registration",
+      link: "/admin/events",
+    });
+    await emailSuperAdmins(adminEmail =>
+      sendRegistrationAlertEmail({
+        email: adminEmail,
+        attendeeName: opts.name,
+        attendeeEmail: opts.email,
+        eventName: event.title,
+      })
+    );
     return { passUrl, reference: ticket.reference };
   } catch (err) {
     await releaseCapacity(opts.eventId, 1);
@@ -348,6 +362,7 @@ export async function checkInAttendee(input: {
   token?: string;
   reference?: string;
   email?: string;
+  eventId?: string;
 }): Promise<{ error?: string; result?: Awaited<ReturnType<typeof checkInTicket>> }> {
   const admin = await requirePermission("check_in_attendees");
   const result = await checkInTicket(input);
@@ -358,6 +373,21 @@ export async function checkInAttendee(input: {
         ? `Checked in ${result.attendeeName}`
         : `Already checked in ${result.attendeeName} (second scan)`,
     });
+    if (result.checkedIn) {
+      await createAdminNotification({
+        title: "Attendee checked in",
+        message: `${result.attendeeName} checked in for ${result.eventTitle || "event"}.`,
+        type: "checkin",
+        link: "/admin/checkin",
+      });
+      await emailSuperAdmins(adminEmail =>
+        sendCheckInAlertEmail({
+          email: adminEmail,
+          attendeeName: result.attendeeName,
+          eventName: result.eventTitle,
+        })
+      );
+    }
   }
   return { result };
 }

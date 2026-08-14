@@ -45,6 +45,17 @@ export async function getSuperAdminEmails(): Promise<string[]> {
   }
 }
 
+export async function emailSuperAdmins(
+  send: (adminEmail: string) => Promise<{ error?: string }>
+): Promise<void> {
+  const adminEmails = await getSuperAdminEmails();
+  await Promise.all(
+    adminEmails.map(adminEmail =>
+      send(adminEmail).catch(() => ({ error: "alert email failed" }))
+    )
+  );
+}
+
 export async function createAdminNotification(input: {
   title: string;
   message?: string;

@@ -119,6 +119,59 @@ export async function sendFormSubmitAlertEmail(opts: {
   });
 }
 
+export async function sendRegistrationAlertEmail(opts: {
+  email: string;
+  attendeeName?: string;
+  attendeeEmail?: string;
+  eventName?: string;
+  dashboardUrl?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "registration-alert",
+    email: opts.email,
+    attendeeName: opts.attendeeName || "",
+    attendeeEmail: opts.attendeeEmail || "",
+    eventName: opts.eventName || "",
+    dashboardUrl: absolutizeUrl(opts.dashboardUrl || ""),
+  });
+}
+
+export async function sendTicketAlertEmail(opts: {
+  email: string;
+  attendeeName?: string;
+  attendeeEmail?: string;
+  eventName?: string;
+  amountLabel?: string;
+  reference?: string;
+  dashboardUrl?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "ticket-alert",
+    email: opts.email,
+    attendeeName: opts.attendeeName || "",
+    attendeeEmail: opts.attendeeEmail || "",
+    eventName: opts.eventName || "",
+    amountLabel: opts.amountLabel || "",
+    reference: opts.reference || "",
+    dashboardUrl: absolutizeUrl(opts.dashboardUrl || ""),
+  });
+}
+
+export async function sendCheckInAlertEmail(opts: {
+  email: string;
+  attendeeName?: string;
+  eventName?: string;
+  dashboardUrl?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "checkin-alert",
+    email: opts.email,
+    attendeeName: opts.attendeeName || "",
+    eventName: opts.eventName || "",
+    dashboardUrl: absolutizeUrl(opts.dashboardUrl || ""),
+  });
+}
+
 export async function sendContactAutoreplyEmail(opts: {
   email: string;
   firstName?: string;

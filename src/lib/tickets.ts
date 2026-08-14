@@ -139,11 +139,14 @@ export async function checkInTicket(input: {
   token?: string;
   reference?: string;
   email?: string;
+  eventId?: string;
 }): Promise<{
   checkedIn?: boolean;
   alreadyCheckedIn?: boolean;
   notFound?: boolean;
   notConfirmed?: boolean;
+  wrongEvent?: boolean;
+  wrongEventTitle?: string;
   checkedInAt?: string;
   attendeeName?: string;
   eventTitle?: string;
@@ -172,6 +175,10 @@ export async function checkInTicket(input: {
   );
   const eventTitle = eventRows[0]?.title || "";
   const attendeeName = ticket.payer_name || ticket.payer_email || "";
+
+  if (input.eventId && ticket.event_id !== input.eventId) {
+    return { wrongEvent: true, wrongEventTitle: eventTitle, attendeeName, eventTitle };
+  }
 
   if (ticket.checked_in) {
     return { alreadyCheckedIn: true, checkedInAt: ticket.checked_in_at || undefined, attendeeName, eventTitle };
