@@ -26,7 +26,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
   const [venue, setVenue] = useState(initialData?.venue || "");
   const [category, setCategory] = useState(initialData?.category || "");
   const [desc, setDesc] = useState(initialData?.desc || initialData?.description || "");
-  const [longDesc, setLongDesc] = useState(initialData?.longDesc || "");
+  const [longDesc, setLongDesc] = useState(initialData?.longDesc || initialData?.long_desc || "");
   const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [isPaid, setIsPaid] = useState(initialData?.isPaid ?? initialData?.is_paid ?? false);
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
@@ -39,12 +39,14 @@ export default function EventForm({ initialData }: { initialData?: any }) {
   const [remindersEnabled, setRemindersEnabled] = useState(initialData?.remindersEnabled ?? initialData?.reminders_enabled ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [saveError, setSaveError] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [categories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const { toast } = useToast();
 
   async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
+    setSaveError(false);
     setMissingFields([]);
 
     if (!title || !desc || !longDesc || !date || !category) {
@@ -73,9 +75,23 @@ export default function EventForm({ initialData }: { initialData?: any }) {
       reminders_enabled: remindersEnabled,
     };
     if (isEdit && params?.id) {
-      await updateItem("events", params.id as string, payload);
+      try {
+        await updateItem("events", params.id as string, payload);
+      } catch (err) {
+        setSaving(false);
+        setSaveError(true);
+        setError(err instanceof Error ? err.message : "Could not save the event. Please try again.");
+        return;
+      }
     } else {
-      await createItem("events", payload);
+      try {
+        await createItem("events", payload);
+      } catch (err) {
+        setSaving(false);
+        setSaveError(true);
+        setError(err instanceof Error ? err.message : "Could not create the event. Please try again.");
+        return;
+      }
     }
     setSaving(false);
     toast(isEdit ? "Event updated" : "Event created", "success");
@@ -369,7 +385,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
           <div className="flex items-start gap-3 px-4 py-3 bg-destructive/5 border border-destructive/15 rounded-xl text-destructive text-sm">
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium">Required fields missing</p>
+              <p className="font-medium">{saveError ? "Save failed" : "Required fields missing"}</p>
               <p className="text-destructive/80 mt-0.5">{error}</p>
             </div>
           </div>

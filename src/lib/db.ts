@@ -81,7 +81,7 @@ export const db = {
   async update<T extends Record<string, any>>(table: string, id: string, updates: Partial<T>): Promise<T | null> {
     const sql = getSql();
     const keys = Object.keys(updates);
-    const values = Object.values(updates);
+    const values = Object.values(updates).map(v => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
     const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
     const rows: any[] = await sql.query(
       `UPDATE public.${table} SET ${setClause}, updated_at = now() WHERE id = $${keys.length + 1} RETURNING *`,
