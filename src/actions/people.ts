@@ -260,26 +260,6 @@ export async function exportPeople(): Promise<PersonRow[]> {
   return fetchPeopleRows();
 }
 
-export async function registerForFreeEvent(opts: {
-  eventId: string;
-  eventTitle: string;
-  name: string;
-  email: string;
-}): Promise<{ error?: string }> {
-  if (!opts.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.email)) {
-    return { error: "Valid email required" };
-  }
-  const person = await findOrCreatePerson({ firstName: opts.name, email: opts.email });
-  if (!person) return { error: "Something went wrong. Try again." };
-  await ensurePersonRoles(person.id, ["attendee"]);
-  await upsertPersonRecord(person.id, "event_registration", {
-    refId: opts.eventId,
-    refTitle: opts.eventTitle,
-    status: "confirmed",
-  });
-  return {};
-}
-
 const kindLabelMap: Record<string, string> = {
   member: "Membership",
   volunteer: "Volunteer",
@@ -487,4 +467,38 @@ export async function resendGoogleFormLink(opts: {
     console.error("store form_link_sent_at error:", err);
   }
   return { formLink, emailSent: true };
+}
+
+export async function anonymizePerson(
+  personId: string
+): Promise<{ error?: string; person?: Person }> {
+  await requirePermission("manage_people");
+  const rows = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [personId]);
+  if (!rows.length) return { error: "Person not found" };
+  const person = rowToPerson(rows[0]);
+
+  const adminRows = await db.query<{ id: string }>(
+    "SELECT id FROM public.admin_users WHERE LOWER(email) = LOWER($1)",
+    [person.email]
+  );
+  if (adminRows.length) {
+    return { error: "Admin accounts cannot be anonymized. Remove admin access first." };
+  }
+
+  await db.query(
+    `UPDATE public.people
+     SET first_name = 'Deleted', last_name = 'User', email = $2, phone = '',
+         notes = '[deleted per request]', consent = '{}'::jsonb, roles = '[]'::jsonb,
+         updated_at = now()
+     WHERE id = $1`,
+    [personId, `deleted-${personId.replace(/[^a-zA-Z0-9]/g, "")}@anon.local`]
+  );
+
+  await logActivity("system", "person_anonymize", "people", {
+    resourceId: personId,
+    details: `Anonymized person record ${personId}`,
+  });
+
+  const refreshed = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [personId]);
+  return refreshed.length ? { person: rowToPerson(refreshed[0]) } : { person };
 }

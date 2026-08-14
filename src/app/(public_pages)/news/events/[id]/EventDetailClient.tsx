@@ -58,9 +58,15 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
         setIsPending(false);
         return;
       }
+      const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      if (!paystackKey) {
+        setFormError("Payments are not configured yet. Please try again later.");
+        setIsPending(false);
+        return;
+      }
       const PaystackPop = await loadPaystack();
       const handler = PaystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+        key: paystackKey,
         email: formData.email,
         amount: order.amountKobo || (event.price || 0) * 100,
         currency: "NGN",

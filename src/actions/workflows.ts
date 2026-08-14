@@ -10,7 +10,7 @@ import {
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { logActivity } from "./activity-logs";
-import { sendAdminReplyEmail } from "@/lib/email";
+import { sendAdminReplyEmail, sendApplicationStatusEmail } from "@/lib/email";
 import type {
   WorkflowKind,
   WorkflowPriority,
@@ -143,6 +143,16 @@ export async function updateWorkflowStatus(
     details: { ...record.details, history },
   });
   if (!updated) return { error: "Failed to update submission" };
+
+  if (opts.status && opts.status !== record.status && record.submitterEmail) {
+    const firstName = record.submitterName?.split(" ")[0] || "";
+    await sendApplicationStatusEmail({
+      email: record.submitterEmail,
+      firstName,
+      kindLabel: record.kind,
+      status: opts.status,
+    }).catch(err => console.error("application-status email error:", err));
+  }
 
   await logActivity(admin.email, "workflow_update", "workflow_records", {
     resourceId: id,

@@ -73,7 +73,10 @@ export interface EventAdminDetail {
     status: string;
     registrations: number;
     confirmed: number;
+    pending: number;
+    cancelled: number;
     checkedIn: number;
+    attendanceRate: number;
     revenue: number;
   };
   registrants: EventRegistrant[];
@@ -160,6 +163,7 @@ export async function getEventAdminDetail(eventId: string): Promise<EventAdminDe
   const byStatus: Record<string, number> = {};
   for (const c of counts) byStatus[c.status] = Number(c.count ?? 0);
   const confirmed = byStatus["confirmed"] || 0;
+  const checkedIn = registrants.filter((r) => Boolean(r.checked_in)).length;
   const revenue = registrants
     .filter((r) => r.status === "confirmed")
     .reduce((sum, r) => sum + Number(r.amount) * Number(r.quantity), 0);
@@ -182,7 +186,10 @@ export async function getEventAdminDetail(eventId: string): Promise<EventAdminDe
       status: event.status,
       registrations: registrants.length,
       confirmed,
-      checkedIn: registrants.filter((r) => Boolean(r.checked_in)).length,
+      pending: byStatus["pending"] || 0,
+      cancelled: byStatus["cancelled"] || 0,
+      checkedIn,
+      attendanceRate: confirmed ? Math.round((checkedIn / confirmed) * 100) : 0,
       revenue,
     },
     registrants: registrants.map(toRegistrant),
@@ -272,6 +279,26 @@ export async function registerForEvent(opts: {
   if (!event) return { error: "Event not found" };
   if (event.status !== "published") return { error: "This event is not open for registration." };
   if (event.is_paid) return { error: "This event requires a paid pass — purchase your ticket instead." };
+  if (event.allow_public_registration === false) {
+    return { error: "Registration for this event is currently closed to the public." };
+  }
+  if (event.registration_deadline) {
+    const deadline = new Date(event.registration_deadline);
+    if (!isNaN(deadline.getTime()) && deadline.getTime() < Date.now()) {
+      return { error: "The registration deadline for this event has passed." };
+    }
+  }
+
+  const existing = await db.query<{ reference: string }>(
+    `SELECT t.reference FROM public.event_tickets t
+     JOIN public.people p ON p.id = t.person_id
+     WHERE t.event_id = $1 AND LOWER(p.email) = LOWER($2) AND t.status = 'confirmed'
+     LIMIT 1`,
+    [opts.eventId, opts.email]
+  );
+  if (existing.length) {
+    return { error: "You've already registered for this event." };
+  }
 
   const used = await reserveCapacity(opts.eventId, 1);
   if (used === null) return { error: "This event is sold out" };

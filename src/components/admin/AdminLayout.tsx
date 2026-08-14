@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard, ShieldOff, Inbox, QrCode, type LucideIcon,
+  UserCog, CreditCard, ShieldOff, Inbox, QrCode, Heart, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -63,6 +63,7 @@ const navGroups: NavGroup[] = [
     children: [
       { label: "Inbox", href: "/admin/inbox", icon: Inbox, permission: "manage_workflows" },
       { label: "Check-In", href: "/admin/checkin", icon: QrCode, permission: "check_in_attendees" },
+      { label: "Analytics", href: "/admin/analytics", icon: BarChart3, permission: "view_analytics" },
     ],
   },
   {
@@ -70,6 +71,7 @@ const navGroups: NavGroup[] = [
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
       { label: "Payments", href: "/admin/payments", icon: CreditCard, permission: "manage_payments" },
+      { label: "Donations", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
       { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },

@@ -120,17 +120,37 @@ function GetInvolvedInner() {
       return;
     }
     try {
+      const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      if (!paystackKey) {
+        setFormError("Payments are not configured yet. Please try again later.");
+        setIsSubmitting(false);
+        return;
+      }
+      const reference = `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`;
+      const { createPendingDonation } = await import("@/actions/donations");
+      const pending = await createPendingDonation({
+        name: formData.name,
+        email: formData.email,
+        amount: amountN,
+        reference,
+      });
+      if (pending.error || !pending.donation) {
+        setFormError(pending.error || "Could not start donation. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
       const PaystackPop = await loadPaystack();
       const handler = PaystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_placeholder",
+        key: paystackKey,
         email: formData.email,
         amount: amountN * 100,
         currency: "NGN",
-        ref: `BMAC-${Math.floor((Math.random() * 1000000000) + 1)}`,
+        ref: reference,
         metadata: {
           source_type: "donation",
           source_id: "get-involved",
           payer_name: formData.name,
+          record_id: pending.donation.recordId,
         },
         callback: function() {
           setIsSubmitting(false);

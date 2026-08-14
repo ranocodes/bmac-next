@@ -11,6 +11,7 @@ import {
 import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification } from "@/lib/notifications";
 import { sendWorkflowEmail } from "@/actions/emails";
+import { logActivity } from "@/actions/activity-logs";
 import type {
   Program,
   ProgramApplication,
@@ -50,6 +51,23 @@ export async function submitApplication(input: {
     }
     if (!program.applicationsOpen) {
       return { error: "Applications are not open for this program" };
+    }
+    if (input.dateOfBirth) {
+      const age = ageFromDate(input.dateOfBirth);
+      if (age !== null && age < 16) {
+        return { error: "This program is open to ages 16 and above." };
+      }
+    }
+
+    const dup = await db.query<{ id: string }>(
+      `SELECT a.id FROM public.program_applications a
+       JOIN public.people p ON p.id = a.person_id
+       WHERE a.program_id = $1 AND LOWER(p.email) = LOWER($2) AND a.status != 'withdrawn'
+       LIMIT 1`,
+      [input.programId, input.email]
+    );
+    if (dup.length) {
+      return { error: "You've already applied to this program." };
     }
 
     const person = await findOrCreatePerson({
@@ -116,6 +134,16 @@ export async function submitApplication(input: {
   }
 }
 
+function ageFromDate(dateStr: string): number | null {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
+
 function genProgramReference(): string {
   return `BMAC-PRG-${Date.now().toString(36).toUpperCase()}${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
 }
@@ -150,6 +178,23 @@ export async function createProgramOrder(input: {
     }
     if (!program.isPaid) {
       return { error: "This program is free — use the apply form." };
+    }
+    if (input.dateOfBirth) {
+      const age = ageFromDate(input.dateOfBirth);
+      if (age !== null && age < 16) {
+        return { error: "This program is open to ages 16 and above." };
+      }
+    }
+
+    const dup = await db.query<{ id: string }>(
+      `SELECT a.id FROM public.program_applications a
+       JOIN public.people p ON p.id = a.person_id
+       WHERE a.program_id = $1 AND LOWER(p.email) = LOWER($2) AND a.status != 'withdrawn'
+       LIMIT 1`,
+      [input.programId, input.email]
+    );
+    if (dup.length) {
+      return { error: "You've already applied to this program." };
     }
 
     const person = await findOrCreatePerson({
@@ -249,6 +294,11 @@ export async function updateApplicationStatus(input: {
     await db.update("program_applications", input.applicationId, {
       status: input.status,
       updated_at: new Date().toISOString(),
+    });
+
+    await logActivity(input.adminEmail, "program_application_status", "program_applications", {
+      resourceId: input.applicationId,
+      details: `Program application ${input.applicationId} status → ${input.status}`,
     });
 
     const person = await db.getById("people", app.person_id) as {
@@ -489,6 +539,119 @@ export async function listApplications(programId: string, status?: string): Prom
     return await db.query<any>(sql, params);
   } catch (err) {
     console.error("listApplications error:", err);
+    return [];
+  }
+}
+
+export async function removeParticipantFromCohort(input: {
+  participantId: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    const rows = await db.query<{ id: string }>(
+      "DELETE FROM public.participants WHERE id = $1 RETURNING id",
+      [input.participantId]
+    );
+    if (!rows.length) return { success: false, error: "Participant not found" };
+    return { success: true };
+  } catch (err) {
+    console.error("removeParticipantFromCohort error:", err);
+    return { success: false, error: "Failed to remove participant" };
+  }
+}
+
+export async function setParticipantOutcome(input: {
+  participantId: string;
+  outcome: "enrolled" | "completed" | "dropped" | "certificate_eligible";
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    const rows = await db.query<{ id: string }>(
+      `UPDATE public.participants
+          SET status = $2, updated_at = now()
+        WHERE id = $1
+        RETURNING id`,
+      [input.participantId, input.outcome]
+    );
+    if (!rows.length) return { success: false, error: "Participant not found" };
+
+    const participant = await db.getById("participants", input.participantId) as {
+      person_id: string;
+      cohort_id: string;
+    } | null;
+    if (participant) {
+      const person = await db.getById("people", participant.person_id) as {
+        email: string;
+        first_name: string;
+        last_name: string;
+      } | null;
+      const cohort = await db.getById("cohorts", participant.cohort_id) as {
+        title: string;
+      } | null;
+      if (person?.email) {
+        await sendWorkflowEmail("program", person.email, `${person.first_name} ${person.last_name}`, {
+          cohortTitle: cohort?.title || "",
+          action: input.outcome,
+        }).catch(err => console.error("participant-outcome email error:", err));
+      }
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("setParticipantOutcome error:", err);
+    return { success: false, error: "Failed to update participant outcome" };
+  }
+}
+
+export async function getParticipantAttendance(input: {
+  cohortId: string;
+  personId?: string;
+}): Promise<any[]> {
+  try {
+    await requireAdmin();
+    let sql = `SELECT ar.*, p.first_name, p.last_name, p.email
+               FROM public.attendance_records ar
+               JOIN public.people p ON p.id = ar.person_id
+               WHERE ar.cohort_id = $1`;
+    const params: any[] = [input.cohortId];
+    if (input.personId) {
+      sql += " AND ar.person_id = $2";
+      params.push(input.personId);
+    }
+    sql += " ORDER BY ar.session_date DESC";
+    return await db.query<any>(sql, params);
+  } catch (err) {
+    console.error("getParticipantAttendance error:", err);
+    return [];
+  }
+}
+
+export async function getCohortAttendanceSummary(cohortId: string): Promise<
+  { personId: string; name: string; email: string; present: number; total: number; attendanceRate: number }[]
+> {
+  try {
+    await requireAdmin();
+    const rows = await db.query<any>(
+      `SELECT ar.person_id, p.first_name, p.last_name, p.email,
+              COUNT(*) FILTER (WHERE ar.present)::int AS present,
+              COUNT(*)::int AS total
+       FROM public.attendance_records ar
+       JOIN public.people p ON p.id = ar.person_id
+       WHERE ar.cohort_id = $1
+       GROUP BY ar.person_id, p.first_name, p.last_name, p.email
+       ORDER BY p.first_name`,
+      [cohortId]
+    );
+    return rows.map(r => ({
+      personId: r.person_id,
+      name: `${r.first_name} ${r.last_name}`.trim(),
+      email: r.email || "",
+      present: Number(r.present ?? 0),
+      total: Number(r.total ?? 0),
+      attendanceRate: Number(r.total) ? Math.round((Number(r.present) / Number(r.total)) * 100) : 0,
+    }));
+  } catch (err) {
+    console.error("getCohortAttendanceSummary error:", err);
     return [];
   }
 }

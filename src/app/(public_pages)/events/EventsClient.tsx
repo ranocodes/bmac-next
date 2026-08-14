@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock, Calendar, MapPin } from "lucide-react";
+import { ArrowRight, Clock, Calendar, MapPin, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import NewsletterModal from "@/components/ui/NewsletterModal";
@@ -25,6 +25,36 @@ function formatEventDate(raw: string | undefined): { month: string; day: string 
   };
 }
 
+function toCalendarDate(raw: string | undefined): string | null {
+  if (!raw) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw.replace(/-/g, "");
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+function toCalendarTime(raw: string | undefined): string {
+  const m = String(raw || "").trim().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+  if (!m) return "0900";
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  const ap = (m[3] || "").toLowerCase();
+  if (ap === "pm" && h < 12) h += 12;
+  if (ap === "am" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}${min}`;
+}
+
+function icsEscape(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+}
+
+function nextEventDateTime(event: EventPass): { date: string; time: string } | null {
+  const cd = toCalendarDate(event.date);
+  if (!cd) return null;
+  const ct = toCalendarTime(event.time);
+  return { date: cd, time: ct };
+}
+
 interface EventsClientProps {
   initialEvents: any[];
 }
@@ -39,6 +69,70 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
     price: Number((e as any).price || 0),
   })));
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAddToGoogle = () => {
+    const event = events.find(e => e.date && e.title);
+    const dt = event ? nextEventDateTime(event) : null;
+    if (!event || !dt) {
+      setIsModalOpen(true);
+      return;
+    }
+    const endDate = dt.date;
+    const endTime = (() => {
+      const h = Math.min(parseInt(dt.time.slice(0, 2), 10) + 1, 23);
+      return `${String(h).padStart(2, "0")}${dt.time.slice(2)}`;
+    })();
+    const url =
+      "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+      `&text=${encodeURIComponent(event.title)}` +
+      `&dates=${dt.date}T${dt.time}00/${endDate}T${endTime}00` +
+      `&details=${encodeURIComponent(event.desc || "")}` +
+      `&location=${encodeURIComponent(event.venue || "")}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleAddToApple = () => {
+    const parts = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//BMAC//Events//EN",
+      "CALSCALE:GREGORIAN",
+    ];
+    events.forEach((event, i) => {
+      const dt = event.date && event.title ? nextEventDateTime(event) : null;
+      if (!dt) return;
+      const endDate = dt.date;
+      const endTime = (() => {
+        const h = Math.min(parseInt(dt.time.slice(0, 2), 10) + 1, 23);
+        return `${String(h).padStart(2, "0")}${dt.time.slice(2)}`;
+      })();
+      parts.push(
+        "BEGIN:VEVENT",
+        `UID:bmac-${event.id || i}@bmac.org.ng`,
+        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`,
+        `DTSTART:${dt.date}T${dt.time}00`,
+        `DTEND:${endDate}T${endTime}00`,
+        `SUMMARY:${icsEscape(event.title)}`,
+        `DESCRIPTION:${icsEscape(event.desc || "")}`,
+        `LOCATION:${icsEscape(event.venue || "")}`,
+        "END:VEVENT"
+      );
+    });
+    if (parts.length <= 4) {
+      setIsModalOpen(true);
+      return;
+    }
+    parts.push("END:VCALENDAR");
+    const blob = new Blob([parts.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bmac-events.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
@@ -166,13 +260,17 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
                     Import the official BMAC leadership cycle directly into your workspace.
                  </p>
                  <div className="flex flex-wrap justify-center gap-3">
-                    <button className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
+                    <button onClick={handleAddToGoogle} className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
                        <Calendar size={16} className="text-accent group-hover:scale-110 transition-transform" />
                        Add to Google
                     </button>
-                    <button className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
+                    <button onClick={handleAddToApple} className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
                        <Calendar size={16} className="text-accent group-hover:scale-110 transition-transform" />
                        Add to Apple
+                    </button>
+                    <button onClick={() => setIsModalOpen(true)} className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-accent text-accent-foreground font-bold hover:bg-card hover:text-accent transition-all flex items-center gap-2 shadow-xl group text-sm md:text-base">
+                       <Send size={16} className="group-hover:scale-110 transition-transform" />
+                       Get Email Alerts
                     </button>
                  </div>
               </div>

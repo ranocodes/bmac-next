@@ -9,5 +9,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
     db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC" }),
     db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" }),
   ]);
-  return <NewsDetailClient id={id} initialNews={news || []} initialEvents={events || []} />;
+  return (
+    <NewsDetailClient
+      id={id}
+      initialNews={(news || []).filter((n: any) => n.status === "published")}
+      initialEvents={(events || []).filter((e: any) => e.status === "published")}
+    />
+  );
 }

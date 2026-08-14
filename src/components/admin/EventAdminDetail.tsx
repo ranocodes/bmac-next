@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, CheckCircle2, TicketCheck, Wallet, Download, Bell, RefreshCcw, Calendar, MapPin } from "lucide-react";
+import { ArrowLeft, Users, CheckCircle2, TicketCheck, Wallet, Download, Bell, RefreshCcw, Calendar, MapPin, Clock3, XCircle } from "lucide-react";
 import { getEventAdminDetail, exportEventRegistrants, setEventCheckedIn, setCapacityUsedOverride, sendEventReminders } from "@/actions/events";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
@@ -13,6 +13,10 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [capacityInput, setCapacityInput] = useState<string>(String(initialData.event.capacity_used));
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
   const { toast, confirm } = useToast();
   const admin = useAdmin();
   const canExport = admin?.permissions?.includes("export_data");
@@ -103,11 +107,24 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   const currency = "₦";
   const revenueLabel = `${currency}${event.revenue.toLocaleString("en-NG")}`;
 
+  const filtered = registrants.filter(r => {
+    if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return [r.payerName, r.payerEmail, r.reference, r.phone].some(v => (v || "").toLowerCase().includes(q));
+  });
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   const stats = [
     { label: "Total registrations", value: String(event.registrations), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Confirmed", value: String(event.confirmed), icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
     { label: "Checked in", value: String(event.checkedIn), icon: TicketCheck, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: "Attendance rate", value: `${event.attendanceRate}%`, icon: TicketCheck, color: "text-cyan-500", bg: "bg-cyan-500/10" },
     { label: "Revenue", value: revenueLabel, icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Pending", value: String(event.pending), icon: Clock3, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { label: "Cancelled", value: String(event.cancelled), icon: XCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
   ];
 
   return (
@@ -140,7 +157,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
         {stats.map(s => (
           <div key={s.label} className="bg-card rounded-3xl border border-border/50 p-5">
             <div className={`w-10 h-10 rounded-2xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
@@ -195,11 +212,32 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
       </div>
 
       <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-border/50 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold text-secondary">Registrants</h2>
-          <span className="text-xs text-muted-foreground">{registrants.length} total</span>
+          <span className="text-xs text-muted-foreground">{filtered.length} shown of {registrants.length} total</span>
         </div>
-        {registrants.length === 0 ? (
+        <div className="px-6 py-3 border-b border-border/50 flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[200px] max-w-sm">
+            <input
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              placeholder="Search name, email, reference…"
+              className="w-full h-10 px-3 rounded-xl border border-input bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+          <div className="flex items-center gap-1.5 rounded-xl border border-input bg-card p-1">
+            {["all", "confirmed", "pending", "cancelled"].map(s => (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(s); setPage(1); }}
+                className={`h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+        {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Users size={40} className="text-muted-foreground/20 mb-3" />
             <p className="text-sm font-medium text-secondary">No registrations yet</p>
@@ -219,7 +257,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                 </tr>
               </thead>
               <tbody>
-                {registrants.map(r => (
+                {pageRows.map(r => (
                   <tr key={r.ticketId} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-4">
                       <div>
@@ -250,6 +288,27 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                 ))}
               </tbody>
             </table>
+            {pageCount > 1 && (
+              <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Page {safePage} of {pageCount}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage(safePage - 1)}
+                    disabled={safePage <= 1}
+                    className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setPage(safePage + 1)}
+                    disabled={safePage >= pageCount}
+                    className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
