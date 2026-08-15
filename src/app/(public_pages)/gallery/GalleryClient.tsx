@@ -60,7 +60,7 @@ export default function GalleryClient({ initialGallery }: GalleryClientProps) {
             <AnimatePresence mode="popLayout">
               {filteredItems.map((item, i) => (
                 <motion.div
-                  key={item.img}
+                  key={item.id || `${item.img}-${i}`}
                   layout
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}

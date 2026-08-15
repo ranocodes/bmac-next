@@ -151,24 +151,25 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
       </section>
 
       <section className="pb-16 md:pb-24 px-6">
-        <div className="max-w-7xl mx-auto space-y-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-3xl mx-auto space-y-4">
           {events.map((event, i) => {
             const fd = formatEventDate(event.date);
             return (
             <FadeIn key={event.id} delay={i * 0.05}>
               <Link href={`/events/${event.id}`} className="group block">
                 <div className="bg-card rounded-xl border border-border p-5 md:p-6 transition-colors hover:border-primary/40 group-hover:bg-muted/30">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
+                  <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                    <div className="flex items-start gap-4 min-w-0">
                       {fd.day && (
                         <div className="w-12 shrink-0 text-center border-r border-border/60 pr-4">
                           <p className="font-display text-2xl font-bold leading-none text-secondary">{fd.day}</p>
                           {fd.month && <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{fd.month}</p>}
                         </div>
                       )}
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{event.category}</p>
-                        <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-secondary mt-1">
+                        <h3 className="font-display text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-secondary mt-1 break-words">
                           {event.title}
                         </h3>
                       </div>
@@ -184,7 +185,7 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
                     <span className="inline-flex items-center gap-2 text-muted-foreground font-medium">
                       <Clock size={14} /> {event.time || "TBA"}
                     </span>
-                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium truncate">
+                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium truncate max-w-full">
                       <MapPin size={14} /> {event.venue || "Venue TBA"}
                     </span>
                     <span className="ml-auto inline-flex items-center gap-1.5 text-primary font-bold group-hover:gap-2.5 transition-all">
@@ -196,6 +197,7 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
             </FadeIn>
           );
           })}
+          </div>
         </div>
       </section>
 

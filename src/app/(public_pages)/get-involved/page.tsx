@@ -72,11 +72,19 @@ const ways: Way[] = [
   },
 ];
 
+const submitLabelMap: Record<string, string> = {
+  join: "Submit Application",
+  volunteer: "Submit Application",
+  school: "Start Chapter Application",
+  donate: "Complete Donation",
+  partner: "Submit Partnership Proposal",
+};
+
 function GetInvolvedInner() {
   const [selectedWay, setSelectedWay] = useState<Way | null>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
-  const [formData, setFormData] = useState({ name: "", email: "", company_website: "", notes: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", company_website: "", notes: "" });
   const [formError, setFormError] = useState("");
   const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +99,7 @@ function GetInvolvedInner() {
     setFormError("");
     setSubmitted(null);
     setConsent({ privacy: false, marketing: false });
+    setFormData({ name: "", email: "", phone: "", company_website: "", notes: "" });
     setSelectedWay(way);
   };
 
@@ -182,6 +191,7 @@ function GetInvolvedInner() {
         kind,
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         notes: formData.notes,
         privacy: consent.privacy,
         marketing: consent.marketing,
@@ -393,10 +403,15 @@ function GetInvolvedInner() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Your Identity</label>
+                    <label htmlFor={`gi-name-${selectedWay.id}`} className="block text-sm font-semibold text-secondary">
+                      Full Name
+                    </label>
                     <input
                       type="text"
-                      placeholder="Full Name"
+                      id={`gi-name-${selectedWay.id}`}
+                      name="name"
+                      placeholder="e.g. Amina Yusuf"
+                      autoComplete="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
@@ -404,10 +419,15 @@ function GetInvolvedInner() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Communication</label>
+                    <label htmlFor={`gi-email-${selectedWay.id}`} className="block text-sm font-semibold text-secondary">
+                      Email Address
+                    </label>
                     <input
                       type="email"
-                      placeholder="Email Address"
+                      id={`gi-email-${selectedWay.id}`}
+                      name="email"
+                      placeholder="you@example.com"
+                      autoComplete="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
@@ -415,8 +435,28 @@ function GetInvolvedInner() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Why you&apos;d like to join <span className="normal-case">(optional)</span></label>
+                    <label htmlFor={`gi-phone-${selectedWay.id}`} className="block text-sm font-semibold text-secondary">
+                      Phone (WhatsApp) <span className="text-muted-foreground font-normal">(optional)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id={`gi-phone-${selectedWay.id}`}
+                      name="phone"
+                      placeholder="e.g. +234 803 456 7891"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor={`gi-notes-${selectedWay.id}`} className="block text-sm font-semibold text-secondary">
+                      Why you&apos;d like to join <span className="text-muted-foreground font-normal">(optional)</span>
+                    </label>
                     <textarea
+                      id={`gi-notes-${selectedWay.id}`}
+                      name="notes"
                       placeholder="Tell us about your motivation, skills, or what you hope to contribute..."
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -440,7 +480,7 @@ function GetInvolvedInner() {
                     {isSubmitting ? (
                       <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <>{selectedWay.id === "donate" ? "Complete Donation" : "Initiate Partnership"} <ArrowRight size={18} /></>
+                      <>{submitLabelMap[selectedWay.id]} <ArrowRight size={18} /></>
                     )}
                   </button>
                 </form>)}
