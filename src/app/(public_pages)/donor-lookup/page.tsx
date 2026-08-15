@@ -39,42 +39,41 @@ export default function DonorLookup() {
 
   return (
     <main suppressHydrationWarning className="bg-background min-h-screen">
-      <section className="relative overflow-hidden bg-secondary pt-24 pb-12 md:pt-32 md:pb-16">
-        <div className="absolute inset-0 bg-primary/5 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-        <div className="max-w-3xl mx-auto px-4 md:px-6 w-full relative z-10 text-center">
-          <span className="inline-block text-accent font-bold tracking-[0.3em] uppercase text-[10px] mb-4">Donor Self-Service</span>
-          <h1 className="font-display text-[clamp(2rem,7vw,3.5rem)] font-extrabold text-card tracking-tighter leading-none mb-4">
+      <section className="bg-background pt-32 pb-12">
+        <div className="max-w-3xl mx-auto px-6 w-full text-center">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Donor Self-Service</span>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary">
             Look Up Your Donations
           </h1>
-          <p className="text-card/60 text-sm md:text-base font-medium max-w-lg mx-auto">
+          <p className="text-muted-foreground text-sm md:text-base font-medium max-w-lg mx-auto mt-4">
             Enter the email you used when donating. We&apos;ll list your donations and give you a tax-deductible receipt for each.
           </p>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 px-4 md:px-6">
+      <section className="pb-16 md:pb-24 px-6">
         <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleSubmit} className="bg-card rounded-bento border border-border/50 p-6 md:p-10 shadow-diffused space-y-5">
+          <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-6 md:p-8 space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Donation Email</label>
+              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Donation Email</label>
               <div className="relative">
-                <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-13 md:pl-14 pr-5 py-4 md:py-5 bg-muted/40 border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
+                  className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium placeholder:text-muted-foreground/40"
                 />
               </div>
             </div>
             {error && (
-              <p className="text-sm font-bold text-red-500 px-2">{error}</p>
+              <p className="text-sm font-bold text-red-500">{error}</p>
             )}
             <button
               disabled={loading}
-              className="w-full py-4 md:py-5 bg-gradient-to-r from-secondary to-primary text-card rounded-2xl font-extrabold text-sm md:text-base hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+              className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg font-bold text-sm flex items-center justify-center gap-2.5 hover:bg-primary/90 transition-colors disabled:opacity-70"
             >
               {loading ? <><Loader2 size={18} className="animate-spin" /> Searching...</> : <><Search size={18} /> Find My Donations</>}
             </button>
@@ -86,19 +85,19 @@ export default function DonorLookup() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 16 }}
-                className="mt-8 space-y-4"
+                className="mt-6 space-y-3"
               >
                 {donations.length === 0 ? (
-                  <div className="text-center py-12 bg-card rounded-bento border border-border/50">
+                  <div className="text-center py-12 bg-card rounded-xl border border-border">
                     <Heart size={28} className="mx-auto text-muted-foreground mb-3" />
                     <p className="font-bold text-secondary">No donations found</p>
                     <p className="text-sm text-muted-foreground mt-1">No completed donations match that email.</p>
                   </div>
                 ) : (
                   donations.map((d) => (
-                    <div key={d.reference} className="bg-card rounded-bento border border-border/50 p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-diffused">
+                    <div key={d.reference} className="bg-card rounded-xl border border-border p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
-                        <p className="font-display font-extrabold text-secondary text-lg">
+                        <p className="font-display font-bold text-secondary text-lg">
                           {d.currency === "NGN" ? "₦" : `${d.currency} `}{Number(d.amount || 0).toLocaleString("en-NG", { maximumFractionDigits: 2 })}
                         </p>
                         <p className="text-xs font-medium text-muted-foreground mt-1">
@@ -113,7 +112,7 @@ export default function DonorLookup() {
                           href={d.receiptUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent text-accent-foreground text-sm font-bold rounded-xl hover:opacity-90 transition-all shrink-0"
+                          className="inline-flex items-center justify-center gap-2 px-5 h-11 bg-accent text-accent-foreground text-sm font-bold rounded-lg hover:opacity-90 transition-opacity shrink-0"
                         >
                           <FileText size={15} /> Download Receipt
                         </a>

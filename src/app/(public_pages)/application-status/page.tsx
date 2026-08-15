@@ -50,14 +50,13 @@ export default function ApplicationStatusPage() {
 
   return (
     <main suppressHydrationWarning className="bg-background min-h-screen">
-      <section className="relative overflow-hidden bg-secondary pt-24 pb-12 md:pt-32 md:pb-16">
-        <div className="absolute inset-0 bg-primary/5 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-        <div className="max-w-3xl mx-auto px-4 md:px-6 w-full relative z-10 text-center">
-          <span className="inline-block text-accent font-bold tracking-[0.3em] uppercase text-[10px] mb-4">Applicant Self-Service</span>
-          <h1 className="font-display text-[clamp(2rem,7vw,3.5rem)] font-extrabold text-card tracking-tighter leading-none mb-4">
+      <section className="bg-background pt-24 md:pt-32 pb-12 md:pb-16">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 w-full text-center">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-primary mb-4">Applicant Self-Service</span>
+          <h1 className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-tight mb-4">
             Check Your Application
           </h1>
-          <p className="text-card/60 text-sm md:text-base font-medium max-w-lg mx-auto">
+          <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto">
             Enter the email you applied with and your application reference. No login needed.
           </p>
         </div>
@@ -65,7 +64,7 @@ export default function ApplicationStatusPage() {
 
       <section className="py-16 md:py-24 px-4 md:px-6">
         <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleSubmit} className="bg-card rounded-bento border border-border/50 p-6 md:p-10 shadow-diffused space-y-5">
+          <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 md:p-10 space-y-5">
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Email Used</label>
               <div className="relative">
@@ -76,7 +75,7 @@ export default function ApplicationStatusPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-13 md:pl-14 pr-5 py-4 md:py-5 bg-muted/40 border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
+                  className="w-full pl-13 md:pl-14 pr-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
                 />
               </div>
             </div>
@@ -90,7 +89,7 @@ export default function ApplicationStatusPage() {
                   onChange={(e) => setReference(e.target.value)}
                   placeholder="app-…"
                   required
-                  className="w-full pl-13 md:pl-14 pr-5 py-4 md:py-5 bg-muted/40 border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
+                  className="w-full pl-13 md:pl-14 pr-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
                 />
               </div>
               <p className="text-xs text-muted-foreground px-2">Found in your confirmation email, e.g. <span className="font-mono font-bold">app-4f9a…</span></p>
@@ -100,7 +99,7 @@ export default function ApplicationStatusPage() {
             )}
             <button
               disabled={loading}
-              className="w-full py-4 md:py-5 bg-gradient-to-r from-secondary to-primary text-card rounded-2xl font-extrabold text-sm md:text-base hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+              className="w-full py-4 bg-primary text-card rounded-lg font-bold text-sm md:text-base hover:bg-primary/90 transition-colors flex items-center justify-center gap-3 disabled:opacity-70"
             >
               {loading ? <><Loader2 size={18} className="animate-spin" /> Checking...</> : <><Search size={18} /> Check My Status</>}
             </button>
@@ -114,9 +113,9 @@ export default function ApplicationStatusPage() {
                 exit={{ opacity: 0, y: 16 }}
                 className="mt-8"
               >
-                <div className="bg-card rounded-bento border border-border/50 p-6 md:p-8 shadow-diffused">
+                <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                   <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
                       meta.tone === "ok" ? "bg-primary/10 text-primary"
                       : meta.tone === "bad" ? "bg-red-500/10 text-red-500"
                       : meta.tone === "warn" ? "bg-amber-500/10 text-amber-600"
@@ -126,7 +125,7 @@ export default function ApplicationStatusPage() {
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Status</p>
-                      <h2 className="font-display text-2xl font-extrabold text-secondary">{meta.label}</h2>
+                      <h2 className="font-display text-2xl font-bold text-secondary">{meta.label}</h2>
                       <p className="text-sm text-muted-foreground mt-2">{meta.hint}</p>
                     </div>
                   </div>

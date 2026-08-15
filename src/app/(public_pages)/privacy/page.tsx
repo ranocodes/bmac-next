@@ -32,27 +32,19 @@ export default function PrivacyPage() {
 
   return (
     <main suppressHydrationWarning className="bg-background">
-      <section className="relative min-h-[40dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card text-center md:text-left">
-        <div
-          className="absolute inset-0 bg-accent/5"
-          style={{
-            backgroundImage:
-              "radial-gradient(var(--secondary) 0.5px, transparent 0.5px)",
-            backgroundSize: "30px 30px",
-          }}
-        />
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-          <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
+      <section className="bg-background pt-32 pb-12 text-center md:text-left">
+        <div className="max-w-7xl mx-auto px-6 w-full">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
             Your Data, Your Trust
           </span>
-          <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-secondary tracking-tighter leading-[0.9]">
-            Privacy <span className="text-accent italic font-light serif">Policy</span>.
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary">
+            Privacy Policy
           </h1>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 px-4 md:px-6">
-        <div className="max-w-3xl mx-auto space-y-10 md:space-y-14">
+      <section className="pb-16 md:pb-24 px-6">
+        <div className="max-w-3xl mx-auto space-y-10 md:space-y-12">
           <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
             Last updated: August 2026
           </p>

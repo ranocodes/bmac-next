@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
 import type { Category } from "@/types/cms";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
+import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
 
@@ -37,6 +38,20 @@ export default function EventForm({ initialData }: { initialData?: any }) {
   const [maxPerPerson, setMaxPerPerson] = useState(initialData?.maxPerPerson ?? initialData?.max_per_person ?? 1);
   const [allowPublicRegistration, setAllowPublicRegistration] = useState(initialData?.allowPublicRegistration ?? initialData?.allow_public_registration ?? false);
   const [remindersEnabled, setRemindersEnabled] = useState(initialData?.remindersEnabled ?? initialData?.reminders_enabled ?? false);
+  const [img, setImg] = useState(initialData?.img || "");
+  const [agenda, setAgenda] = useState<{ time: string; title: string }[]>(initialData?.agenda || []);
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [agendaTime, setAgendaTime] = useState("");
+  const [agendaTitle, setAgendaTitle] = useState("");
+  const [audienceFor, setAudienceFor] = useState<string[]>(initialData?.audienceFor || initialData?.audience_for || []);
+  const [audienceForInput, setAudienceForInput] = useState("");
+  const [audienceNotFor, setAudienceNotFor] = useState<string[]>(initialData?.audienceNotFor || initialData?.audience_not_for || []);
+  const [audienceNotForInput, setAudienceNotForInput] = useState("");
+  const [faqs, setFaqs] = useState<{ q: string; a: string }[]>(initialData?.faqs || []);
+  const [faqOpen, setFaqOpen] = useState(false);
+  const [faqQ, setFaqQ] = useState("");
+  const [faqA, setFaqA] = useState("");
+  const [policies, setPolicies] = useState(initialData?.policies || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState(false);
@@ -73,6 +88,12 @@ export default function EventForm({ initialData }: { initialData?: any }) {
       max_per_person: maxPerPerson,
       allow_public_registration: allowPublicRegistration,
       reminders_enabled: remindersEnabled,
+      img,
+      agenda,
+      audience_for: audienceFor,
+      audience_not_for: audienceNotFor,
+      faqs,
+      policies,
     };
     if (isEdit && params?.id) {
       try {
@@ -356,6 +377,251 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 Add
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+              Hero Image
+            </label>
+            <ImagePicker value={img} onChange={setImg} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+              Agenda
+            </label>
+            <div className="space-y-2 mb-2">
+              {agenda.length === 0 && (
+                <p className="text-xs text-muted-foreground/50 py-2">No agenda items yet</p>
+              )}
+              {agenda.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                  <span className="text-xs font-semibold text-primary shrink-0 w-16">{item.time}</span>
+                  <span className="flex-1 text-sm text-secondary truncate">{item.title}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAgenda(agenda.filter((_, j) => j !== i))}
+                    className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            {!agendaOpen ? (
+              <button
+                type="button"
+                onClick={() => setAgendaOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+              >
+                + Add agenda item
+              </button>
+            ) : (
+              <div className="space-y-2 p-3 bg-background border border-border/50 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={agendaTime}
+                    onChange={e => setAgendaTime(e.target.value)}
+                    placeholder="Time (e.g. 10:00 AM)"
+                    className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={agendaTitle}
+                    onChange={e => setAgendaTitle(e.target.value)}
+                    placeholder="Title"
+                    className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!agendaTime.trim() || !agendaTitle.trim()) return;
+                      setAgenda([...agenda, { time: agendaTime.trim(), title: agendaTitle.trim() }]);
+                      setAgendaTime("");
+                      setAgendaTitle("");
+                      setAgendaOpen(false);
+                    }}
+                    disabled={!agendaTime.trim() || !agendaTitle.trim()}
+                    className="px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAgendaOpen(false); setAgendaTime(""); setAgendaTitle(""); }}
+                    className="px-3 py-2 bg-card border border-border/50 text-secondary text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+                This event is for
+              </label>
+              <div className="space-y-2 mb-2">
+                {audienceFor.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                    <span className="flex-1 text-sm text-secondary">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAudienceFor(audienceFor.filter((_, j) => j !== i))}
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={audienceForInput}
+                  onChange={e => setAudienceForInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); const v = audienceForInput.trim(); if (v) { setAudienceFor([...audienceFor, v]); setAudienceForInput(""); } } }}
+                  placeholder="e.g. Teens ages 13-18"
+                  className="flex-1 px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => { const v = audienceForInput.trim(); if (v) { setAudienceFor([...audienceFor, v]); setAudienceForInput(""); } }}
+                  className="px-3 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-colors whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+                This event is not for
+              </label>
+              <div className="space-y-2 mb-2">
+                {audienceNotFor.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                    <span className="flex-1 text-sm text-secondary">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAudienceNotFor(audienceNotFor.filter((_, j) => j !== i))}
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={audienceNotForInput}
+                  onChange={e => setAudienceNotForInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); const v = audienceNotForInput.trim(); if (v) { setAudienceNotFor([...audienceNotFor, v]); setAudienceNotForInput(""); } } }}
+                  placeholder="e.g. Advanced developers"
+                  className="flex-1 px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => { const v = audienceNotForInput.trim(); if (v) { setAudienceNotFor([...audienceNotFor, v]); setAudienceNotForInput(""); } }}
+                  className="px-3 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-colors whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+              Common Questions
+            </label>
+            <div className="space-y-2 mb-2">
+              {faqs.length === 0 && (
+                <p className="text-xs text-muted-foreground/50 py-2">No FAQs added yet</p>
+              )}
+              {faqs.map((faq, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2.5 bg-background border border-input rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-secondary">{faq.q}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{faq.a}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFaqs(faqs.filter((_, j) => j !== i))}
+                    className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors shrink-0 mt-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            {!faqOpen ? (
+              <button
+                type="button"
+                onClick={() => setFaqOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+              >
+                + Add FAQ
+              </button>
+            ) : (
+              <div className="space-y-2 p-3 bg-background border border-border/50 rounded-lg">
+                <input
+                  type="text"
+                  value={faqQ}
+                  onChange={e => setFaqQ(e.target.value)}
+                  placeholder="Question"
+                  className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <textarea
+                  value={faqA}
+                  onChange={e => setFaqA(e.target.value)}
+                  rows={2}
+                  placeholder="Answer"
+                  className="w-full px-3 py-2 min-h-[50px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!faqQ.trim() || !faqA.trim()) return;
+                      setFaqs([...faqs, { q: faqQ.trim(), a: faqA.trim() }]);
+                      setFaqQ("");
+                      setFaqA("");
+                      setFaqOpen(false);
+                    }}
+                    disabled={!faqQ.trim() || !faqA.trim()}
+                    className="px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    Save FAQ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setFaqOpen(false); setFaqQ(""); setFaqA(""); }}
+                    className="px-3 py-2 bg-card border border-border/50 text-secondary text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">
+              Policies & Refunds
+            </label>
+            <textarea
+              value={policies}
+              onChange={e => setPolicies(e.target.value)}
+              rows={3}
+              placeholder="Refund, cancellation and attendance policies"
+              className="w-full px-3 py-2.5 min-h-[60px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+            />
           </div>
 
           <div>

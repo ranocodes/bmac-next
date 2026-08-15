@@ -102,7 +102,7 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
           <ArrowLeft size={14} /> Back to Events
         </Link>
 
-        <div ref={passRef} className="bg-white border border-border rounded-3xl shadow-sm">
+        <div ref={passRef} className="bg-white border border-border rounded-xl">
           <div className="px-6 pt-6 pb-5 border-b border-border/60 flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">Digital Pass</p>
@@ -132,7 +132,7 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
           </div>
 
           <div className="px-6 pb-6">
-            <div className="rounded-2xl border border-border bg-background/50 p-5 flex flex-col items-center">
+            <div className="rounded-xl border border-border bg-background/50 p-5 flex flex-col items-center">
               {inactive ? (
                 <div className="flex flex-col items-center gap-3 py-6 text-center">
                   <AlertTriangle className="w-10 h-10 text-amber-500" />
@@ -160,7 +160,7 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           <Download size={14} /> {downloading ? "Preparing…" : "Download pass"}
         </button>

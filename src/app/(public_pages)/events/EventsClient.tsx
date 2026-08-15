@@ -136,111 +136,62 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
 
   return (
     <>
-      <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
-        <div className="absolute inset-0 bg-primary/5 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
-              Official Calendar
-            </span>
-            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-secondary tracking-tighter leading-[0.9]">
-              Upcoming <span className="text-accent italic font-light serif">Engagements</span>.
-            </h1>
-            <p className="text-muted-foreground max-w-lg text-base md:text-lg mt-6 leading-relaxed font-medium">
-               Secure your digital entry pass to the next gathering of Jos's brightest minds.
-            </p>
-          </motion.div>
+      <section className="bg-background pt-32 pb-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+            Official Calendar
+          </span>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary mt-2">
+            Upcoming Engagements
+          </h1>
+          <p className="text-muted-foreground max-w-lg text-base md:text-lg mt-4 leading-relaxed font-medium">
+            Secure your digital entry pass to the next gathering of Jos's brightest minds.
+          </p>
         </div>
       </section>
 
-      <section className="py-12 md:py-20 px-4 md:px-6 relative overflow-x-clip">
-        <div className="max-w-7xl mx-auto space-y-16">
+      <section className="pb-16 md:pb-24 px-6">
+        <div className="max-w-7xl mx-auto space-y-4">
           {events.map((event, i) => {
             const fd = formatEventDate(event.date);
             return (
-            <FadeIn key={event.id} delay={i * 0.1}>
-              <Link href={`/events/${event.id}`} className="group relative block">
-                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                    
-                    <div className="lg:col-span-2 relative">
-                       <div className="flex flex-row lg:flex-col items-baseline lg:items-start gap-2">
-                          <span className="text-6xl md:text-8xl font-display font-extrabold text-secondary/5 tracking-tighter absolute -top-8 -left-3 lg:-top-12 lg:-left-6 pointer-events-none group-hover:text-primary/10 transition-colors duration-700">
-                             0{i + 1}
-                          </span>
-                          {fd.day && (
-                          <span className="text-4xl md:text-6xl font-display font-extrabold text-secondary tracking-tighter leading-none relative z-10">
-                             {fd.day}
-                          </span>
-                          )}
-                          {fd.month && (
-                          <span className="text-lg md:text-xl font-bold text-accent uppercase tracking-[0.2em] relative z-10">
-                             {fd.month}
-                          </span>
-                          )}
-                       </div>
+            <FadeIn key={event.id} delay={i * 0.05}>
+              <Link href={`/events/${event.id}`} className="group block">
+                <div className="bg-card rounded-xl border border-border p-5 md:p-6 transition-colors hover:border-primary/40 group-hover:bg-muted/30">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      {fd.day && (
+                        <div className="w-12 shrink-0 text-center border-r border-border/60 pr-4">
+                          <p className="font-display text-2xl font-bold leading-none text-secondary">{fd.day}</p>
+                          {fd.month && <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{fd.month}</p>}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{event.category}</p>
+                        <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-secondary mt-1">
+                          {event.title}
+                        </h3>
+                      </div>
                     </div>
-
-                    <div className="lg:col-span-10">
-                       <div className="relative group-hover:-translate-y-1 transition-transform duration-700">
-                          <div className="bg-card border border-border/50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-diffused relative overflow-hidden">
-                             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-24 -mt-24 opacity-0 group-hover:opacity-100 transition-opacity" />
-                             
-                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-border/30 pb-6">
-                                <div>
-                                   <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary mb-2 block">
-                                      {event.category}
-                                   </span>
-                                   <h3 className="text-2xl md:text-3xl font-extrabold tracking-tighter text-secondary leading-none">
-                                      {event.title}
-                                   </h3>
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border/50 shadow-inner">
-                                   <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                   <span className="text-[9px] font-bold uppercase tracking-widest text-secondary">
-                                      {event.isPaid ? `₦${(event.price || 0).toLocaleString()}` : "Free Entry"}
-                                   </span>
-                                </div>
-                             </div>
-
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-                                <p className="text-muted-foreground text-sm md:text-base leading-relaxed font-medium line-clamp-3">
-                                   {event.desc}
-                                </p>
-                                <div className="flex flex-wrap md:justify-end gap-4 md:gap-6">
-                                   <div className="flex items-center gap-3">
-                                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-primary">
-                                         <Clock size={16} />
-                                      </div>
-                                      <div>
-                                         <p className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest">Time</p>
-                                         <p className="text-xs font-bold text-secondary">{event.time}</p>
-                                      </div>
-                                   </div>
-                                   <div className="flex items-center gap-3">
-                                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-primary">
-                                         <MapPin size={16} />
-                                      </div>
-                                      <div>
-                                         <p className="text-[8px] font-bold uppercase text-muted-foreground tracking-widest">Venue</p>
-                                          <p className="text-xs font-bold text-secondary truncate sm:max-w-[160px]">{event.venue}</p>
-                                      </div>
-                                   </div>
-                                </div>
-                             </div>
-
-                             <div className="mt-8 flex justify-end">
-                                <div className="w-12 h-12 rounded-full bg-secondary text-card flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-500 shadow-xl">
-                                   <ArrowRight size={20} />
-                                </div>
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-bold whitespace-nowrap">
+                      {event.isPaid ? `₦${(event.price || 0).toLocaleString()}` : "Free Entry"}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground text-sm md:text-base leading-relaxed mt-3 line-clamp-2">
+                    {event.desc}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 pt-4 border-t border-border/50 text-xs">
+                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium">
+                      <Clock size={14} /> {event.time || "TBA"}
+                    </span>
+                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium truncate">
+                      <MapPin size={14} /> {event.venue || "Venue TBA"}
+                    </span>
+                    <span className="ml-auto inline-flex items-center gap-1.5 text-primary font-bold group-hover:gap-2.5 transition-all">
+                      View Event <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </div>
               </Link>
             </FadeIn>
           );
@@ -248,33 +199,23 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
         </div>
       </section>
 
-      <section className="py-16 md:py-20 px-4 md:px-6 bg-card border-t border-border/50">
-        <div className="max-w-4xl mx-auto">
-           <div className="bg-secondary rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-14 text-center relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none" />
-              <div className="relative z-10">
-                 <h2 className="font-display text-3xl md:text-5xl font-extrabold text-card tracking-tighter mb-6">
-                    Stay <span className="text-accent italic font-light serif">Synchronized</span>.
-                 </h2>
-                 <p className="text-card/60 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium leading-relaxed">
-                    Import the official BMAC leadership cycle directly into your workspace.
-                 </p>
-                 <div className="flex flex-wrap justify-center gap-3">
-                    <button onClick={handleAddToGoogle} className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
-                       <Calendar size={16} className="text-accent group-hover:scale-110 transition-transform" />
-                       Add to Google
-                    </button>
-                    <button onClick={handleAddToApple} className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-card/5 border border-card/10 text-card font-bold hover:bg-card/10 transition-all flex items-center gap-2 backdrop-blur-md shadow-xl group text-sm md:text-base">
-                       <Calendar size={16} className="text-accent group-hover:scale-110 transition-transform" />
-                       Add to Apple
-                    </button>
-                    <button onClick={() => setIsModalOpen(true)} className="px-6 md:px-8 py-3 md:py-4 rounded-full bg-accent text-accent-foreground font-bold hover:bg-card hover:text-accent transition-all flex items-center gap-2 shadow-xl group text-sm md:text-base">
-                       <Send size={16} className="group-hover:scale-110 transition-transform" />
-                       Get Email Alerts
-                    </button>
-                 </div>
-              </div>
-           </div>
+      <section className="py-16 md:py-20 px-6 bg-card border-t border-border">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Stay Synchronized</p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary mt-2">
+            Import the official BMAC leadership cycle directly into your workspace.
+          </h2>
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
+            <button onClick={handleAddToGoogle} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card text-secondary font-bold px-6 h-11 hover:bg-muted transition-colors">
+              <Calendar size={16} /> Add to Google
+            </button>
+            <button onClick={handleAddToApple} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card text-secondary font-bold px-6 h-11 hover:bg-muted transition-colors">
+              <Calendar size={16} /> Add to Apple
+            </button>
+            <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground font-bold px-6 h-11 hover:bg-primary/90 transition-colors">
+              <Send size={16} /> Get Email Alerts
+            </button>
+          </div>
         </div>
       </section>
       

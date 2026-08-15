@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { Calendar, MapPin, Send, Clock, CheckCircle2, X, CalendarPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
@@ -12,6 +13,7 @@ import ShareButtons from "@/components/ui/ShareButtons";
 import { registerForEvent } from "@/actions/events";
 import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
+import { buildIcs, downloadIcs } from "@/lib/ics";
 import type { EventPass } from "@/types/cms";
 
 function formatDisplayDate(raw: string | undefined): string {
@@ -38,6 +40,12 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
     features: (e as any).features || [],
     isPaid: (e as any).is_paid ?? (e as any).isPaid ?? false,
     price: Number((e as any).price || 0),
+    img: (e as any).img || "",
+    agenda: (e as any).agenda || [],
+    audienceFor: (e as any).audienceFor || (e as any).audience_for || [],
+    audienceNotFor: (e as any).audienceNotFor || (e as any).audience_not_for || [],
+    faqs: (e as any).faqs || [],
+    policies: (e as any).policies || "",
   }));
   const found = all.find(e => e.id === id) || null;
   const [event] = useState<EventPass | null>(found);
@@ -61,9 +69,25 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
       .slice(0, 3);
   })();
 
+  const agenda = (event as any).agenda || [];
+  const audienceFor = (event as any).audienceFor || [];
+  const audienceNotFor = (event as any).audienceNotFor || [];
   const faqs = (event as any).faqs || [];
+  const policies = (event as any).policies || "";
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const publishedTestimonials = initialTestimonials.filter((t: any) => t.status === "published");
+
+  const handleAddToCalendar = () => {
+    if (!event) return;
+    const ics = buildIcs({
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      venue: event.venue,
+      description: event.desc,
+    });
+    downloadIcs(ics, `${event.id}.ics`);
+  };
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -215,139 +239,198 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
 
   return (
     <main suppressHydrationWarning className="bg-background">
-      {/* Editorial Event Hero */}
-      <section className="relative overflow-hidden bg-secondary pt-24 pb-12 md:pt-32 md:pb-20">
-        <div className="absolute inset-0 bg-primary/5 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-        
-        <div className="max-w-7xl mx-auto px-4 md:px-6 w-full relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10 lg:gap-16">
-            
+      {/* Hero */}
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto">
+          <Breadcrumbs items={[{ label: "Events", href: "/events" }, { label: event.title }]} />
+
+          <div className="mt-8 md:mt-12 text-center lg:text-left">
+            <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 flex-wrap">
+              <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest">
+                {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}
+              </span>
+              <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase tracking-widest">
+                <Calendar size={14} className="text-primary" /> {formatDisplayDate(event.date)}
+              </div>
+            </div>
+
+            <h1 className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-tight max-w-4xl mx-auto lg:mx-0">
+              {event.title}
+            </h1>
+
+            <p className="mt-6 md:mt-8 text-muted-foreground text-base md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              {event.desc}
+            </p>
+
+            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 md:gap-10">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary shrink-0">
+                  <MapPin size={20} className="md:w-6 md:h-6" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Location</p>
+                  <p className="text-sm md:text-base font-bold text-secondary leading-tight">{event.venue}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary shrink-0">
+                  <Clock size={20} className="md:w-6 md:h-6" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Start Time</p>
+                  <p className="text-sm md:text-base font-bold text-secondary leading-tight">{event.time}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 md:mt-10 lg:hidden">
+              <a href="#register" className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-card rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
+                {event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Reserve My Spot"}
+              </a>
+            </div>
+          </div>
+
+          {event.img ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="flex-1 text-center lg:text-left"
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="mt-10 md:mt-16 relative aspect-[16/9] rounded-xl border border-border overflow-hidden"
             >
-              <Breadcrumbs dark items={[{ label: "Events", href: "/events" }, { label: event.title }]} />
-
-              <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 md:mb-8">
-                <span className="bg-accent text-accent-foreground px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest border border-accent/20">
-                  {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}
-                </span>
-                <div className="flex items-center gap-2 text-card/50 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                  <Calendar size={12} className="text-accent" /> {formatDisplayDate(event.date)}
-                </div>
-              </div>
-
-              <h1 className="font-display text-[clamp(2.25rem,10vw,5.5rem)] font-extrabold text-card tracking-tighter leading-[0.95] md:leading-[0.85] mb-8 md:mb-10 max-w-4xl mx-auto lg:mx-0">
-                {event.title}
-              </h1>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 md:gap-10">
-                <div className="flex items-center gap-4 text-card/80">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent shrink-0 shadow-lg">
-                    <MapPin size={20} className="md:w-6 md:h-6" />
-                  </div>
-                  <div className="text-left">
-                     <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-40">Location</p>
-                     <p className="text-sm md:text-base font-bold leading-tight">{event.venue}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 text-card/80">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent shrink-0 shadow-lg">
-                    <Clock size={20} className="md:w-6 md:h-6" />
-                  </div>
-                  <div className="text-left">
-                     <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-40">Start Time</p>
-                     <p className="text-sm md:text-base font-bold leading-tight">{event.time}</p>
-                  </div>
-                </div>
-              </div>
+              <Image src={event.img} alt={event.title} fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1280px" />
             </motion.div>
-          </div>
+          ) : null}
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 mt-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <ShareButtons title={event.title} url={shareUrl} />
       </div>
 
       {/* Main Content Area */}
-      <section className="py-24 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-start">
-          
-          <div className="lg:col-span-7">
-            <div className="prose prose-slate lg:prose-xl max-w-none mb-20 text-muted-foreground">
-              <h3 className="font-display text-4xl font-extrabold text-secondary mb-10 tracking-tight">The Vision</h3>
-              <div className="text-lg md:text-xl leading-[1.8] mb-12 font-medium overflow-x-auto">
+      <section className="py-16 md:py-24 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-start">
+
+          <div className="lg:col-span-7 space-y-16 md:space-y-20">
+            {/* The Vision */}
+            <div>
+              <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-10 tracking-tight">The Vision</h3>
+              <div className="prose prose-slate lg:prose-xl max-w-none text-secondary/90 text-lg md:text-xl leading-[1.8]">
                 <ReactMarkdown>{event.longDesc}</ReactMarkdown>
               </div>
+            </div>
 
-              {(event.features && event.features.length > 0) && (
-                <div className="flex flex-wrap gap-2.5 mt-12">
+            {/* What you'll get */}
+            {event.features && event.features.length > 0 && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">What You&rsquo;ll Get</h3>
+                <div className="flex flex-wrap gap-2.5">
                   {event.features.map((feat, i) => (
-                    <div key={i} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border/40 shadow-xs hover:bg-card hover:border-border/70 hover:shadow-sm transition-all duration-300">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <div key={i} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-background border border-border">
+                      <div className="w-5 h-5 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
                         <CheckCircle2 size={12} />
                       </div>
                       <span className="font-semibold text-secondary text-xs leading-tight">{feat}</span>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Agenda */}
+            {agenda.length > 0 && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Programme</h3>
+                <div className="rounded-xl border border-border bg-card overflow-hidden">
+                  {agenda.map((item: { time: string; title: string }, i: number) => (
+                    <div key={i} className="flex items-start gap-5 px-5 md:px-8 py-5 border-b border-border/50 last:border-b-0">
+                      <span className="text-primary font-bold text-sm w-20 shrink-0 pt-0.5">{item.time}</span>
+                      <span className="text-secondary text-sm md:text-base font-medium">{item.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Audience fit */}
+            {(audienceFor.length > 0 || audienceNotFor.length > 0) && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Who It&rsquo;s For</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  {audienceFor.length > 0 && (
+                    <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-5">This event is for</h4>
+                      <ul className="space-y-3.5">
+                        {audienceFor.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
+                            <span className="text-sm text-secondary leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {audienceNotFor.length > 0 && (
+                    <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-5">This event is not for</h4>
+                      <ul className="space-y-3.5">
+                        {audienceNotFor.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <X size={16} className="text-destructive shrink-0 mt-0.5" />
+                            <span className="text-sm text-muted-foreground leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sticky Booking Island */}
-          <aside className="lg:col-span-5">
+          <aside id="register" className="lg:col-span-5 scroll-mt-28">
             <div className="lg:sticky lg:top-32">
                {!isReserved ? (
-                  <motion.div 
-                    layoutId="rsvp-card"
-                    className="bg-gradient-to-br from-card to-muted/30 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-diffused border border-border/50 relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-32 md:w-48 h-32 md:h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-16 md:-mr-24 -mt-16 md:-mt-24 pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-24 md:w-36 h-24 md:h-36 bg-accent/5 rounded-full blur-3xl opacity-30 -ml-12 md:-ml-18 -mb-12 md:-mb-18 pointer-events-none" />
-                    
-                    <div className="relative z-10">
+                  <motion.div className="bg-card border border-border rounded-xl p-6 md:p-10">
                       <div className="text-center md:text-left mb-6 md:mb-10">
-                        <h3 className="font-display text-2xl md:text-3xl font-extrabold text-secondary mb-3 tracking-tight">Secure Your Pass</h3>
-                        <p className="text-muted-foreground text-sm font-medium">Limited spots available for the 2026 cycle.</p>
+                        <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-3 tracking-tight">Secure Your Pass</h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">{event.isPaid ? `One payment of ₦${(event.price || 0).toLocaleString()}. Instant confirmation and digital pass by email.` : "Reserve in seconds — free entry, instant confirmation by email."}</p>
                       </div>
-                      
+
                       <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                           <div className="space-y-2 group">
-                             <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Legal Name</label>
-                             <input 
-                               type="text" 
+                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
+                             <input
+                               type="text"
                                value={formData.name}
                                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                               placeholder="Peace Jagaban" 
-                               className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
-                               required 
+                               placeholder="Peace Jagaban"
+                               className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40"
+                               required
                              />
                              {fieldErrors.name && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.name}</p>}
                           </div>
                           <div className="space-y-2 group">
-                             <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Communications</label>
-                             <input 
-                               type="email" 
+                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Email Address</label>
+                             <input
+                               type="email"
                                value={formData.email}
                                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                               placeholder="peace@bmacjos.org" 
-                               className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
-                               required 
+                               placeholder="peace@bmacjos.org"
+                               className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40"
+                               required
                              />
                              {fieldErrors.email && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.email}</p>}
                            </div>
                            <div className="space-y-2 group">
-                              <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Phone (WhatsApp) — Optional</label>
-                              <input 
-                                type="tel" 
+                              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Phone (WhatsApp) — Optional</label>
+                              <input
+                                type="tel"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                placeholder="+234 803 456 7891" 
-                                className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
+                                placeholder="+234 803 456 7891"
+                                className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40"
                               />
                               {fieldErrors.phone && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.phone}</p>}
                             </div>
@@ -360,52 +443,51 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
                            )}
 
                            {waitlistMsg && (
-                             <p className="text-sm font-bold text-primary bg-primary/5 border border-primary/15 rounded-xl px-4 py-3">{waitlistMsg}</p>
+                             <p className="text-sm font-bold text-primary bg-primary/5 border border-primary/15 rounded-lg px-4 py-3">{waitlistMsg}</p>
                            )}
 
-                           <button 
+                           <button
                             disabled={isPending}
-                            className="group relative w-full py-4 md:py-6 bg-gradient-to-r from-secondary to-primary text-card rounded-[1.5rem] md:rounded-[2rem] font-extrabold text-sm md:text-base hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-4 mt-5 md:mt-8 shadow-2xl disabled:opacity-70 active:scale-[0.98] overflow-hidden"
+                            className="w-full py-4 bg-primary text-card rounded-lg font-bold text-sm md:text-base hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3 mt-5 md:mt-8 disabled:opacity-70"
                           >
-                             <span className="relative z-10 flex items-center gap-3 md:gap-4">
-                                {isPending ? (
-                                  <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <>{event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Request Official Pass"} <Send size={18} className="md:w-5 md:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" /></>
-                                )}
-                             </span>
-                             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full" />
-                          </button>
-                       </form>
-                    </div>
+                              {isPending ? (
+                                <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <>{event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Request Official Pass"} <Send size={18} /></>
+                              )}
+                           </button>
+                        </form>
                   </motion.div>
                ) : (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-primary rounded-[3rem] p-12 text-center text-card shadow-2xl relative overflow-hidden"
+                    className="bg-card border border-border rounded-xl p-8 md:p-12 text-center"
                   >
-                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0%,transparent_70%)]" />
-                    <div className="relative z-10">
-                       <div className="w-20 h-20 bg-card rounded-full flex items-center justify-center text-primary mx-auto mb-8 shadow-xl">
+                       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-8">
                           <CheckCircle2 size={40} />
                        </div>
-                       <h3 className="font-display text-3xl font-extrabold mb-4 tracking-tighter">Reservation Confirmed</h3>
-                       <p className="text-card/80 text-base mb-10 font-medium leading-relaxed">
+                       <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-4 tracking-tight">Reservation Confirmed</h3>
+                       <p className="text-muted-foreground text-base mb-10 leading-relaxed">
                           Your digital pass has been generated. Check your email for the official QR code and entry details.
                        </p>
-                       
-                        <div className="p-6 bg-card/10 rounded-3xl border border-card/20 backdrop-blur-md mb-8">
-                           <p className="text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">Entry ID</p>
-                           <p className="font-mono text-xl font-extrabold text-accent">{passInfo?.reference || "—"}</p>
+
+                        <div className="p-6 bg-background rounded-xl border border-border mb-8">
+                           <p className="text-[11px] font-bold uppercase tracking-widest mb-2 text-muted-foreground">Entry ID</p>
+                           <p className="font-mono text-xl font-extrabold text-primary">{passInfo?.reference || "—"}</p>
                         </div>
 
                         <div className="flex flex-col gap-3">
-                           <a href={passInfo?.passUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-card text-primary font-bold rounded-2xl text-sm hover:bg-accent hover:text-secondary transition-all text-center">
+                           <a href={passInfo?.passUrl || "#"} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-primary text-card font-bold rounded-lg text-sm hover:bg-primary/90 transition-colors text-center">
                               View Digital Pass
                            </a>
+                           <button
+                             onClick={handleAddToCalendar}
+                             className="w-full py-4 bg-background border border-border text-secondary font-bold rounded-lg text-sm hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-2"
+                           >
+                             <CalendarPlus size={18} /> Add to Calendar (.ics)
+                           </button>
                         </div>
-                    </div>
                   </motion.div>
                )}
             </div>
@@ -413,12 +495,34 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
         </div>
       </section>
 
+      {/* Social Proof */}
+      {publishedTestimonials.length > 0 && (
+        <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-t border-border/50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-12 tracking-tight">Voices from our community</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {publishedTestimonials.slice(0, 3).map((t, i) => (
+                <FadeIn key={i} delay={i * 0.1}>
+                  <blockquote className="rounded-xl border border-border bg-card p-6 h-full">
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-5">&ldquo;{t.quote}&rdquo;</p>
+                    <footer className="text-xs">
+                      <p className="font-bold text-secondary">{t.name}</p>
+                      <p className="text-muted-foreground mt-0.5">{t.designation}</p>
+                    </footer>
+                  </blockquote>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* FAQ */}
       {faqs.length > 0 && (
-        <section className="py-16 px-4 md:px-6 bg-muted/30">
+        <section className="py-16 md:py-24 px-4 md:px-6">
           <div className="max-w-3xl mx-auto">
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary mb-10 tracking-tight text-center">Common Questions</h2>
-            <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-12 tracking-tight text-center">Common Questions</h2>
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
               {faqs.map((faq: { q: string; a: string }, i: number) => (
                 <div key={i} className="border-b border-border/50 last:border-b-0">
                   <button
@@ -437,48 +541,44 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
         </section>
       )}
 
-      {/* Related Events */}
-      {relatedEvents.length > 0 && (
-        <section className="py-16 px-4 md:px-6">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary mb-10 tracking-tight">More from BMAC</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {relatedEvents.map((e, i) => (
-                <Link
-                  key={e.id}
-                  href={`/events/${e.id}`}
-                  className="group rounded-xl border border-border bg-card p-6 hover:border-primary/30 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">
-                      <Calendar size={11} /> {formatDisplayDate(e.date)}
-                    </span>
-                  </div>
-                  <h3 className="font-display text-lg font-bold text-secondary mb-3 leading-tight group-hover:text-primary transition-colors">
-                    {e.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">{e.desc}</p>
-                </Link>
-              ))}
-            </div>
+      {/* Policies */}
+      {policies && (
+        <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-y border-border/50">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Good to Know</h2>
+            <p className="text-muted-foreground text-sm md:text-base leading-relaxed">{policies}</p>
           </div>
         </section>
       )}
 
-      {/* Social Proof */}
-      {publishedTestimonials.length > 0 && (
-        <section className="py-16 px-4 md:px-6 bg-muted/30">
+      {/* Related Events */}
+      {relatedEvents.length > 0 && (
+        <section className="py-16 md:py-24 px-4 md:px-6">
           <div className="max-w-7xl mx-auto">
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary mb-10 tracking-tight">Voices from our community</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-12 tracking-tight">More from BMAC</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {publishedTestimonials.slice(0, 3).map((t, i) => (
-                <blockquote key={i} className="rounded-xl border border-border bg-card p-6">
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-5">&ldquo;{t.quote}&rdquo;</p>
-                  <footer className="text-xs">
-                    <p className="font-bold text-secondary">{t.name}</p>
-                    <p className="text-muted-foreground mt-0.5">{t.designation}</p>
-                  </footer>
-                </blockquote>
+              {relatedEvents.map((e, i) => (
+                <FadeIn key={e.id} delay={i * 0.1}>
+                  <Link
+                    href={`/events/${e.id}`}
+                    className="group block h-full rounded-xl border border-border bg-card p-6 hover:border-primary/40 transition-colors"
+                  >
+                    {e.img ? (
+                      <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-border/50 mb-5">
+                        <Image src={e.img} alt={e.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                      </div>
+                    ) : null}
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-widest">
+                        <Calendar size={12} /> {formatDisplayDate(e.date)}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-lg font-bold text-secondary mb-3 leading-tight group-hover:text-primary transition-colors">
+                      {e.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">{e.desc}</p>
+                  </Link>
+                </FadeIn>
               ))}
             </div>
           </div>

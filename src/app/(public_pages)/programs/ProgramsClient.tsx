@@ -3,10 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Clock } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
-import { BentoCard } from "@/components/ui/BentoCard";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
@@ -34,47 +32,40 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
 
   return (
     <>
-      <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
-        <div className="absolute inset-0 bg-primary/5 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
-              Leadership Ecosystem
-            </span>
-            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-secondary tracking-tighter leading-[0.9]">
-              Our Core <span className="text-accent italic font-light serif">Curriculum</span>.
-            </h1>
-            <p className="text-muted-foreground max-w-lg text-base md:text-lg mt-6 leading-relaxed">
-               A hands-on curriculum built to turn Jos's brightest minds into confident public speakers and leaders.
-            </p>
-          </motion.div>
+      <section className="bg-background pt-32 pb-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+            Leadership Ecosystem
+          </span>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary mt-2">
+            Our Core Curriculum
+          </h1>
+          <p className="text-muted-foreground max-w-lg text-base md:text-lg mt-4 leading-relaxed">
+            A hands-on curriculum built to turn Jos's brightest minds into confident public speakers and leaders.
+          </p>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 px-4 md:px-6">
+      <section className="pb-16 md:pb-24 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {programs.map((prog, i) => (
-              <FadeIn key={`${prog.id}-${i}`} delay={i * 0.1}>
+              <FadeIn key={`${prog.id}-${i}`} delay={i * 0.05}>
                 <Link href={`/programs/${prog.id}`} className="group flex flex-col h-full">
-                  <BentoCard className="p-0 overflow-hidden flex flex-col h-full border-none shadow-sm group-hover:shadow-xl transition-all bg-card">
-                    <div className="relative h-48 lg:h-56 w-full shrink-0 border-b border-border/50">
+                  <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col h-full transition-colors group-hover:border-primary/40 group-hover:bg-muted/30">
+                    <div className="relative h-48 lg:h-52 w-full shrink-0 border-b border-border/50">
                       <Image
                         src={prog.img}
                         alt={prog.title}
                         fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover"
                       />
-                      <div className="absolute top-4 lg:top-6 left-4 lg:left-6 p-2.5 rounded-xl bg-card/90 backdrop-blur-md shadow-sm">
+                      <div className="absolute top-4 left-4 p-2 rounded-lg bg-card/90">
                         <div className={cn(prog.color, "w-6 h-6 flex items-center justify-center")}>
                           {getIcon(prog.icon, { size: 24 })}
                         </div>
                       </div>
-                      <div className={`absolute top-4 lg:top-6 right-4 lg:right-6 px-3 py-1.5 rounded-full backdrop-blur-md shadow-sm text-[9px] font-bold uppercase tracking-widest border ${
+                      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold border ${
                         prog.isPaid
                           ? "bg-card/90 text-accent border-accent/30"
                           : "bg-card/90 text-emerald-600 border-emerald-500/30"
@@ -83,22 +74,22 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
                       </div>
                     </div>
                     
-                    <div className="p-8 flex flex-col flex-grow bg-card">
-                      <h3 className="font-display text-xl lg:text-2xl font-bold text-secondary mb-3 tracking-tight">
+                    <div className="p-6 flex flex-col flex-grow">
+                      <h3 className="font-display text-xl font-bold text-secondary tracking-tight">
                         {prog.title}
                       </h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed mb-8 line-clamp-3">
+                      <p className="text-muted-foreground text-sm leading-relaxed mt-2 mb-6 line-clamp-3">
                         {prog.desc}
                       </p>
                       
-                      <div className="mt-auto pt-6 border-t border-border/50 flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Learn More</span>
-                        <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <div className="mt-auto pt-4 border-t border-border/50 flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Learn More</span>
+                        <span className="inline-flex items-center gap-1.5 text-primary font-bold group-hover:gap-2.5 transition-all">
                           <ArrowRight size={16} />
-                        </div>
+                        </span>
                       </div>
                     </div>
-                  </BentoCard>
+                  </div>
                 </Link>
               </FadeIn>
             ))}
@@ -106,21 +97,20 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
         </div>
       </section>
 
-      <section className="py-24 px-4 md:px-6 overflow-hidden relative" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[120px] opacity-20 -mr-48 -mt-48 pointer-events-none" />
-        <FadeIn className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="font-display text-[clamp(2rem,6vw,4rem)] font-extrabold text-primary tracking-tighter mb-8 leading-none">
-            Ready to Accelerate <br/> Your <span className="text-accent">Growth</span>?
+      <section className="py-20 px-6 bg-card border-t border-border">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary">
+            Ready to Accelerate Your Growth?
           </h2>
-          <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-4 bg-secondary text-secondary-foreground px-8 py-4 rounded-full font-bold hover:bg-accent hover:text-secondary transition-all duration-300 shadow-xl shadow-secondary/20">
-            Join the Next Cohort <ArrowRight size={20} />
+          <button onClick={() => setIsModalOpen(true)} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-8 h-12 font-bold hover:bg-primary/90 transition-colors">
+            Join the Next Cohort <ArrowRight size={18} />
           </button>
           <p className="mt-4">
             <Link href="/application-status" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
               Already applied? Check your application status
             </Link>
           </p>
-        </FadeIn>
+        </div>
       </section>
       
       <NewsletterModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Join the Waitlist" />

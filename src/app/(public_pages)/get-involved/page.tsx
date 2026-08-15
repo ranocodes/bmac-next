@@ -206,19 +206,18 @@ function GetInvolvedInner() {
   };
   return (
     <main suppressHydrationWarning className="bg-background">
-      <section className="relative min-h-[50dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
-        <div className="absolute inset-0 bg-secondary/5" style={{ backgroundImage: 'radial-gradient(var(--secondary) 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' }} />
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10 text-center md:text-left">
+      <section className="pt-24 md:pt-32 pb-10 md:pb-16 bg-background">
+        <div className="max-w-7xl mx-auto px-6 w-full text-center md:text-left">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
           >
-            <span className="text-accent font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-primary mb-4 block">
               Movement of Minds
             </span>
-            <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-secondary tracking-tighter leading-[0.9]">
-              Empower <span className="text-primary italic font-light serif">The Future</span>.
+            <h1 className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-tight">
+              Empower <span className="text-primary">The Future</span>.
             </h1>
           </motion.div>
         </div>
@@ -227,16 +226,16 @@ function GetInvolvedInner() {
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           {/* CMS-READY UNIFORM GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ways.map((way, i) => (
               <BentoCard
                 key={way.id}
                 delay={i * 0.1}
-                className="flex flex-col h-full bg-card border-none shadow-sm hover:shadow-xl transition-all"
+                className="flex flex-col h-full bg-card border border-border rounded-xl hover:border-primary/40 transition-colors"
                 onClick={() => openWay(way)}
               >
                 <div className="flex flex-col h-full">
-                  <div className={`w-12 h-12 rounded-2xl ${way.color} flex items-center justify-center mb-6`}>
+                  <div className={`w-12 h-12 rounded-lg ${way.color} flex items-center justify-center mb-6`}>
                     {way.icon}
                   </div>
                   <h3 className="font-display text-xl font-bold text-secondary mb-3 tracking-tight">
@@ -250,7 +249,7 @@ function GetInvolvedInner() {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       Learn More
                     </span>
-                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-card transition-colors">
                       <ArrowRight size={16} />
                     </div>
                   </div>
@@ -269,14 +268,14 @@ function GetInvolvedInner() {
             <div className="p-8 md:p-12 pb-0 md:pb-0">
                <div className="flex flex-col md:flex-row items-start justify-between gap-6 mb-8 md:mb-12">
                  <div className="order-2 md:order-1 text-center md:text-left w-full md:w-auto">
-                   <span className="text-xs font-bold tracking-[0.2em] text-accent uppercase block mb-3 md:mb-2">
+                   <span className="text-[11px] font-bold uppercase tracking-widest text-primary block mb-3 md:mb-2">
                      Action Step
                    </span>
-                   <h2 className="font-display text-3xl md:text-5xl font-extrabold text-secondary tracking-tighter leading-[0.95]">
+                   <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary tracking-tight leading-tight">
                      {selectedWay.title}
                    </h2>
                  </div>
-                 <div className={`p-4 md:p-5 rounded-2xl md:rounded-3xl ${selectedWay.color} order-1 md:order-2 mx-auto md:mx-0 shadow-sm`}>
+                 <div className={`p-4 md:p-5 rounded-lg ${selectedWay.color} order-1 md:order-2 mx-auto md:mx-0`}>
                    {React.cloneElement(selectedWay.icon, { size: 32 })}
                  </div>
                </div>
@@ -292,7 +291,7 @@ function GetInvolvedInner() {
                  <h4 className="font-bold text-secondary uppercase text-[10px] tracking-widest mb-6 text-center md:text-left">What to Expect</h4>
                  <div className="grid grid-cols-1 gap-3">
                    {selectedWay.details.split("|").map((detail: string, i: number) => (
-                     <div key={i} className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground bg-card px-5 py-4 rounded-xl border border-border/30 shadow-sm transition-transform hover:scale-[1.02]">
+                     <div key={i} className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground bg-card px-5 py-4 rounded-lg border border-border hover:border-primary/40 transition-colors">
                        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                        <span className="font-bold">{detail}</span>
                      </div>
@@ -301,23 +300,22 @@ function GetInvolvedInner() {
               </div>
 
               {/* Form Section */}
-              <div className="p-8 md:p-12 bg-secondary text-secondary-foreground relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary rounded-full blur-[60px] opacity-20" />
+              <div className="p-8 md:p-12 bg-background">
                 
-                <h3 className="relative z-10 font-display text-xl md:text-2xl font-bold mb-8 text-center md:text-left">
+                <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-8 text-center md:text-left">
                    {selectedWay.id === "donate" ? "Gift of Growth" : "Secure Connection"}
                 </h3>
 
                 {selectedWay.id === "donate" && (
-                  <div className="space-y-6 mb-8 relative z-10">
+                  <div className="space-y-6 mb-8">
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                       {["5000", "10000", "25000", "custom"].map((amt) => (
                         <button
                           key={amt}
-                          className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border ${
+                          className={`px-5 py-2.5 rounded-full text-xs font-bold transition-colors border ${
                             donateAmount === amt 
-                              ? "bg-accent border-accent text-accent-foreground shadow-lg shadow-accent/20" 
-                              : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                              ? "bg-primary border-primary text-card" 
+                              : "bg-background border-border text-secondary hover:border-primary/40"
                           }`}
                           onClick={() => setDonateAmount(amt)}
                         >
@@ -335,7 +333,7 @@ function GetInvolvedInner() {
                           <input
                             type="number"
                             placeholder="Enter amount (₦)"
-                            className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+                            className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                             value={customAmount}
                             onChange={(e) => setCustomAmount(e.target.value)}
                           />
@@ -344,7 +342,7 @@ function GetInvolvedInner() {
                     </AnimatePresence>
                     <Link
                       href="/donor-lookup"
-                      className="block text-center md:text-left text-[11px] font-medium text-white/40 hover:text-accent transition-colors mt-4"
+                      className="block text-center md:text-left text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors mt-4"
                     >
                       Already donated? Look up your donations & receipts →
                     </Link>
@@ -356,10 +354,10 @@ function GetInvolvedInner() {
                     <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-5">
                       <CheckCircle2 size={32} className="text-emerald-600" />
                     </div>
-                    <p className="font-display text-2xl font-bold text-white mb-2">
+                    <p className="font-display text-2xl font-bold text-secondary mb-2">
                       {submitted.title}
                     </p>
-                    <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
+                    <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
                       {submitted.message}
                     </p>
                     {submitted.reference && (
@@ -367,7 +365,7 @@ function GetInvolvedInner() {
                         href={`/api/receipts/${encodeURIComponent(submitted.reference)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
+                        className="mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary/5 text-primary hover:bg-primary/10 rounded-lg text-sm font-medium transition-colors"
                       >
                         <FileText size={15} />
                         Download Receipt (PDF)
@@ -375,13 +373,13 @@ function GetInvolvedInner() {
                     )}
                     <button
                       onClick={() => { setSubmitted(null); setSelectedWay(null); }}
-                      className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
+                      className="mt-8 px-6 py-3 bg-muted text-secondary hover:bg-muted/70 rounded-lg text-sm font-medium transition-colors"
                     >
                       Close
                     </button>
                   </div>
                 ) : (
-                  <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={handleSubmit}>
+                  <form className="space-y-4 md:space-y-5" onSubmit={handleSubmit}>
                   <div className="absolute left-[-9999px]" aria-hidden="true">
                     <label htmlFor="company_website">Website</label>
                     <input
@@ -395,53 +393,52 @@ function GetInvolvedInner() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Your Identity</label>
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Your Identity</label>
                     <input
                       type="text"
                       placeholder="Full Name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all"
+                      className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                       required
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Communication</label>
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Communication</label>
                     <input
                       type="email"
                       placeholder="Email Address"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all"
+                      className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                       required
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Why you&apos;d like to join <span className="normal-case">(optional)</span></label>
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Why you&apos;d like to join <span className="normal-case">(optional)</span></label>
                     <textarea
                       placeholder="Tell us about your motivation, skills, or what you hope to contribute..."
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       rows={3}
-                      className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all resize-none"
+                      className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
                     />
                   </div>
                   {formError && (
-                    <p className="text-xs font-bold text-red-300 px-2">{formError}</p>
+                    <p className="text-xs font-bold text-red-500 px-2">{formError}</p>
                   )}
                   <ConsentCheckbox
                     privacy={consent.privacy}
                     marketing={consent.marketing}
                     onChange={setConsent}
                     consentId={`get-involved-${selectedWay.id}`}
-                    dark
                   />
                   <button
                     disabled={isSubmitting}
-                    className="w-full py-4 md:py-5 bg-accent text-accent-foreground font-bold rounded-xl md:rounded-2xl text-sm hover:bg-card hover:text-accent transition-all flex items-center justify-center gap-3 mt-6 shadow-xl shadow-accent/10 active:scale-[0.98] disabled:opacity-70"
+                    className="w-full py-4 bg-primary text-card font-bold rounded-lg text-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-3 mt-6 disabled:opacity-70"
                   >
                     {isSubmitting ? (
-                      <div className="w-5 h-5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>{selectedWay.id === "donate" ? "Complete Donation" : "Initiate Partnership"} <ArrowRight size={18} /></>
                     )}
