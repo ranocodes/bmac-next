@@ -185,6 +185,23 @@ export async function setLastContacted(
   return { record: updated };
 }
 
+export async function deleteWorkflow(
+  id: string
+): Promise<{ error?: string; success?: boolean }> {
+  const admin = await requirePermission("manage_workflows");
+  const record = await getWorkflow(id);
+  if (!record) return { error: "Submission not found" };
+
+  const removed = await db.remove("workflow_records", id);
+  if (!removed) return { error: "Failed to delete submission" };
+
+  await logActivity(admin.email, "workflow_delete", "workflow_records", {
+    resourceId: id,
+    details: `Deleted workflow ${id} (${record.kind})`,
+  });
+  return { success: true };
+}
+
 export async function replyToSubmission(
   workflowId: string,
   opts: { body: string }

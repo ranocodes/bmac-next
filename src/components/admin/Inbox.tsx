@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays } from "lucide-react";
+import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { replyToSubmission } from "@/actions/workflows";
+import { replyToSubmission, updateWorkflowStatus, deleteWorkflow } from "@/actions/workflows";
+import type { WorkflowStatus, WorkflowPriority } from "@/types/cms";
 
 interface WorkflowItem {
   id: string;
@@ -83,6 +84,9 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
   const [filterKind, setFilterKind] = useState<string>("all");
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { toast } = useToast();
 
   const selected = useMemo(() => items.find(i => i.id === selectedId) || null, [items, selectedId]);
@@ -113,6 +117,37 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
     } : i));
     setReply("");
     toast("Reply sent to " + selected.submitterEmail, "success");
+  }
+
+  const [statusDraft, setStatusDraft] = useState<Record<string, string>>({});
+  const [priorityDraft, setPriorityDraft] = useState<Record<string, string>>({});
+
+  async function handleSaveStatus() {
+    if (!selected) return;
+    setSaving(true);
+    const status = (statusDraft[selected.id] ?? selected.status) as WorkflowStatus;
+    const priority = (priorityDraft[selected.id] ?? selected.priority) as WorkflowPriority;
+    const result = await updateWorkflowStatus(selected.id, { status, priority });
+    setSaving(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    setItems(prev => prev.map(i => i.id === selected.id ? { ...i, status: status as string, priority: priority as string } : i));
+    setStatusDraft(p => { const c = { ...p }; delete c[selected.id]; return c; });
+    setPriorityDraft(p => { const c = { ...p }; delete c[selected.id]; return c; });
+    toast("Status updated", "success");
+  }
+
+  async function handleDelete() {
+    if (!selected) return;
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    setDeleting(true);
+    const result = await deleteWorkflow(selected.id);
+    setDeleting(false);
+    setConfirmDelete(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    const removedId = selected.id;
+    setItems(prev => prev.filter(i => i.id !== removedId));
+    setSelectedId(items.length > 1 ? (items.find(i => i.id !== removedId)?.id ?? null) : null);
+    toast("Submission deleted", "success");
   }
 
   return (
@@ -209,6 +244,44 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                     <p className="flex items-center gap-2 text-secondary"><Phone size={14} className="text-muted-foreground" /> {selected.details.phone}</p>
                   )}
                   <p className="flex items-center gap-2 text-secondary"><CalendarDays size={14} className="text-muted-foreground" /> Submitted {new Date(selected.createdAt).toLocaleString()}</p>
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-border/50 pt-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Status</label>
+                    <select
+                      value={statusDraft[selected.id] ?? selected.status}
+                      onChange={e => setStatusDraft(p => ({ ...p, [selected.id]: e.target.value }))}
+                      className="h-10 px-3 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    >
+                      {["open", "in_progress", "resolved", "closed"].map(s => (
+                        <option key={s} value={s}>{s.replace("_", " ")}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Priority</label>
+                    <select
+                      value={priorityDraft[selected.id] ?? selected.priority}
+                      onChange={e => setPriorityDraft(p => ({ ...p, [selected.id]: e.target.value }))}
+                      className="h-10 px-3 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    >
+                      {["low", "normal", "high", "urgent"].map(pr => (
+                        <option key={pr} value={pr}>{pr}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button onClick={handleSaveStatus} disabled={saving}
+                    className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                    {saving ? "Saving…" : "Save Status"}
+                  </button>
+                  <button onClick={handleDelete} disabled={deleting}
+                    className={`ml-auto inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold border transition-all disabled:opacity-50 ${
+                      confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-destructive/40 text-destructive hover:bg-destructive/10"
+                    }`}>
+                    <Trash2 size={15} />
+                    {deleting ? "Deleting…" : confirmDelete ? "Confirm delete?" : "Delete"}
+                  </button>
                 </div>
               </div>
 

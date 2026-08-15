@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CreditCard, Download, Search } from "lucide-react";
 
-export default function PaymentsTable({ initialData }: { initialData: any[] }) {
+export default function PaymentsTable({ initialData, embedded }: { initialData: any[]; embedded?: boolean }) {
   const [payments, setPayments] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -65,14 +65,16 @@ export default function PaymentsTable({ initialData }: { initialData: any[] }) {
   );
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
-      <div className="flex items-center gap-3">
-        <CreditCard size={24} className="text-primary shrink-0" />
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Payments</h1>
-          <p className="text-sm text-muted-foreground mt-1">Verified Paystack transactions</p>
+    <div className={embedded ? "space-y-6" : "space-y-6 max-w-[1400px]"}>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <CreditCard size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Payments</h1>
+            <p className="text-sm text-muted-foreground mt-1">Verified Paystack transactions</p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-xs">

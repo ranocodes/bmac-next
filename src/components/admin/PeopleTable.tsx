@@ -2,13 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Search, Download } from "lucide-react";
-import { exportPeople } from "@/actions/people";
-import type { PersonRow } from "@/types/cms";
+import { Users, Search, Download, Plus } from "lucide-react";
+import { exportPeople, createPerson } from "@/actions/people";
+import { useToast } from "@/components/ui/Toast";
+import type { PersonRow, PersonRole } from "@/types/cms";
 
 function nameOf(p: PersonRow): string {
   return [p.firstName, p.lastName].filter(Boolean).join(" ") || "—";
 }
+
+const allRoles: PersonRole[] = [
+  "attendee",
+  "donor",
+  "applicant",
+  "volunteer",
+  "partner contact",
+  "member",
+  "admin",
+];
 
 const roleColors: Record<string, string> = {
   attendee: "bg-blue-500/10 text-blue-600",
@@ -22,8 +33,45 @@ const roleColors: Record<string, string> = {
 
 export default function PeopleTable({ initialData, canExport }: { initialData: PersonRow[]; canExport?: boolean }) {
   const router = useRouter();
-  const [people] = useState<PersonRow[]>(initialData);
+  const [people, setPeople] = useState<PersonRow[]>(initialData);
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    notes: "",
+    roles: [] as PersonRole[],
+  });
+  const { toast } = useToast();
+
+  function toggleRole(role: PersonRole) {
+    setForm(f => ({
+      ...f,
+      roles: f.roles.includes(role) ? f.roles.filter(r => r !== role) : [...f.roles, role],
+    }));
+  }
+
+  async function handleCreate() {
+    if (!form.firstName.trim()) { toast("First name is required", "error"); return; }
+    setCreating(true);
+    const result = await createPerson({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      notes: form.notes,
+      roles: form.roles,
+    });
+    setCreating(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    toast("Person created", "success");
+    setShowCreate(false);
+    setForm({ firstName: "", lastName: "", email: "", phone: "", notes: "", roles: [] });
+    router.refresh();
+  }
 
   const filtered = search
     ? people.filter(p =>
@@ -70,12 +118,20 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
           </div>
         </div>
         {canExport && (
-          <button
-            onClick={handleExport}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all self-start sm:self-auto"
-          >
-            <Download size={16} /> Export CSV
-          </button>
+          <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+            <button
+              onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all"
+            >
+              <Plus size={16} /> New Person
+            </button>
+            <button
+              onClick={handleExport}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-secondary text-sm font-medium hover:bg-muted/40 transition-colors"
+            >
+              <Download size={16} /> Export CSV
+            </button>
+          </div>
         )}
       </div>
 
@@ -141,6 +197,69 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowCreate(false)} />
+          <div className="relative w-full max-w-lg bg-card rounded-3xl border border-border/50 shadow-xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold text-secondary">New Person</h2>
+              <button onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-secondary text-xl leading-none">&times;</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First name *</label>
+                <input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Last name</label>
+                <input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Email</label>
+                <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
+                <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Notes</label>
+              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Roles</label>
+              <div className="flex flex-wrap gap-1.5">
+                {allRoles.map(role => (
+                  <button key={role} type="button" onClick={() => toggleRole(role)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      form.roles.includes(role)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-input text-muted-foreground hover:text-secondary hover:border-primary/40"
+                    }`}>
+                    {role}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-1">
+              <button onClick={() => setShowCreate(false)} className="h-10 px-4 rounded-xl border border-input text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleCreate} disabled={creating}
+                className="h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                {creating ? "Creating…" : "Create Person"}
+              </button>
+            </div>
           </div>
         </div>
       )}

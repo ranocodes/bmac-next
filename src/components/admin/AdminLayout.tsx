@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard, ShieldOff, Inbox, QrCode, Heart, Mail, type LucideIcon,
+  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -71,8 +71,7 @@ const navGroups: NavGroup[] = [
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
       { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
-      { label: "Payments", href: "/admin/payments", icon: CreditCard, permission: "manage_payments" },
-      { label: "Donations", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
+      { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
       { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
@@ -107,6 +106,8 @@ const routePermissions: Record<string, Permission> = {
   "/admin/settings": "access_settings",
   "/admin/inbox": "manage_workflows",
   "/admin/checkin": "check_in_attendees",
+  "/admin/newsletter": "manage_newsletter",
+  "/admin/donations": "manage_payments",
 };
 
 function checkRouteAccess(pathname: string, permissions: Permission[]): boolean {

@@ -507,3 +507,134 @@ export async function anonymizePerson(
   const refreshed = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [personId]);
   return refreshed.length ? { person: rowToPerson(refreshed[0]) } : { person };
 }
+
+export interface PersonInput {
+  firstName: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  roles?: PersonRole[];
+  notes?: string;
+}
+
+export async function createPerson(input: PersonInput): Promise<{ error?: string; person?: Person }> {
+  const admin = await requirePermission("manage_people");
+  const firstName = (input.firstName || "").trim();
+  const lastName = (input.lastName || "").trim();
+  const email = (input.email || "").trim().toLowerCase();
+  const phone = (input.phone || "").trim();
+  const notes = (input.notes || "").trim();
+  const roles = Array.isArray(input.roles) ? input.roles : [];
+
+  if (!firstName) return { error: "First name is required" };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Valid email required" };
+
+  const emailCheck = email
+    ? await db.query<PersonDbRow>("SELECT id FROM public.people WHERE lower(email) = $1", [email]).catch(() => [])
+    : [];
+  if (emailCheck.length) return { error: "A person with this email already exists" };
+
+  const id = `person-${crypto.randomUUID()}`;
+  try {
+    await db.query(
+      `INSERT INTO public.people (id, first_name, last_name, email, phone, roles, notes)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)`,
+      [id, firstName, lastName, email, phone, JSON.stringify(roles), notes]
+    );
+  } catch (err) {
+    console.error("createPerson error:", err);
+    return { error: "Failed to create person" };
+  }
+
+  const rows = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [id]);
+  const person = rows.length ? rowToPerson(rows[0]) : null;
+  if (person) {
+    await logActivity(admin.email, "person_create", "people", {
+      resourceId: id,
+      details: `Created person: ${firstName} ${lastName} <${email || "no email"}>`,
+    });
+  }
+  return person ? { person } : { error: "Failed to create person" };
+}
+
+export async function updatePerson(
+  personId: string,
+  input: PersonInput
+): Promise<{ error?: string; person?: Person }> {
+  const admin = await requirePermission("manage_people");
+  const rows = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [personId]);
+  if (!rows.length) return { error: "Person not found" };
+  const current = rowToPerson(rows[0]);
+
+  const firstName = input.firstName?.trim() ?? current.firstName;
+  const lastName = input.lastName?.trim() ?? current.lastName;
+  const email = input.email?.trim().toLowerCase() ?? current.email;
+  const phone = input.phone?.trim() ?? current.phone;
+  const notes = input.notes?.trim() ?? current.notes;
+  const roles = Array.isArray(input.roles) ? input.roles : current.roles;
+
+  if (!firstName) return { error: "First name is required" };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Valid email required" };
+
+  if (email.toLowerCase() !== current.email.toLowerCase()) {
+    const dup = await db.query<PersonDbRow>("SELECT id FROM public.people WHERE lower(email) = $1 AND id <> $2", [
+      email.toLowerCase(),
+      personId,
+    ]).catch(() => []);
+    if (dup.length) return { error: "A person with this email already exists" };
+  }
+
+  try {
+    await db.query(
+      `UPDATE public.people
+       SET first_name = $1, last_name = $2, email = $3, phone = $4, roles = $5::jsonb, notes = $6, updated_at = now()
+       WHERE id = $7`,
+      [firstName, lastName, email, phone, JSON.stringify(roles), notes, personId]
+    );
+  } catch (err) {
+    console.error("updatePerson error:", err);
+    return { error: "Failed to update person" };
+  }
+
+  const refreshed = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [personId]);
+  const person = refreshed.length ? rowToPerson(refreshed[0]) : null;
+  if (person) {
+    await logActivity(admin.email, "person_update", "people", {
+      resourceId: personId,
+      details: `Updated person: ${firstName} ${lastName}`,
+    });
+  }
+  return person ? { person } : { error: "Failed to update person" };
+}
+
+export async function deletePerson(
+  personId: string
+): Promise<{ error?: string; success?: boolean }> {
+  const admin = await requirePermission("manage_people");
+  const rows = await db.query<PersonDbRow>("SELECT * FROM public.people WHERE id = $1", [personId]);
+  if (!rows.length) return { error: "Person not found" };
+  const person = rowToPerson(rows[0]);
+
+  if (person.email) {
+    const adminRows = await db.query<{ id: string }>(
+      "SELECT id FROM public.admin_users WHERE LOWER(email) = LOWER($1)",
+      [person.email]
+    );
+    if (adminRows.length) {
+      return { error: "Admin accounts cannot be deleted. Remove admin access first." };
+    }
+  }
+
+  try {
+    await db.remove("people", personId);
+  } catch (err) {
+    console.error("deletePerson error:", err);
+    return { error: "Failed to delete person" };
+  }
+
+  await logActivity(admin.email, "person_delete", "people", {
+    resourceId: personId,
+    details: `Deleted person: ${person.firstName} ${person.lastName}`,
+  });
+  return { success: true };
+}

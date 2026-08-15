@@ -14,7 +14,7 @@ interface DonationRow {
   createdAt: string;
 }
 
-export default function DonationsTable({ initialData }: { initialData: DonationRow[] }) {
+export default function DonationsTable({ initialData, embedded }: { initialData: DonationRow[]; embedded?: boolean }) {
   const [donations, setDonations] = useState<DonationRow[]>(initialData);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -70,14 +70,16 @@ export default function DonationsTable({ initialData }: { initialData: DonationR
   }
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
-      <div className="flex items-center gap-3">
-        <Heart size={24} className="text-primary shrink-0" />
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Donations</h1>
-          <p className="text-sm text-muted-foreground mt-1">Donor records with payment status</p>
+    <div className={embedded ? "space-y-6" : "space-y-6 max-w-[1400px]"}>
+      {!embedded && (
+        <div className="flex items-center gap-3">
+          <Heart size={24} className="text-primary shrink-0" />
+          <div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Donations</h1>
+            <p className="text-sm text-muted-foreground mt-1">Donor records with payment status</p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="bg-card rounded-3xl border border-border/50 p-5">

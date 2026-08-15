@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Calendar, Heart, Users, Handshake, FileText, Mail, Phone, Shield, Briefcase, MessageSquare } from "lucide-react";
-import type { Person, PersonRecord, PersonRecordKind } from "@/types/cms";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { ArrowLeft, Calendar, Heart, Users, Handshake, FileText, Mail, Phone, Shield, Briefcase, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { updatePerson, deletePerson } from "@/actions/people";
+import { useToast } from "@/components/ui/Toast";
+import type { Person, PersonRecord, PersonRecordKind, PersonRole } from "@/types/cms";
 
 const roleColors: Record<string, string> = {
   attendee: "bg-blue-500/10 text-blue-600",
@@ -13,6 +17,16 @@ const roleColors: Record<string, string> = {
   member: "bg-emerald-500/10 text-emerald-600",
   admin: "bg-secondary/10 text-secondary",
 };
+
+const allRoles: PersonRole[] = [
+  "attendee",
+  "donor",
+  "applicant",
+  "volunteer",
+  "partner contact",
+  "member",
+  "admin",
+];
 
 import type { LucideIcon } from "lucide-react";
 
@@ -40,16 +54,82 @@ function initials(person: Person) {
 }
 
 export default function PersonDetail({ person, records, isAdmin }: { person: Person; records: PersonRecord[]; isAdmin: boolean }) {
-  const roles = isAdmin && !person.roles.includes("admin") ? [...person.roles, "admin"] : person.roles;
+  const router = useRouter();
+  const { toast } = useToast();
+  const roles: PersonRole[] = isAdmin && !person.roles.includes("admin") ? [...person.roles, "admin"] : person.roles;
   const groups = sectionConfig
     .map(s => ({ ...s, items: records.filter(r => r.kind === s.kind) }))
     .filter(s => s.items.length > 0);
 
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [form, setForm] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    notes: string;
+    roles: PersonRole[];
+  }>({
+    firstName: person.firstName,
+    lastName: person.lastName,
+    email: person.email,
+    phone: person.phone,
+    notes: person.notes,
+    roles: roles,
+  });
+
+  function toggleRole(role: PersonRole) {
+    setForm(f => ({
+      ...f,
+      roles: f.roles.includes(role) ? f.roles.filter(r => r !== role) : [...f.roles, role],
+    }));
+  }
+
+  async function handleSave() {
+    if (!form.firstName.trim()) { toast("First name is required", "error"); return; }
+    setSaving(true);
+    const result = await updatePerson(person.id, form);
+    setSaving(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    toast("Changes saved", "success");
+    setEditing(false);
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    setDeleting(true);
+    const result = await deletePerson(person.id);
+    setDeleting(false);
+    if (result.error) { toast(result.error, "error"); setConfirmDelete(false); return; }
+    toast("Person deleted", "success");
+    router.push("/admin/people");
+    router.refresh();
+  }
+
   return (
     <div className="space-y-6 max-w-[1200px]">
-      <Link href="/admin/people" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-        <ArrowLeft size={16} /> Back to People
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/admin/people" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+          <ArrowLeft size={16} /> Back to People
+        </Link>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setEditing(v => !v)}
+            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-xl border border-input bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
+            <Pencil size={14} /> {editing ? "Cancel" : "Edit"}
+          </button>
+          <button onClick={handleDelete} disabled={deleting}
+            className={`inline-flex items-center gap-2 h-9 px-3.5 rounded-xl text-sm font-medium border transition-all disabled:opacity-50 ${
+              confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-destructive/40 text-destructive hover:bg-destructive/10"
+            }`}>
+            <Trash2 size={14} />
+            {deleting ? "Deleting…" : confirmDelete ? "Confirm delete?" : "Delete"}
+          </button>
+        </div>
+      </div>
 
       <div className="bg-card rounded-3xl border border-border/50 p-6 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -78,6 +158,63 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
             {roles.length === 0 && <span className="text-xs text-muted-foreground">No role tags</span>}
           </div>
         </div>
+
+        {editing && (
+          <div className="mt-6 border-t border-border/50 pt-6 space-y-5">
+            <h3 className="text-sm font-bold text-secondary">Edit profile</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First name *</label>
+                <input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Last name</label>
+                <input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Email</label>
+                <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
+                <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Notes</label>
+              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Roles</label>
+              <div className="flex flex-wrap gap-1.5">
+                {allRoles.map(role => (
+                  <button key={role} type="button" onClick={() => toggleRole(role)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      form.roles.includes(role)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-input text-muted-foreground hover:text-secondary hover:border-primary/40"
+                    }`}>
+                    {role}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setEditing(false)} className="h-10 px-4 rounded-xl border border-input text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {groups.length === 0 ? (
