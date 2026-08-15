@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2 } from "lucide-react";
+import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { replyToSubmission, updateWorkflowStatus, deleteWorkflow } from "@/actions/workflows";
 import type { WorkflowStatus, WorkflowPriority } from "@/types/cms";
@@ -23,20 +23,20 @@ interface WorkflowItem {
 }
 
 const kindMeta: Record<string, { label: string; color: string }> = {
-  contact: { label: "Contact", color: "text-blue-600 bg-blue-100" },
-  member: { label: "Member", color: "text-emerald-600 bg-emerald-100" },
-  volunteer: { label: "Volunteer", color: "text-teal-600 bg-teal-100" },
-  partner: { label: "Partner", color: "text-violet-600 bg-violet-100" },
-  program: { label: "Program", color: "text-indigo-600 bg-indigo-100" },
-  donation: { label: "Donation", color: "text-amber-600 bg-amber-100" },
-  event_registration: { label: "Event Registration", color: "text-rose-600 bg-rose-100" },
-  ticket: { label: "Ticket", color: "text-cyan-600 bg-cyan-100" },
+  contact: { label: "Contact", color: "text-blue-700 bg-blue-50" },
+  member: { label: "Member", color: "text-emerald-700 bg-emerald-50" },
+  volunteer: { label: "Volunteer", color: "text-teal-700 bg-teal-50" },
+  partner: { label: "Partner", color: "text-violet-700 bg-violet-50" },
+  program: { label: "Program", color: "text-indigo-700 bg-indigo-50" },
+  donation: { label: "Donation", color: "text-amber-700 bg-amber-50" },
+  event_registration: { label: "Event Registration", color: "text-rose-700 bg-rose-50" },
+  ticket: { label: "Ticket", color: "text-cyan-700 bg-cyan-50" },
 };
 
 const statusMeta: Record<string, { label: string; color: string }> = {
-  open: { label: "Open", color: "text-amber-600 bg-amber-100" },
-  in_progress: { label: "In Progress", color: "text-blue-600 bg-blue-100" },
-  resolved: { label: "Resolved", color: "text-emerald-600 bg-emerald-100" },
+  open: { label: "Open", color: "text-amber-700 bg-amber-50" },
+  in_progress: { label: "In Progress", color: "text-blue-700 bg-blue-50" },
+  resolved: { label: "Resolved", color: "text-emerald-700 bg-emerald-50" },
   closed: { label: "Closed", color: "text-muted-foreground bg-muted" },
 };
 
@@ -80,6 +80,7 @@ function timeAgo(iso?: string): string {
 export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
   const [items, setItems] = useState<WorkflowItem[]>(() => initialData.map(normalize));
   const [selectedId, setSelectedId] = useState<string | null>(() => (initialData.length ? normalize(initialData[0]).id : null));
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [search, setSearch] = useState("");
   const [filterKind, setFilterKind] = useState<string>("all");
   const [reply, setReply] = useState("");
@@ -147,45 +148,51 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
     const removedId = selected.id;
     setItems(prev => prev.filter(i => i.id !== removedId));
     setSelectedId(items.length > 1 ? (items.find(i => i.id !== removedId)?.id ?? null) : null);
+    setMobileView("list");
     toast("Submission deleted", "success");
   }
+
+  const detailHidden = mobileView === "list";
+  const listHidden = mobileView === "detail";
 
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center gap-3">
-        <InboxIcon size={24} className="text-primary shrink-0" />
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <InboxIcon size={18} />
+        </div>
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Inbox</h1>
-          <p className="text-sm text-muted-foreground mt-1">Read and reply to form & email submissions</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Inbox</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Read and reply to form & email submissions</p>
         </div>
         {unreadCount > 0 && (
-          <span className="ml-2 inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+          <span className="ml-1 inline-flex items-center px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[11px] font-semibold">
             {unreadCount} open
           </span>
         )}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-[380px] shrink-0 space-y-4">
+        <div className={`w-full lg:w-[360px] shrink-0 space-y-4 ${listHidden ? "hidden lg:block" : ""}`}>
           <div className="relative">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search submissions..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              className="w-full h-10 pl-9 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
           <div className="flex flex-wrap gap-1.5">
             {[{ k: "all", label: "All" }, ...Object.entries(kindMeta).map(([k, m]) => ({ k, label: m.label }))].map(f => (
               <button key={f.k} onClick={() => setFilterKind(f.k)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  filterKind === f.k ? "bg-primary text-primary-foreground border-primary" : "border-input text-muted-foreground hover:text-secondary hover:border-primary/40"
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                  filterKind === f.k ? "bg-secondary text-secondary-foreground border-secondary" : "border-border text-muted-foreground hover:text-secondary hover:border-primary/40"
                 }`}>
                 {f.label}
               </button>
             ))}
           </div>
-          <div className="bg-card rounded-3xl border border-border/50 divide-y divide-border/10 max-h-[60vh] overflow-y-auto">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
             {filtered.length === 0 ? (
               <div className="text-center py-16">
-                <InboxIcon size={40} className="text-muted-foreground/20 mx-auto mb-3" />
+                <InboxIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">{search || filterKind !== "all" ? "No submissions match" : "No submissions yet"}</p>
               </div>
             ) : filtered.map(item => {
@@ -193,11 +200,11 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
               const sm = statusMeta[item.status] || statusMeta.open;
               const isSelected = item.id === selectedId;
               return (
-                <button key={item.id} onClick={() => setSelectedId(item.id)}
-                  className={`w-full text-left px-4 py-4 transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-muted/40"}`}>
+                <button key={item.id} onClick={() => { setSelectedId(item.id); setMobileView("detail"); }}
+                  className={`w-full text-left px-4 py-4 border-b border-border/50 last:border-0 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${km.color}`}>{km.label}</span>
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${sm.color}`}>{sm.label}</span>
+                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${km.color}`}>{km.label}</span>
+                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${sm.color}`}>{sm.label}</span>
                   </div>
                   <p className="mt-2 text-sm font-medium text-secondary line-clamp-1">{item.title || "Untitled"}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{item.summary}</p>
@@ -211,27 +218,31 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
           </div>
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className={`flex-1 min-w-0 ${detailHidden ? "hidden lg:block" : ""}`}>
           {!selected ? (
-            <div className="bg-card rounded-3xl border border-border/50 flex flex-col items-center justify-center py-24">
-              <MessageSquareReply size={44} className="text-muted-foreground/20 mb-4" />
+            <div className="bg-card rounded-xl border border-border flex flex-col items-center justify-center py-24">
+              <MessageSquareReply size={40} className="text-muted-foreground/20 mb-4" />
               <p className="text-sm text-muted-foreground">Select a submission to view</p>
             </div>
           ) : (
-            <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
-              <div className="p-6 border-b border-border/50">
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="p-5 lg:p-6 border-b border-border/60">
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${(kindMeta[selected.kind] || kindMeta.contact).color}`}>
+                  <button onClick={() => setMobileView("list")}
+                    className="lg:hidden inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-colors">
+                    <ArrowLeft size={15} /> All
+                  </button>
+                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${(kindMeta[selected.kind] || kindMeta.contact).color}`}>
                     {(kindMeta[selected.kind] || kindMeta.contact).label}
                   </span>
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${(statusMeta[selected.status] || statusMeta.open).color}`}>
+                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${(statusMeta[selected.status] || statusMeta.open).color}`}>
                     {selected.status.replace("_", " ")}
                   </span>
-                  <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider bg-muted text-muted-foreground">
+                  <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider bg-muted text-muted-foreground">
                     {selected.priority}
                   </span>
                 </div>
-                <h2 className="mt-3 font-display text-xl font-bold text-secondary">{selected.title}</h2>
+                <h2 className="mt-4 font-display text-xl font-bold text-secondary">{selected.title}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{selected.summary}</p>
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                   {selected.submitterName && (
@@ -246,13 +257,13 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                   <p className="flex items-center gap-2 text-secondary"><CalendarDays size={14} className="text-muted-foreground" /> Submitted {new Date(selected.createdAt).toLocaleString()}</p>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-border/50 pt-5">
+                <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-border/60 pt-5">
                   <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Status</label>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Status</label>
                     <select
                       value={statusDraft[selected.id] ?? selected.status}
                       onChange={e => setStatusDraft(p => ({ ...p, [selected.id]: e.target.value }))}
-                      className="h-10 px-3 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     >
                       {["open", "in_progress", "resolved", "closed"].map(s => (
                         <option key={s} value={s}>{s.replace("_", " ")}</option>
@@ -260,11 +271,11 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Priority</label>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Priority</label>
                     <select
                       value={priorityDraft[selected.id] ?? selected.priority}
                       onChange={e => setPriorityDraft(p => ({ ...p, [selected.id]: e.target.value }))}
-                      className="h-10 px-3 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     >
                       {["low", "normal", "high", "urgent"].map(pr => (
                         <option key={pr} value={pr}>{pr}</option>
@@ -272,12 +283,12 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                     </select>
                   </div>
                   <button onClick={handleSaveStatus} disabled={saving}
-                    className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                    className="h-10 px-4 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
                     {saving ? "Saving…" : "Save Status"}
                   </button>
                   <button onClick={handleDelete} disabled={deleting}
-                    className={`ml-auto inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold border transition-all disabled:opacity-50 ${
-                      confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-destructive/40 text-destructive hover:bg-destructive/10"
+                    className={`ml-auto inline-flex items-center gap-2 h-10 px-4 rounded-lg text-sm font-semibold border transition-all disabled:opacity-50 ${
+                      confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-destructive hover:bg-destructive/5"
                     }`}>
                     <Trash2 size={15} />
                     {deleting ? "Deleting…" : confirmDelete ? "Confirm delete?" : "Delete"}
@@ -285,8 +296,8 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                 </div>
               </div>
 
-              <div className="p-6 border-b border-border/50">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">Message</h3>
+              <div className="p-5 lg:p-6 border-b border-border/60">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Message</h3>
                 <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">
                   {selected.details.message || selected.details.notes || selected.summary || "—"}
                 </p>
@@ -295,8 +306,8 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                 )}
               </div>
 
-              <div className="p-6 border-b border-border/50">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">History</h3>
+              <div className="p-5 lg:p-6 border-b border-border/60">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">History</h3>
                 {Array.isArray(selected.details.history) && selected.details.history.length > 0 ? (
                   <div className="space-y-3">
                     {selected.details.history.map((h: any, idx: number) => (
@@ -318,18 +329,18 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                 )}
               </div>
 
-              <div className="p-6">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">Reply by email</h3>
+              <div className="p-5 lg:p-6">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Reply by email</h3>
                 <textarea
                   value={reply}
                   onChange={e => setReply(e.target.value)}
                   rows={4}
                   placeholder={`Reply to ${selected.submitterEmail || "submitter"}…`}
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
                 />
                 <div className="mt-3 flex justify-end">
                   <button onClick={handleReply} disabled={sending || !reply.trim() || !selected.submitterEmail}
-                    className="flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                    className="flex items-center gap-2 h-11 px-5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
                     <Send size={15} />
                     {sending ? "Sending…" : "Send Reply"}
                   </button>

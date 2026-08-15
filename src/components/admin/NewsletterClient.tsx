@@ -113,21 +113,21 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-          <Mail size={20} />
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <Mail size={18} />
         </div>
         <div>
-          <h1 className="font-display text-2xl font-bold text-secondary">Newsletter</h1>
-          <p className="text-sm text-muted-foreground">{subscribers.length} active subscriber(s)</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Newsletter</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{subscribers.length} active subscriber(s)</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 bg-card rounded-bento border border-border/50 p-6">
-          <h2 className="font-display text-lg font-bold text-secondary mb-4 flex items-center gap-2">
-            <Send size={16} className="text-primary" /> Compose Broadcast
+        <div className="lg:col-span-3 bg-card rounded-xl border border-border p-6">
+          <h2 className="text-sm font-semibold text-secondary mb-4 flex items-center gap-2">
+            <Send size={15} className="text-primary" /> Compose Broadcast
           </h2>
           <form onSubmit={handleSend} className="space-y-4">
             <input
@@ -136,7 +136,7 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Subject line"
               required
-              className="w-full px-4 py-3 bg-muted/40 border border-border/60 rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+              className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
             />
             <textarea
               value={body}
@@ -144,11 +144,11 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
               placeholder="Message body…"
               required
               rows={10}
-              className="w-full px-4 py-3 bg-muted/40 border border-border/60 rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-y"
+              className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-y"
             />
             {result && (
-              <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm ${
-                result.ok ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-700" : "bg-destructive/10 border border-destructive/20 text-destructive"
+              <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${
+                result.ok ? "bg-emerald-50 border border-emerald-200 text-emerald-800" : "bg-destructive/5 border border-destructive/20 text-destructive"
               }`}>
                 {result.ok ? <CheckCircle2 size={16} className="shrink-0" /> : <AlertCircle size={16} className="shrink-0" />}
                 <span>{result.message}</span>
@@ -156,24 +156,24 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
             )}
             <button
               disabled={sending}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {sending ? <><Loader2 size={16} className="animate-spin" /> Sending…</> : <><Send size={16} /> Send Broadcast</>}
             </button>
           </form>
         </div>
 
-        <div className="lg:col-span-2 bg-card rounded-bento border border-border/50 p-6">
+        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-lg font-bold text-secondary flex items-center gap-2">
-              <Users size={16} className="text-primary" /> Subscribers
+            <h2 className="text-sm font-semibold text-secondary flex items-center gap-2">
+              <Users size={15} className="text-primary" /> Subscribers
             </h2>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">{filtered.length}</span>
+              <span className="text-[11px] font-bold bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full">{filtered.length}</span>
               <button
                 onClick={handleExport}
                 title="Export CSV"
-                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-secondary transition-colors"
+                className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-secondary transition-colors"
               >
                 <Download size={15} />
               </button>
@@ -186,11 +186,11 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
               placeholder="Add subscriber email…"
-              className="flex-1 min-w-0 px-3 py-2.5 bg-muted/40 border border-border/60 rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+              className="flex-1 min-w-0 px-3 py-2.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
             />
             <button
               disabled={adding}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-secondary text-secondary-foreground rounded-lg text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
             >
               {adding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Add
             </button>
@@ -203,7 +203,7 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search emails…"
-              className="w-full pl-9 pr-3 py-2.5 bg-muted/40 border border-border/60 rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+              className="w-full pl-9 pr-3 py-2.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
             />
           </div>
 
@@ -221,11 +221,11 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
             <p className="text-xs text-destructive mb-3">{fileError}</p>
           )}
 
-          <div className="max-h-[420px] overflow-y-auto space-y-1.5">
+          <div className="max-h-[420px] overflow-y-auto space-y-0.5">
             {filtered.slice(0, 100).map((s) => (
-              <div key={s.email} className="group flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <div key={s.email} className="group flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-secondary truncate">{s.email}</p>
+                  <p className="text-sm font-medium text-secondary truncate">{s.email}</p>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     {s.source} · {new Date(s.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     {s.lastSentAt ? ` · last sent ${new Date(s.lastSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
@@ -234,7 +234,8 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
                 <button
                   onClick={() => handleDelete(s.email)}
                   title={`Delete ${s.email}`}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                  aria-label={`Delete ${s.email}`}
+                  className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-60 lg:opacity-0 lg:group-hover:opacity-100"
                 >
                   <Trash2 size={14} />
                 </button>
