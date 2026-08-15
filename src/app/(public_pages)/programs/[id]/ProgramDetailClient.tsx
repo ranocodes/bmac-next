@@ -162,7 +162,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
         
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center relative z-10">
           <div className="lg:col-span-7 order-2 lg:order-1">
-            <Link href="/programs" className="lg:hidden inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
+            <Link href="/programs" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Curriculum
             </Link>
             <motion.div
@@ -170,10 +170,6 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <Link href="/programs" className="hidden lg:inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Curriculum
-              </Link>
-              
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
                 <div className={cn("p-3 rounded-2xl shadow-sm hidden md:block", program.color)}>
                   <div className="w-6 h-6 flex items-center justify-center">

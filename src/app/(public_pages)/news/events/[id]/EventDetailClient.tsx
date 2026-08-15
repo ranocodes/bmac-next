@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-r
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
+import ConsentCheckbox from "@/components/ConsentCheckbox";
 import { registerForEvent } from "@/actions/events";
 import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
@@ -40,9 +41,27 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const [isReserved, setIsReserved] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [formError, setFormError] = useState("");
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
+  const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState("");
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!formData.name.trim()) errors.name = "Please enter your full name.";
+    if (!formData.email.trim()) {
+      errors.email = "Please enter your email.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = "Please enter a valid email address.";
+    }
+    if (formData.phone.trim() && !/^[+\d][\d\s\-()]{6,}$/.test(formData.phone.trim())) {
+      errors.phone = "Please enter a valid phone number (e.g. +234 803 456 7891).";
+    }
+    if (!consent.privacy) errors.consent = "Please accept the privacy policy to continue.";
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handlePaystackPayment = async () => {
     if (!event) return;
@@ -51,8 +70,9 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
         eventId: event.id,
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         quantity: 1,
-        consent: true,
+        consent: consent.privacy,
       });
       if (order.error) {
         setFormError(order.error);
@@ -125,6 +145,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!event) return;
+    if (!validateForm()) return;
     setIsPending(true);
     setFormError("");
 
@@ -135,7 +156,8 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
         eventId: event.id,
         name: formData.name,
         email: formData.email,
-        consent: true,
+        phone: formData.phone,
+        consent: consent.privacy,
       });
       if (res.error) {
         setFormError(res.error);
@@ -146,6 +168,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
             eventId: event.id,
             name: formData.name,
             email: formData.email,
+            phone: formData.phone,
           });
           if (wl.error) {
             setFormError(wl.error);
@@ -283,6 +306,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
                                className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
                                required 
                              />
+                             {fieldErrors.name && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.name}</p>}
                           </div>
                           <div className="space-y-2 group">
                              <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Communications</label>
@@ -294,7 +318,22 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
                                className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
                                required 
                              />
+                             {fieldErrors.email && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.email}</p>}
                            </div>
+                           <div className="space-y-2 group">
+                              <label className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2 md:ml-4 group-focus-within:text-primary transition-colors duration-300">Phone (WhatsApp) — Optional</label>
+                              <input 
+                                type="tel" 
+                                value={formData.phone}
+                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                placeholder="+234 803 456 7891" 
+                                className="w-full px-5 md:px-8 py-4 md:py-5 bg-background border border-border/60 rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 font-bold placeholder:text-muted-foreground/40" 
+                              />
+                              {fieldErrors.phone && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.phone}</p>}
+                            </div>
+
+                           <ConsentCheckbox consentId="event" onChange={setConsent} />
+                           {fieldErrors.consent && <p className="text-sm font-bold text-red-500 px-2">{fieldErrors.consent}</p>}
 
                            {formError && (
                              <p className="text-sm font-bold text-red-500 px-2">{formError}</p>

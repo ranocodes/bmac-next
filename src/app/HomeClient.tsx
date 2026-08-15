@@ -135,7 +135,7 @@ export default function HomeClient({ initialPrograms, initialTestimonials, initi
                          <h3 className="font-display text-xl lg:text-2xl font-bold text-secondary mb-3 tracking-tight">{prog.title}</h3>
                          <p className="text-muted-foreground text-sm leading-relaxed mb-8">{prog.desc}</p>
                          <div className="mt-auto pt-6 border-t border-border/50 flex justify-between items-center">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Explore Program</span>
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Explore Program</span>
                             <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                                <ArrowRight size={18} />
                             </div>

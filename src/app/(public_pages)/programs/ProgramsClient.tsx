@@ -49,7 +49,7 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
               Our Core <span className="text-accent italic font-light serif">Curriculum</span>.
             </h1>
             <p className="text-muted-foreground max-w-lg text-base md:text-lg mt-6 leading-relaxed">
-               Secure your digital entry pass to the next gathering of Jos's brightest minds.
+               A hands-on curriculum built to turn Jos's brightest minds into confident public speakers and leaders.
             </p>
           </motion.div>
         </div>
@@ -92,7 +92,7 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
                       </p>
                       
                       <div className="mt-auto pt-6 border-t border-border/50 flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Learn More</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Learn More</span>
                         <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                           <ArrowRight size={16} />
                         </div>

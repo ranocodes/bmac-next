@@ -304,7 +304,7 @@ function GetInvolvedInner() {
                   </p>
                   
                   <div className="flex items-center justify-between mt-auto pt-6 border-t border-border/50">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       Learn More
                     </span>
                     <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">

@@ -79,22 +79,33 @@ export default function Contact() {
                       </div>
                    </div>
 
+                   {state?.success && (
+                     <div className="relative z-10 mb-6 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
+                       Message sent — we&apos;ll get back to you within 24 hours.
+                     </div>
+                   )}
+                   {state?.error && (
+                     <div className="relative z-10 mb-6 rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm font-medium text-red-600">
+                       {state.error}
+                     </div>
+                   )}
+
                    <form action={formAction} className="space-y-5 md:space-y-7">
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-7">
                         <div className="space-y-2 group">
                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Full Name</label>
-                           <input name="name" type="text" placeholder="Peace Jagaban" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                           <input name="name" type="text" placeholder="Peace Jagaban" disabled={pending} className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 disabled:opacity-60" required />
                         </div>
                         <div className="space-y-2 group">
                            <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Email Address</label>
-                           <input name="email" type="email" placeholder="peace@bmacjos.org" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                           <input name="email" type="email" placeholder="peace@bmacjos.org" disabled={pending} className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 disabled:opacity-60" required />
                         </div>
                      </div>
                      
                      <div className="space-y-2 group">
                         <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Subject</label>
                         <div className="relative">
-                           <select name="subject" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 appearance-none cursor-pointer">
+                           <select name="subject" disabled={pending} className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 appearance-none cursor-pointer disabled:opacity-60">
                               <option>General Inquiry</option>
                               <option>Membership</option>
                               <option>Partnership</option>
@@ -105,7 +116,7 @@ export default function Contact() {
 
                      <div className="space-y-2 group">
                         <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Detailed Message</label>
-                        <textarea name="message" rows={4} placeholder="How can we help?" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 resize-none placeholder:text-muted-foreground/40" required />
+                        <textarea name="message" rows={4} placeholder="How can we help?" disabled={pending} className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 resize-none placeholder:text-muted-foreground/40 disabled:opacity-60" required />
                      </div>
 
                      <ConsentCheckbox consentId="contact" />

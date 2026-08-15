@@ -137,7 +137,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
         
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center relative z-10">
           <div className="lg:col-span-7 text-center lg:text-left order-2 lg:order-1">
-            <Link href="/news" className="lg:hidden inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
+            <Link href="/news" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Chronicle
             </Link>
             <motion.div
@@ -145,10 +145,6 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <Link href="/news" className="hidden lg:inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Chronicle
-              </Link>
-              
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
                 <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest">
                   {article.category}
