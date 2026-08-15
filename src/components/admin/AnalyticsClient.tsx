@@ -11,14 +11,10 @@ import {
   RefreshCw,
   Users,
   Eye,
-  TrendingUp,
-  MousePointerClick,
 } from "lucide-react";
 import {
   DailyViewsAreaChart,
   TopPagesBarChart,
-  DevicePieChart,
-  ReferrersRingChart,
   ConversionFunnelChart,
 } from "./AnalyticsCharts";
 
@@ -110,85 +106,68 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
   const hasTraffic = t.overview.totalViews > 0;
 
   const statCards = [
-    { label: "Confirmed registrations", value: String(o.tickets.confirmed), icon: TicketCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Checked in", value: String(o.tickets.checkedIn), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Attendance rate", value: `${o.tickets.attendanceRate}%`, icon: BarChart3, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { label: "Donations (verified)", value: ngn(o.donations.total), icon: Heart, color: "text-rose-500", bg: "bg-rose-500/10" },
-    { label: "Program applications", value: String(o.programs.applications), icon: BookOpen, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Program participants", value: String(o.programs.participants), icon: Users, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-    { label: "Event revenue", value: ngn(o.revenue.events), icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Workflow items", value: String(Object.values(o.workflows).reduce((a, b) => a + b, 0)), icon: ClipboardList, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+    { label: "Confirmed registrations", value: String(o.tickets.confirmed), icon: TicketCheck },
+    { label: "Checked in", value: String(o.tickets.checkedIn), icon: Users },
+    { label: "Attendance rate", value: `${o.tickets.attendanceRate}%`, icon: BarChart3 },
+    { label: "Donations (verified)", value: ngn(o.donations.total), icon: Heart },
+    { label: "Program applications", value: String(o.programs.applications), icon: BookOpen },
+    { label: "Program participants", value: String(o.programs.participants), icon: Users },
+    { label: "Event revenue", value: ngn(o.revenue.events), icon: Wallet },
+    { label: "Workflow items", value: String(Object.values(o.workflows).reduce((a, b) => a + b, 0)), icon: ClipboardList },
   ];
 
   const trafficCards = [
-    { label: "Total views", value: String(t.overview.totalViews), icon: Eye, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Unique visitors", value: String(t.overview.uniqueVisitors), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Views today", value: String(t.overview.todayViews), icon: TrendingUp, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { label: "Avg daily views", value: String(t.overview.avgDailyViews), icon: BarChart3, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Total views", value: String(t.overview.totalViews), icon: Eye },
+    { label: "Unique visitors", value: String(t.overview.uniqueVisitors), icon: Users },
   ];
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
+    <div className="space-y-8 max-w-[1400px]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <BarChart3 size={24} className="text-primary shrink-0" />
+          <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+            <BarChart3 size={18} />
+          </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Analytics</h1>
-            <p className="text-sm text-muted-foreground mt-1">Traffic, conversions & operational metrics across events, donations, programs & workflows</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Analytics</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Traffic, conversions & operational metrics</p>
           </div>
         </div>
         <button
           onClick={refresh}
           disabled={refreshing}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-medium text-secondary hover:bg-muted/40 disabled:opacity-50 transition-colors"
+          className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/50 disabled:opacity-50 transition-colors"
         >
-          <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} />
+          <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
           Refresh
         </button>
       </div>
 
       <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <MousePointerClick size={18} className="text-primary" />
-          <h2 className="font-display text-xl font-bold text-secondary">Traffic</h2>
-        </div>
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Traffic</h2>
         {!hasTraffic ? (
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <p className="text-sm text-muted-foreground">No traffic yet — visit the public site to start collecting data.</p>
+          <div className="bg-card rounded-xl border border-border p-6 text-sm text-muted-foreground">
+            No traffic yet — visit the public site to start collecting data.
           </div>
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {trafficCards.map(c => (
-                <div key={c.label} className="bg-card rounded-3xl border border-border/50 p-5">
-                  <div className={`inline-flex p-2.5 rounded-2xl ${c.bg} mb-3`}>
-                    <c.icon size={20} className={c.color} />
-                  </div>
-                  <p className="text-2xl font-display font-bold text-secondary">{c.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{c.label}</p>
-                </div>
+                <StatCard key={c.label} label={c.label} value={c.value} icon={c.icon} />
               ))}
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="bg-card rounded-3xl border border-border/50 p-6">
-                <h3 className="font-display text-lg font-bold text-secondary mb-4">Views & visitors (30d)</h3>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
-                  <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#10b981" }} />Views</span>
-                  <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#3b82f6" }} />Visitors</span>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <h3 className="text-sm font-semibold text-secondary mb-4">Views &amp; visitors (30d)</h3>
+                <div className="flex items-center gap-4 text-[11px] text-muted-foreground mb-3">
+                  <span className="flex items-center gap-1.5"><span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#10b981" }} />Views</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "#3b82f6" }} />Visitors</span>
                 </div>
                 <DailyViewsAreaChart data={t.dailyViews} />
               </div>
-              <div className="bg-card rounded-3xl border border-border/50 p-6">
-                <h3 className="font-display text-lg font-bold text-secondary mb-4">Top pages</h3>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <h3 className="text-sm font-semibold text-secondary mb-4">Top pages</h3>
                 <TopPagesBarChart data={t.topPages} />
-              </div>
-              <div className="bg-card rounded-3xl border border-border/50 p-6">
-                <h3 className="font-display text-lg font-bold text-secondary mb-4">Devices</h3>
-                <DevicePieChart data={t.devices} />
-              </div>
-              <div className="bg-card rounded-3xl border border-border/50 p-6">
-                <h3 className="font-display text-lg font-bold text-secondary mb-4">Referrers</h3>
-                <ReferrersRingChart data={t.referrers} />
               </div>
             </div>
           </>
@@ -196,25 +175,22 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <TrendingUp size={18} className="text-primary" />
-          <h2 className="font-display text-xl font-bold text-secondary">Conversions</h2>
-        </div>
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Conversions</h2>
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <h3 className="font-display text-lg font-bold text-secondary mb-4">Funnel</h3>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h3 className="text-sm font-semibold text-secondary mb-4">Funnel</h3>
             <ConversionFunnelChart data={data.conversions.funnel} />
           </div>
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <h3 className="font-display text-lg font-bold text-secondary mb-4">Conversion events (30d)</h3>
-            <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h3 className="text-sm font-semibold text-secondary mb-4">Conversion events (30d)</h3>
+            <div className="space-y-1">
               {data.conversions.eventCounts.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No conversion events recorded yet.</p>
               ) : (
                 data.conversions.eventCounts.map(e => (
-                  <div key={e.name} className="flex items-center justify-between text-sm py-2 border-b border-border/40 last:border-0">
+                  <div key={e.name} className="flex items-center justify-between text-sm py-2.5 border-b border-border/40 last:border-0">
                     <span className="text-secondary">{EVENT_LABELS[e.name] || e.name.replace(/_/g, " ")}</span>
-                    <span className="text-muted-foreground text-xs">{e.count}</span>
+                    <span className="text-muted-foreground text-xs tabular-nums">{e.count}</span>
                   </div>
                 ))
               )}
@@ -224,23 +200,17 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-xl font-bold text-secondary">Operational</h2>
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Operational</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map(c => (
-            <div key={c.label} className="bg-card rounded-3xl border border-border/50 p-5">
-              <div className={`inline-flex p-2.5 rounded-2xl ${c.bg} mb-3`}>
-                <c.icon size={20} className={c.color} />
-              </div>
-              <p className="text-2xl font-display font-bold text-secondary">{c.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{c.label}</p>
-            </div>
+            <StatCard key={c.label} label={c.label} value={c.value} icon={c.icon} />
           ))}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <h2 className="font-display text-lg font-bold text-secondary mb-4">Registrations by status</h2>
-            <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h2 className="text-sm font-semibold text-secondary mb-4">Registrations by status</h2>
+            <div className="space-y-3.5">
               {Object.entries(o.tickets.byStatus).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No registrations yet</p>
               ) : (
@@ -251,9 +221,9 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <h2 className="font-display text-lg font-bold text-secondary mb-4">Program applications by status</h2>
-            <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h2 className="text-sm font-semibold text-secondary mb-4">Program applications by status</h2>
+            <div className="space-y-3.5">
               {Object.entries(o.programs.applicationsByStatus).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No applications yet</p>
               ) : (
@@ -264,9 +234,9 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <h2 className="font-display text-lg font-bold text-secondary mb-4">Workflows by type</h2>
-            <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h2 className="text-sm font-semibold text-secondary mb-4">Workflows by type</h2>
+            <div className="space-y-3.5">
               {Object.entries(o.workflows).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No workflow records yet</p>
               ) : (
@@ -277,9 +247,9 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
-            <h2 className="font-display text-lg font-bold text-secondary mb-4">Donations</h2>
-            <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h2 className="text-sm font-semibold text-secondary mb-4">Donations</h2>
+            <div className="space-y-3.5">
               {Object.keys(o.donations.byStatus).length === 0 ? (
                 <p className="text-sm text-muted-foreground">No donations yet</p>
               ) : (
@@ -287,7 +257,7 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
                   <BarRow key={status} label={status} value={count} total={o.donations.count || count} />
                 ))
               )}
-              <div className="pt-3 border-t border-border/50 flex items-center justify-between">
+              <div className="pt-3.5 border-t border-border flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Verified total</span>
                 <span className="font-display font-bold text-secondary">{ngn(o.donations.total)}</span>
               </div>
@@ -299,16 +269,28 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
   );
 }
 
+function StatCard({ label, value, icon: Icon }: { label: string; value: string; icon: typeof BarChart3 }) {
+  return (
+    <div className="bg-card rounded-xl border border-border p-5">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Icon size={14} />
+        <span className="text-[11px] font-semibold uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="mt-3 font-display text-[28px] leading-none font-bold tracking-tight text-secondary">{value}</p>
+    </div>
+  );
+}
+
 function BarRow({ label, value, total }: { label: string; value: number; total: number }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
     <div>
       <div className="flex items-center justify-between text-sm mb-1.5">
         <span className="text-secondary">{label}</span>
-        <span className="text-muted-foreground text-xs">{value}</span>
+        <span className="text-muted-foreground text-xs tabular-nums">{value}</span>
       </div>
-      <div className="h-2 rounded-full bg-muted overflow-hidden">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full bg-secondary" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Search, Download, Plus } from "lucide-react";
+import { Users, Search, Download, Plus, ChevronRight } from "lucide-react";
 import { exportPeople, createPerson } from "@/actions/people";
 import { useToast } from "@/components/ui/Toast";
 import type { PersonRow, PersonRole } from "@/types/cms";
@@ -22,13 +22,13 @@ const allRoles: PersonRole[] = [
 ];
 
 const roleColors: Record<string, string> = {
-  attendee: "bg-blue-500/10 text-blue-600",
-  donor: "bg-rose-500/10 text-rose-600",
-  applicant: "bg-indigo-500/10 text-indigo-600",
-  volunteer: "bg-amber-500/10 text-amber-600",
-  "partner contact": "bg-violet-500/10 text-violet-600",
-  member: "bg-emerald-500/10 text-emerald-600",
-  admin: "bg-secondary/10 text-secondary",
+  attendee: "bg-blue-50 text-blue-700",
+  donor: "bg-rose-50 text-rose-700",
+  applicant: "bg-indigo-50 text-indigo-700",
+  volunteer: "bg-amber-50 text-amber-700",
+  "partner contact": "bg-violet-50 text-violet-700",
+  member: "bg-emerald-50 text-emerald-700",
+  admin: "bg-muted text-secondary",
 };
 
 export default function PeopleTable({ initialData, canExport }: { initialData: PersonRow[]; canExport?: boolean }) {
@@ -107,27 +107,33 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   }
 
+  function openPerson(id: string) {
+    router.push(`/admin/people/${id}`);
+  }
+
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
         <div className="flex items-center gap-3">
-          <Users size={24} className="text-primary shrink-0" />
+          <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+            <Users size={18} />
+          </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">People</h1>
-            <p className="text-sm text-muted-foreground mt-1">Unified profiles across events, donations, and programs</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">People</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Unified profiles across events, donations, and programs</p>
           </div>
         </div>
         {canExport && (
           <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
             <button
               onClick={() => setShowCreate(true)}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary active:scale-[0.98] transition-all"
             >
               <Plus size={16} /> New Person
             </button>
             <button
               onClick={handleExport}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-secondary text-sm font-medium hover:bg-muted/40 transition-colors"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-secondary text-sm font-medium hover:bg-muted/40 transition-colors"
             >
               <Download size={16} /> Export CSV
             </button>
@@ -135,15 +141,15 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
         )}
       </div>
 
-      <div className="relative max-w-xs">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative w-full lg:max-w-xs">
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, phone, role..."
-          className="w-full h-10 pl-10 pr-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          className="w-full h-10 pl-9 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-3xl border border-border/50">
-          <Users size={48} className="text-muted-foreground/20 mb-4" />
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
+          <Users size={44} className="text-muted-foreground/20 mb-4" />
           <p className="text-sm font-medium text-secondary">
             {search ? "No people match your search" : "No people yet"}
           </p>
@@ -152,99 +158,138 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
           </p>
         </div>
       ) : (
-        <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left font-semibold text-secondary px-5 py-4">Name</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden sm:table-cell">Email</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden lg:table-cell">Phone</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4">Roles</th>
-                  <th className="text-right font-semibold text-secondary px-5 py-4 hidden md:table-cell">Records</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden xl:table-cell">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(p => (
-                  <tr
-                    key={p.id}
-                    onClick={() => router.push(`/admin/people/${p.id}`)}
-                    className="cursor-pointer border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-5 py-4">
-                      <span className="font-medium text-secondary transition-colors">{nameOf(p)}</span>
-                    </td>
-                    <td className="px-5 py-4 hidden sm:table-cell text-muted-foreground text-xs">{p.email || "—"}</td>
-                    <td className="px-5 py-4 hidden lg:table-cell text-muted-foreground text-xs">{p.phone || "—"}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap gap-1.5">
-                        {(p.roles || []).length === 0 && <span className="text-muted-foreground text-xs">—</span>}
-                        {(p.roles || []).map(role => (
-                          <span key={role} className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${roleColors[role] || "bg-muted text-muted-foreground"}`}>
+        <>
+          <div className="lg:hidden space-y-2">
+            {filtered.map(p => (
+              <button
+                key={p.id}
+                onClick={() => openPerson(p.id)}
+                className="w-full text-left bg-card rounded-xl border border-border px-4 py-3.5 flex items-center gap-3 hover:bg-muted/40 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-secondary truncate">{nameOf(p)}</p>
+                    {p.recordCount > 0 && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-[11px] font-semibold text-muted-foreground shrink-0">
+                        {p.recordCount} {p.recordCount === 1 ? "record" : "records"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {p.email && <span className="text-xs text-muted-foreground truncate">{p.email}</span>}
+                    {(p.roles || []).length > 0 && (
+                      <span className="flex flex-wrap gap-1">
+                        {(p.roles || []).slice(0, 3).map(role => (
+                          <span key={role} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${roleColors[role] || "bg-muted text-muted-foreground"}`}>
                             {role}
                           </span>
                         ))}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right hidden md:table-cell">
-                      <span className="inline-flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-lg bg-muted text-xs font-semibold text-secondary">
-                        {p.recordCount}
+                        {(p.roles || []).length > 3 && (
+                          <span className="text-[10px] text-muted-foreground">+{(p.roles || []).length - 3}</span>
+                        )}
                       </span>
-                    </td>
-                    <td className="px-5 py-4 hidden xl:table-cell text-muted-foreground text-xs whitespace-nowrap">{formatDate(p.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+              </button>
+            ))}
           </div>
-        </div>
+
+          <div className="hidden lg:block bg-card rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Name</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Email</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Phone</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Roles</th>
+                    <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Records</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(p => (
+                    <tr
+                      key={p.id}
+                      onClick={() => openPerson(p.id)}
+                      className="cursor-pointer border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    >
+                      <td className="px-5 py-4">
+                        <span className="font-medium text-secondary transition-colors">{nameOf(p)}</span>
+                      </td>
+                      <td className="px-5 py-4 text-muted-foreground text-xs">{p.email || "—"}</td>
+                      <td className="px-5 py-4 text-muted-foreground text-xs">{p.phone || "—"}</td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {(p.roles || []).length === 0 && <span className="text-muted-foreground text-xs">—</span>}
+                          {(p.roles || []).map(role => (
+                            <span key={role} className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleColors[role] || "bg-muted text-muted-foreground"}`}>
+                              {role}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <span className="inline-flex items-center justify-center min-w-[2rem] h-6 px-2 rounded-full bg-muted text-xs font-semibold text-secondary">
+                          {p.recordCount}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-muted-foreground text-xs whitespace-nowrap">{formatDate(p.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowCreate(false)} />
-          <div className="relative w-full max-w-lg bg-card rounded-3xl border border-border/50 shadow-xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreate(false)} />
+          <div className="relative w-full max-w-lg bg-card rounded-xl border border-border p-6 space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold text-secondary">New Person</h2>
-              <button onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-secondary text-xl leading-none">&times;</button>
+              <h2 className="font-display text-lg font-bold text-secondary">New Person</h2>
+              <button onClick={() => setShowCreate(false)} aria-label="Close" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-colors text-lg leading-none">&times;</button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First name *</label>
+                <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">First name *</label>
                 <input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Last name</label>
+                <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Last name</label>
                 <input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Email</label>
+                <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Email</label>
                 <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
+                <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Phone</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Notes</label>
+              <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Notes</label>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Roles</label>
+              <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Roles</label>
               <div className="flex flex-wrap gap-1.5">
                 {allRoles.map(role => (
                   <button key={role} type="button" onClick={() => toggleRole(role)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                       form.roles.includes(role)
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-input text-muted-foreground hover:text-secondary hover:border-primary/40"
+                        ? "bg-secondary text-secondary-foreground border-secondary"
+                        : "border-border text-muted-foreground hover:text-secondary hover:border-primary/40"
                     }`}>
                     {role}
                   </button>
@@ -252,11 +297,11 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-1">
-              <button onClick={() => setShowCreate(false)} className="h-10 px-4 rounded-xl border border-input text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
+              <button onClick={() => setShowCreate(false)} className="h-10 px-4 rounded-lg border border-border text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={creating}
-                className="h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                className="h-10 px-5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
                 {creating ? "Creating…" : "Create Person"}
               </button>
             </div>
