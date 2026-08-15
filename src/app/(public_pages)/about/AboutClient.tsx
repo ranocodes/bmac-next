@@ -50,7 +50,7 @@ export default function AboutClient({ initialTeam, initialStats }: AboutClientPr
 
       {/* Story Section */}
       <section className="py-24 px-6 relative">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center text-center lg:text-left">
+        <div className="max-w-3xl mx-auto text-center">
           <FadeIn>
             <div className="section-eyebrow">Our Story</div>
             <h2 className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold text-secondary tracking-tighter leading-[1.1] mb-8">
@@ -69,39 +69,6 @@ export default function AboutClient({ initialTeam, initialStats }: AboutClientPr
               </p>
             </div>
           </FadeIn>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-            <div className="lg:pt-12">
-              <FadeIn className="group relative aspect-[16/10] lg:aspect-[5/4] rounded-2xl md:rounded-bento overflow-hidden shadow-lg">
-                <Image
-                  src="/images/ws.jpg"
-                  alt="BMAC outreach workshop in session"
-                  fill
-                  sizes="(min-width:1024px) 26vw, 92vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary/60 via-transparent to-transparent" />
-                <div className="absolute bottom-3 left-4 lg:bottom-6 lg:left-6">
-                  <h4 className="text-card font-display font-semibold text-sm lg:text-xl leading-tight drop-shadow-md">100% Youth Led.</h4>
-                </div>
-              </FadeIn>
-            </div>
-            <div className="lg:pb-12">
-              <FadeIn delay={0.15} className="group relative aspect-[4/5] lg:aspect-[3/4] rounded-2xl md:rounded-bento overflow-hidden shadow-lg">
-                <Image
-                  src="/images/ws1.jpg"
-                  alt="A young ambassador during a workshop"
-                  fill
-                  sizes="(min-width:1024px) 22vw, 92vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary/60 via-transparent to-transparent" />
-                <div className="absolute bottom-3 left-4 lg:bottom-6 lg:left-6">
-                  <h4 className="text-card font-display font-semibold text-sm lg:text-xl leading-tight drop-shadow-md">Community Rooted.</h4>
-                </div>
-              </FadeIn>
-            </div>
-          </div>
         </div>
       </section>
 
