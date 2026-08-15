@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import {
   Users,
   HeartHandshake,
@@ -9,7 +9,6 @@ import {
   School,
   ArrowRight,
   CheckCircle2,
-  Mail,
   FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +16,7 @@ import Link from "next/link";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
-import { applyAsPerson, resendGoogleFormLink } from "@/actions/people";
+import { applyAsPerson } from "@/actions/people";
 import { loadPaystack } from "@/lib/paystack";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 
@@ -77,27 +76,16 @@ function GetInvolvedInner() {
   const [selectedWay, setSelectedWay] = useState<Way | null>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
-  const [formData, setFormData] = useState({ name: "", email: "", company_website: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", company_website: "", notes: "" });
   const [formError, setFormError] = useState("");
   const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{
     title: string;
     message: string;
-    formLink?: string;
-    email?: string;
-    kind?: "member" | "volunteer" | "partner" | "program";
-    emailError?: string;
     reference?: string;
   } | null>(null);
-  const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const resendCooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => () => {
-    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
-  }, []);
 
   const openWay = (way: Way) => {
     setFormError("");
@@ -110,8 +98,6 @@ function GetInvolvedInner() {
     setSubmitted(null);
     setSelectedWay(null);
     setConsent({ privacy: false, marketing: false });
-    if (resendCooldownRef.current) clearInterval(resendCooldownRef.current);
-    setResendCooldown(0);
   };
 
   const handlePaystackDonation = async () => {
@@ -196,6 +182,7 @@ function GetInvolvedInner() {
         kind,
         name: formData.name,
         email: formData.email,
+        notes: formData.notes,
         privacy: consent.privacy,
         marketing: consent.marketing,
         company_website: formData.company_website,
@@ -211,55 +198,11 @@ function GetInvolvedInner() {
       return;
     }
     setIsSubmitting(false);
-    if (res.formLink) {
-      const emailOk = res.emailSent;
-      setSubmitted({
-        title: "Application Sent!",
-        message: emailOk
-          ? "Check your email — we've sent you a link to complete the next step."
-          : "We couldn't email your form link, but you can open it below.",
-        formLink: res.formLink,
-        email: formData.email.trim(),
-        kind,
-        emailError: emailOk ? "" : res.emailError || "Email delivery failed",
-      });
-      toast(
-        emailOk ? "Application sent! Check your email for your form link." : "Application saved — open your form link below.",
-        emailOk ? "success" : "error"
-      );
-    } else {
-      setSubmitted({
-        title: "Application Sent!",
-        message: "We'll review your application and get back to you within 48 hours.",
-      });
-    }
-  };
-
-  const handleResendLink = async () => {
-    if (!submitted?.email || !submitted.kind || resending || resendCooldown > 0) return;
-    setResending(true);
-    try {
-      const res = await resendGoogleFormLink({
-        kind: submitted.kind,
-        email: submitted.email,
-      });
-      if (res.error) {
-        toast(res.error, "error");
-      } else {
-        toast("Link sent! Check your email inbox.", "success");
-        setResendCooldown(60);
-        resendCooldownRef.current = setInterval(() => {
-          setResendCooldown(prev => {
-            if (prev <= 1 && resendCooldownRef.current) clearInterval(resendCooldownRef.current);
-            return prev <= 1 ? 0 : prev - 1;
-          });
-        }, 1000);
-      }
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Could not resend the link. Please try again.", "error");
-    } finally {
-      setResending(false);
-    }
+    setSubmitted({
+      title: "Application Sent!",
+      message: "We've received your application and will get back to you within 48 hours.",
+    });
+    toast("Application sent! We'll review it and get back to you soon.", "success");
   };
   return (
     <main suppressHydrationWarning className="bg-background">
@@ -419,21 +362,6 @@ function GetInvolvedInner() {
                     <p className="text-white/60 text-sm leading-relaxed max-w-sm mx-auto">
                       {submitted.message}
                     </p>
-                    {submitted.emailError && (
-                      <p className="mt-3 mx-auto max-w-sm text-xs text-amber-300 bg-amber-400/10 border border-amber-400/20 rounded-lg px-4 py-2.5">
-                        We couldn&apos;t email the form link to <span className="font-semibold">{submitted.email}</span>. Use the button below to open it now, or resend the link to your email.
-                      </p>
-                    )}
-                    {submitted.formLink && (
-                      <a
-                        href={submitted.formLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-accent-foreground text-sm font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:opacity-90"
-                      >
-                        Open Application Form <ArrowRight size={16} />
-                      </a>
-                    )}
                     {submitted.reference && (
                       <a
                         href={`/api/receipts/${encodeURIComponent(submitted.reference)}`}
@@ -444,25 +372,6 @@ function GetInvolvedInner() {
                         <FileText size={15} />
                         Download Receipt (PDF)
                       </a>
-                    )}
-                    {submitted.email && submitted.kind && (
-                      <button
-                        onClick={handleResendLink}
-                        disabled={resending || resendCooldown > 0}
-                        className="mt-4 w-full max-w-xs mx-auto flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Mail size={15} />
-                        {resending ? (
-                          <span className="flex items-center gap-2">
-                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Sending...
-                          </span>
-                        ) : resendCooldown > 0 ? (
-                          `Request link again (${resendCooldown}s)`
-                        ) : (
-                          "Request link again"
-                        )}
-                      </button>
                     )}
                     <button
                       onClick={() => { setSubmitted(null); setSelectedWay(null); }}
@@ -505,6 +414,16 @@ function GetInvolvedInner() {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all"
                       required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Why you&apos;d like to join <span className="normal-case">(optional)</span></label>
+                    <textarea
+                      placeholder="Tell us about your motivation, skills, or what you hope to contribute..."
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      rows={3}
+                      className="w-full px-5 md:px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-accent/50 transition-all resize-none"
                     />
                   </div>
                   {formError && (

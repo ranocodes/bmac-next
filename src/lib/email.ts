@@ -87,6 +87,19 @@ export async function sendGoogleFormLinkEmail(opts: {
   });
 }
 
+export async function sendApplicationReceivedEmail(opts: {
+  email: string;
+  firstName?: string;
+  kindLabel: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "application-received",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    kindLabel: opts.kindLabel,
+  });
+}
+
 export async function sendDonationThanksEmail(opts: {
   email: string;
   firstName?: string;

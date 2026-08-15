@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { logActivity } from "./activity-logs";
-import { sendFormSubmitAlertEmail, sendGoogleFormLinkEmail } from "@/lib/email";
+import { sendApplicationReceivedEmail, sendFormSubmitAlertEmail } from "@/lib/email";
 import { createAdminNotification, getSuperAdminEmails } from "@/lib/notifications";
 import { createWorkflowRecord } from "@/lib/workflows";
 import { recordConsent } from "@/lib/consent";
@@ -268,25 +268,6 @@ const kindLabelMap: Record<string, string> = {
   program: "School Chapter",
 };
 
-const formKeyMap: Record<string, string> = {
-  member: "join",
-  volunteer: "volunteer",
-  partner: "partner",
-  program: "school",
-};
-
-async function getConfiguredFormLink(key: string): Promise<string> {
-  try {
-    const rows = await db.query<{ google_forms: Record<string, string> }>(
-      "SELECT google_forms FROM public.site_settings LIMIT 1"
-    );
-    return rows[0]?.google_forms?.[key] || "";
-  } catch (err) {
-    console.error("getConfiguredFormLink error:", err);
-    return "";
-  }
-}
-
 export async function applyAsPerson(opts: {
   kind: "member" | "volunteer" | "partner" | "program";
   name: string;
@@ -296,7 +277,7 @@ export async function applyAsPerson(opts: {
   privacy?: boolean;
   marketing?: boolean;
   [HONEYPOT_FIELD]?: string;
-}): Promise<{ error?: string; formLink?: string; emailSent?: boolean; emailError?: string; kindLabel?: string }> {
+}): Promise<{ error?: string; emailSent?: boolean; emailError?: string; kindLabel?: string }> {
   const guard = await assertSafe(`apply:${opts.kind}`, opts.email, await getClientIp(), opts as Record<string, unknown>);
   if (guard.error) return { error: guard.error };
   if (!opts.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.email)) {
@@ -363,37 +344,27 @@ export async function applyAsPerson(opts: {
     },
   });
 
-  let formLink = "";
   let emailSent = false;
   let emailError = "";
-  formLink = await getConfiguredFormLink(formKeyMap[opts.kind] || "join");
-  if (record && formLink) {
-    const sent = await sendGoogleFormLinkEmail({
+  if (record) {
+    const sent = await sendApplicationReceivedEmail({
       email: person.email,
       firstName: person.firstName,
       kindLabel,
-      formLink,
     });
     emailSent = !sent.error;
     if (sent.error) {
       emailError = sent.error;
-      console.error("google-forms-link email error:", sent.error);
+      console.error("application-received email error:", sent.error);
     }
     try {
       await db.query(
-        "UPDATE public.person_records SET meta = jsonb_set(meta, '{form_link_sent_at}', to_jsonb($2::text), true) WHERE id = $1",
+        "UPDATE public.person_records SET meta = jsonb_set(meta, '{confirmation_sent_at}', to_jsonb($2::text), true) WHERE id = $1",
         [record.id, new Date().toISOString()]
       );
     } catch (err) {
-      console.error("store form_link_sent_at error:", err);
+      console.error("store confirmation_sent_at error:", err);
     }
-  } else if (!formLink) {
-    await createAdminNotification({
-      title: "Google Form link missing",
-      message: `${kindLabel} applications have no configured Google Form link — applicants cannot proceed past this step.`,
-      type: "config",
-      link: "/admin/settings",
-    });
   }
 
   const adminEmails = await getSuperAdminEmails();
@@ -414,64 +385,7 @@ export async function applyAsPerson(opts: {
     link: "/admin/inbox",
   });
 
-  return { formLink, emailSent, emailError, kindLabel };
-}
-
-export async function resendGoogleFormLink(opts: {
-  kind: "member" | "volunteer" | "partner" | "program";
-  email: string;
-}): Promise<{ error?: string; formLink?: string; emailSent?: boolean }> {
-  if (!opts.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.email)) {
-    return { error: "Valid email required" };
-  }
-  const email = opts.email.trim().toLowerCase();
-  const kindMap: Record<string, PersonRecordKind> = {
-    member: "member",
-    volunteer: "volunteer",
-    partner: "partner",
-    program: "program",
-  };
-  const recordKind = kindMap[opts.kind] || "program";
-
-  const personRows = await db.query<PersonDbRow>(
-    "SELECT * FROM public.people WHERE lower(email) = $1",
-    [email]
-  );
-  if (!personRows.length) return { error: "No application found for this email." };
-  const person = rowToPerson(personRows[0]);
-
-  const recRows = await db.query<PersonRecordDbRow>(
-    "SELECT * FROM public.person_records WHERE person_id = $1 AND kind = $2 ORDER BY created_at DESC LIMIT 1",
-    [person.id, recordKind]
-  );
-  if (!recRows.length) return { error: "No application found for this email." };
-  const record = rowToRecord(recRows[0]);
-
-  const lastSent = record.meta?.form_link_sent_at as string | undefined;
-  if (lastSent && Date.now() - new Date(lastSent).getTime() < 60_000) {
-    return { error: "Link already sent recently. Check your inbox, or try again in a minute." };
-  }
-
-  const formLink = await getConfiguredFormLink(formKeyMap[opts.kind] || "join");
-  if (!formLink) return { error: "No form link configured yet. Please try again later." };
-
-  const sent = await sendGoogleFormLinkEmail({
-    email: person.email,
-    firstName: person.firstName,
-    kindLabel: kindLabelMap[opts.kind] || "BMAC",
-    formLink,
-  });
-  if (sent.error) return { error: "Could not send the email. Please try again." };
-
-  try {
-    await db.query(
-      "UPDATE public.person_records SET meta = jsonb_set(meta, '{form_link_sent_at}', to_jsonb($2::text), true) WHERE id = $1",
-      [record.id, new Date().toISOString()]
-    );
-  } catch (err) {
-    console.error("store form_link_sent_at error:", err);
-  }
-  return { formLink, emailSent: true };
+  return { emailSent, emailError, kindLabel };
 }
 
 export async function anonymizePerson(
