@@ -22,56 +22,131 @@ export default function AboutClient({ initialTeam, initialStats }: AboutClientPr
   const [impact] = useState<any[]>(publishedImpact.length > 0 ? publishedImpact : initialStats);
   return (
     <main suppressHydrationWarning className="bg-background">
-      <section className="bg-background pt-32 pb-12">
-        <div className="max-w-7xl mx-auto px-6 text-center md:text-left">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
-            Our Identity
-          </span>
-          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary">
-            Building Ambassadors.
+      <section className="relative min-h-[68vh] lg:min-h-[82vh] flex items-center lg:items-end overflow-hidden">
+        <Image
+          src="/images/about-hero.jpg"
+          alt="BMAC community in Jos"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div aria-hidden className="absolute inset-0 bg-secondary/75" />
+
+        {/* Mobile & tablet: v1 hero — centered title over image */}
+        <div className="relative w-full max-w-7xl mx-auto px-6 py-24 text-center lg:hidden">
+          <h1 className="font-display text-5xl sm:text-6xl font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+            About Us
           </h1>
         </div>
+
+        {/* Desktop: glass card */}
+        <div className="relative w-full max-w-7xl mx-auto px-6 pb-16 lg:pb-24 hidden lg:block">
+          <FadeIn className="max-w-2xl">
+            <div className="rounded-3xl p-12 border border-white/15 bg-white/10 backdrop-blur-2xl shadow-2xl">
+              <span className="inline-block text-accent text-[11px] font-bold uppercase tracking-widest mb-3">
+                Our Identity
+              </span>
+              <h1 className="font-display text-6xl font-bold tracking-tight text-white leading-[1.05]">
+                Building Ambassadors.
+              </h1>
+              <p className="mt-4 text-white/80 text-lg leading-relaxed max-w-lg">
+                A movement turning young people in Jos into confident leaders,
+                communicators, and changemakers across Nigeria.
+              </p>
+            </div>
+          </FadeIn>
+        </div>
+
+        <div aria-hidden className="absolute bottom-0 inset-x-0 h-20 lg:h-24 bg-gradient-to-b from-transparent to-background" />
       </section>
 
       {/* Story Section */}
       <section className="py-16 md:py-20 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center text-center lg:text-left">
-          <FadeIn>
-             <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Our Story</p>
-             <h2 className="font-display text-3xl md:text-4xl font-bold text-secondary tracking-tight mb-8">
-               From a Local Hub to a National Movement.
-             </h2>
-             <div className="space-y-6 text-muted-foreground text-base lg:text-lg leading-relaxed">
+        <div className="max-w-7xl mx-auto">
+          {/* Mobile & tablet: v1 centered story */}
+          <div className="lg:hidden max-w-[760px] mx-auto text-center">
+            <FadeIn>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Our Story</p>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-secondary tracking-tight mb-8">
+                Where It All Began
+              </h2>
+              <div className="space-y-5 text-left text-muted-foreground leading-[1.8] text-[1.05rem]">
                 <p>
                   Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
-                  State by Suleiman Peace Jagaban — a visionary who saw the
-                  untapped potential in the youth around him.
+                  State by Suleiman Peace Jagaban — a young leader who saw the
+                  untapped potential in the youth around him. Starting as a small
+                  weekly gathering focused on building confidence through public
+                  speaking, BMAC has grown into one of the most active youth
+                  development organizations in northern Nigeria.
                 </p>
                 <p>
                   What began with five members meeting in a community hall has become
-                  a movement of over 350 trained young people. Our ambassadors are now 
-                  winning regional championships and leading change across Nigeria.
+                  a movement of over 350 trained young people across Plateau State.
+                  Our members have gone on to win regional debate championships,
+                  publish their creative writing, lead school clubs, and launch
+                  community initiatives that reach thousands.
                 </p>
-             </div>
-          </FadeIn>
-          
-          <div className="grid grid-cols-2 gap-4">
-             <div className="space-y-4 pt-6 lg:pt-12">
-                <FadeIn delay={0.2} className="relative h-48 lg:h-64 rounded-xl border border-border overflow-hidden">
-                   <Image src="/images/ws.jpg" alt="Outreach" fill className="object-cover" />
-                </FadeIn>
-                <FadeIn delay={0.3} className="relative h-40 lg:h-48 rounded-xl border border-border bg-accent/20 p-6 lg:p-8 flex flex-col justify-end">
-                   <h4 className="text-secondary font-display font-bold text-lg lg:text-xl leading-tight text-left">100% Youth Led.</h4>
-                </FadeIn>
-             </div>
-             <div className="space-y-4">
-                <FadeIn delay={0.4} className="relative h-40 lg:h-48 rounded-xl border border-border bg-secondary p-6 lg:p-8 flex flex-col justify-end text-left">
-                   <h4 className="text-secondary-foreground font-display font-bold text-lg lg:text-xl leading-tight">Community Rooted.</h4>
-                </FadeIn>
-                <FadeIn delay={0.5} className="relative h-48 lg:h-64 rounded-xl border border-border overflow-hidden">
-                   <Image src="/images/ws1.jpg" alt="Workshop" fill className="object-cover" />
-                </FadeIn>
-             </div>
+                <p>
+                  BMAC's long-term vision is to establish a network of youth
+                  empowerment centers across every major city in northern Nigeria —
+                  each one serving as a launchpad for young people to discover their
+                  voice, develop their skills, and lead meaningful change in their
+                  communities.
+                </p>
+              </div>
+            </FadeIn>
+          </div>
+
+          {/* Desktop: split with photo bento */}
+          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-20 items-center lg:text-left">
+            <FadeIn>
+               <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Our Story</p>
+               <h2 className="font-display text-3xl md:text-4xl font-bold text-secondary tracking-tight mb-8">
+                 From a Local Hub to a National Movement.
+               </h2>
+               <div className="space-y-6 text-muted-foreground text-base lg:text-lg leading-relaxed">
+                  <p>
+                    Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
+                    State by Suleiman Peace Jagaban — a visionary who saw the
+                    untapped potential in the youth around him.
+                  </p>
+                  <p>
+                    What began with five members meeting in a community hall has become
+                    a movement of over 350 trained young people. Our ambassadors are now 
+                    winning regional championships and leading change across Nigeria.
+                  </p>
+               </div>
+            </FadeIn>
+
+            <div className="relative pt-12">
+               <div aria-hidden className="absolute -top-4 -left-4 w-full h-full rounded-3xl border border-primary/25" />
+               <div className="relative grid grid-cols-12 gap-5">
+                  <FadeIn className="col-span-7 relative aspect-[16/10] rounded-2xl overflow-hidden border border-border shadow-xl">
+                     <Image
+                        src="/images/ws.jpg"
+                        alt="BMAC outreach workshop in session"
+                        fill
+                        priority
+                        sizes="(min-width:1024px) 42vw, 92vw"
+                        className="object-cover transition-transform duration-700 hover:scale-105"
+                     />
+                  </FadeIn>
+                  <FadeIn delay={0.2} className="col-span-5 relative aspect-[4/5] mt-12 rounded-2xl overflow-hidden border border-border shadow-xl">
+                     <Image
+                        src="/images/ws1.jpg"
+                        alt="A young ambassador during a workshop"
+                        fill
+                        sizes="(min-width:1024px) 26vw, 92vw"
+                        className="object-cover"
+                     />
+                  </FadeIn>
+               </div>
+               <FadeIn delay={0.3} className="relative z-10 flex flex-wrap gap-3 -mt-8">
+                  <span className="bg-secondary text-secondary-foreground rounded-xl px-5 py-3 font-display font-bold text-sm leading-tight shadow-lg">100% Youth Led.</span>
+                  <span className="bg-background text-secondary border border-border rounded-xl px-5 py-3 font-display font-bold text-sm leading-tight shadow-lg">Community Rooted.</span>
+               </FadeIn>
+            </div>
           </div>
         </div>
       </section>
