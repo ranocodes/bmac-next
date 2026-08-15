@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import dns from "dns";
+import dns from "node:dns";
 
 // force IPv4 for neon HTTP fetch (IPv6 unreachable on this machine)
 const __orig = dns.lookup.bind(dns);

@@ -1,3 +1,5 @@
+"use server";
+
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/actions/people";

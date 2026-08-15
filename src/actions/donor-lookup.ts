@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/lib/db";
 import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
 
