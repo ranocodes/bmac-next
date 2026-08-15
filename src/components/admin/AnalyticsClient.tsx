@@ -17,8 +17,6 @@ import {
 import {
   DailyViewsAreaChart,
   TopPagesBarChart,
-  DevicePieChart,
-  ReferrersRingChart,
   ConversionFunnelChart,
 } from "./AnalyticsCharts";
 
@@ -123,8 +121,6 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
   const trafficCards = [
     { label: "Total views", value: String(t.overview.totalViews), icon: Eye, color: "text-emerald-500", bg: "bg-emerald-500/10" },
     { label: "Unique visitors", value: String(t.overview.uniqueVisitors), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Views today", value: String(t.overview.todayViews), icon: TrendingUp, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { label: "Avg daily views", value: String(t.overview.avgDailyViews), icon: BarChart3, color: "text-amber-500", bg: "bg-amber-500/10" },
   ];
 
   return (
@@ -181,14 +177,6 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
               <div className="bg-card rounded-3xl border border-border/50 p-6">
                 <h3 className="font-display text-lg font-bold text-secondary mb-4">Top pages</h3>
                 <TopPagesBarChart data={t.topPages} />
-              </div>
-              <div className="bg-card rounded-3xl border border-border/50 p-6">
-                <h3 className="font-display text-lg font-bold text-secondary mb-4">Devices</h3>
-                <DevicePieChart data={t.devices} />
-              </div>
-              <div className="bg-card rounded-3xl border border-border/50 p-6">
-                <h3 className="font-display text-lg font-bold text-secondary mb-4">Referrers</h3>
-                <ReferrersRingChart data={t.referrers} />
               </div>
             </div>
           </>
