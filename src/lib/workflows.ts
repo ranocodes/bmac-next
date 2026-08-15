@@ -1,6 +1,14 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
+import { recordEvent } from "@/lib/analytics/record";
 import type { WorkflowKind, WorkflowPriority, WorkflowRecord, WorkflowStatus } from "@/types/cms";
+
+const FORM_EVENT_NAMES: Partial<Record<WorkflowKind, string>> = {
+  contact: "contact_submitted",
+  member: "member_joined",
+  volunteer: "volunteer_submitted",
+  partner: "partner_submitted",
+};
 
 interface WorkflowRow {
   id: string;
@@ -87,6 +95,16 @@ export async function createWorkflowRecord(input: {
         input.outcome || "",
       ]
     );
+    if (rows.length) {
+      const eventName = FORM_EVENT_NAMES[input.kind];
+      if (eventName) {
+        await recordEvent({
+          name: eventName,
+          path: "/",
+          properties: { kind: input.kind, refId: rows[0].ref_id, source: rows[0].source },
+        });
+      }
+    }
     return rows.length ? rowToWorkflow(rows[0]) : null;
   } catch (err) {
     console.error("createWorkflowRecord error:", err);

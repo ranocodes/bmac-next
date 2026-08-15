@@ -4,6 +4,7 @@ import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/act
 import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail, sendTicketAlertEmail } from "@/lib/email";
 import { sendWorkflowEmail } from "@/actions/emails";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
+import { recordEvent } from "@/lib/analytics/record";
 
 export interface PaystackMetadata {
   source_type?: string;
@@ -141,6 +142,11 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
           WHERE kind = 'ticket' AND ref_id = $1 AND status IN ('open', 'in_progress')`,
         [ticket.id]
       );
+      await recordEvent({
+        name: "event_registered",
+        path: "/",
+        properties: { eventId: ticket.event_id, reference: ticket.reference, paid: true },
+      });
     }
     return "success";
   }
@@ -192,6 +198,11 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
       message: `${metadata?.payer_name || person?.email || "Applicant"} paid & applied to ${programTitle} (${reference}).`,
       type: "program",
       link: `/admin/programs/${app.program_id}`,
+    });
+    await recordEvent({
+      name: "program_applied",
+      path: "/",
+      properties: { programId: app.program_id, applicationId: app.id, paid: true },
     });
     return "success";
   }
@@ -270,6 +281,11 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
           });
         }
       }
+      await recordEvent({
+        name: "donation_completed",
+        path: "/",
+        properties: { reference, amount: Number(amount || 0) },
+      });
     }
 
     if (payerEmail) {

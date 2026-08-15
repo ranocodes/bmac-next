@@ -387,14 +387,26 @@ describe("BMAC-33 acceptance: analytics + donation exports are permission-gated"
       .mockResolvedValueOnce([]) // workflows
       .mockResolvedValueOnce([{ count: "0" }]) // checked in
       .mockResolvedValueOnce([{ count: "0" }]) // participants
-      .mockResolvedValueOnce([]); // applications by status
+      .mockResolvedValueOnce([]) // applications by status
+      .mockResolvedValueOnce([{ count: "0" }]) // overview: total views
+      .mockResolvedValueOnce([{ count: "0" }]) // overview: unique visitors
+      .mockResolvedValueOnce([{ count: "0" }]) // overview: today views
+      .mockResolvedValueOnce([{ count: "1" }]) // overview: distinct days
+      .mockResolvedValueOnce([]) // daily views series
+      .mockResolvedValueOnce([]) // top pages
+      .mockResolvedValueOnce([]) // referrers
+      .mockResolvedValueOnce([]) // devices
+      .mockResolvedValueOnce([]) // conversions: event counts
+      .mockResolvedValueOnce([{ count: "0" }]); // conversions: page views
     const { GET } = await import("@/app/api/admin/analytics/route");
 
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.tickets).toBeDefined();
-    expect(json.programs).toBeDefined();
+    expect(json.operational.tickets).toBeDefined();
+    expect(json.operational.programs).toBeDefined();
+    expect(json.traffic.overview).toEqual({ totalViews: 0, uniqueVisitors: 0, todayViews: 0, avgDailyViews: 0 });
+    expect(json.conversions.funnel).toHaveLength(3);
   });
 
   it("blocks event admin detail without manage_events", async () => {

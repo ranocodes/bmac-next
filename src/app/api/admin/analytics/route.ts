@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/auth/server";
-import { getOperationalAnalytics } from "@/actions/analytics";
+import {
+  getOperationalAnalytics,
+  getTrafficOverview,
+  getDailyViewsSeries,
+  getTopPages,
+  getReferrers,
+  getDeviceBreakdown,
+  getConversionFunnels,
+} from "@/actions/analytics";
 
 export async function GET() {
   try {
@@ -8,6 +16,19 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  const data = await getOperationalAnalytics();
-  return NextResponse.json(data);
+  const [operational, overview, dailyViews, topPages, referrers, devices, conversions] =
+    await Promise.all([
+      getOperationalAnalytics(),
+      getTrafficOverview(),
+      getDailyViewsSeries(),
+      getTopPages(),
+      getReferrers(),
+      getDeviceBreakdown(),
+      getConversionFunnels(),
+    ]);
+  return NextResponse.json({
+    operational,
+    traffic: { overview, dailyViews, topPages, referrers, devices },
+    conversions,
+  });
 }

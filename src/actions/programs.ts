@@ -10,6 +10,7 @@ import {
 } from "@/actions/people";
 import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification } from "@/lib/notifications";
+import { recordEvent } from "@/lib/analytics/record";
 import { sendWorkflowEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
@@ -126,6 +127,12 @@ export async function submitApplication(input: {
       message: `${input.firstName} ${input.lastName} applied to ${program.title}`,
       type: "program",
       link: `/admin/programs/${input.programId}`,
+    });
+
+    await recordEvent({
+      name: "program_applied",
+      path: "/",
+      properties: { programId: input.programId, applicationId, paid: false },
     });
 
     return { applicationId };
