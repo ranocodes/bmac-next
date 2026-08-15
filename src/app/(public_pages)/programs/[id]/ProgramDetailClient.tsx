@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle } from "lucide-react";
+import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
@@ -308,6 +308,9 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                         {applicationId && (
                           <p className="text-[10px] font-mono text-muted-foreground/60 mt-3">Ref: {applicationId}</p>
                         )}
+                        <Link href="/application-status" className="inline-flex items-center gap-2 text-primary font-bold text-sm mt-4 hover:gap-3 transition-all">
+                          Check your application status <ArrowLeft size={15} className="rotate-180" />
+                        </Link>
                       </div>
                     ) : (
                       <form className="space-y-5 md:space-y-6" onSubmit={handleSubmit}>
