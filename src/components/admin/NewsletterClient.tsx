@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Mail, Send, Search, Users, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import { sendNewsletterBroadcast } from "@/actions/newsletter-admin";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Mail, Send, Search, Users, Loader2, CheckCircle2, AlertCircle, Download, Upload, Plus, Trash2 } from "lucide-react";
+import { sendNewsletterBroadcast, listNewsletterSubscribers, addNewsletterSubscriber, deleteNewsletterSubscriber, exportNewsletterSubscribers, importNewsletterSubscribers } from "@/actions/newsletter-admin";
 
 interface SubscriberRow {
   email: string;
@@ -13,12 +13,22 @@ interface SubscriberRow {
 }
 
 export default function NewsletterClient({ initialSubscribers }: { initialSubscribers: SubscriberRow[] }) {
-  const [subscribers] = useState<SubscriberRow[]>(initialSubscribers);
+  const [subscribers, setSubscribers] = useState<SubscriberRow[]>(initialSubscribers);
   const [search, setSearch] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [addEmail, setAddEmail] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const load = useCallback(async () => {
+    const rows = await listNewsletterSubscribers();
+    setSubscribers(rows);
+  }, []);
 
   const filtered = useMemo(() => {
     if (!search) return subscribers;
@@ -39,6 +49,67 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
     setResult({ ok: true, message: `Broadcast sent to ${res.sent} subscriber(s).${res.errors ? ` ${res.errors} failed.` : ""}` });
     setSubject("");
     setBody("");
+    load();
+  };
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adding) return;
+    setAdding(true);
+    const res = await addNewsletterSubscriber(addEmail);
+    setAdding(false);
+    if (res.error) {
+      setResult({ ok: false, message: res.error });
+      return;
+    }
+    setAddEmail("");
+    setResult({ ok: true, message: `Added ${addEmail.trim().toLowerCase()}` });
+    load();
+  };
+
+  const handleDelete = async (email: string) => {
+    if (!window.confirm(`Delete subscriber ${email}?`)) return;
+    const res = await deleteNewsletterSubscriber(email);
+    if (res.error) {
+      setResult({ ok: false, message: res.error });
+      return;
+    }
+    setResult({ ok: true, message: `Deleted ${email}` });
+    load();
+  };
+
+  const handleExport = async () => {
+    const res = await exportNewsletterSubscribers();
+    if (res.error || !res.csv) {
+      setResult({ ok: false, message: res.error || "Nothing to export" });
+      return;
+    }
+    const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `newsletter-subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const text = await file.text();
+    setImporting(true);
+    setFileError("");
+    const res = await importNewsletterSubscribers(text);
+    setImporting(false);
+    if (res.error) {
+      setFileError(res.error);
+      return;
+    }
+    setResult({ ok: true, message: `Imported ${res.added} subscriber(s), ${res.skipped} duplicate(s), ${res.invalid} invalid.` });
+    load();
   };
 
   return (
@@ -97,8 +168,34 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
             <h2 className="font-display text-lg font-bold text-secondary flex items-center gap-2">
               <Users size={16} className="text-primary" /> Subscribers
             </h2>
-            <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">{filtered.length}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">{filtered.length}</span>
+              <button
+                onClick={handleExport}
+                title="Export CSV"
+                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-secondary transition-colors"
+              >
+                <Download size={15} />
+              </button>
+            </div>
           </div>
+
+          <form onSubmit={handleAdd} className="flex gap-2 mb-4">
+            <input
+              type="email"
+              value={addEmail}
+              onChange={(e) => setAddEmail(e.target.value)}
+              placeholder="Add subscriber email…"
+              className="flex-1 min-w-0 px-3 py-2.5 bg-muted/40 border border-border/60 rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+            />
+            <button
+              disabled={adding}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-secondary text-secondary-foreground rounded-xl text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+            >
+              {adding ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Add
+            </button>
+          </form>
+
           <div className="relative mb-4">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -109,14 +206,38 @@ export default function NewsletterClient({ initialSubscribers }: { initialSubscr
               className="w-full pl-9 pr-3 py-2.5 bg-muted/40 border border-border/60 rounded-xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
             />
           </div>
+
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={importing}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-secondary transition-colors disabled:opacity-60"
+            >
+              {importing ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />} Import CSV / list
+            </button>
+            <input ref={fileRef} type="file" accept=".csv,.txt,.tsv" className="hidden" onChange={handleImportFile} />
+          </div>
+          {fileError && (
+            <p className="text-xs text-destructive mb-3">{fileError}</p>
+          )}
+
           <div className="max-h-[420px] overflow-y-auto space-y-1.5">
             {filtered.slice(0, 100).map((s) => (
-              <div key={s.email} className="px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
-                <p className="text-sm font-semibold text-secondary truncate">{s.email}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  {s.source} · {new Date(s.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  {s.lastSentAt ? ` · last sent ${new Date(s.lastSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
-                </p>
+              <div key={s.email} className="group flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-secondary truncate">{s.email}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    {s.source} · {new Date(s.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {s.lastSentAt ? ` · last sent ${new Date(s.lastSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(s.email)}
+                  title={`Delete ${s.email}`}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))}
             {filtered.length === 0 && (

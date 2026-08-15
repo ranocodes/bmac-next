@@ -98,3 +98,78 @@ export async function unsubscribeNewsletter(email: string): Promise<{ error?: st
   );
   return {};
 }
+
+export async function addNewsletterSubscriber(email: string): Promise<{ error?: string }> {
+  const admin = await requirePermission("manage_newsletter");
+  const clean = (email || "").trim().toLowerCase();
+  if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+    return { error: "Valid email required" };
+  }
+  await db.query(
+    `INSERT INTO public.newsletter_subscribers (email, source)
+     VALUES ($1, 'admin_added')
+     ON CONFLICT (email) DO UPDATE
+       SET active = TRUE, unsubscribed_at = NULL`,
+    [clean]
+  );
+  logActivity(admin.email, "newsletter_subscribe", "newsletter", { details: `Added subscriber: ${clean}` });
+  return {};
+}
+
+export async function deleteNewsletterSubscriber(email: string): Promise<{ error?: string }> {
+  const admin = await requirePermission("manage_newsletter");
+  const clean = (email || "").trim().toLowerCase();
+  if (!clean) return { error: "Email required" };
+  await db.query(
+    `DELETE FROM public.newsletter_subscribers WHERE LOWER(email) = LOWER($1)`,
+    [clean]
+  );
+  logActivity(admin.email, "newsletter_subscriber_deleted", "newsletter", { details: `Deleted subscriber: ${clean}` });
+  return {};
+}
+
+export async function exportNewsletterSubscribers(): Promise<{ csv: string; error?: string }> {
+  await requirePermission("manage_newsletter");
+  const rows = await db.query<{ email: string; source: string; active: boolean; created_at: string; unsubscribed_at: string | null; last_sent_at: string | null }>(
+    `SELECT email, source, active, created_at, unsubscribed_at, last_sent_at
+     FROM public.newsletter_subscribers
+     ORDER BY created_at DESC`
+  );
+  const escape = (v: string | null | undefined) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = ["email", "source", "active", "created_at", "unsubscribed_at", "last_sent_at"];
+  const lines = rows.map(r => [r.email, r.source, r.active ? "true" : "false", r.created_at, r.unsubscribed_at, r.last_sent_at].map(escape).join(","));
+  return { csv: [header.join(","), ...lines].join("\n") };
+}
+
+export async function importNewsletterSubscribers(raw: string): Promise<{ added: number; skipped: number; invalid: number; error?: string }> {
+  const admin = await requirePermission("manage_newsletter");
+  const emails = (raw || "")
+    .split(/[\n,;]+/)
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i);
+
+  let added = 0;
+  let skipped = 0;
+  let invalid = 0;
+  for (const email of emails) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { invalid++; continue; }
+    try {
+      const res = await db.query<{ email: string }>(
+        `INSERT INTO public.newsletter_subscribers (email, source)
+         VALUES ($1, 'imported')
+         ON CONFLICT (email) DO NOTHING
+         RETURNING email`,
+        [email]
+      );
+      if (res.length > 0) added++; else skipped++;
+    } catch {
+      skipped++;
+    }
+  }
+  logActivity(admin.email, "newsletter_import", "newsletter", { details: `Imported ${added} subscribers (${skipped} duplicates, ${invalid} invalid)` });
+  return { added, skipped, invalid };
+}

@@ -6,6 +6,7 @@ import { createWorkflowRecord, resolveWorkflow } from "@/lib/workflows";
 import { createTicket, reserveCapacity, releaseCapacity, getTicketById } from "@/lib/tickets";
 import type { EventTicketRow } from "@/lib/tickets";
 import { promoteFromWaitlist } from "@/actions/waitlist";
+import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
 
 interface EventOrderRow {
   id: string;
@@ -111,6 +112,17 @@ export async function getTicketStatus(reference: string): Promise<{
   if (!rows.length) return { status: "not_found" };
   const t = rows[0];
   return { status: t.status, passUrl: t.qr_token ? `/pass/${t.qr_token}` : undefined };
+}
+
+export async function verifyTicketPayment(reference: string): Promise<{
+  status: string;
+  passUrl?: string;
+  error?: string;
+}> {
+  if (!reference) return { status: "not_found" };
+  const result = await verifyPaystackTransaction(reference);
+  if (result.status !== "completed") return { status: result.status, error: result.error };
+  return getTicketStatus(reference);
 }
 
 export async function cancelTicket(ticketId: string): Promise<{ error?: string }> {

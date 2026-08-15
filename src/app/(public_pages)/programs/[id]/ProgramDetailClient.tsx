@@ -10,7 +10,7 @@ import { BentoCard } from "@/components/ui/BentoCard";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
-import { submitApplication, createProgramOrder, getProgramPaymentStatus } from "@/actions/programs";
+import { submitApplication, createProgramOrder, verifyProgramPayment } from "@/actions/programs";
 import { loadPaystack } from "@/lib/paystack";
 
 interface ProgramDetailClientProps {
@@ -104,8 +104,9 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
           callback: function(response: any) {
             console.log("Payment successful. Reference: " + response.reference);
             setIsPending(true);
+            setFormError("");
             const poll = setInterval(async () => {
-              const res = await getProgramPaymentStatus(order.reference || "");
+              const res = await verifyProgramPayment(order.reference || "");
               if (res.status === "completed") {
                 clearInterval(poll);
                 setApplicationId(res.applicationId || "");
@@ -113,7 +114,11 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                 setSubmitted(true);
               }
             }, 3000);
-            setTimeout(() => clearInterval(poll), 60000);
+            setTimeout(() => {
+              clearInterval(poll);
+              setIsPending(false);
+              setFormError("Payment received — verification is taking longer than usual. We'll confirm your application by email shortly.");
+            }, 60000);
           },
           onClose: function() {
             setIsPending(false);

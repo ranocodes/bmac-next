@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
 import { registerForEvent } from "@/actions/events";
-import { createTicketOrder, getTicketStatus } from "@/actions/tickets";
+import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
 import type { EventPass } from "@/types/cms";
 
@@ -94,8 +94,9 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
         callback: function(response: any) {
           console.log("Payment successful. Reference: " + response.reference);
           setIsPending(true);
+          setFormError("");
           const poll = setInterval(async () => {
-            const res = await getTicketStatus(order.reference || "");
+            const res = await verifyTicketPayment(order.reference || "");
             if (res.status === "confirmed" && res.passUrl) {
               clearInterval(poll);
               setPassInfo({ passUrl: res.passUrl, reference: order.reference || "" });
@@ -103,7 +104,11 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
               setIsReserved(true);
             }
           }, 3000);
-          setTimeout(() => clearInterval(poll), 60000);
+          setTimeout(() => {
+            clearInterval(poll);
+            setIsPending(false);
+            setFormError("Payment received — verification is taking longer than usual. We'll confirm your pass by email shortly.");
+          }, 60000);
         },
         onClose: function() {
           setIsPending(false);

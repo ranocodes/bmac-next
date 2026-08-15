@@ -12,6 +12,7 @@ import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification } from "@/lib/notifications";
 import { sendWorkflowEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
+import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
 import type {
   Program,
   ProgramApplication,
@@ -272,6 +273,17 @@ export async function getProgramPaymentStatus(reference: string): Promise<{
     return { status: "completed", applicationId: app[0]?.id };
   }
   return { status: "pending" };
+}
+
+export async function verifyProgramPayment(reference: string): Promise<{
+  status: string;
+  applicationId?: string;
+  error?: string;
+}> {
+  if (!reference) return { status: "not_found" };
+  const result = await verifyPaystackTransaction(reference);
+  if (result.status !== "completed") return { status: result.status, error: result.error };
+  return getProgramPaymentStatus(reference);
 }
 
 export async function updateApplicationStatus(input: {
