@@ -7,6 +7,7 @@ import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./peo
 import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
 import { sendRegistrationConfirmedEmail, sendEventReminderEmail, sendRegistrationAlertEmail, sendCheckInAlertEmail } from "@/lib/email";
+import { recordEvent } from "@/lib/analytics/record";
 import {
   createTicket,
   reserveCapacity,
@@ -353,6 +354,11 @@ export async function registerForEvent(opts: {
       message: `${opts.name} registered for ${event.title} (${ticket.reference}).`,
       type: "registration",
       link: "/admin/events",
+    });
+    await recordEvent({
+      name: "event_registered",
+      path: "/",
+      properties: { eventId: opts.eventId, reference: ticket.reference, paid: false },
     });
     await emailSuperAdmins(adminEmail =>
       sendRegistrationAlertEmail({

@@ -82,13 +82,122 @@ export async function getVisitorStats() {
   };
 }
 
-export async function getDailyViews() {
-  const rows = await db.query<{ view_date: string; count: string }>(
-    `SELECT view_date, COUNT(*) AS count FROM public.page_views 
-     WHERE view_date >= CURRENT_DATE - INTERVAL '30 days' 
-     GROUP BY view_date ORDER BY view_date ASC`
+export async function getDailyViewsSeries(rangeDays = 30) {
+  const rows = await db.query<{ view_date: string; views: string; visitors: string }>(
+    `SELECT view_date, COUNT(*) AS views, COUNT(DISTINCT session_id) AS visitors
+     FROM public.page_views
+     WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')
+     GROUP BY view_date ORDER BY view_date ASC`,
+    [rangeDays]
   ).catch(() => []);
-  return rows.map(r => ({ date: r.view_date, count: Number(r.count) }));
+  return rows.map(r => ({ date: r.view_date, views: Number(r.views), visitors: Number(r.visitors) }));
+}
+
+export async function getTrafficOverview(rangeDays = 30) {
+  const [totalRow, uniqueRow, todayRow, avgRow] = await Promise.all([
+    db.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM public.page_views
+       WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')`,
+      [rangeDays]
+    ).catch(() => [{ count: "0" }]),
+    db.query<{ count: string }>(
+      `SELECT COUNT(DISTINCT session_id) AS count FROM public.page_views
+       WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')`,
+      [rangeDays]
+    ).catch(() => [{ count: "0" }]),
+    db.query<{ count: string }>(
+      "SELECT COUNT(*) AS count FROM public.page_views WHERE view_date = CURRENT_DATE"
+    ).catch(() => [{ count: "0" }]),
+    db.query<{ count: string }>(
+      `SELECT COUNT(DISTINCT view_date) AS count FROM public.page_views
+       WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')`,
+      [rangeDays]
+    ).catch(() => [{ count: "1" }]),
+  ]);
+  const totalViews = Number(totalRow[0]?.count ?? 0);
+  const days = Number(avgRow[0]?.count ?? 1);
+  return {
+    totalViews,
+    uniqueVisitors: Number(uniqueRow[0]?.count ?? 0),
+    todayViews: Number(todayRow[0]?.count ?? 0),
+    avgDailyViews: days ? Math.round(totalViews / days) : 0,
+  };
+}
+
+export async function getTopPages(rangeDays = 30, limit = 10) {
+  const rows = await db.query<{ path: string; count: string }>(
+    `SELECT path, COUNT(*) AS count FROM public.page_views
+     WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')
+     GROUP BY path ORDER BY count DESC LIMIT $2`,
+    [rangeDays, limit]
+  ).catch(() => []);
+  return rows.map(r => ({ path: r.path, views: Number(r.count) }));
+}
+
+export async function getReferrers(rangeDays = 30, limit = 10) {
+  const rows = await db.query<{ referrer: string; count: string }>(
+    `SELECT referrer, COUNT(*) AS count FROM public.page_views
+     WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')
+     GROUP BY referrer ORDER BY count DESC LIMIT $2`,
+    [rangeDays, limit]
+  ).catch(() => []);
+  const hosts = new Map<string, number>();
+  for (const r of rows) {
+    const host = referrerHost(r.referrer);
+    hosts.set(host, (hosts.get(host) || 0) + Number(r.count));
+  }
+  return [...hosts.entries()]
+    .map(([host, views]) => ({ host, views }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, limit);
+}
+
+export async function getDeviceBreakdown(rangeDays = 30) {
+  const rows = await db.query<{ type: string; count: string }>(
+    `SELECT device_type AS type, COUNT(*) AS count FROM public.page_views
+     WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day') AND device_type != ''
+     GROUP BY device_type ORDER BY count DESC`,
+    [rangeDays]
+  ).catch(() => []);
+  return rows.map(r => ({ type: r.type || "unknown", count: Number(r.count) }));
+}
+
+export async function getConversionFunnels(rangeDays = 30) {
+  const [events, totalRow] = await Promise.all([
+    db.query<{ name: string; count: string }>(
+      `SELECT name, COUNT(*) AS count FROM public.analytics_events
+       WHERE created_at >= now() - ($1::int * INTERVAL '1 day')
+       GROUP BY name ORDER BY count DESC`,
+      [rangeDays]
+    ).catch(() => []),
+    db.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM public.page_views
+       WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')`,
+      [rangeDays]
+    ).catch(() => [{ count: "0" }]),
+  ]);
+
+  const eventCounts = events.map(e => ({ name: e.name, count: Number(e.count) }));
+  const countFor = (name: string) => Number(events.find(e => e.name === name)?.count ?? 0);
+  const pageViews = Number(totalRow[0]?.count ?? 0);
+
+  const funnel = [
+    { step: "page_view", count: pageViews, rate: 100 },
+    { step: "event_registered", count: countFor("event_registered"), rate: 0 },
+    { step: "donation_completed", count: countFor("donation_completed"), rate: 0 },
+  ];
+  for (const s of funnel) s.rate = pageViews ? Math.round((s.count / pageViews) * 1000) / 10 : 0;
+
+  return { eventCounts, funnel };
+}
+
+function referrerHost(referrer: string): string {
+  if (!referrer) return "(direct)";
+  try {
+    return new URL(referrer).hostname || "(direct)";
+  } catch {
+    return referrer;
+  }
 }
 
 export async function getActivityBreakdown() {
