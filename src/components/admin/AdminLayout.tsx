@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, CreditCard, ShieldOff, Inbox, QrCode, Heart, type LucideIcon,
+  UserCog, CreditCard, ShieldOff, Inbox, QrCode, Heart, Mail, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -70,6 +70,7 @@ const navGroups: NavGroup[] = [
     label: "System", icon: Shield,
     children: [
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
+      { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
       { label: "Payments", href: "/admin/payments", icon: CreditCard, permission: "manage_payments" },
       { label: "Donations", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
       { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },

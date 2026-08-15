@@ -234,7 +234,8 @@ export type Permission =
   | "export_data"
   | "view_analytics"
   | "manage_workflows"
-  | "check_in_attendees";
+  | "check_in_attendees"
+  | "manage_newsletter";
 
 export interface Partner {
   id: string;

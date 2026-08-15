@@ -10,8 +10,10 @@ import {
   ArrowRight,
   CheckCircle2,
   Mail,
+  FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
@@ -75,7 +77,7 @@ function GetInvolvedInner() {
   const [selectedWay, setSelectedWay] = useState<Way | null>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
   const [customAmount, setCustomAmount] = useState("");
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", company_website: "" });
   const [formError, setFormError] = useState("");
   const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,6 +88,7 @@ function GetInvolvedInner() {
     email?: string;
     kind?: "member" | "volunteer" | "partner" | "program";
     emailError?: string;
+    reference?: string;
   } | null>(null);
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -133,6 +136,7 @@ function GetInvolvedInner() {
         email: formData.email,
         amount: amountN,
         reference,
+        company_website: formData.company_website,
       });
       if (pending.error || !pending.donation) {
         setFormError(pending.error || "Could not start donation. Please try again.");
@@ -154,7 +158,7 @@ function GetInvolvedInner() {
         },
         callback: function() {
           setIsSubmitting(false);
-          setSubmitted({ title: "Payment Initiated", message: "Donation received. Thank you! 🎉" });
+          setSubmitted({ title: "Payment Initiated", message: "Donation received. Thank you! 🎉", reference });
         },
         onClose: function() {
           setIsSubmitting(false);
@@ -194,6 +198,7 @@ function GetInvolvedInner() {
         email: formData.email,
         privacy: consent.privacy,
         marketing: consent.marketing,
+        company_website: formData.company_website,
       });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -394,6 +399,12 @@ function GetInvolvedInner() {
                         </motion.div>
                       )}
                     </AnimatePresence>
+                    <Link
+                      href="/donor-lookup"
+                      className="block text-center md:text-left text-[11px] font-medium text-white/40 hover:text-accent transition-colors mt-4"
+                    >
+                      Already donated? Look up your donations & receipts →
+                    </Link>
                   </div>
                 )}
 
@@ -421,6 +432,17 @@ function GetInvolvedInner() {
                         className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-accent-foreground text-sm font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:opacity-90"
                       >
                         Open Application Form <ArrowRight size={16} />
+                      </a>
+                    )}
+                    {submitted.reference && (
+                      <a
+                        href={`/api/receipts/${encodeURIComponent(submitted.reference)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
+                      >
+                        <FileText size={15} />
+                        Download Receipt (PDF)
                       </a>
                     )}
                     {submitted.email && submitted.kind && (
@@ -451,6 +473,18 @@ function GetInvolvedInner() {
                   </div>
                 ) : (
                   <form className="space-y-4 md:space-y-5 relative z-10" onSubmit={handleSubmit}>
+                  <div className="absolute left-[-9999px]" aria-hidden="true">
+                    <label htmlFor="company_website">Website</label>
+                    <input
+                      type="text"
+                      id="company_website"
+                      name="company_website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={formData.company_website}
+                      onChange={(e) => setFormData({ ...formData, company_website: e.target.value })}
+                    />
+                  </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-bold uppercase tracking-widest text-white/40 ml-2">Your Identity</label>
                     <input

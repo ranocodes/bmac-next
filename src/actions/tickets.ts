@@ -5,6 +5,7 @@ import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./peo
 import { createWorkflowRecord, resolveWorkflow } from "@/lib/workflows";
 import { createTicket, reserveCapacity, releaseCapacity, getTicketById } from "@/lib/tickets";
 import type { EventTicketRow } from "@/lib/tickets";
+import { promoteFromWaitlist } from "@/actions/waitlist";
 
 interface EventOrderRow {
   id: string;
@@ -121,6 +122,7 @@ export async function cancelTicket(ticketId: string): Promise<{ error?: string }
     [ticketId]
   );
   await releaseCapacity(ticket.event_id, ticket.quantity);
+  await promoteFromWaitlist(ticket.event_id, ticket.quantity);
   const wf = await db.query<{ id: string }>(
     "SELECT id FROM public.workflow_records WHERE kind = 'ticket' AND ref_id = $1 LIMIT 1",
     [ticketId]

@@ -141,6 +141,17 @@ none of their keys, projects, or webhook setup.
 - [ ] `curl <express-url>/health` returns `{"status":"ok"}`
 - [ ] Shared-key auth verified (401 without key, 200 with key, real login works)
 - [ ] First admin created via `/admin/setup` on the fresh database
-- [ ] Live Paystack keys set (no `pk_test_placeholder`)
+- [ ] Live Paystack keys set (no `pk_test_placeholder`); test/live keys not mixed
 - [ ] `NEXT_PUBLIC_APP_URL` set to the production URL (email links / QR / webhook callbacks)
 - [ ] No Clerk/Supabase/Neon Auth env vars, projects, or steps involved
+
+## 7. Post-launch operational checklist
+
+- [ ] Enable Neon Point-in-Time Recovery (PITR) for the production branch (Neon console → Project Settings → Branches → PITR) — protects against accidental `DELETE`/`UPDATE` and data loss
+- [ ] Set `CRON_SECRET` and schedule `/api/cron/reminders?token=<CRON_SECRET>` (e.g. Vercel Cron `crons.json` or external cron on a `* * * * *` interval)
+- [ ] Configure Termii sender + verify WhatsApp channel if SMS/WhatsApp reminders are enabled (see `SETUP.md` §9)
+- [ ] Email deliverability: set SPF, DKIM, and DMARC records for the sending domain (Resend + Express SMTP). DMARC `p=reject` recommended once SPF/DKIM pass.
+- [ ] CDN/WAF in front of the app (e.g. Cloudflare): enable TLS, bot protection, and rate limiting on `/admin/login`
+- [ ] Verify webhook signature check live: send a test `charge.success` event with a forged `X-Paystack-Signature` and confirm 401
+- [ ] Confirm admin donation amount-mismatch alerts are visible under Admin → Notifications
+

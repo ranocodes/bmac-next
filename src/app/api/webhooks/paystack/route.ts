@@ -6,6 +6,21 @@ import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail
 import { sendWorkflowEmail } from '@/actions/emails';
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from '@/lib/notifications';
 
+const PLACEHOLDER_MARKERS = [
+  "your_",
+  "xxxx",
+  "replace",
+  "sk_live_0000",
+  "sk_test_0000",
+  "pk_live_0000",
+  "pk_test_0000",
+  "paystack_secret",
+];
+
+function isPlaceholderSecret(secret: string): boolean {
+  return PLACEHOLDER_MARKERS.some(m => secret.toLowerCase().includes(m));
+}
+
 export async function POST(request: Request) {
   const body = await request.text();
   const signature = request.headers.get('x-paystack-signature');
@@ -13,6 +28,11 @@ export async function POST(request: Request) {
 
   if (!secret || !signature) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (process.env.NODE_ENV === 'production' && isPlaceholderSecret(secret)) {
+    console.error("paystack webhook rejected: PAYSTACK_SECRET_KEY looks like a placeholder in production");
+    return NextResponse.json({ error: 'Misconfigured' }, { status: 503 });
   }
 
   const hash = crypto.createHmac('sha512', secret).update(body).digest('hex');
@@ -207,6 +227,32 @@ export async function POST(request: Request) {
     const payerEmail = customer?.email || "";
     const payerName = metadata?.payer_name || customer?.email || "";
     if (payerEmail) {
+
+      const expected = await db.query<{ meta: { amount?: number; currency?: string } | null }>(
+        `SELECT meta
+         FROM public.person_records
+         WHERE kind = 'donation' AND ref_id = $1 AND status = 'pending'
+         LIMIT 1`,
+        [reference]
+      );
+
+      const expectedMeta = expected[0]?.meta;
+      if (expectedMeta && expectedMeta.amount != null) {
+        const webhookAmount = Number(amount || 0);
+        const expectedAmount = Number(expectedMeta.amount) * 100;
+        const tolerance = Math.max(Math.round(expectedAmount * 0.01), 1);
+        if (Math.abs(webhookAmount - expectedAmount) > tolerance) {
+          await createAdminNotification({
+            title: "Donation amount mismatch",
+            message: `Webhook ${reference} reports ${currency}${amount}, expected ~${expectedMeta.currency || "NGN"}${expectedAmount}. Manual review needed.`,
+            type: "donation",
+            link: "/admin/payments",
+          });
+          console.error(`donation amount mismatch for ${reference}: webhook ${amount} vs expected ${expectedAmount}`);
+          return NextResponse.json({ status: 'success' });
+        }
+      }
+
       const person = await findOrCreatePerson({
         firstName: metadata?.payer_name || payerEmail,
         email: payerEmail,

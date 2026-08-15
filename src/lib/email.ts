@@ -38,6 +38,21 @@ export async function sendAdminDeletedNotification(email: string, deletedAdmin: 
   return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy, reason: reason || "" });
 }
 
+export async function sendAdminCreatedAlertEmail(opts: {
+  email: string;
+  newAdminEmail: string;
+  newAdminRole: string;
+  createdBy: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "admin-created",
+    email: opts.email,
+    newAdminEmail: opts.newAdminEmail,
+    newAdminRole: opts.newAdminRole,
+    createdBy: opts.createdBy,
+  });
+}
+
 export async function sendAdminReplyEmail(opts: {
   email: string;
   subject: string;
@@ -282,5 +297,22 @@ export async function sendEventReminderEmail(opts: {
     eventDate: opts.eventDate || "",
     eventLocation: opts.eventLocation || "",
     passUrl: absolutizeUrl(opts.passUrl || ""),
+  });
+}
+
+export async function sendNewsletterBroadcastEmail(opts: {
+  email: string;
+  firstName?: string;
+  subject: string;
+  body: string;
+  unsubscribeUrl?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "newsletter-broadcast",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    subject: opts.subject,
+    body: opts.body,
+    unsubscribeUrl: absolutizeUrl(opts.unsubscribeUrl || ""),
   });
 }

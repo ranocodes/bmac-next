@@ -19,6 +19,7 @@ export const PERMISSION_LABELS: { key: Permission; label: string }[] = [
   { key: "view_analytics", label: "View Analytics" },
   { key: "manage_workflows", label: "Manage Workflows & Inbox" },
   { key: "check_in_attendees", label: "Check In Attendees" },
+  { key: "manage_newsletter", label: "Manage Newsletter" },
 ];
 
 export const ALL_PERMISSION_KEYS: Permission[] = PERMISSION_LABELS.map((p) => p.key);
@@ -29,7 +30,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<AdminRole, Permission[]> = {
     "manage_news", "manage_events", "manage_programs", "manage_gallery",
     "manage_team", "manage_testimonials", "manage_categories", "manage_partners",
     "manage_stats", "export_data", "view_analytics",
-    "manage_workflows", "check_in_attendees",
+    "manage_workflows", "check_in_attendees", "manage_newsletter",
   ],
   moderator: [
     "manage_news", "manage_events", "manage_programs", "manage_gallery",

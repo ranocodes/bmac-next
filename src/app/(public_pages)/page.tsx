@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import HomeClient from "../HomeClient";
+import DonationProgress from "@/components/ui/DonationProgress";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,9 @@ export default async function HomePage() {
         initialStats={stats || []}
         initialPartners={partners || []}
       />
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-16 md:pb-24">
+        <DonationProgress />
+      </div>
     </main>
   );
 }

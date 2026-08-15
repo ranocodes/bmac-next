@@ -42,6 +42,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
+  const [waitlistMsg, setWaitlistMsg] = useState("");
 
   const handlePaystackPayment = async () => {
     if (!event) return;
@@ -134,6 +135,19 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
       if (res.error) {
         setFormError(res.error);
         setIsPending(false);
+        if (res.error === "This event is sold out") {
+          const { joinWaitlist } = await import("@/actions/waitlist");
+          const wl = await joinWaitlist({
+            eventId: event.id,
+            name: formData.name,
+            email: formData.email,
+          });
+          if (wl.error) {
+            setFormError(wl.error);
+          } else {
+            setWaitlistMsg(`You're on the waitlist! If a spot opens up, ${formData.email} gets first claim.`);
+          }
+        }
         return;
       }
       setPassInfo({ passUrl: res.passUrl || "", reference: res.reference || "" });
@@ -279,6 +293,10 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
 
                            {formError && (
                              <p className="text-sm font-bold text-red-500 px-2">{formError}</p>
+                           )}
+
+                           {waitlistMsg && (
+                             <p className="text-sm font-bold text-primary bg-primary/5 border border-primary/15 rounded-xl px-4 py-3">{waitlistMsg}</p>
                            )}
 
                            <button 

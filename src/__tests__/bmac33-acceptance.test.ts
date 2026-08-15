@@ -324,6 +324,7 @@ describe("BMAC-33 acceptance: donation pending → verified by webhook", () => {
     const PAYSTACK_SECRET = "test-secret-key";
     vi.stubEnv("PAYSTACK_SECRET_KEY", PAYSTACK_SECRET);
     mockQuery.mockResolvedValueOnce([]); // dedup
+    mockQuery.mockResolvedValueOnce([{ meta: { amount: 5000, currency: "NGN" } }]); // expected amount
     mockQuery.mockResolvedValueOnce([{ id: "rec-1" }]); // pending → completed UPDATE
     mockFindOrCreate.mockResolvedValueOnce({ id: "p-1" });
     mockSendDonationThanks.mockResolvedValue({});

@@ -15,6 +15,7 @@ interface NewsletterModalProps {
 export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated with BMAC" }: NewsletterModalProps) {
   const [step, setStep] = useState<'subscribe' | 'thankyou' | 'error'>('subscribe');
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,7 +24,7 @@ export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated
     if (loading) return;
     setLoading(true);
     setError("");
-    const result = await subscribeToNewsletter(email);
+    const result = await subscribeToNewsletter(email, { company_website: website });
     setLoading(false);
     if (result.error) {
       setError(result.error);
@@ -61,6 +62,11 @@ export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated
                 <h3 className="font-display text-2xl font-bold text-secondary mb-3">{title}</h3>
                 <p className="text-muted-foreground text-sm mb-8">Get the latest stories, workshop alerts, and leadership tips every Friday.</p>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="absolute left-[-9999px]" aria-hidden="true">
+                    <label htmlFor="newsletter_company_website">Website</label>
+                    <input type="text" id="newsletter_company_website" name="company_website" tabIndex={-1} autoComplete="off"
+                      value={website} onChange={e => setWebsite(e.target.value)} />
+                  </div>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                     placeholder="Your Email Address"
                     className="w-full px-5 py-4 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" required />

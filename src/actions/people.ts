@@ -8,6 +8,7 @@ import { sendFormSubmitAlertEmail, sendGoogleFormLinkEmail } from "@/lib/email";
 import { createAdminNotification, getSuperAdminEmails } from "@/lib/notifications";
 import { createWorkflowRecord } from "@/lib/workflows";
 import { recordConsent } from "@/lib/consent";
+import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
 import type { Person, PersonRecord, PersonRecordKind, PersonRole, PersonRow, WorkflowKind } from "@/types/cms";
 
 interface PersonDbRow {
@@ -294,7 +295,10 @@ export async function applyAsPerson(opts: {
   notes?: string;
   privacy?: boolean;
   marketing?: boolean;
+  [HONEYPOT_FIELD]?: string;
 }): Promise<{ error?: string; formLink?: string; emailSent?: boolean; emailError?: string; kindLabel?: string }> {
+  const guard = await assertSafe(`apply:${opts.kind}`, opts.email, await getClientIp(), opts as Record<string, unknown>);
+  if (guard.error) return { error: guard.error };
   if (!opts.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.email)) {
     return { error: "Valid email required" };
   }
@@ -304,6 +308,7 @@ export async function applyAsPerson(opts: {
   if (!opts.privacy) {
     return { error: "Please accept the privacy policy to continue" };
   }
+  await recordSubmission(`apply:${opts.kind}`, opts.email, await getClientIp());
   const person = await findOrCreatePerson({ firstName: opts.name, email: opts.email, phone: opts.phone });
   if (!person) return { error: "Something went wrong. Try again." };
   await recordConsent(

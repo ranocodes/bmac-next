@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { db } from "@/lib/db";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./people";
 import { logActivity } from "./activity-logs";
+import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
 
 export interface PendingDonation {
   personId: string;
@@ -16,7 +17,10 @@ export async function createPendingDonation(opts: {
   email: string;
   amount: number;
   reference: string;
+  [HONEYPOT_FIELD]?: string;
 }): Promise<{ error?: string; donation?: PendingDonation }> {
+  const guard = await assertSafe("donation", opts.email, await getClientIp(), opts as Record<string, unknown>);
+  if (guard.error) return { error: guard.error };
   const email = (opts.email || "").trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "Valid email required" };
@@ -30,6 +34,7 @@ export async function createPendingDonation(opts: {
   }
 
   try {
+    await recordSubmission("donation", email, await getClientIp());
     const person = await findOrCreatePerson({ firstName: opts.name, email });
     if (!person) return { error: "Something went wrong. Try again." };
     await ensurePersonRoles(person.id, ["donor"]);

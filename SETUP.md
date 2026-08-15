@@ -146,6 +146,21 @@ Visit `http://localhost:3000`. The admin dashboard is at `http://localhost:3000/
 
 ---
 
+## 9. SMS/WhatsApp, cron, and donation goal — optional
+
+| Variable | Purpose |
+|---|---|
+| `TERMII_API_KEY` | Enables SMS + WhatsApp reminders to event registrants |
+| `TERMII_BASE_URL` | Termii API base (default `https://api.ng.termii.com`) |
+| `TERMII_SENDER_ID` | SMS sender ID (e.g. `BMACAlert`). For WhatsApp, set a verified sender and `TERMII_WHATSAPP_CHANNEL=whatsapp` |
+| `TERMII_WHATSAPP_CHANNEL` | Leave empty for SMS-only; `whatsapp` to route reminders via WhatsApp |
+| `CRON_SECRET` | Guards `/api/cron/*`. Call: `GET /api/cron/reminders?token=<CRON_SECRET>` |
+| `DONATION_GOAL` | Fallback for the home donation progress bar when the admin Site Settings goal is unset |
+
+Termii sender IDs require approval in the Termii dashboard for SMS delivery in Nigeria.
+
+---
+
 ## First-Time Admin Setup
 
 1. Make sure the Express backend is running and `EMAIL_SERVICE_URL`/`EMAIL_SERVICE_API_KEY` are set.

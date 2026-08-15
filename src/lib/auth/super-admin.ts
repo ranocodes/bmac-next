@@ -50,6 +50,8 @@ async function hmacVerify(data: string, signature: string, secret: string): Prom
   return crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(data));
 }
 
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
 export async function setSuperAdminSession(email: string, firstName: string = "", permissions: Permission[] = ALL_PERMISSIONS, role: AdminRole = "super_admin") {
   const cookie = await cookies();
   const payload = JSON.stringify({ email, firstName, role, permissions, createdAt: Date.now() });
@@ -57,7 +59,8 @@ export async function setSuperAdminSession(email: string, firstName: string = ""
   const sig = await hmacSign(payloadB64, getSecret());
   cookie.set(COOKIE_NAME, `${payloadB64}.${sig}`, {
     httpOnly: true, secure: process.env.NODE_ENV === "production",
-    sameSite: "lax", path: "/admin", maxAge: 60 * 60 * 24,
+    sameSite: "lax", path: "/admin", maxAge: SESSION_TTL_MS / 1000,
+    priority: "high",
   });
 }
 
@@ -78,11 +81,19 @@ export async function getSuperAdminSession(): Promise<SuperAdminSession | null> 
   try {
     const payload = JSON.parse(Buffer.from(payloadB64, "base64").toString("utf-8"));
     if (payload.role !== "super_admin" && payload.role !== "moderator") return null;
-    return payload as SuperAdminSession;
+    const session = payload as SuperAdminSession;
+    if (typeof session.createdAt === "number" && Date.now() - session.createdAt > SESSION_TTL_MS) {
+      await clearSuperAdminSession();
+      return null;
+    }
+    return session;
   } catch { return null; }
 }
 
 export async function clearSuperAdminSession() {
   const cookie = await cookies();
-  cookie.set(COOKIE_NAME, "", { path: "/admin", maxAge: 0 });
+  cookie.set(COOKIE_NAME, "", {
+    httpOnly: true, secure: process.env.NODE_ENV === "production",
+    sameSite: "lax", path: "/admin", maxAge: 0,
+  });
 }

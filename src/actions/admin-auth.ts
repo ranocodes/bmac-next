@@ -1,16 +1,37 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { setSuperAdminSession, clearSuperAdminSession, getSuperAdminSession } from "@/lib/auth/super-admin";
 import * as authClient from "@/lib/auth/client";
 import { logActivity } from "./activity-logs";
+import { isLoginLocked, recordLoginAttempt } from "@/lib/rate-limit";
 import type { AdminRole, Permission } from "@/types/cms";
+
+async function clientIp(): Promise<string> {
+  try {
+    const h = await headers();
+    const fwd = h.get("x-forwarded-for");
+    if (fwd) return fwd.split(",")[0].trim();
+    return h.get("x-real-ip") || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 
 export async function loginAdmin(email: string, password: string): Promise<{ error?: string }> {
   try {
     if (!email || !password) return { error: "Email and password required" };
+    const ip = await clientIp();
+    if (await isLoginLocked(email, ip)) {
+      return { error: "Too many failed attempts. Try again in 15 minutes." };
+    }
     const info = await authClient.loginAdmin(email, password);
-    if (!info.email || info.error) return { error: info.error || "Invalid email or password" };
+    if (!info.email || info.error) {
+      await recordLoginAttempt(email, ip, false);
+      return { error: info.error || "Invalid email or password" };
+    }
+    await recordLoginAttempt(email, ip, true);
     await setSuperAdminSession(info.email, info.firstName || "", info.permissions, info.role);
     logActivity(info.email, "login", "auth", { details: "Admin login" });
     return {};
@@ -44,7 +65,25 @@ export async function createAdminAction(
   opts: { email: string; firstName: string; role: AdminRole; permissions: Permission[]; password: string }
 ): Promise<{ error?: string; warning?: string }> {
   const result = await authClient.createAdmin(createdByEmail, opts);
-  if (!result.error) logActivity(createdByEmail, "admin_create", "auth", { details: `Created ${opts.email} as ${opts.role}` });
+  if (!result.error) {
+    logActivity(createdByEmail, "admin_create", "auth", { details: `Created ${opts.email} as ${opts.role}` });
+    const { createAdminNotification, emailSuperAdmins } = await import("@/lib/notifications");
+    const { sendAdminCreatedAlertEmail } = await import("@/lib/email");
+    await createAdminNotification({
+      title: "New admin created",
+      message: `${opts.email} was created as ${opts.role} by ${createdByEmail}.`,
+      type: "admin",
+      link: "/admin/admins",
+    });
+    await emailSuperAdmins(adminEmail =>
+      sendAdminCreatedAlertEmail({
+        email: adminEmail,
+        newAdminEmail: opts.email,
+        newAdminRole: opts.role,
+        createdBy: createdByEmail,
+      })
+    );
+  }
   return result;
 }
 
