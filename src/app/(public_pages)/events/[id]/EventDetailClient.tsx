@@ -8,6 +8,7 @@ import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import ShareButtons from "@/components/ui/ShareButtons";
 import { registerForEvent } from "@/actions/events";
 import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
@@ -26,9 +27,10 @@ function formatDisplayDate(raw: string | undefined): string {
 interface EventDetailClientProps {
   id: string;
   initialEvents: any[];
+  initialTestimonials?: any[];
 }
 
-export default function EventDetailClient({ id, initialEvents }: EventDetailClientProps) {
+export default function EventDetailClient({ id, initialEvents, initialTestimonials = [] }: EventDetailClientProps) {
   const all = initialEvents.map(e => ({
     ...e,
     date: (e as any).event_date || e.date || "",
@@ -39,6 +41,7 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   }));
   const found = all.find(e => e.id === id) || null;
   const [event] = useState<EventPass | null>(found);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [isReserved, setIsReserved] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [formError, setFormError] = useState("");
@@ -47,6 +50,20 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
   const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState("");
+
+  const relatedEvents = (() => {
+    if (!event) return [];
+    const parseDate = (d: string) => (d ? new Date(d.replace("T00:00:00", "") + "T00:00:00").getTime() || 0 : 0);
+    return all
+      .filter(e => e.id !== event.id)
+      .map(e => ({ ...e, _cat: e.category === event.category ? 1 : 0, _d: Math.abs(parseDate(e.date) - (parseDate(event.date) || parseDate(e.date))) }))
+      .sort((a, b) => b._cat - a._cat || a._d - b._d)
+      .slice(0, 3);
+  })();
+
+  const faqs = (event as any).faqs || [];
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const publishedTestimonials = initialTestimonials.filter((t: any) => t.status === "published");
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -251,6 +268,10 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
         </div>
       </section>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-6 mt-10">
+        <ShareButtons title={event.title} url={shareUrl} />
+      </div>
+
       {/* Main Content Area */}
       <section className="py-24 px-4 md:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-start">
@@ -391,6 +412,78 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
           </aside>
         </div>
       </section>
+
+      {/* FAQ */}
+      {faqs.length > 0 && (
+        <section className="py-16 px-4 md:px-6 bg-muted/30">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary mb-10 tracking-tight text-center">Common Questions</h2>
+            <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
+              {faqs.map((faq: { q: string; a: string }, i: number) => (
+                <div key={i} className="border-b border-border/50 last:border-b-0">
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-muted/40 transition-colors"
+                    aria-expanded={openFaq === i}
+                  >
+                    <span className="font-bold text-secondary text-sm md:text-base">{faq.q}</span>
+                    <span className={`text-primary text-xl font-bold transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}>+</span>
+                  </button>
+                  {openFaq === i && <p className="px-6 pb-6 text-muted-foreground text-sm leading-relaxed">{faq.a}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Related Events */}
+      {relatedEvents.length > 0 && (
+        <section className="py-16 px-4 md:px-6">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary mb-10 tracking-tight">More from BMAC</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedEvents.map((e, i) => (
+                <Link
+                  key={e.id}
+                  href={`/events/${e.id}`}
+                  className="group rounded-xl border border-border bg-card p-6 hover:border-primary/30 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest">
+                      <Calendar size={11} /> {formatDisplayDate(e.date)}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-secondary mb-3 leading-tight group-hover:text-primary transition-colors">
+                    {e.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">{e.desc}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Social Proof */}
+      {publishedTestimonials.length > 0 && (
+        <section className="py-16 px-4 md:px-6 bg-muted/30">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold text-secondary mb-10 tracking-tight">Voices from our community</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {publishedTestimonials.slice(0, 3).map((t, i) => (
+                <blockquote key={i} className="rounded-xl border border-border bg-card p-6">
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-5">&ldquo;{t.quote}&rdquo;</p>
+                  <footer className="text-xs">
+                    <p className="font-bold text-secondary">{t.name}</p>
+                    <p className="text-muted-foreground mt-0.5">{t.designation}</p>
+                  </footer>
+                </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

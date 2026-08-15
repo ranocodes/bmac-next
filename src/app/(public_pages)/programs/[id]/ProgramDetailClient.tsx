@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import ShareButtons from "@/components/ui/ShareButtons";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
@@ -208,6 +209,10 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
         </div>
       </section>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <ShareButtons title={program.title} />
+      </div>
+
       {/* Main Content Area */}
       <section className="py-10 md:py-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24">
@@ -241,20 +246,19 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
 
             <hr className="border-border/50 mb-12 md:mb-16" />
 
-            <div className="bg-muted/50 rounded-[2rem] md:rounded-bento p-6 md:p-12 border border-border text-center md:text-left">
-               <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-4">Common Questions</h3>
-               <div className="space-y-3 md:space-y-4 text-left">
-               {(program.faqs?.length ? program.faqs : [
-                    { q: "Is this workshop for beginners?", a: "Absolutely. We have specialized modules designed specifically for those starting their journey." },
-                    { q: "Are there any fees?", a: "Most BMAC programs are free for active members. Public competitions may have small registration fees." }
-                  ]).map((faq, i) => (
-                    <div key={i} className="bg-card p-5 md:p-6 rounded-xl shadow-sm border border-border">
-                       <p className="font-bold text-secondary text-sm md:text-base mb-2">{faq.q}</p>
-                       <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-                    </div>
-                  ))}
-               </div>
-            </div>
+            {(program.faqs?.length ?? 0) > 0 && (
+              <div className="bg-muted/50 rounded-[2rem] md:rounded-bento p-6 md:p-12 border border-border text-center md:text-left">
+                 <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-4">Common Questions</h3>
+                 <div className="space-y-3 md:space-y-4 text-left">
+                 {program.faqs?.map((faq, i) => (
+                      <div key={i} className="bg-card p-5 md:p-6 rounded-xl shadow-sm border border-border">
+                         <p className="font-bold text-secondary text-sm md:text-base mb-2">{faq.q}</p>
+                         <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            )}
           </div>
 
           <aside className="lg:col-span-5 space-y-6 md:space-y-12">
