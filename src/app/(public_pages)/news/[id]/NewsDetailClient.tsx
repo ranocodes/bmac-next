@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Bookmark, MapPin, Send, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import ShareButtons from "@/components/ui/ShareButtons";
 import ReactMarkdown from "react-markdown";
 import { subscribeToNewsletter } from "@/actions/newsletter";
 import type { NewsArticle, EventPass } from "@/types/cms";
@@ -116,20 +117,6 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
     );
   }
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    const title = article.title;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, url });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-      }
-    } catch {
-      // user cancelled native share; ignore
-    }
-  };
-
   return (
     <main suppressHydrationWarning className="bg-background">
       {/* Editorial Hero Section - Mobile Optimized */}
@@ -188,10 +175,10 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
             <div className="mt-12 md:mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
                <div className="flex flex-col sm:flex-row items-center gap-4">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Share story</span>
-                   <div className="flex gap-2">
-                      <button onClick={handleShare} aria-label="Share story" className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-secondary-foreground transition-all"><Share2 size={18} /></button>
-                      <button onClick={toggleBookmark} aria-label={bookmarked ? "Remove bookmark" : "Save story"} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${bookmarked ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"}`}><Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} /></button>
-                   </div>
+                  <div className="flex items-center gap-2">
+                     <ShareButtons title={article.title} />
+                     <button onClick={toggleBookmark} aria-label={bookmarked ? "Remove bookmark" : "Save story"} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${bookmarked ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"}`}><Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} /></button>
+                  </div>
                </div>
                <Link href="/get-involved" className="text-xs md:text-sm font-bold text-primary hover:gap-3 transition-all flex items-center gap-2">
                   Be part of the next story <ArrowLeft size={16} className="rotate-180 text-accent" />
