@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, Music2 } from "lucide-react";
+import { Facebook, Instagram, Twitter, Music2, Mail, Phone, MapPin, Clock } from "lucide-react";
 import { getIcon } from "@/lib/iconMapper";
 
 interface SocialLink {
@@ -38,6 +38,14 @@ const defaultLinks = [
   { name: "Gallery", href: "/gallery" },
   { name: "News", href: "/news" },
   { name: "Contact", href: "/contact" },
+  { name: "Privacy", href: "/privacy" },
+];
+
+const contactInfo = [
+  { icon: Mail, label: "Email", value: "hello@bmacjos.org", href: "mailto:hello@bmacjos.org" },
+  { icon: Phone, label: "Phone / WhatsApp", value: "+234 803 456 7891", href: "https://wa.me/2348034567891" },
+  { icon: MapPin, label: "Hub", value: "Nalado Street, Jos", href: "" },
+  { icon: Clock, label: "Hours", value: "Mon - Sat: 9am - 5pm", href: "" },
 ];
 
 export default function Footer({ 
@@ -48,7 +56,7 @@ export default function Footer({
 }: FooterProps) {
   return (
     <footer className="bg-card border-t border-border pt-16 pb-8 px-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         <div className="space-y-4">
           <div className="font-display font-bold text-xl text-secondary">
             <span>{logoText}</span>
@@ -71,6 +79,29 @@ export default function Footer({
           </div>
         </div>
         
+        <div>
+          <h4 className="font-display font-bold text-lg text-secondary mb-6">Contact</h4>
+          <ul className="space-y-4">
+            {contactInfo.map((item) => (
+              <li key={item.label} className="flex items-start gap-3">
+                <span className="mt-0.5 text-primary">
+                  <item.icon size={16} />
+                </span>
+                <div>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  {item.href ? (
+                    <a href={item.href} className="text-sm text-secondary hover:text-primary transition-colors">
+                      {item.value}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-secondary">{item.value}</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         <div>
           <h4 className="font-display font-bold text-lg text-secondary mb-6">Connect</h4>
           <div className="flex gap-3">

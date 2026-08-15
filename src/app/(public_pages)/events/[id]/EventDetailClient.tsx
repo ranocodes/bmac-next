@@ -227,14 +227,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   };
 
   if (!event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Event Not Found</h2>
-          <Link href="/events" className="text-primary font-bold">Back to Events</Link>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

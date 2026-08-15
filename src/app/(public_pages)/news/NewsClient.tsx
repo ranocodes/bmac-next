@@ -142,8 +142,8 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
           </div>
 
           {/* Right Side: Simple Sidebar */}
-          <aside className="hidden lg:block lg:col-span-4">
-             <div className="sticky top-28 space-y-6">
+          <aside className="lg:col-span-4">
+             <div className="lg:sticky lg:top-28 space-y-6">
                 {/* Upcoming Events Mini-Widget */}
                 <div className="bg-card border border-border rounded-xl p-6">
                    <div className="flex items-center justify-between mb-6">

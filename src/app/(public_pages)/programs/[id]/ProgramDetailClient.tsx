@@ -167,14 +167,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   };
 
   if (!program) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Program Not Found</h2>
-          <Link href="/programs" className="text-primary font-bold">Back to Curriculum</Link>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const detailsList = program.details.split("|").map(s => s.trim()).filter(Boolean);

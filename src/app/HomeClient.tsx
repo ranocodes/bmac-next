@@ -107,11 +107,11 @@ export default function HomeClient({ initialPrograms, initialTestimonials, initi
                <div className="max-w-2xl">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Our Ecosystem</span>
                   <h2 className="font-display text-3xl md:text-4xl font-bold text-secondary tracking-tight">
-                     Workshops That Redefine Possible.
+                     Programs That Redefine Possible.
                   </h2>
                </div>
                <Link href="/programs" className="font-bold text-sm text-primary hover:gap-4 transition-all flex items-center gap-2 pb-2">
-                  All Workshops <ArrowRight size={16} />
+                  All Programs <ArrowRight size={16} />
                </Link>
             </div>
 
