@@ -130,12 +130,12 @@ export default function EventForm({ initialData }: { initialData?: any }) {
         </div>
       </div>
 
-      <h1 className="text-xl sm:text-2xl font-bold text-secondary mb-4 sm:mb-5">
+      <h1 className="font-display text-2xl font-bold tracking-tight text-secondary mb-4 sm:mb-5">
         {isEdit ? "Edit Event" : "New Event"}
       </h1>
 
       <form className="space-y-4">
-        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-secondary/80 mb-1.5">
               Title *
@@ -146,7 +146,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
               onChange={e => setTitle(e.target.value)}
               placeholder="Event title"
               className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
-                missingFields.includes("title") ? "border-destructive/50" : "border-input"
+                missingFields.includes("title") ? "border-destructive/50" : "border-border"
               }`}
             />
           </div>
@@ -161,7 +161,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
-                  missingFields.includes("date") ? "border-destructive/50" : "border-input"
+                  missingFields.includes("date") ? "border-destructive/50" : "border-border"
                 }`}
               />
             </div>
@@ -174,7 +174,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 value={time}
                 onChange={e => setTime(e.target.value)}
                 placeholder="10:00 AM"
-                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
               />
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
               value={venue}
               onChange={e => setVenue(e.target.value)}
               placeholder="Event location"
-              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
             />
           </div>
 
@@ -201,7 +201,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 value={category}
                 onChange={e => setCategory(e.target.value)}
                 className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
-                  missingFields.includes("category") ? "border-destructive/50" : "border-input"
+                  missingFields.includes("category") ? "border-destructive/50" : "border-border"
                 }`}
               >
                 <option value="">Select category</option>
@@ -221,9 +221,9 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                     className={`flex-1 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium capitalize transition-colors ${
                       status === s
                         ? s === "published"
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : "bg-background text-secondary/70 border border-input"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-background text-secondary/70 border border-border"
                     }`}
                   >
                     {s}
@@ -239,12 +239,12 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 Price
               </label>
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 cursor-pointer min-h-[44px] px-3 bg-background border border-input rounded-lg">
+                <label className="flex items-center gap-2 cursor-pointer min-h-[44px] px-3 bg-background border border-border rounded-lg">
                   <input
                     type="checkbox"
                     checked={isPaid}
                     onChange={e => setIsPaid(e.target.checked)}
-                    className="w-4 h-4 rounded border-input text-primary focus:ring-primary/20"
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
                   />
                   <span className="text-sm text-secondary/80">Paid</span>
                 </label>
@@ -254,7 +254,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                     value={price}
                     onChange={e => setPrice(e.target.value)}
                     placeholder="Amount"
-                    className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                    className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
                   />
                 )}
               </div>
@@ -269,7 +269,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 value={capacity}
                 onChange={e => setCapacity(e.target.value)}
                 placeholder="0 = unlimited"
-                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
               />
             </div>
           </div>
@@ -283,7 +283,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 type="date"
                 value={registrationDeadline}
                 onChange={e => setRegistrationDeadline(e.target.value)}
-                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
               />
             </div>
             <div>
@@ -295,13 +295,13 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 min={1}
                 value={maxPerPerson}
                 onChange={e => setMaxPerPerson(Math.max(1, Number(e.target.value) || 1))}
-                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
               />
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px] px-4 bg-background border border-input rounded-lg flex-1">
+            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px] px-4 bg-background border border-border rounded-lg flex-1">
               <input
                 type="checkbox"
                 checked={allowPublicRegistration}
@@ -310,7 +310,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
               />
               <span className="text-sm text-secondary/80">Allow public registration</span>
             </label>
-            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px] px-4 bg-background border border-input rounded-lg flex-1">
+            <label className="flex items-center gap-2.5 cursor-pointer min-h-[44px] px-4 bg-background border border-border rounded-lg flex-1">
               <input
                 type="checkbox"
                 checked={remindersEnabled}
@@ -327,12 +327,12 @@ export default function EventForm({ initialData }: { initialData?: any }) {
             </label>
             <div className="space-y-2 mb-2">
               {features.map((f, i) => (
-                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg">
                   <span className="flex-1 text-sm text-secondary">{f}</span>
                   <button
                     type="button"
                     onClick={() => setFeatures(features.filter((_, j) => j !== i))}
-                    className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
                   >
                     ✕
                   </button>
@@ -346,7 +346,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
                 onChange={e => setFeatureInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); const val = featureInput.trim(); if (val) { setFeatures([...features, val]); setFeatureInput(""); } } }}
                 placeholder="Add a feature..."
-                className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
               />
               <button
                 type="button"
@@ -368,7 +368,7 @@ export default function EventForm({ initialData }: { initialData?: any }) {
               rows={3}
               placeholder="Brief summary of the event"
               className={`w-full px-3 py-2.5 min-h-[60px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none ${
-                missingFields.includes("description") ? "border-destructive/50" : "border-input"
+                missingFields.includes("description") ? "border-destructive/50" : "border-border"
               }`}
             />
           </div>

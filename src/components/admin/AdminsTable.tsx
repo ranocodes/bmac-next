@@ -45,8 +45,8 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
   function roleBadge(role: string) {
     const isSuper = role === "super_admin";
     return (
-      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium ${
-        isSuper ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-500"
+      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+        isSuper ? "bg-primary/10 text-primary" : "bg-amber-50 text-amber-700"
       }`}>
         {isSuper ? <ShieldCheck size={12} /> : <Shield size={12} />}
         {isSuper ? "Super Admin" : "Moderator"}
@@ -121,19 +121,21 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <UserCog size={24} className="text-primary shrink-0" />
+          <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+            <UserCog size={18} />
+          </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Admins</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage administrator accounts</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Admins</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Manage administrator accounts</p>
           </div>
         </div>
-        <Link href="/admin/admins/new" className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
+        <Link href="/admin/admins/new" className="flex items-center gap-2 h-11 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
           <Plus size={16} /> <span className="hidden sm:inline">New Admin</span>
         </Link>
       </div>
 
       {credentials && (
-        <div className="p-6 rounded-3xl bg-primary/5 border border-primary/20">
+        <div className="p-6 rounded-xl bg-primary/5 border border-primary/20">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="flex items-center gap-2 text-sm font-semibold text-secondary">
@@ -158,11 +160,11 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
       <div className="relative max-w-xs">
         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search admins..."
-          className="w-full h-10 pl-10 pr-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+          className="w-full h-10 pl-10 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-3xl border border-border/50">
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
           <UserCog size={48} className="text-muted-foreground/20 mb-4" />
           <p className="text-sm font-medium text-secondary">
             {search ? "No admins match your search" : "No admins yet"}
@@ -171,28 +173,88 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
             {search ? "Try a different term" : "Create your first admin to get started"}
           </p>
           {!search && (
-            <Link href="/admin/admins/new" className="mt-5 flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
+            <Link href="/admin/admins/new" className="mt-5 flex items-center gap-2 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
               <Plus size={15} /> New Admin
             </Link>
           )}
         </div>
       ) : (
-        <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+        <>
+        <div className="lg:hidden space-y-2">
+          {filtered.map(u => {
+            const isSelf = u.email === currentUser?.email;
+            return (
+              <div key={u.id} className="w-full text-left bg-card rounded-xl border border-border px-4 py-3.5 flex items-center gap-3 hover:bg-muted/40 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-primary">
+                    {(u.first_name || u.email || "?").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-secondary truncate">
+                    {u.first_name || "—"}
+                    {isSelf && <span className="text-[10px] text-muted-foreground ml-1.5">(you)</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  <div className="mt-1">{roleBadge(u.role)}</div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                    title="Edit admin"
+                    onClick={() => openEdit(u)}>
+                    <Pencil size={14} />
+                  </button>
+                  {!isSelf && (
+                    <>
+                      <button
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                        title="Resend login credentials"
+                        onClick={() => handleResendCredentials(u.id, u.email)}>
+                        <RefreshCw size={14} />
+                      </button>
+                      <button
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                        title="Send password reset email"
+                        onClick={async () => {
+                          const ok = await confirm(`Send password reset email to ${u.email}?`, { confirmText: "Send" });
+                          if (!ok) return;
+                          const res = await adminResetPassword(u.id);
+                          if (res.error) { toast(res.error, "error"); return; }
+                          toast("Reset link sent to their email", "success");
+                        }}>
+                        <Mail size={14} />
+                      </button>
+                      <button
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                        title="Delete admin"
+                        onClick={() => handleDelete(u.id, u.email, u.first_name || u.email)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="hidden lg:block bg-card rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left font-semibold text-secondary px-5 py-4">Name</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden sm:table-cell">Email</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden md:table-cell">Role</th>
-                  <th className="text-right font-semibold text-secondary px-5 py-4 w-44">Actions</th>
+                <tr className="border-b border-border">
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Name</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">Email</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Role</th>
+                  <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-44">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(u => {
                   const isSelf = u.email === currentUser?.email;
                   return (
-                    <tr key={u.id} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
+                    <tr key={u.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -257,11 +319,12 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
             </table>
           </div>
         </div>
+        </>
       )}
 
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary/20 backdrop-blur-sm p-4" onClick={() => setEditing(null)}>
-          <form onSubmit={saveEdit} className="bg-card rounded-2xl shadow-xl border border-border/50 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEditing(null)}>
+          <form onSubmit={saveEdit} className="bg-card rounded-xl border border-border w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-border/30">
               <div>
                 <h3 className="font-display text-lg font-bold text-secondary">Edit Admin</h3>
@@ -276,13 +339,13 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                 <label className="block text-sm font-medium text-secondary">Name</label>
                 <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
                   placeholder="Jane Doe"
-                  className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-secondary">Email</label>
                 <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)}
                   placeholder="admin@example.org"
-                  className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                 {editing.email === currentUser?.email && (
                   <p className="text-xs text-muted-foreground">You cannot change your own email.</p>
                 )}
@@ -290,7 +353,7 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-secondary">Role</label>
                 <select value={editRole} onChange={e => setEditRole(e.target.value as AdminRole)} disabled={editing.email === currentUser?.email}
-                  className="w-full h-11 px-4 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-60">
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-60">
                   <option value="moderator">Moderator</option>
                   <option value="super_admin">Super Admin</option>
                 </select>
@@ -308,12 +371,12 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
                       const checked = editPerms.includes(perm.key);
                       return (
                         <label key={perm.key}
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm cursor-pointer transition-all ${
-                            checked ? "border-primary/40 bg-primary/5 text-secondary" : "border-input bg-background text-muted-foreground hover:border-primary/30"
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm cursor-pointer transition-all ${
+                            checked ? "border-primary/40 bg-primary/5 text-secondary" : "border-border bg-background text-muted-foreground hover:border-primary/30"
                           }`}>
                           <input type="checkbox" checked={checked} disabled={editing.email === currentUser?.email}
                             onChange={() => setEditPerms(p => p.includes(perm.key) ? p.filter(k => k !== perm.key) : [...p, perm.key])}
-                            className="h-4 w-4 rounded border-input accent-primary" />
+                            className="h-4 w-4 rounded border-border accent-primary" />
                           <span>{perm.label}</span>
                         </label>
                       );
@@ -324,11 +387,11 @@ export default function AdminsTable({ initialData = [] }: { initialData?: any[] 
             </div>
             <div className="flex items-center gap-3 p-5 border-t border-border/30">
               <button type="button" onClick={() => setEditing(null)}
-                className="flex-1 h-10 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">
+                className="flex-1 h-10 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">
                 Cancel
               </button>
               <button type="submit" disabled={editSaving}
-                className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
+                className="flex-1 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
                 {editSaving ? "Saving..." : "Save Changes"}
               </button>
             </div>

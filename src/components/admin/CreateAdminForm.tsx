@@ -93,15 +93,17 @@ export default function CreateAdminForm({ email }: Props) {
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center gap-3">
-        <UserPlus size={24} className="text-primary shrink-0" />
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <UserPlus size={18} />
+        </div>
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">New Admin</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create an administrator account</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">New Admin</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Create an administrator account</p>
         </div>
       </div>
 
       {created ? (
-        <div className="max-w-md p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/15">
+        <div className="max-w-md p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
           <div className="flex items-center gap-2.5 text-emerald-600 text-sm font-medium mb-3">
             <CheckCircle size={16} />
             <span>Admin account created</span>
@@ -119,11 +121,11 @@ export default function CreateAdminForm({ email }: Props) {
             </div>
           )}
           <button onClick={resendCredentials} disabled={sending}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+            className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             {sending ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               : <><RefreshCw size={16} /> Email Credentials</>}
           </button>
-          <Link href="/admin/admins" className="mt-3 block w-full h-10 flex items-center justify-center rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+          <Link href="/admin/admins" className="mt-3 block w-full h-10 flex items-center justify-center rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
             Back to Admins
           </Link>
         </div>
@@ -133,7 +135,7 @@ export default function CreateAdminForm({ email }: Props) {
             <label className="block text-sm font-medium text-secondary">Name</label>
             <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
               placeholder="Jane Doe"
-              className="w-full h-11 px-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+              className="w-full h-11 px-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-secondary">Email</label>
@@ -141,7 +143,7 @@ export default function CreateAdminForm({ email }: Props) {
               <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)}
                 placeholder="newadmin@example.org"
-                className="w-full h-11 pl-11 pr-4 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                className="w-full h-11 pl-11 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
             </div>
           </div>
 
@@ -149,11 +151,11 @@ export default function CreateAdminForm({ email }: Props) {
             <label className="block text-sm font-medium text-secondary">Role</label>
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setRole("moderator")}
-                className={`flex items-center gap-2 h-11 px-4 rounded-xl border text-sm font-medium transition-all ${role === "moderator" ? "border-primary bg-primary/5 text-primary" : "border-input bg-card text-muted-foreground hover:text-secondary"}`}>
+                className={`flex items-center gap-2 h-11 px-4 rounded-lg border text-sm font-medium transition-all ${role === "moderator" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card text-muted-foreground hover:text-secondary"}`}>
                 <Shield size={16} /> Moderator
               </button>
               <button type="button" onClick={() => setRole("super_admin")}
-                className={`flex items-center gap-2 h-11 px-4 rounded-xl border text-sm font-medium transition-all ${role === "super_admin" ? "border-primary bg-primary/5 text-primary" : "border-input bg-card text-muted-foreground hover:text-secondary"}`}>
+                className={`flex items-center gap-2 h-11 px-4 rounded-lg border text-sm font-medium transition-all ${role === "super_admin" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card text-muted-foreground hover:text-secondary"}`}>
                 <ShieldCheck size={16} /> Super Admin
               </button>
             </div>
@@ -164,7 +166,7 @@ export default function CreateAdminForm({ email }: Props) {
             <div className="relative">
               <input type={showPwd ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
-                className="w-full h-11 px-4 pr-20 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                className="w-full h-11 px-4 pr-20 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button type="button" onClick={generatePassword}
                   className="text-xs text-primary hover:text-primary/80 font-medium">Generate</button>
@@ -185,7 +187,7 @@ export default function CreateAdminForm({ email }: Props) {
                     className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
                     <input type="checkbox" checked={permissions.includes(p.id)}
                       onChange={() => togglePermission(p.id)}
-                      className="w-4 h-4 rounded border-input text-primary focus:ring-primary/20" />
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20" />
                     <span className="text-sm text-secondary">{p.label}</span>
                   </label>
                 ))}
@@ -201,7 +203,7 @@ export default function CreateAdminForm({ email }: Props) {
           )}
 
           <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+            className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               : <><Send size={16} /> Create Admin</>}
           </button>

@@ -16,9 +16,9 @@ const roleIcons: Record<string, any> = {
 };
 
 const roleColors: Record<string, string> = {
-  super_admin: "text-purple-600 bg-purple-100",
-  administrator: "text-blue-600 bg-blue-100",
-  moderator: "text-emerald-600 bg-emerald-100",
+  super_admin: "text-purple-700 bg-purple-50",
+  administrator: "text-blue-700 bg-blue-50",
+  moderator: "text-emerald-700 bg-emerald-50",
 };
 
 const allPermissions = PERMISSION_LABELS;
@@ -99,35 +99,76 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
   return (
     <div className="w-full max-w-4xl space-y-6">
       <div className="flex items-center gap-3">
-        <Users size={24} className="text-primary shrink-0" />
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <Users size={18} />
+        </div>
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Users</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage admin accounts</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Users</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Manage admin accounts</p>
         </div>
       </div>
 
       <div className="relative max-w-xs">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users..."
-          className="w-full h-10 pl-9 pr-4 rounded-xl bg-background border border-input text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+          className="w-full h-10 pl-9 pr-4 rounded-lg bg-background border border-border text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 bg-card/30 border border-border/30 rounded-xl">
+        <div className="text-center py-20 bg-card rounded-xl border border-border">
           <Users size={48} className="text-muted-foreground/20 mx-auto mb-4" />
           <p className="text-sm text-muted-foreground">{search ? "No users match your search" : "No admin users yet"}</p>
         </div>
       ) : (
-        <div className="bg-card/50 border border-border/50 rounded-xl overflow-hidden">
+        <>
+        <div className="lg:hidden space-y-2">
+          {filtered.map(u => {
+            const RoleIcon = roleIcons[u.role] || Shield;
+            const roleColor = roleColors[u.role] || "text-muted-foreground bg-muted";
+            return (
+              <div key={u.id} className="w-full text-left bg-card rounded-xl border border-border px-4 py-3.5 flex items-center gap-3 hover:bg-muted/40 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-primary">
+                    {u.firstName ? u.firstName.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-secondary truncate">{u.firstName}
+                    {u.email === currentUser?.email && <span className="text-[10px] text-muted-foreground ml-1.5">(you)</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  <span className={`mt-1 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${roleColor}`}>
+                    <RoleIcon size={11} />
+                    {u.role.replace("_", " ")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {isSuper && u.role !== "super_admin" && (
+                    <button onClick={() => openPermissionEditor(u)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+                      <ShieldEllipsis size={14} />
+                    </button>
+                  )}
+                  <button onClick={() => handleDelete(u.id, u.email)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="hidden lg:block bg-card rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border/30">
-                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3">User</th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 hidden sm:table-cell">Email</th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 hidden md:table-cell">Role</th>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 hidden lg:table-cell">Created</th>
-                  <th className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 w-24">Actions</th>
+                <tr className="border-b border-border">
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">User</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">Email</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Role</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden lg:table-cell">Created</th>
+                  <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,7 +176,7 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
                   const RoleIcon = roleIcons[u.role] || Shield;
                   const roleColor = roleColors[u.role] || "text-muted-foreground bg-muted";
                   return (
-                    <tr key={u.id} className="border-b border-border/10 hover:bg-muted/30 transition-colors">
+                    <tr key={u.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -155,7 +196,7 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
                         <span className="text-xs text-muted-foreground">{u.email}</span>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${roleColor}`}>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${roleColor}`}>
                           <RoleIcon size={11} />
                           {u.role.replace("_", " ")}
                         </span>
@@ -186,11 +227,12 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
             </table>
           </div>
         </div>
+        </>
       )}
 
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary/20 backdrop-blur-sm p-4" onClick={() => setEditingUser(null)}>
-          <div className="bg-card rounded-2xl shadow-xl border border-border/50 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEditingUser(null)}>
+          <div className="bg-card rounded-xl border border-border w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-5 border-b border-border/30">
               <div>
                 <h3 className="font-display text-lg font-bold text-secondary">Edit Permissions</h3>
@@ -203,7 +245,7 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
             <div className="p-5 space-y-3">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">Role</span>
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${roleColors[editingUser.role] || "text-muted-foreground bg-muted"}`}>
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${roleColors[editingUser.role] || "text-muted-foreground bg-muted"}`}>
                   {editingUser.role.replace("_", " ")}
                 </span>
               </div>
@@ -211,7 +253,7 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
                 const enabled = editPerms.includes(p.key);
                 return (
                   <button key={p.key} onClick={() => toggleEditPerm(p.key)}
-                    className={`flex items-center gap-3 w-full p-3 rounded-xl border transition-all text-left ${
+                    className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-all text-left ${
                       enabled ? "bg-primary/5 border-primary/20" : "bg-background border-border/30 hover:border-muted-foreground/30"
                     }`}>
                     <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
@@ -226,11 +268,11 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
             </div>
             <div className="flex items-center gap-3 p-5 border-t border-border/30">
               <button onClick={() => setEditingUser(null)}
-                className="flex-1 h-10 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">
+                className="flex-1 h-10 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">
                 Cancel
               </button>
               <button onClick={savePermissions}
-                className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+                className="flex-1 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                 Save Changes
               </button>
             </div>

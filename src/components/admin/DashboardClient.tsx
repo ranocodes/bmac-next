@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Newspaper, Calendar, BookOpen, Image, Users, Star,
   ArrowRight, Plus, Sparkle, Activity, ClipboardList,
-  TrendingUp, UserCheck, RefreshCw, Globe,
+  TrendingUp, UserCheck, RefreshCw, Globe, LayoutDashboard,
 } from "lucide-react";
 import { useAdmin } from "@/lib/auth/admin-context";
 import type { NewsArticle, EventPass } from "@/types/cms";
@@ -102,15 +102,20 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
   return (
     <div className="space-y-8 max-w-[1400px]">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-secondary">
-            {greeting}, {user?.firstName ?? "Admin"}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">Here is what is happening across your site.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+            <LayoutDashboard size={18} />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">
+              {greeting}, {user?.firstName ?? "Admin"}
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Here is what is happening across your site.</p>
+          </div>
         </div>
         <button onClick={handleRefresh} disabled={refreshing}
-          className="flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 bg-card border border-border/50 text-muted-foreground hover:text-secondary rounded-lg text-xs font-medium transition-colors disabled:opacity-50 shrink-0 mt-1">
+          className="flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 bg-card border border-border text-muted-foreground hover:text-secondary rounded-lg text-xs font-medium transition-colors disabled:opacity-50 shrink-0 sm:mt-0">
           <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
           Refresh
         </button>
@@ -120,12 +125,12 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-4">
         {statCards.map(card => {
           const body = (
-            <div className="bg-card rounded-2xl border border-border/50 p-5 transition-all duration-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
-              <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-4`}>
-                <card.icon size={20} className={card.color} />
+            <div className="bg-card rounded-xl border border-border p-5">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <card.icon size={14} />
+                <span className="text-[11px] font-semibold uppercase tracking-widest">{card.label}</span>
               </div>
-              <p className="text-2xl font-bold font-display tracking-tight text-secondary">{card.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{card.label}</p>
+              <p className="mt-3 font-display text-[28px] leading-none font-bold tracking-tight text-secondary">{card.value}</p>
             </div>
           );
           return card.href ? (
@@ -139,9 +144,9 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
 
 
       {/* Quick Actions */}
-      <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+      <div className="bg-card rounded-xl border border-border p-5 md:p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Sparkle size={16} className="text-primary" />
+          <Sparkle size={16} className="text-muted-foreground" />
           <h2 className="text-sm font-semibold text-secondary">Quick Actions</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -149,10 +154,10 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
             <Link
               key={a.href}
               href={a.href}
-              className="flex flex-col lg:flex-row items-center gap-2 lg:gap-3.5 h-auto lg:h-12 pt-4 pb-3.5 lg:py-0 px-4 md:px-5 lg:px-5 rounded-2xl bg-muted/50 hover:bg-muted border border-border/30 transition-all active:scale-[0.97] text-center lg:text-left"
+              className="flex flex-col lg:flex-row items-center gap-2 lg:gap-3.5 h-auto lg:h-12 pt-4 pb-3.5 lg:py-0 px-4 md:px-5 lg:px-5 rounded-lg bg-muted/50 hover:bg-muted border border-border/30 transition-all active:scale-[0.97] text-center lg:text-left"
             >
-              <div className={`md:w-11 md:h-11 lg:w-9 lg:h-9 rounded-xl ${a.bg} flex items-center justify-center flex-shrink-0`}>
-                <a.icon size={18} className={`${a.color} md:scale-125 lg:scale-100`} />
+              <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center flex-shrink-0">
+                <a.icon size={18} />
               </div>
               <span className="text-sm md:text-base lg:text-sm font-medium text-secondary">{a.label}</span>
               <ArrowRight size={15} className="hidden lg:block ml-auto text-muted-foreground flex-shrink-0" />
@@ -163,10 +168,10 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
 
       {/* Recent content */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-3 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+        <div className="xl:col-span-3 bg-card rounded-xl border border-border p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <Newspaper size={16} className="text-blue-500" />
+              <Newspaper size={16} className="text-muted-foreground" />
               <h2 className="text-sm font-semibold text-secondary">Recent News</h2>
             </div>
             <Link href="/admin/news" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
@@ -181,7 +186,7 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
             <div className="space-y-1">
               {recentNews.map((a: any) => (
                 <Link key={a.id} href={`/admin/news/${a.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
-                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-blue-50 transition-colors">
                     <Newspaper size={15} className="text-muted-foreground group-hover:text-blue-500 transition-colors" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -193,15 +198,15 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
               ))}
             </div>
           )}
-          <Link href="/admin/news/new" className="mt-5 flex items-center justify-center gap-2 h-11 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-secondary hover:border-border hover:bg-muted/50 transition-all">
+          <Link href="/admin/news/new" className="mt-5 flex items-center justify-center gap-2 h-11 rounded-lg border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-secondary hover:border-border hover:bg-muted/50 transition-all">
             <Plus size={15} /> Add article
           </Link>
         </div>
 
-        <div className="xl:col-span-2 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+        <div className="xl:col-span-2 bg-card rounded-xl border border-border p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-amber-500" />
+              <Calendar size={16} className="text-muted-foreground" />
               <h2 className="text-sm font-semibold text-secondary">Upcoming Events</h2>
             </div>
             <Link href="/admin/events" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
@@ -216,7 +221,7 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
             <div className="space-y-1">
               {recentEvents.map((e: any) => (
                 <Link key={e.id} href={`/admin/events/${e.id}/edit`} className="flex items-center gap-4 py-3 border-b border-border/20 last:border-0 group cursor-pointer">
-                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-amber-50 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-amber-50 transition-colors">
                     <Calendar size={15} className="text-muted-foreground group-hover:text-amber-500 transition-colors" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -228,7 +233,7 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
               ))}
             </div>
           )}
-          <Link href="/admin/events/new" className="mt-5 flex items-center justify-center gap-2 h-11 rounded-2xl border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-secondary hover:border-border hover:bg-muted/50 transition-all">
+          <Link href="/admin/events/new" className="mt-5 flex items-center justify-center gap-2 h-11 rounded-lg border border-dashed border-border text-sm font-medium text-muted-foreground hover:text-secondary hover:border-border hover:bg-muted/50 transition-all">
             <Plus size={15} /> Add event
           </Link>
         </div>
@@ -236,12 +241,12 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
 
       {/* Recent Activity */}
       {canViewActivity && <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-3 bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+        <div className="xl:col-span-3 bg-card rounded-xl border border-border p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <Activity size={16} className="text-primary" />
+              <Activity size={16} className="text-muted-foreground" />
               <h2 className="text-sm font-semibold text-secondary">Recent Activity</h2>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{todayCount} today</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{todayCount} today</span>
             </div>
             <Link href="/admin/logs" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
           </div>
@@ -258,7 +263,7 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-medium text-secondary">{log.user}</span>
-                      <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action}</span>
+                      <span className="text-[9px] font-bold px-1 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">{log.action}</span>
                       <span className="text-[11px] text-muted-foreground">{log.resource}</span>
                     </div>
                     {log.details && <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate max-w-lg">{log.details}</p>}
@@ -276,9 +281,9 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
         <div className="xl:col-span-2 space-y-6">
           {/* Top Pages */}
           {visitorStats?.topPages && visitorStats.topPages.length > 0 && (
-            <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+            <div className="bg-card rounded-xl border border-border p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Globe size={16} className="text-purple-500" />
+                <Globe size={16} className="text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-secondary">Top Pages</h2>
               </div>
               <div className="space-y-2">
@@ -294,9 +299,9 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
           )}
 
           {activitySummary?.topUsers && activitySummary.topUsers.length > 0 && (
-            <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+            <div className="bg-card rounded-xl border border-border p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <UserCheck size={16} className="text-emerald-500" />
+                <UserCheck size={16} className="text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-secondary">Most Active Users</h2>
               </div>
               <div className="space-y-2">
@@ -312,9 +317,9 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
           )}
 
           {activitySummary?.topActions && activitySummary.topActions.length > 0 && (
-            <div className="bg-card rounded-3xl border border-border/50 p-5 md:p-6">
+            <div className="bg-card rounded-xl border border-border p-5 md:p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={16} className="text-blue-500" />
+                <TrendingUp size={16} className="text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-secondary">Top Actions</h2>
               </div>
               <div className="space-y-2">
