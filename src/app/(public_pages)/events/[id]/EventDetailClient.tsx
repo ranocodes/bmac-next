@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
+import { Calendar, MapPin, Send, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ReactMarkdown from "react-markdown";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import { registerForEvent } from "@/actions/events";
 import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
@@ -210,10 +211,8 @@ export default function EventDetailClient({ id, initialEvents }: EventDetailClie
               transition={{ duration: 0.6 }}
               className="flex-1 text-center lg:text-left"
             >
-              <Link href="/events" className="inline-flex items-center gap-2 text-accent hover:text-card text-[9px] md:text-[10px] font-bold uppercase tracking-[0.4em] mb-8 md:mb-12 transition-colors group mx-auto lg:mx-0">
-                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Access All Passes
-              </Link>
-              
+              <Breadcrumbs dark items={[{ label: "Events", href: "/events" }, { label: event.title }]} />
+
               <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 md:mb-8">
                 <span className="bg-accent text-accent-foreground px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest border border-accent/20">
                   {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}

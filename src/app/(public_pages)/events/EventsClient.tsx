@@ -163,7 +163,7 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
             const fd = formatEventDate(event.date);
             return (
             <FadeIn key={event.id} delay={i * 0.1}>
-              <Link href={`/news/events/${event.id}`} className="group relative block">
+              <Link href={`/events/${event.id}`} className="group relative block">
                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     
                     <div className="lg:col-span-2 relative">

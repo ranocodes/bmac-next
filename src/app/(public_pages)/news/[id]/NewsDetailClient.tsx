@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Calendar, Bookmark, Share2, MapPin, Send, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import ReactMarkdown from "react-markdown";
 import { subscribeToNewsletter } from "@/actions/newsletter";
 import type { NewsArticle, EventPass } from "@/types/cms";
@@ -137,9 +138,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
         
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center relative z-10">
           <div className="lg:col-span-7 text-center lg:text-left order-2 lg:order-1">
-            <Link href="/news" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
-              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Chronicle
-            </Link>
+            <Breadcrumbs items={[{ label: "News", href: "/news" }, { label: article.title }]} className="mb-8" />
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -212,7 +211,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
                   {events.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 relative z-10">
                       {events.map((event, i) => (
-                        <Link href={`/news/events/${event.id}`} key={i} className="group flex gap-4 md:gap-5 justify-start cursor-pointer">
+                        <Link href={`/events/${event.id}`} key={i} className="group flex gap-4 md:gap-5 justify-start cursor-pointer">
                            <div className="flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-card/5 border border-card/10 flex flex-col items-center justify-center group-hover:bg-accent transition-colors">
                                  <span className="text-[8px] md:text-[9px] font-bold uppercase group-hover:text-secondary">{formatEventDate(event.date).month}</span>
                                  <span className="text-xs md:text-sm font-extrabold group-hover:text-secondary">{formatEventDate(event.date).day}</span>

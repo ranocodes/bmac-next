@@ -164,7 +164,7 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
 
                    <div className="relative space-y-6">
                        {events.slice(0, 2).map((event, i) => (
-                         <Link href={`/news/events/${event.id}`} key={event.id} className="block group">
+                         <Link href={`/events/${event.id}`} key={event.id} className="block group">
                            <div className="flex gap-4 items-center relative z-10 transition-transform group-hover:translate-x-2">
                               <div className={cn(
                                 "min-w-[42px] h-[42px] flex flex-col items-center justify-center rounded-xl transition-colors",
