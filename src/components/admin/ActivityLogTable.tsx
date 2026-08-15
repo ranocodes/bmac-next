@@ -71,14 +71,16 @@ export default function ActivityLogTable({ initialData }: { initialData: any[] }
     <div className="w-full max-w-5xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
-          <ClipboardList size={24} className="text-primary shrink-0" />
+          <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+            <ClipboardList size={18} />
+          </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Activity Log</h1>
-            <p className="text-sm text-muted-foreground mt-1">Audit trail of all administrative actions</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Activity Log</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Audit trail of all administrative actions</p>
           </div>
         </div>
         <button onClick={handleClear}
-          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-background border border-input text-muted-foreground text-sm font-medium hover:text-destructive hover:border-destructive/30 transition-all">
+          className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-muted-foreground text-sm font-medium hover:text-destructive hover:border-destructive/30 transition-all">
           <Trash2 size={14} /> Clear Logs
         </button>
       </div>
@@ -87,12 +89,12 @@ export default function ActivityLogTable({ initialData }: { initialData: any[] }
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users, resources, details..."
-            className="w-full h-10 pl-9 pr-4 rounded-xl bg-background border border-input text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+            className="w-full h-10 pl-9 pr-4 rounded-lg bg-background border border-border text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
         </div>
         <div className="relative">
           <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
           <select value={actionFilter} onChange={e => setActionFilter(e.target.value)}
-            className="h-10 pl-9 pr-8 rounded-xl bg-background border border-input text-sm text-secondary appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors">
+            className="h-10 pl-9 pr-8 rounded-lg bg-background border border-border text-sm text-secondary appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors">
             <option value="">All actions</option>
             {actions.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
@@ -100,7 +102,7 @@ export default function ActivityLogTable({ initialData }: { initialData: any[] }
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 bg-card/30 border border-border/30 rounded-xl">
+        <div className="text-center py-20 bg-card rounded-xl border border-border">
           <ClipboardList size={48} className="text-muted-foreground/20 mx-auto mb-4" />
           <p className="text-sm text-muted-foreground">{logs.length === 0 ? "No activity logged yet" : "No logs match your filters"}</p>
         </div>
@@ -112,7 +114,7 @@ export default function ActivityLogTable({ initialData }: { initialData: any[] }
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium text-secondary">{log.user || log.user_email}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wider">{log.action || log.action_type}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">{log.action || log.action_type}</span>
                   <span className="text-xs text-muted-foreground">{log.resource || log.resource_type}{log.resource_id || log.resourceId ? ` #${(log.resource_id || log.resourceId).slice(0, 12)}` : ""}</span>
                 </div>
                 {(log.details || log.description) && <p className="text-xs text-muted-foreground/70 mt-0.5">{log.details || log.description}</p>}

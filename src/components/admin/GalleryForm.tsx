@@ -79,9 +79,9 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
               <button
                 type="button"
                 onClick={() => setStatus("draft")}
-                className={`px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-md transition-all ${
+                className={`px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-full transition-all ${
                   status === "draft"
-                    ? "bg-background shadow-sm text-secondary"
+                    ? "bg-card text-secondary"
                     : "text-muted-foreground hover:text-secondary"
                 }`}
               >
@@ -90,9 +90,9 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
               <button
                 type="button"
                 onClick={() => setStatus("published")}
-                className={`px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-md transition-all ${
+                className={`px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-full transition-all ${
                   status === "published"
-                    ? "bg-background shadow-sm text-secondary"
+                    ? "bg-card text-secondary"
                     : "text-muted-foreground hover:text-secondary"
                 }`}
               >
@@ -121,12 +121,12 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
         </div>
       </div>
 
-      <h1 className="text-xl sm:text-2xl font-bold text-secondary mb-4 sm:mb-5">
+      <h1 className="font-display text-2xl font-bold tracking-tight text-secondary mb-4 sm:mb-5">
         {isEdit ? "Edit Gallery Image" : "New Gallery Image"}
       </h1>
 
       <form className="space-y-4 max-w-2xl" onSubmit={(e) => { e.preventDefault(); handleSubmit(status); }}>
-        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-secondary/80 mb-1.5">Image *</label>
             <ImagePicker value={img} onChange={setImg} />
@@ -140,7 +140,7 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
               onChange={e => setAlt(e.target.value)}
               placeholder="BMAC Debate Championship"
               className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
-                missingFields.includes("alt text") ? "border-destructive/50" : "border-input"
+                missingFields.includes("alt text") ? "border-destructive/50" : "border-border"
               }`}
             />
           </div>
@@ -151,7 +151,7 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
               value={category}
               onChange={e => setCategory(e.target.value)}
               className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
-                missingFields.includes("category") ? "border-destructive/50" : "border-input"
+                missingFields.includes("category") ? "border-destructive/50" : "border-border"
               }`}
             >
               <option value="">Select category...</option>

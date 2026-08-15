@@ -61,14 +61,16 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
     <div className="w-full max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Handshake size={24} className="text-primary shrink-0" />
+          <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+            <Handshake size={18} />
+          </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Partners</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage partner organizations</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Partners</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Manage partner organizations</p>
           </div>
         </div>
         <Link href="/admin/partners/new"
-          className="flex items-center gap-2 h-11 px-5 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
+          className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
           <Plus size={16} /> New Partner
         </Link>
       </div>
@@ -76,34 +78,63 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
       <div className="relative max-w-xs">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search partners..."
-          className="w-full h-10 pl-9 pr-4 rounded-xl bg-background border border-input text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+          className="w-full h-10 pl-9 pr-4 rounded-lg bg-background border border-border text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 bg-card/30 border border-border/30 rounded-xl">
-          <Handshake size={48} className="text-muted-foreground/20 mx-auto mb-4" />
+        <div className="text-center py-20 bg-card rounded-xl border border-border">
+          <Handshake size={44} className="text-muted-foreground/20 mx-auto mb-4" />
           <p className="text-sm text-muted-foreground">{search ? "No partners match your search" : "No partners yet"}</p>
           {!search && (
-            <Link href="/admin/partners/new" className="mt-5 inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
+            <Link href="/admin/partners/new" className="mt-5 inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all">
               <Plus size={15} /> Add your first partner
             </Link>
           )}
         </div>
       ) : (
-        <div className="bg-card/50 border border-border/50 rounded-xl overflow-x-auto">
+        <>
+          <div className="lg:hidden space-y-2">
+            {filtered.map(item => (
+              <div key={item.id} className="w-full text-left bg-card rounded-xl border border-border px-4 py-3.5 flex items-center gap-3 hover:bg-muted/40 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-secondary truncate">{item.name}</p>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${item.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
+                      {item.status === "active" ? <Eye size={10} /> : <EyeOff size={10} />}
+                      {item.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground truncate">{item.url || "—"}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Link href={`/admin/partners/${item.id}/edit`}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
+                    <Pencil size={14} />
+                  </Link>
+                  <button onClick={() => handleDelete(item.id)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden lg:block bg-card rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border/30">
-                <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 w-20">Order</th>
-                <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3">Partner</th>
-                <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 hidden sm:table-cell">URL</th>
-                <th className="text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 w-20">Status</th>
-                <th className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-4 py-3 w-24">Actions</th>
+              <tr className="border-b border-border">
+                <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-20">Order</th>
+                <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Partner</th>
+                <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">URL</th>
+                <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-20">Status</th>
+                <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-24">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((item, idx) => (
-                <tr key={item.id} className="border-b border-border/10 hover:bg-muted/30 transition-colors">
+                <tr key={item.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-0.5">
                       <button onClick={() => moveItem(item.id, -1)} disabled={idx === 0}
@@ -144,7 +175,7 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={() => toggleStatus(item.id, item.status)}
-                      className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider transition-colors ${item.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
+                      className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider transition-colors ${item.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
                       {item.status === "active" ? <Eye size={11} /> : <EyeOff size={11} />}
                       {item.status}
                     </button>
@@ -165,7 +196,9 @@ export default function PartnerTable({ initialData }: { initialData: Partner[] }
               ))}
             </tbody>
           </table>
-        </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

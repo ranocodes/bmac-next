@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, RotateCcw, User, Globe, FileText, ExternalLink } from "lucide-react";
+import { Plus, X, Save, RotateCcw, User, Globe, FileText, ExternalLink, Settings } from "lucide-react";
 import {
   saveSiteSettings,
   updateAdminProfile,
@@ -48,7 +48,7 @@ const GOOGLE_FORM_FIELDS = [
 ];
 
 function inputCls() {
-  return "w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors";
+  return "w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors";
 }
 
 export default function SettingsForm({ initialData }: { initialData?: SiteSettings | null }) {
@@ -147,12 +147,17 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
 
   return (
     <div className="w-full max-w-2xl space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage site-wide settings and your profile</p>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <Settings size={18} />
+        </div>
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Settings</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Manage site-wide settings and your profile</p>
+        </div>
       </div>
 
-      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
           <User size={16} className="text-primary" />
           <h2 className="font-display text-base font-bold text-secondary">Profile</h2>
@@ -174,7 +179,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         </div>
       </div>
 
-      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
           <Globe size={16} className="text-primary" />
           <h2 className="font-display text-base font-bold text-secondary">Site</h2>
@@ -200,11 +205,11 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
                 <input type="text" value={link.name} onChange={e => {
                   const next = [...socialLinks]; next[i] = { ...next[i], name: e.target.value }; setSocialLinks(next);
                 }} placeholder="Instagram"
-                  className="flex-1 px-3 py-2 min-h-[40px] bg-muted/50 border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
+                  className="flex-1 px-3 py-2 min-h-[40px] bg-muted/50 border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
                 <input type="text" value={link.href} onChange={e => {
                   const next = [...socialLinks]; next[i] = { ...next[i], href: e.target.value }; setSocialLinks(next);
                 }} placeholder="https://..."
-                  className="flex-[2] px-3 py-2 min-h-[40px] bg-muted/50 border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
+                  className="flex-[2] px-3 py-2 min-h-[40px] bg-muted/50 border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
                 <SocialLinkSelector value={link.icon} onChange={(v) => {
                   const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next);
                 }} />
@@ -230,7 +235,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         </button>
       </div>
 
-      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
           <ExternalLink size={16} className="text-primary" />
           <h2 className="font-display text-base font-bold text-secondary">Google Forms Links</h2>
@@ -259,7 +264,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         </button>
       </div>
 
-      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
           <FileText size={16} className="text-primary" />
           <h2 className="font-display text-base font-bold text-secondary">Email Templates</h2>
@@ -296,7 +301,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
             value={active?.html || ""}
             onChange={e => patchActive({ html: e.target.value })}
             rows={10}
-            className="w-full px-3 py-2.5 bg-background border border-input rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+            className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
           />
         </div>
         <div>
@@ -305,7 +310,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
             value={active?.text || ""}
             onChange={e => patchActive({ text: e.target.value })}
             rows={5}
-            className="w-full px-3 py-2.5 bg-background border border-input rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+            className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
           />
         </div>
         <div className="flex gap-2">
@@ -316,7 +321,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           </button>
           <button onClick={handleResetTemplate} disabled={savingTemplates}
             title={`Reset ${EMAIL_TEMPLATE_LABELS[activeTemplate]} to default`}
-            className="flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 text-sm font-semibold rounded-lg border border-input bg-background text-secondary hover:bg-accent transition-colors disabled:opacity-50">
+            className="flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 text-sm font-semibold rounded-lg border border-border bg-background text-secondary hover:bg-accent transition-colors disabled:opacity-50">
             <RotateCcw className="w-3.5 h-3.5" />
             Reset
           </button>

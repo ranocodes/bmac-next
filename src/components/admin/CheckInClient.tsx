@@ -130,14 +130,17 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
 
   return (
     <div className="space-y-6 max-w-[1400px]">
-      <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-secondary flex items-center gap-3">
-          <QrCode size={26} className="text-primary" /> Event Check-In
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Scan a pass QR, enter a reference, or search by email.</p>
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <QrCode size={18} />
+        </div>
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Event Check-In</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Scan a pass QR, enter a reference, or search by email.</p>
+        </div>
       </div>
 
-      <div className="bg-card rounded-3xl border border-border/50 p-6">
+      <div className="bg-card rounded-xl border border-border p-6">
         <label className="block text-sm font-medium text-secondary mb-2">Event</label>
         <select
           value={selectedEventId}
@@ -146,7 +149,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
             setResult(null);
             setFlash(null);
           }}
-          className="w-full h-12 px-4 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          className="w-full h-12 px-4 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         >
           <option value="">Pick an event…</option>
           {events.map(e => (
@@ -158,7 +161,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <div className="bg-card rounded-xl border border-border p-6">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-secondary">Camera scanner</label>
               {scanning && (
@@ -167,7 +170,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
                 </button>
               )}
             </div>
-            <div ref={scannerRef} className="relative rounded-2xl overflow-hidden bg-background border border-border/50 aspect-[4/3]">
+            <div ref={scannerRef} className="relative rounded-lg overflow-hidden bg-background border border-border aspect-[4/3]">
               {!scanning && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
                   <Camera size={24} />
@@ -179,14 +182,14 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
             {!scanning && (
               <button
                 onClick={startScanner}
-                className="flex items-center gap-2 h-11 px-5 rounded-xl border border-input bg-background text-sm font-semibold hover:bg-muted transition-colors mt-4"
+                className="flex items-center gap-2 h-11 px-5 rounded-lg border border-border bg-background text-sm font-semibold hover:bg-muted transition-colors mt-4"
               >
                 <Camera size={16} /> Start camera scan
               </button>
             )}
           </div>
 
-          <form onSubmit={onSubmit} className="bg-card rounded-3xl border border-border/50 p-6">
+          <form onSubmit={onSubmit} className="bg-card rounded-xl border border-border p-6">
             <label className="block text-sm font-medium text-secondary mb-2">Manual search</label>
             <div className="flex gap-3">
               <div className="relative flex-1">
@@ -197,13 +200,13 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Token, reference (BMAC-EVT-…), or email"
-                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
+                  className="w-full h-12 pl-10 pr-4 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono"
                 />
               </div>
               <button
                 type="submit"
                 disabled={busy || !query.trim() || !selectedEventId}
-                className="flex items-center gap-2 h-12 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 h-12 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Check In
               </button>
@@ -211,7 +214,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
           </form>
 
           {flash && (
-            <div className={`flex items-center gap-3 px-5 py-4 rounded-2xl border text-sm font-semibold ${
+            <div className={`flex items-center gap-3 px-5 py-4 rounded-lg border text-sm font-semibold ${
               flash.ok ? "bg-green-500/10 border-green-500/30 text-green-600" : "bg-amber-500/10 border-amber-500/30 text-amber-600"
             }`}>
               {flash.ok ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />} {flash.msg}
@@ -219,7 +222,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
           )}
 
           {result && (
-            <div className="bg-card rounded-3xl border border-border/50 p-6">
+            <div className="bg-card rounded-xl border border-border p-6">
               <h2 className="font-semibold text-secondary mb-4">Result</h2>
               {result.notFound ? (
                 <p className="text-sm text-muted-foreground">No ticket matched that input.</p>
@@ -232,12 +235,12 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
               ) : (
                 <dl className="space-y-3 text-sm">
                   <div className="flex items-center gap-3">
-                    <User size={16} className="text-primary shrink-0" />
+                    <User size={16} className="text-muted-foreground shrink-0" />
                     <dt className="text-muted-foreground w-24 shrink-0">Attendee</dt>
                     <dd className="font-semibold text-secondary">{result.attendeeName || "—"}</dd>
                   </div>
                   <div className="flex items-center gap-3">
-                    <CalendarDays size={16} className="text-primary shrink-0" />
+                    <CalendarDays size={16} className="text-muted-foreground shrink-0" />
                     <dt className="text-muted-foreground w-24 shrink-0">Event</dt>
                     <dd className="font-semibold text-secondary">{result.eventTitle || "—"}</dd>
                   </div>
@@ -250,7 +253,7 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
                   </div>
                   {result.checkedInAt && (
                     <div className="flex items-center gap-3">
-                      <Mail size={16} className="text-primary shrink-0" />
+                      <Mail size={16} className="text-muted-foreground shrink-0" />
                       <dt className="text-muted-foreground w-24 shrink-0">Time</dt>
                       <dd className="font-semibold text-secondary">{new Date(result.checkedInAt).toLocaleString()}</dd>
                     </div>
@@ -261,16 +264,16 @@ export default function CheckInClient({ events }: { events: CheckInEvent[] }) {
           )}
         </div>
 
-        <div className="bg-card rounded-3xl border border-border/50 p-6 h-fit">
+        <div className="bg-card rounded-xl border border-border p-6 h-fit">
           <h2 className="font-semibold text-secondary mb-4 flex items-center gap-2">
-            <CalendarDays size={16} className="text-primary" /> Upcoming events
+            <CalendarDays size={16} className="text-muted-foreground" /> Upcoming events
           </h2>
           {events.length === 0 ? (
             <p className="text-sm text-muted-foreground">No published events.</p>
           ) : (
             <ul className="space-y-2">
               {events.map(e => (
-                <li key={e.id} className="px-3 py-2.5 rounded-xl bg-muted/50 text-sm">
+                <li key={e.id} className="px-3 py-2.5 rounded-lg bg-muted/50 text-sm">
                   <p className="font-medium text-secondary">{e.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{e.date || "—"}</p>
                 </li>

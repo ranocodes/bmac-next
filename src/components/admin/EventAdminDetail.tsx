@@ -138,19 +138,19 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
           <p className="text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="inline-flex items-center gap-1.5"><Calendar size={13} /> {event.date || "—"}</span>
             <span className="inline-flex items-center gap-1.5"><MapPin size={13} /> {event.venue || "—"}</span>
-            <span className="inline-block px-2.5 py-0.5 rounded-lg bg-muted text-xs font-medium text-muted-foreground">{event.category}</span>
-            <span className={`inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold ${event.status === "published" ? "bg-green-500/10 text-green-600" : "bg-amber-500/10 text-amber-600"}`}>{event.status}</span>
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-muted text-xs font-medium text-muted-foreground">{event.category}</span>
+            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${event.status === "published" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>{event.status}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/admin/events/${eventId}/edit`} className="flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-semibold hover:bg-muted transition-colors">
+          <Link href={`/admin/events/${eventId}/edit`} className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
             Edit
           </Link>
-          <button onClick={handleSendReminders} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
+          <button onClick={handleSendReminders} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
             <Bell size={15} /> Send Reminders
           </button>
           {canExport && (
-            <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
+            <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
               <Download size={15} /> {exporting ? "Exporting…" : "Export CSV"}
             </button>
           )}
@@ -159,8 +159,8 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
         {stats.map(s => (
-          <div key={s.label} className="bg-card rounded-3xl border border-border/50 p-5">
-            <div className={`w-10 h-10 rounded-2xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
+          <div key={s.label} className="bg-card rounded-xl border border-border p-5">
+            <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
               <s.icon size={18} />
             </div>
             <p className="text-2xl font-bold text-secondary">{s.value}</p>
@@ -170,7 +170,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-card rounded-3xl border border-border/50 p-6 lg:col-span-2">
+        <div className="bg-card rounded-xl border border-border p-6 lg:col-span-2">
           <h2 className="font-semibold text-secondary mb-4">Capacity</h2>
           <div className="flex items-end justify-between mb-2">
             <p className="text-3xl font-bold text-secondary">
@@ -189,17 +189,17 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                 min={0}
                 value={capacityInput}
                 onChange={e => setCapacityInput(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-input bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
-            <button onClick={handleCapacityOverride} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-xl border border-input bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
+            <button onClick={handleCapacityOverride} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
               <RefreshCcw size={14} /> Override used count
             </button>
             <span className="text-xs text-muted-foreground hidden md:block">For manual corrections</span>
           </div>
         </div>
 
-        <div className="bg-card rounded-3xl border border-border/50 p-6">
+        <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="font-semibold text-secondary mb-4">Registration</h2>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between"><dt className="text-muted-foreground">Deadline</dt><dd className="font-semibold text-secondary">{event.registration_deadline || "None"}</dd></div>
@@ -211,7 +211,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
         </div>
       </div>
 
-      <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border/50 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold text-secondary">Registrants</h2>
           <span className="text-xs text-muted-foreground">{filtered.length} shown of {registrants.length} total</span>
@@ -222,10 +222,10 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search name, email, reference…"
-              className="w-full h-10 px-3 rounded-xl border border-input bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              className="w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
-          <div className="flex items-center gap-1.5 rounded-xl border border-input bg-card p-1">
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card p-1">
             {["all", "confirmed", "pending", "cancelled"].map(s => (
               <button
                 key={s}
@@ -247,18 +247,18 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border/50">
-                  <th className="text-left font-semibold text-secondary px-5 py-4">Attendee</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden sm:table-cell">Reference</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden md:table-cell">Status</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden lg:table-cell">Qty</th>
-                  <th className="text-left font-semibold text-secondary px-5 py-4 hidden lg:table-cell">Amount</th>
-                  <th className="text-right font-semibold text-secondary px-5 py-4 w-24">Check-in</th>
+                <tr className="border-b border-border">
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Attendee</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">Reference</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Status</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden lg:table-cell">Qty</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden lg:table-cell">Amount</th>
+                  <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-24">Check-in</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map(r => (
-                  <tr key={r.ticketId} className="border-b border-border/20 last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={r.ticketId} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-4">
                       <div>
                         <p className="font-medium text-secondary">{r.payerName || "—"}</p>
@@ -267,8 +267,8 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                     </td>
                     <td className="px-5 py-4 text-muted-foreground font-mono text-xs hidden sm:table-cell">{r.reference}</td>
                     <td className="px-5 py-4 hidden md:table-cell">
-                      <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                        r.status === "confirmed" ? "bg-green-500/10 text-green-600" : r.status === "pending" ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                        r.status === "confirmed" ? "bg-green-50 text-green-700" : r.status === "pending" ? "bg-amber-50 text-amber-700" : "bg-muted text-muted-foreground"
                       }`}>{r.status}</span>
                     </td>
                     <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.quantity}</td>
@@ -277,8 +277,8 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                       <button
                         onClick={() => toggleCheckIn(r.ticketId, r.checkedIn, r.payerName || "attendee")}
                         disabled={busy || r.status !== "confirmed"}
-                        className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-xl text-xs font-semibold transition-colors disabled:opacity-40 ${
-                          r.checkedIn ? "bg-green-500/10 text-green-600 hover:bg-green-500/20" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                        className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
+                          r.checkedIn ? "bg-green-50 text-green-700 hover:bg-green-100" : "bg-muted text-muted-foreground hover:bg-muted/70"
                         }`}
                       >
                         <TicketCheck size={13} /> {r.checkedIn ? "Checked in" : "Check in"}
@@ -295,14 +295,14 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                   <button
                     onClick={() => setPage(safePage - 1)}
                     disabled={safePage <= 1}
-                    className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+                    className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage(safePage + 1)}
                     disabled={safePage >= pageCount}
-                    className="h-8 px-3 rounded-lg border border-input bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+                    className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
                   >
                     Next
                   </button>

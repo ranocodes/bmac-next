@@ -9,13 +9,13 @@ import { useToast } from "@/components/ui/Toast";
 import type { Person, PersonRecord, PersonRecordKind, PersonRole } from "@/types/cms";
 
 const roleColors: Record<string, string> = {
-  attendee: "bg-blue-500/10 text-blue-600",
-  donor: "bg-rose-500/10 text-rose-600",
-  applicant: "bg-indigo-500/10 text-indigo-600",
-  volunteer: "bg-amber-500/10 text-amber-600",
-  "partner contact": "bg-violet-500/10 text-violet-600",
-  member: "bg-emerald-500/10 text-emerald-600",
-  admin: "bg-secondary/10 text-secondary",
+  attendee: "bg-blue-50 text-blue-700",
+  donor: "bg-rose-50 text-rose-700",
+  applicant: "bg-indigo-50 text-indigo-700",
+  volunteer: "bg-amber-50 text-amber-700",
+  "partner contact": "bg-violet-50 text-violet-700",
+  member: "bg-emerald-50 text-emerald-700",
+  admin: "bg-muted text-secondary",
 };
 
 const allRoles: PersonRole[] = [
@@ -118,11 +118,11 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
         </Link>
         <div className="flex items-center gap-2">
           <button onClick={() => setEditing(v => !v)}
-            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-xl border border-input bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
+            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
             <Pencil size={14} /> {editing ? "Cancel" : "Edit"}
           </button>
           <button onClick={handleDelete} disabled={deleting}
-            className={`inline-flex items-center gap-2 h-9 px-3.5 rounded-xl text-sm font-medium border transition-all disabled:opacity-50 ${
+            className={`inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-sm font-medium border transition-all disabled:opacity-50 ${
               confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-destructive/40 text-destructive hover:bg-destructive/10"
             }`}>
             <Trash2 size={14} />
@@ -131,7 +131,7 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
         </div>
       </div>
 
-      <div className="bg-card rounded-3xl border border-border/50 p-6 md:p-8">
+      <div className="bg-card rounded-xl border border-border p-6 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center gap-6">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-display font-extrabold text-xl shrink-0">
             {initials(person)}
@@ -151,7 +151,7 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
           </div>
           <div className="flex flex-wrap gap-2">
             {roles.map(role => (
-              <span key={role} className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold ${roleColors[role] || "bg-muted text-muted-foreground"}`}>
+              <span key={role} className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${roleColors[role] || "bg-muted text-muted-foreground"}`}>
                 {role}
               </span>
             ))}
@@ -166,28 +166,28 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First name *</label>
                 <input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Last name</label>
                 <input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Email</label>
                 <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Phone</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full h-10 px-3.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </div>
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Notes</label>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+                className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Roles</label>
@@ -197,7 +197,7 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                       form.roles.includes(role)
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "border-input text-muted-foreground hover:text-secondary hover:border-primary/40"
+                        : "border-border text-muted-foreground hover:text-secondary hover:border-primary/40"
                     }`}>
                     {role}
                   </button>
@@ -205,11 +205,11 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
               </div>
             </div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setEditing(false)} className="h-10 px-4 rounded-xl border border-input text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
+              <button onClick={() => setEditing(false)} className="h-10 px-4 rounded-lg border border-border text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
                 Cancel
               </button>
               <button onClick={handleSave} disabled={saving}
-                className="h-10 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                className="h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
                 {saving ? "Saving…" : "Save Changes"}
               </button>
             </div>
@@ -218,14 +218,14 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
       </div>
 
       {groups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-3xl border border-border/50">
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
           <Users size={48} className="text-muted-foreground/20 mb-4" />
           <p className="text-sm font-medium text-secondary">No records yet</p>
           <p className="text-xs text-muted-foreground mt-1">This person has no linked activity yet</p>
         </div>
       ) : (
         groups.map(g => (
-          <div key={g.group + g.kind} className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+          <div key={g.group + g.kind} className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="px-6 py-4 border-b border-border/50 flex items-center gap-3">
               <g.icon size={16} className="text-primary" />
               <h2 className="font-display font-bold text-secondary">{g.label}</h2>
@@ -242,10 +242,10 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
                       {formatDate(r.createdAt)}
                     </p>
                   </div>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium w-fit ${
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium w-fit ${
                     r.status === "completed" || r.status === "confirmed" || r.status === "received"
-                      ? "bg-emerald-500/10 text-emerald-600"
-                      : "bg-amber-500/10 text-amber-500"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-amber-50 text-amber-700"
                   }`}>
                     {r.status}
                   </span>

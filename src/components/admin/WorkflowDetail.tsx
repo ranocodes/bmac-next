@@ -98,12 +98,12 @@ export default function WorkflowDetail({
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center gap-3">
-        <Link href="/admin/workflow" className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-secondary hover:border-border transition-all">
+        <Link href="/admin/workflow" className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-secondary hover:border-border transition-all">
           <ArrowLeft size={17} />
         </Link>
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-secondary">{record.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{record.id}</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">{record.title}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{record.id}</p>
         </div>
         <span className={`ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
           status === "resolved" || status === "closed"
@@ -118,7 +118,7 @@ export default function WorkflowDetail({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">Summary</h3>
             <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">
               {String(record.details.message || record.details.notes || record.summary || "—")}
@@ -128,59 +128,59 @@ export default function WorkflowDetail({
             )}
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-4">Update Workflow</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="space-y-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
                 <select value={status} onChange={e => setStatus(e.target.value as WorkflowStatus)}
-                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                  className="w-full h-11 rounded-lg border border-border bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
                   {statusOptions.map(s => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
                 </select>
               </label>
               <label className="space-y-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Priority</span>
                 <select value={priority} onChange={e => setPriority(e.target.value as WorkflowPriority)}
-                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                  className="w-full h-11 rounded-lg border border-border bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
                   {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </label>
               <label className="space-y-1.5 sm:col-span-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Assignee email</span>
                 <input type="email" value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="admin@bmacjos.org"
-                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-11 rounded-lg border border-border bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </label>
               <label className="space-y-1.5 sm:col-span-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Outcome</span>
                 <input type="text" value={outcome} onChange={e => setOutcome(e.target.value)} placeholder="How was this resolved?"
-                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                  className="w-full h-11 rounded-lg border border-border bg-background px-3 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               </label>
               <label className="space-y-1.5 sm:col-span-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Add a note</span>
                 <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Note for the record…"
-                  className="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
               </label>
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
               <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                className="flex items-center gap-2 h-11 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
                 <CheckCheck size={15} /> {saving ? "Saving…" : "Save Changes"}
               </button>
               <button onClick={handleContacted}
-                className="flex items-center gap-2 h-11 px-5 rounded-xl border border-border/60 text-sm font-semibold text-secondary hover:bg-muted/60 transition-all">
+                className="flex items-center gap-2 h-11 px-5 rounded-lg border border-border text-sm font-semibold text-secondary hover:bg-muted/60 transition-all">
                 <Clock size={15} /> Mark as contacted
               </button>
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">Reply by email</h3>
             <textarea value={reply} onChange={e => setReply(e.target.value)} rows={4}
               placeholder={`Reply to ${record.submitterEmail || "submitter"}…`}
-              className="w-full px-4 py-3 rounded-xl border border-input bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
+              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none" />
             <div className="mt-3 flex justify-end">
               <button onClick={handleReply} disabled={sending || !reply.trim() || !record.submitterEmail}
-                className="flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
+                className="flex items-center gap-2 h-11 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50">
                 <Send size={15} /> {sending ? "Sending…" : "Send Reply"}
               </button>
             </div>
@@ -188,7 +188,7 @@ export default function WorkflowDetail({
         </div>
 
         <div className="space-y-6">
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-4">Details</h3>
             <div className="space-y-3 text-sm">
               {record.submitterName && (
@@ -213,7 +213,7 @@ export default function WorkflowDetail({
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 p-6">
+          <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-4">History</h3>
             {history.length > 0 ? (
               <div className="space-y-3">
