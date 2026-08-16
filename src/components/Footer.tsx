@@ -21,6 +21,7 @@ interface FooterProps {
   copyright?: string;
   socialLinks?: SocialLink[];
   navLinks?: NavLink[];
+  contactInfo?: { email?: string; phone?: string; whatsapp?: string; address?: string; hours?: string };
 }
 
 const defaultSocials = [
@@ -41,19 +42,28 @@ const defaultLinks = [
   { name: "Privacy", href: "/privacy" },
 ];
 
-const contactInfo = [
-  { icon: Mail, label: "Email", value: "hello@bmacjos.org", href: "mailto:hello@bmacjos.org" },
-  { icon: Phone, label: "Phone / WhatsApp", value: "+234 803 456 7891", href: "https://wa.me/2348034567891" },
-  { icon: MapPin, label: "Hub", value: "Nalado Street, Jos", href: "" },
-  { icon: Clock, label: "Hours", value: "Mon - Sat: 9am - 5pm", href: "" },
-];
+const defaultContact = {
+  email: "hello@bmacjos.org",
+  phone: "+234 803 456 7891",
+  whatsapp: "2348034567891",
+  address: "Nalado Street, Jos",
+  hours: "Mon - Sat: 9am - 5pm",
+};
 
 export default function Footer({ 
   logoText = "BMAC Jos", 
   copyright = "Brilliant Minds Ambassadors Club. All rights reserved.",
   socialLinks = defaultSocials,
-  navLinks = defaultLinks
+  navLinks = defaultLinks,
+  contactInfo = defaultContact
 }: FooterProps) {
+  const contact = { ...defaultContact, ...contactInfo };
+  const contactItems = [
+    { icon: Mail, label: "Email", value: contact.email, href: `mailto:${contact.email}` },
+    { icon: Phone, label: "Phone / WhatsApp", value: contact.phone, href: `https://wa.me/${contact.whatsapp}` },
+    { icon: MapPin, label: "Hub", value: contact.address, href: "" },
+    { icon: Clock, label: "Hours", value: contact.hours, href: "" },
+  ];
   return (
     <footer className="bg-card border-t border-border pt-16 pb-8 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -82,7 +92,7 @@ export default function Footer({
         <div>
           <h4 className="font-display font-bold text-lg text-secondary mb-6">Contact</h4>
           <ul className="space-y-4">
-            {contactInfo.map((item) => (
+            {contactItems.map((item) => (
               <li key={item.label} className="flex items-start gap-3">
                 <span className="mt-0.5 text-primary">
                   <item.icon size={16} />
@@ -117,7 +127,7 @@ export default function Footer({
             ))}
           </div>
           <a
-            href="https://wa.me/2348034567891"
+            href={`https://wa.me/${contact.whatsapp}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"

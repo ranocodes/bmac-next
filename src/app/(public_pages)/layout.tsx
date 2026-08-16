@@ -13,6 +13,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       navLinks={s?.navigation || undefined}
       socialLinks={s?.social_links || undefined}
       copyright={s?.copyright || undefined}
+      contactInfo={s?.contact_info || undefined}
     >
       {children}
     </PublicLayout>

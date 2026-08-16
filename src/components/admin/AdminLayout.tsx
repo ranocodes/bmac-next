@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
-  BarChart3, Settings, Tag, LogOut, Menu, ChevronRight,
+  BarChart3, Settings, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
   UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, type LucideIcon,
 } from "lucide-react";
@@ -53,7 +53,6 @@ const navGroups: NavGroup[] = [
   {
     label: "Management", icon: ClipboardList,
     children: [
-      { label: "Categories", href: "/admin/categories", icon: Tag, permission: "manage_categories" },
       { label: "Partners", href: "/admin/partners", icon: Handshake, permission: "manage_partners" },
       { label: "Stats", href: "/admin/stats", icon: BarChart3, permission: "manage_stats" },
     ],
@@ -95,7 +94,6 @@ const routePermissions: Record<string, Permission> = {
   "/admin/gallery": "manage_gallery",
   "/admin/team": "manage_team",
   "/admin/testimonials": "manage_testimonials",
-  "/admin/categories": "manage_categories",
   "/admin/partners": "manage_partners",
   "/admin/stats": "manage_stats",
   "/admin/logs": "manage_logs",

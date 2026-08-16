@@ -5,15 +5,9 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
 import { createItem, updateItem } from "@/actions/crud";
-import type { Category } from "@/types/cms";
 import ImagePicker from "@/components/ui/ImagePicker";
+import CategorySelect from "@/components/ui/CategorySelect";
 import { useToast } from "@/components/ui/Toast";
-
-const CATEGORIES: Category[] = [
-  "Achievements", "Programs", "Alumni", "Partnerships",
-  "Events", "Announcements", "Workshops", "Competition",
-  "Culture", "Mentorship", "Community",
-].map((name, i) => ({ id: `cat-${i}`, name }));
 
 export default function GalleryForm({ initialData }: { initialData?: any | null }) {
   const router = useRouter();
@@ -27,7 +21,6 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
-  const [categories] = useState<Category[]>(CATEGORIES);
   const { toast } = useToast();
 
   async function handleSubmit(publishStatus: "draft" | "published") {
@@ -147,18 +140,7 @@ export default function GalleryForm({ initialData }: { initialData?: any | null 
 
           <div>
             <label className="block text-sm font-medium text-secondary/80 mb-1.5">Category *</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors ${
-                missingFields.includes("category") ? "border-destructive/50" : "border-border"
-              }`}
-            >
-              <option value="">Select category...</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.name}>{cat.name}</option>
-              ))}
-            </select>
+            <CategorySelect value={category} onChange={setCategory} error={missingFields.includes("category")} />
           </div>
         </div>
 

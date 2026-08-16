@@ -27,9 +27,10 @@ interface PublicLayoutProps {
   navLinks?: typeof DEFAULT_NAV;
   socialLinks?: typeof DEFAULT_SOCIAL;
   copyright?: string;
+  contactInfo?: { email?: string; phone?: string; whatsapp?: string; address?: string; hours?: string };
 }
 
-export default function PublicLayout({ children, logoText: initialLogoText, navLinks: initialNavLinks, socialLinks: initialSocialLinks, copyright: initialCopyright }: PublicLayoutProps) {
+export default function PublicLayout({ children, logoText: initialLogoText, navLinks: initialNavLinks, socialLinks: initialSocialLinks, copyright: initialCopyright, contactInfo }: PublicLayoutProps) {
   const logoText = initialLogoText || "BMAC";
   const navLinks = initialNavLinks || DEFAULT_NAV;
   const socialLinks = initialSocialLinks || DEFAULT_SOCIAL;
@@ -39,7 +40,7 @@ export default function PublicLayout({ children, logoText: initialLogoText, navL
     <>
       <Navbar logoText={logoText} navLinks={navLinks} />
       {children}
-      <Footer logoText={logoText} copyright={copyright} socialLinks={socialLinks} navLinks={navLinks} />
+      <Footer logoText={logoText} copyright={copyright} socialLinks={socialLinks} navLinks={navLinks} contactInfo={contactInfo} />
       <BackToTop />
     </>
   );
