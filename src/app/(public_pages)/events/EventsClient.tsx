@@ -2,11 +2,32 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Clock, Calendar, MapPin, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import NewsletterModal from "@/components/ui/NewsletterModal";
 import type { EventPass } from "@/types/cms";
+
+type EventStatus = { label: string; tone: "open" | "closed" | "sold" };
+
+function getEventStatus(e: EventPass): EventStatus {
+  const cap = e.capacity && e.capacity > 0 ? e.capacity : 0;
+  const used = e.capacityUsed || 0;
+  if (cap > 0 && used >= cap) return { label: "Sold Out", tone: "sold" };
+  const dl = e.registrationDeadline;
+  if (dl) {
+    const dlDate = /^\d{4}-\d{2}-\d{2}$/.test(dl) ? new Date(dl + "T23:59:59") : new Date(dl);
+    if (!isNaN(dlDate.getTime()) && dlDate.getTime() < Date.now()) return { label: "Registration Closed", tone: "closed" };
+  }
+  return { label: "Registration Open", tone: "open" };
+}
+
+const statusClasses: Record<EventStatus["tone"], string> = {
+  open: "bg-primary text-card",
+  closed: "bg-secondary/80 text-card backdrop-blur-sm",
+  sold: "bg-destructive text-white",
+};
 
 function formatEventDate(raw: string | undefined): { month: string; day: string } {
   if (!raw) return { month: "", day: "" };
@@ -67,6 +88,10 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
     features: (e as any).features || [],
     isPaid: (e as any).is_paid ?? (e as any).isPaid ?? false,
     price: Number((e as any).price || 0),
+    img: (e as any).img || (e as any).image || "",
+    capacity: Number((e as any).capacity || 0),
+    capacityUsed: Number((e as any).capacity_used ?? (e as any).capacityUsed ?? 0),
+    registrationDeadline: (e as any).registration_deadline || (e as any).registrationDeadline || "",
   })));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -152,41 +177,59 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
 
       <section className="pb-16 md:pb-24 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event, i) => {
             const fd = formatEventDate(event.date);
+            const status = getEventStatus(event);
             return (
-            <FadeIn key={event.id} delay={i * 0.05}>
-              <Link href={`/events/${event.id}`} className="group block">
-                <div className="bg-card rounded-xl border border-border p-5 md:p-6 transition-colors hover:border-primary/40 group-hover:bg-muted/30">
-                  <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-                    <div className="flex items-start gap-4 min-w-0">
-                      {fd.day && (
-                        <div className="w-12 shrink-0 text-center border-r border-border/60 pr-4">
-                          <p className="font-display text-2xl font-bold leading-none text-secondary">{fd.day}</p>
-                          {fd.month && <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{fd.month}</p>}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{event.category}</p>
-                        <h3 className="font-display text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-secondary mt-1 break-words">
-                          {event.title}
-                        </h3>
+            <FadeIn key={event.id} delay={i * 0.05} className="h-full">
+              <Link href={`/events/${event.id}`} className="group block h-full rounded-xl border border-border bg-card overflow-hidden transition-colors hover:border-primary/40">
+                <div className="relative aspect-[16/9] overflow-hidden">
+                  {event.img ? (
+                    <Image
+                      src={event.img}
+                      alt={event.title}
+                      fill
+                      sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-secondary via-primary to-accent/50 flex items-center justify-center">
+                      <div className="text-center px-6">
+                        <Calendar size={36} className="mx-auto text-card/40" />
+                        <p className="mt-3 text-card/60 text-[11px] font-bold uppercase tracking-widest">{event.category}</p>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-bold whitespace-nowrap">
+                  )}
+                  <span className={`absolute top-3 left-3 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${statusClasses[status.tone]}`}>
+                    {status.label}
+                  </span>
+                  {fd.day && (
+                    <div className="absolute bottom-3 left-3 flex items-baseline gap-1.5 rounded-lg bg-card/90 backdrop-blur px-3 py-1.5">
+                      <span className="font-display text-xl font-bold leading-none text-secondary">{fd.day}</span>
+                      {fd.month && <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{fd.month}</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="p-5 md:p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{event.category}</p>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-2.5 py-1 text-[11px] font-bold whitespace-nowrap">
                       {event.isPaid ? `₦${(event.price || 0).toLocaleString()}` : "Free Entry"}
                     </span>
                   </div>
-                  <p className="text-muted-foreground text-sm md:text-base leading-relaxed mt-3 line-clamp-2">
+                  <h3 className="font-display text-lg md:text-xl font-bold tracking-tight text-secondary mt-2 group-hover:text-primary transition-colors break-words">
+                    {event.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed mt-2 line-clamp-2">
                     {event.desc}
                   </p>
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-5 pt-4 border-t border-border/50 text-xs">
-                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium">
-                      <Clock size={14} /> {event.time || "TBA"}
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5 pt-4 border-t border-border/50 text-xs">
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground font-medium">
+                      <Clock size={13} /> {event.time || "TBA"}
                     </span>
-                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium truncate max-w-full">
-                      <MapPin size={14} /> {event.venue || "Venue TBA"}
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground font-medium truncate max-w-full">
+                      <MapPin size={13} /> {event.venue || "Venue TBA"}
                     </span>
                     <span className="ml-auto inline-flex items-center gap-1.5 text-primary font-bold group-hover:gap-2.5 transition-all">
                       View Event <ArrowRight size={14} />

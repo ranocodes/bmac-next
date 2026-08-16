@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, MapPin, Send, Clock, CheckCircle2, X, CalendarPlus } from "lucide-react";
@@ -58,6 +58,27 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState("");
+  const [showStickyCta, setShowStickyCta] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowStickyCta(window.scrollY > 480);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const el = document.getElementById("register");
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setShowStickyCta(false);
+      },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const relatedEvents = (() => {
     if (!event) return [];
@@ -276,7 +297,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
               </div>
             </div>
 
-            <div className="mt-8 md:mt-10 lg:hidden">
+            <div className="mt-8 md:mt-10">
               <a href="#register" className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-card rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
                 {event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Reserve My Spot"}
               </a>
@@ -292,7 +313,23 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
             >
               <Image src={event.img} alt={event.title} fill className="object-cover" priority sizes="(max-width: 1280px) 100vw, 1280px" />
             </motion.div>
-          ) : null}
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="mt-10 md:mt-16 relative aspect-[16/9] rounded-xl border border-border overflow-hidden bg-gradient-to-br from-secondary via-primary to-accent/40 flex items-center justify-center"
+            >
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 25% 25%, rgba(212,168,67,0.6) 0, transparent 45%), radial-gradient(circle at 75% 70%, rgba(255,255,255,0.15) 0, transparent 40%)" }} />
+              <div className="relative text-center px-6">
+                <div className="w-14 h-14 md:w-16 md:h-16 mx-auto rounded-xl bg-card/10 border border-card/20 flex items-center justify-center text-card">
+                  <Calendar size={26} className="md:w-8 md:h-8" />
+                </div>
+                <p className="mt-4 text-card text-[11px] font-bold uppercase tracking-widest">{event.category}</p>
+                <p className="mt-1 text-card/60 text-xs font-medium">{event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Free Entry"}</p>
+              </div>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -450,7 +487,11 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
                               )}
                            </button>
                         </form>
-                  </motion.div>
+                        <p className="text-center text-xs text-muted-foreground mt-5 leading-relaxed">
+                          Instant confirmation and digital pass by email.
+                          {event.policies ? <> See our <a href="#good-to-know" className="underline underline-offset-2 hover:text-primary transition-colors">policy</a> for cancellations.</> : null}
+                        </p>
+                   </motion.div>
                ) : (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -536,7 +577,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
 
       {/* Policies */}
       {policies && (
-        <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-y border-border/50">
+        <section id="good-to-know" className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-y border-border/50">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Good to Know</h2>
             <p className="text-muted-foreground text-sm md:text-base leading-relaxed">{policies}</p>
@@ -576,6 +617,17 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
             </div>
           </div>
         </section>
+      )}
+
+      {!isReserved && showStickyCta && (
+        <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden bg-card/95 backdrop-blur border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <a
+            href="#register"
+            className="block w-full py-3.5 bg-primary text-card rounded-lg text-sm font-bold text-center hover:bg-primary/90 transition-colors"
+          >
+            {event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Reserve My Spot"}
+          </a>
+        </div>
       )}
     </main>
   );
