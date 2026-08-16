@@ -14,8 +14,6 @@ import {
   Clock3,
   ChevronUp,
   ChevronDown,
-  FileText,
-  GripVertical,
 } from "lucide-react";
 import {
   getProgramDetail,
@@ -27,14 +25,10 @@ import {
   getCohortAttendanceSummary,
   recordAttendance,
 } from "@/actions/programs";
-import { getFormDefinition, upsertFormDefinition, getFormSubmissions } from "@/actions/forms";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
-import type { FormQuestion, FormQuestionType } from "@/types/cms";
 
-type Tab = "applications" | "cohorts" | "attendance" | "form";
-
-const QUESTION_TYPES: FormQuestionType[] = ["text", "textarea", "select", "radio", "checkbox", "date", "email", "phone", "number"];
+type Tab = "applications" | "cohorts" | "attendance";
 
 const STATUS_OPTIONS = ["in_review", "accepted", "waitlisted", "rejected", "withdrawn"] as const;
 const OUTCOME_OPTIONS = ["enrolled", "completed", "dropped", "certificate_eligible"] as const;
@@ -71,10 +65,6 @@ export default function ProgramAdminDetail({
   const [attendanceDate, setAttendanceDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<any[]>([]);
-  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
-  const [formLoaded, setFormLoaded] = useState(false);
-  const [formSaving, setFormSaving] = useState(false);
-  const [submissionCount, setSubmissionCount] = useState(0);
   const { toast, confirm } = useToast();
   const admin = useAdmin();
   const adminEmail = admin?.email || "";
@@ -97,19 +87,6 @@ export default function ProgramAdminDetail({
     }
     getCohortAttendanceSummary(selectedCohort).then(setSummary);
   }, [selectedCohort]);
-
-  useEffect(() => {
-    if (tab === "form" && !formLoaded) {
-      Promise.all([
-        getFormDefinition("program", programId),
-        getFormSubmissions("program", programId),
-      ]).then(([def, subs]) => {
-        if (def) setFormQuestions(def.questions);
-        setSubmissionCount(subs.length);
-        setFormLoaded(true);
-      });
-    }
-  }, [tab, formLoaded, programId]);
 
   async function refresh() {
     const next = await getProgramDetail(programId);
@@ -204,52 +181,10 @@ export default function ProgramAdminDetail({
     }
   }
 
-  function addQuestion() {
-    const newQ: FormQuestion = {
-      id: `q-${crypto.randomUUID()}`,
-      type: "text",
-      label: "",
-      placeholder: "",
-      required: false,
-      options: [],
-      order: formQuestions.length,
-    };
-    setFormQuestions([...formQuestions, newQ]);
-  }
-
-  function updateQuestion(id: string, patch: Partial<FormQuestion>) {
-    setFormQuestions(prev => prev.map(q => q.id === id ? { ...q, ...patch } : q));
-  }
-
-  function removeQuestion(id: string) {
-    setFormQuestions(prev => prev.filter(q => q.id !== id).map((q, i) => ({ ...q, order: i })));
-  }
-
-  function moveQuestion(id: string, dir: -1 | 1) {
-    setFormQuestions(prev => {
-      const idx = prev.findIndex(q => q.id === id);
-      if (idx < 0) return prev;
-      const target = idx + dir;
-      if (target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next.map((q, i) => ({ ...q, order: i }));
-    });
-  }
-
-  async function handleSaveForm() {
-    setFormSaving(true);
-    const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
-    await upsertFormDefinition("program", programId, sorted);
-    setFormSaving(false);
-    toast("Form saved");
-  }
-
-  const tabs: { key: Tab; label: string; icon: any; badge?: number }[] = [
+  const tabs: { key: Tab; label: string; icon: any }[] = [
     { key: "applications", label: "Applications", icon: ClipboardCheck },
     { key: "cohorts", label: "Cohorts & Participants", icon: Users },
     { key: "attendance", label: "Attendance", icon: CheckCircle2 },
-    { key: "form", label: "Application Form", icon: FileText, badge: submissionCount },
   ];
 
   return (
@@ -282,11 +217,6 @@ export default function ProgramAdminDetail({
           >
             <t.icon size={16} />
             {t.label}
-            {t.badge != null && t.badge > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary">
-                {t.badge}
-              </span>
-            )}
           </button>
         ))}
       </div>
@@ -630,134 +560,6 @@ export default function ProgramAdminDetail({
         </div>
       )}
 
-      {tab === "form" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              {formQuestions.length} question{formQuestions.length !== 1 ? "s" : ""}
-              {submissionCount > 0 && ` · ${submissionCount} submission${submissionCount !== 1 ? "s" : ""}`}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={addQuestion}
-                className="inline-flex items-center gap-2 px-4 h-9 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors"
-              >
-                <Plus size={15} /> Add Question
-              </button>
-              <button
-                onClick={handleSaveForm}
-                disabled={formSaving}
-                className="inline-flex items-center gap-2 px-5 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
-              >
-                {formSaving ? <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : "Save Form"}
-              </button>
-            </div>
-          </div>
-
-          {formQuestions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
-              <FileText size={48} className="text-muted-foreground/20 mb-4" />
-              <p className="text-sm font-medium text-secondary">No questions yet</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-4">Add questions to build the application form for this program</p>
-              <button
-                onClick={addQuestion}
-                className="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-              >
-                <Plus size={15} /> Add First Question
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {formQuestions.map((q, idx) => (
-                <div key={q.id} className="bg-card rounded-xl border border-border p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex flex-col items-center gap-0.5 pt-1">
-                      <GripVertical size={14} className="text-muted-foreground/30" />
-                      <span className="text-[10px] font-bold text-muted-foreground/40">{idx + 1}</span>
-                    </div>
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr_auto] gap-3">
-                      <select
-                        value={q.type}
-                        onChange={e => updateQuestion(q.id, { type: e.target.value as FormQuestionType })}
-                        className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      >
-                        {QUESTION_TYPES.map(t => (
-                          <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={q.label}
-                        onChange={e => updateQuestion(q.id, { label: e.target.value })}
-                        placeholder="Question label"
-                        className="h-10 px-3.5 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      />
-                      <div className="flex items-center gap-2">
-                        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={q.required}
-                            onChange={e => updateQuestion(q.id, { required: e.target.checked })}
-                            className="rounded border-border"
-                          />
-                          Required
-                        </label>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-0.5 pt-1">
-                      <button
-                        onClick={() => moveQuestion(q.id, -1)}
-                        disabled={idx === 0}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-30 transition-colors"
-                        title="Move up"
-                      >
-                        <ChevronUp size={15} />
-                      </button>
-                      <button
-                        onClick={() => moveQuestion(q.id, 1)}
-                        disabled={idx === formQuestions.length - 1}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-30 transition-colors"
-                        title="Move down"
-                      >
-                        <ChevronDown size={15} />
-                      </button>
-                      <button
-                        onClick={() => removeQuestion(q.id)}
-                        className="p-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                        title="Delete question"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </div>
-                  {(q.type === "select" || q.type === "radio" || q.type === "checkbox") && (
-                    <div className="mt-3 ml-7">
-                      <input
-                        type="text"
-                        value={(q.options || []).join(", ")}
-                        onChange={e => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
-                        placeholder="Options (comma-separated)"
-                        className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      />
-                    </div>
-                  )}
-                  {(q.type === "text" || q.type === "textarea" || q.type === "email" || q.type === "phone" || q.type === "number") && (
-                    <div className="mt-3 ml-7">
-                      <input
-                        type="text"
-                        value={q.placeholder || ""}
-                        onChange={e => updateQuestion(q.id, { placeholder: e.target.value })}
-                        placeholder="Placeholder text"
-                        className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

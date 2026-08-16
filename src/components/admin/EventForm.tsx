@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, AlertCircle, ChevronDown, ChevronUp, FileText, GripVertical, Plus, X } from "lucide-react";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ImagePicker from "@/components/ui/ImagePicker";
 import CategorySelect from "@/components/ui/CategorySelect";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
+import { getFormDefinition, upsertFormDefinition } from "@/actions/forms";
+import type { FormQuestion, FormQuestionType } from "@/types/cms";
 
 export default function EventForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
@@ -46,11 +48,68 @@ export default function EventForm({ initialData }: { initialData?: any }) {
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
   const [policies, setPolicies] = useState(initialData?.policies || "");
+  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
+  const [formLoaded, setFormLoaded] = useState(false);
+  const [formExpanded, setFormExpanded] = useState(false);
+  const [formSaving, setFormSaving] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const { toast } = useToast();
+
+  const QUESTION_TYPES: FormQuestionType[] = ["text", "textarea", "select", "radio", "checkbox", "date", "email", "phone", "number"];
+
+  useEffect(() => {
+    if (isEdit && params?.id && !formLoaded) {
+      getFormDefinition("event", params.id as string).then((def) => {
+        if (def) setFormQuestions(def.questions);
+        setFormLoaded(true);
+      });
+    }
+  }, [isEdit, params?.id, formLoaded]);
+
+  function addQuestion() {
+    const newQ: FormQuestion = {
+      id: `q-${crypto.randomUUID()}`,
+      type: "text",
+      label: "",
+      placeholder: "",
+      required: false,
+      options: [],
+      order: formQuestions.length,
+    };
+    setFormQuestions([...formQuestions, newQ]);
+  }
+
+  function updateQuestion(id: string, patch: Partial<FormQuestion>) {
+    setFormQuestions(prev => prev.map(q => q.id === id ? { ...q, ...patch } : q));
+  }
+
+  function removeQuestion(id: string) {
+    setFormQuestions(prev => prev.filter(q => q.id !== id).map((q, i) => ({ ...q, order: i })));
+  }
+
+  function moveQuestion(id: string, dir: -1 | 1) {
+    setFormQuestions(prev => {
+      const idx = prev.findIndex(q => q.id === id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next.map((q, i) => ({ ...q, order: i }));
+    });
+  }
+
+  async function handleSaveForm() {
+    if (!params?.id) return;
+    setFormSaving(true);
+    const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
+    await upsertFormDefinition("event", params.id as string, sorted);
+    setFormSaving(false);
+    toast("Form saved", "success");
+  }
 
   async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");

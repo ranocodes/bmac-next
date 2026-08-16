@@ -31,7 +31,6 @@ function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
 function InstructorCard({ instructor, color, index }: { instructor: ProgramInstructor; color: string; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useInView(ref);
-  const [expanded, setExpanded] = useState(false);
 
   const colorMap: Record<string, string> = {
     "text-emerald-400": "ring-emerald-400/60",
@@ -44,7 +43,6 @@ function InstructorCard({ instructor, color, index }: { instructor: ProgramInstr
     "text-accent": "ring-accent/60",
   };
   const ringColor = colorMap[color] || "ring-primary/60";
-  const shouldTruncate = instructor.bio && instructor.bio.length > 120;
 
   return (
     <div
@@ -67,22 +65,6 @@ function InstructorCard({ instructor, color, index }: { instructor: ProgramInstr
       <p className="font-display text-lg md:text-xl font-bold text-secondary">{instructor.name}</p>
       {instructor.role && (
         <p className="text-xs font-semibold uppercase tracking-widest text-primary mt-1.5">{instructor.role}</p>
-      )}
-      {instructor.bio && (
-        <div className="mt-3">
-          <p className={cn("text-sm text-muted-foreground leading-relaxed", !expanded && shouldTruncate && "line-clamp-3")}>
-            {instructor.bio}
-          </p>
-          {shouldTruncate && (
-            <button
-              type="button"
-              onClick={() => setExpanded(!expanded)}
-              className="text-xs text-primary font-medium mt-1.5 hover:text-primary/80 transition-colors"
-            >
-              {expanded ? "Show less" : "Read more"}
-            </button>
-          )}
-        </div>
       )}
     </div>
   );

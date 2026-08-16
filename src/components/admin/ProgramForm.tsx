@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle, ChevronUp, ChevronDown, FileText, GripVertical } from "lucide-react";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import IconPicker from "@/components/ui/IconPicker";
 import ImagePicker from "@/components/ui/ImagePicker";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
+import { getFormDefinition, upsertFormDefinition } from "@/actions/forms";
 import type { ProgramInstructor } from "@/types/cms";
+import type { FormQuestion, FormQuestionType } from "@/types/cms";
 
 const COLOR_OPTIONS = [
   { name: "Emerald", class: "text-emerald-400" },
@@ -91,6 +93,63 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
+  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
+  const [formLoaded, setFormLoaded] = useState(false);
+  const [formExpanded, setFormExpanded] = useState(false);
+  const [formSaving, setFormSaving] = useState(false);
+
+  const QUESTION_TYPES: FormQuestionType[] = ["text", "textarea", "select", "radio", "checkbox", "date", "email", "phone", "number"];
+
+  useEffect(() => {
+    if (isEdit && params?.id && !formLoaded) {
+      getFormDefinition("program", params.id as string).then((def) => {
+        if (def) setFormQuestions(def.questions);
+        setFormLoaded(true);
+      });
+    }
+  }, [isEdit, params?.id, formLoaded]);
+
+  function addQuestion() {
+    const newQ: FormQuestion = {
+      id: `q-${crypto.randomUUID()}`,
+      type: "text",
+      label: "",
+      placeholder: "",
+      required: false,
+      options: [],
+      order: formQuestions.length,
+    };
+    setFormQuestions([...formQuestions, newQ]);
+  }
+
+  function updateQuestion(id: string, patch: Partial<FormQuestion>) {
+    setFormQuestions(prev => prev.map(q => q.id === id ? { ...q, ...patch } : q));
+  }
+
+  function removeQuestion(id: string) {
+    setFormQuestions(prev => prev.filter(q => q.id !== id).map((q, i) => ({ ...q, order: i })));
+  }
+
+  function moveQuestion(id: string, dir: -1 | 1) {
+    setFormQuestions(prev => {
+      const idx = prev.findIndex(q => q.id === id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next.map((q, i) => ({ ...q, order: i }));
+    });
+  }
+
+  async function handleSaveForm() {
+    if (!params?.id) return;
+    setFormSaving(true);
+    const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
+    await upsertFormDefinition("program", params.id as string, sorted);
+    setFormSaving(false);
+    toast("Form saved", "success");
+  }
 
   async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
@@ -643,13 +702,11 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Photo URL</label>
-                    <input
-                      type="text"
-                      value={inst.photo || ""}
-                      onChange={(e) => { const next = [...instructors]; next[i] = { ...next[i], photo: e.target.value }; setInstructors(next); }}
-                      placeholder="https://example.com/photo.jpg"
-                      className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Photo</label>
+                    <ImagePicker 
+                      value={inst.photo || ""} 
+                      onChange={(val) => { const next = [...instructors]; next[i] = { ...next[i], photo: val }; setInstructors(next); }}
+                      previewShape="round"
                     />
                   </div>
                   <div>
@@ -1034,6 +1091,151 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               <p className="font-medium">{saveError ? "Save failed" : "Required fields missing"}</p>
               <p className="text-destructive/80 mt-0.5">{error}</p>
             </div>
+          </div>
+        )}
+
+        {isEdit && (
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setFormExpanded(!formExpanded)}
+              className="w-full flex items-center justify-between gap-2 px-4 py-3.5 text-left hover:bg-muted/30 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileText size={18} className="text-primary" />
+                <span className="text-sm font-semibold text-secondary">Application Form</span>
+                {formQuestions.length > 0 && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary">
+                    {formQuestions.length} question{formQuestions.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              <ChevronDown size={16} className={`text-muted-foreground transition-transform ${formExpanded ? "rotate-180" : ""}`} />
+            </button>
+            {formExpanded && (
+              <div className="px-4 pb-4 space-y-4 border-t border-border/50 pt-4">
+                {formQuestions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <FileText size={36} className="text-muted-foreground/20 mb-3" />
+                    <p className="text-sm font-medium text-secondary">No questions yet</p>
+                    <p className="text-xs text-muted-foreground mt-1 mb-4">Add questions to build the application form</p>
+                    <button
+                      type="button"
+                      onClick={addQuestion}
+                      className="inline-flex items-center gap-2 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    >
+                      <Plus size={15} /> Add First Question
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {formQuestions.map((q, idx) => (
+                      <div key={q.id} className="bg-background border border-border rounded-lg p-3">
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col items-center gap-0.5 pt-1.5">
+                            <GripVertical size={14} className="text-muted-foreground/30" />
+                            <span className="text-[10px] font-bold text-muted-foreground/40">{idx + 1}</span>
+                          </div>
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-2.5">
+                            <select
+                              value={q.type}
+                              onChange={e => updateQuestion(q.id, { type: e.target.value as FormQuestionType })}
+                              className="h-9 px-2.5 rounded-lg border border-border bg-card text-xs text-secondary focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                            >
+                              {QUESTION_TYPES.map(t => (
+                                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              value={q.label}
+                              onChange={e => updateQuestion(q.id, { label: e.target.value })}
+                              placeholder="Question label"
+                              className="h-9 px-3 rounded-lg border border-border bg-card text-xs text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                            />
+                            <div className="flex items-center gap-2">
+                              <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={q.required}
+                                  onChange={e => updateQuestion(q.id, { required: e.target.checked })}
+                                  className="rounded border-border"
+                                />
+                                Req
+                              </label>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-0.5 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => moveQuestion(q.id, -1)}
+                              disabled={idx === 0}
+                              className="p-1 rounded text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-30 transition-colors"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveQuestion(q.id, 1)}
+                              disabled={idx === formQuestions.length - 1}
+                              className="p-1 rounded text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-30 transition-colors"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeQuestion(q.id)}
+                              className="p-1 rounded text-destructive hover:bg-destructive/10 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
+                        {(q.type === "select" || q.type === "radio" || q.type === "checkbox") && (
+                          <div className="mt-2.5 ml-6">
+                            <input
+                              type="text"
+                              value={(q.options || []).join(", ")}
+                              onChange={e => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
+                              placeholder="Options (comma-separated)"
+                              className="w-full h-8 px-2.5 rounded-lg border border-border bg-card text-xs text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                            />
+                          </div>
+                        )}
+                        {(q.type === "text" || q.type === "textarea" || q.type === "email" || q.type === "phone" || q.type === "number") && (
+                          <div className="mt-2.5 ml-6">
+                            <input
+                              type="text"
+                              value={q.placeholder || ""}
+                              onChange={e => updateQuestion(q.id, { placeholder: e.target.value })}
+                              placeholder="Placeholder text"
+                              className="w-full h-8 px-2.5 rounded-lg border border-border bg-card text-xs text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={addQuestion}
+                    className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border bg-card text-xs font-medium text-secondary hover:bg-muted/40 transition-colors"
+                  >
+                    <Plus size={13} /> Add Question
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveForm}
+                    disabled={formSaving}
+                    className="inline-flex items-center gap-1.5 px-4 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    {formSaving ? <div className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : "Save Form"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </form>
