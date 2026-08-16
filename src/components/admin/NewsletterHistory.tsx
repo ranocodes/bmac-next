@@ -12,6 +12,28 @@ const STATUS_STYLES: Record<string, string> = {
   test: "bg-slate-50 border-slate-200 text-slate-600",
 };
 
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${STATUS_STYLES[status] || STATUS_STYLES.test}`}>
+      {status === "sent" && <CheckCircle2 size={10} />}
+      {status === "sending" && <Send size={10} />}
+      {status === "aborted" && <Ban size={10} />}
+      {(status === "partial" || status === "test" || status === "scheduled") && <AlertCircle size={10} />}
+      {status}
+    </span>
+  );
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatTime(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+}
+
 interface NewsletterHistoryProps {
   broadcasts: Broadcast[];
   onCancel: (id: string) => void;
@@ -20,7 +42,7 @@ interface NewsletterHistoryProps {
 export default function NewsletterHistory({ broadcasts, onCancel }: NewsletterHistoryProps) {
   if (broadcasts.length === 0) {
     return (
-      <div className="bg-card rounded-xl border border-border p-6">
+      <div className="bg-card rounded-xl border border-border p-4 lg:p-6">
         <h2 className="text-sm font-semibold text-secondary flex items-center gap-2 mb-4">
           <Clock size={15} className="text-primary" /> Broadcast History
         </h2>
@@ -30,11 +52,13 @@ export default function NewsletterHistory({ broadcasts, onCancel }: NewsletterHi
   }
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
+    <div className="bg-card rounded-xl border border-border p-4 lg:p-6">
       <h2 className="text-sm font-semibold text-secondary flex items-center gap-2 mb-4">
         <Clock size={15} className="text-primary" /> Broadcast History
       </h2>
-      <div className="overflow-x-auto">
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/50">
@@ -50,18 +74,8 @@ export default function NewsletterHistory({ broadcasts, onCancel }: NewsletterHi
             {broadcasts.map((b) => (
               <tr key={b.id} className="border-b border-border/30 hover:bg-muted/30">
                 <td className="py-2.5 px-3 font-medium text-secondary truncate max-w-[200px]">{b.subject}</td>
-                <td className="py-2.5 px-3">
-                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${STATUS_STYLES[b.status] || STATUS_STYLES.test}`}>
-                    {b.status === "sent" && <CheckCircle2 size={10} />}
-                    {b.status === "sending" && <Send size={10} />}
-                    {b.status === "aborted" && <Ban size={10} />}
-                    {(b.status === "partial" || b.status === "test" || b.status === "scheduled") && <AlertCircle size={10} />}
-                    {b.status}
-                  </span>
-                </td>
-                <td className="py-2.5 px-3 text-right text-xs text-muted-foreground">
-                  {b.sentCount} / {b.recipientCount}
-                </td>
+                <td className="py-2.5 px-3"><StatusBadge status={b.status} /></td>
+                <td className="py-2.5 px-3 text-right text-xs text-muted-foreground">{b.sentCount} / {b.recipientCount}</td>
                 <td className="py-2.5 px-3 text-right text-xs">
                   {b.errorCount > 0 ? (
                     <span className="text-destructive font-bold">{b.errorCount}</span>
@@ -69,17 +83,11 @@ export default function NewsletterHistory({ broadcasts, onCancel }: NewsletterHi
                     <span className="text-muted-foreground">0</span>
                   )}
                 </td>
-                <td className="py-2.5 px-3 text-xs text-muted-foreground">
-                  {new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  {" "}
-                  {new Date(b.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                </td>
+                <td className="py-2.5 px-3 text-xs text-muted-foreground">{formatDate(b.createdAt)} {formatTime(b.createdAt)}</td>
                 <td className="py-2.5 px-3 text-right">
                   {(b.status === "scheduled" || b.status === "sending") && (
                     <button
-                      onClick={() => {
-                        if (window.confirm(`Cancel broadcast "${b.subject}"?`)) onCancel(b.id);
-                      }}
+                      onClick={() => { if (window.confirm(`Cancel broadcast "${b.subject}"?`)) onCancel(b.id); }}
                       title="Cancel broadcast"
                       className="text-[10px] font-bold text-destructive hover:text-destructive/80 transition-colors"
                     >
@@ -91,6 +99,33 @@ export default function NewsletterHistory({ broadcasts, onCancel }: NewsletterHi
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {broadcasts.map((b) => (
+          <div key={b.id} className="border border-border/50 rounded-lg p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-medium text-secondary truncate flex-1 min-w-0">{b.subject}</p>
+              <StatusBadge status={b.status} />
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>{b.sentCount} / {b.recipientCount} sent</span>
+              {b.errorCount > 0 && <span className="text-destructive font-bold">{b.errorCount} errors</span>}
+              <span>{formatDate(b.createdAt)} {formatTime(b.createdAt)}</span>
+            </div>
+            {(b.status === "scheduled" || b.status === "sending") && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => { if (window.confirm(`Cancel broadcast "${b.subject}"?`)) onCancel(b.id); }}
+                  className="text-[10px] font-bold text-destructive hover:text-destructive/80 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

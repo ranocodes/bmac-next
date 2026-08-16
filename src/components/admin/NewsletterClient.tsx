@@ -486,16 +486,16 @@ export default function NewsletterClient({
         />
       )}
 
-      <div className="grid lg:grid-cols-5 gap-6">
+      <div className="grid lg:grid-cols-5 gap-4 lg:gap-6">
         <div className="lg:col-span-3 space-y-4">
-          <div className="bg-card rounded-xl border border-border p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-card rounded-xl border border-border p-4 lg:p-6">
+            <div className="flex items-center justify-between gap-2 mb-4">
               <h2 className="text-sm font-semibold text-secondary flex items-center gap-2">
                 <Send size={15} className="text-primary" /> Compose Broadcast
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 {draftSaved && (
-                  <span className="text-[10px] text-muted-foreground">Draft saved {draftSaved}</span>
+                  <span className="text-[10px] text-muted-foreground hidden sm:inline">Draft saved {draftSaved}</span>
                 )}
                 {draftSaved && (
                   <button onClick={clearDraft} className="text-[10px] text-destructive hover:underline">Clear</button>
@@ -507,11 +507,11 @@ export default function NewsletterClient({
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold text-secondary/80">Audience</label>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={sourceFilter}
                   onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
-                  className="px-3 py-2 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50"
+                  className="flex-1 min-w-0 px-3 py-2 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50"
                 >
                   <option value="">All subscribers</option>
                   {sources.map((s) => (
@@ -539,8 +539,8 @@ export default function NewsletterClient({
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Markdown body… (supports **bold**, *italic*, headings, lists, links)"
-                rows={12}
-                className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-y"
+                rows={8}
+                className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-y sm:rows-12"
               />
             </div>
 
@@ -582,7 +582,7 @@ export default function NewsletterClient({
               {sending ? (
                 <button
                   onClick={() => abortController?.abort()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-bold hover:bg-destructive/90 transition-all"
+                  className="inline-flex items-center gap-2 px-4 lg:px-5 py-2 lg:py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-bold hover:bg-destructive/90 transition-all"
                 >
                   <Ban size={16} /> Abort
                 </button>
@@ -590,34 +590,34 @@ export default function NewsletterClient({
                 <button
                   onClick={openConfirm}
                   disabled={!subject.trim() || !body.trim()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-4 lg:px-5 py-2 lg:py-2.5 bg-secondary text-secondary-foreground rounded-lg text-sm font-bold hover:bg-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Send size={16} /> Send Broadcast
+                  <Send size={16} /> Send
                 </button>
               )}
 
               <button
                 onClick={() => setShowTestModal(true)}
                 disabled={!subject.trim() || !body.trim()}
-                className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 px-3 py-2 lg:py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors disabled:opacity-60"
               >
-                <Mail size={13} /> Test send
+                <Mail size={13} /> <span className="hidden sm:inline">Test send</span><span className="sm:hidden">Test</span>
               </button>
 
               <button
                 onClick={handleSaveTemplate}
                 disabled={!subject.trim() || !body.trim()}
-                className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 px-3 py-2 lg:py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors disabled:opacity-60"
               >
-                <Save size={13} /> Save template
+                <Save size={13} /> <span className="hidden sm:inline">Save template</span><span className="sm:hidden">Save</span>
               </button>
 
               <div className="relative">
                 <button
                   onClick={() => setShowTemplates(!showTemplates)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 lg:py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors"
                 >
-                  <ChevronDown size={13} /> Templates ({templates.length})
+                  <ChevronDown size={13} /> <span className="hidden sm:inline">Templates ({templates.length})</span><span className="sm:hidden">({templates.length})</span>
                 </button>
                 {showTemplates && templates.length > 0 && (
                   <div className="absolute z-10 top-full mt-1 left-0 bg-card border border-border rounded-lg shadow-lg p-2 w-64 max-h-48 overflow-y-auto">
@@ -636,13 +636,13 @@ export default function NewsletterClient({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex flex-wrap items-center gap-2 mt-3">
               <Calendar size={13} className="text-muted-foreground" />
               <input
                 type="datetime-local"
                 value={scheduleTime}
                 onChange={(e) => setScheduleTime(e.target.value)}
-                className="px-3 py-1.5 bg-muted/40 border border-border rounded-lg text-xs focus:outline-none focus:border-primary/50"
+                className="flex-1 min-w-0 px-3 py-1.5 bg-muted/40 border border-border rounded-lg text-xs focus:outline-none focus:border-primary/50"
               />
               <button
                 onClick={handleSchedule}
@@ -655,7 +655,7 @@ export default function NewsletterClient({
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
+        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-4 lg:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-secondary flex items-center gap-2">
               <Users size={15} className="text-primary" /> Subscribers
@@ -677,7 +677,7 @@ export default function NewsletterClient({
               type="email"
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
-              placeholder="Add subscriber email…"
+              placeholder="Add subscriber…"
               className="flex-1 min-w-0 px-3 py-2.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
             />
             <button
@@ -746,7 +746,7 @@ export default function NewsletterClient({
             <span className="text-[10px] text-muted-foreground">Select all</span>
           </div>
 
-          <div className="max-h-[420px] overflow-y-auto space-y-0.5">
+          <div className="max-h-[300px] sm:max-h-[420px] overflow-y-auto space-y-0.5">
             {filtered.map((s) => (
               <div key={s.email} className="group flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
                 <input
@@ -757,9 +757,9 @@ export default function NewsletterClient({
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-secondary truncate">{s.email}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground truncate">
                     {s.source} · {new Date(s.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    {s.lastSentAt ? ` · last sent ${new Date(s.lastSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                    {s.lastSentAt ? ` · sent ${new Date(s.lastSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
                   </p>
                 </div>
                 <button
@@ -803,7 +803,7 @@ export default function NewsletterClient({
 
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowConfirm(false)}>
-          <div className="bg-card rounded-xl border border-border shadow-2xl p-6 max-w-lg w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-xl border border-border shadow-2xl p-5 sm:p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-display text-lg font-bold text-secondary mb-3">Confirm Send</h3>
             <div className="space-y-2 text-sm">
               <p><span className="font-semibold">Subject:</span> {subject}</p>
@@ -824,7 +824,7 @@ export default function NewsletterClient({
 
       {showTestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowTestModal(false)}>
-          <div className="bg-card rounded-xl border border-border shadow-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-xl border border-border shadow-2xl p-5 sm:p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-display text-lg font-bold text-secondary mb-3">Test Send</h3>
             <p className="text-xs text-muted-foreground mb-3">Send a test email with <code>[TEST]</code> prefix in subject.</p>
             <textarea
