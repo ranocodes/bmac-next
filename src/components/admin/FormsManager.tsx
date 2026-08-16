@@ -3,15 +3,10 @@
 import { useEffect, useState } from "react";
 import {
   FileText,
-  Plus,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-  GripVertical,
   ClipboardList,
-  Save,
-  X,
   Pencil,
+  X,
+  Trash2,
   Loader2,
 } from "lucide-react";
 import {
@@ -20,8 +15,9 @@ import {
   deleteFormDefinition,
   getFormSubmissions,
 } from "@/actions/forms";
+import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
-import type { FormQuestion, FormQuestionType, FormDefinition, FormSubmission } from "@/types/cms";
+import type { FormQuestion, FormDefinition } from "@/types/cms";
 
 const FORM_TYPES = [
   { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
@@ -30,10 +26,6 @@ const FORM_TYPES = [
   { entityType: "contact", label: "Contact Form", desc: "Fields for the contact page" },
   { entityType: "newsletter", label: "Newsletter Signup", desc: "Extra fields for newsletter" },
   { entityType: "member", label: "Membership Application", desc: "Form for joining BMAC" },
-];
-
-const QUESTION_TYPES: FormQuestionType[] = [
-  "text", "textarea", "select", "radio", "checkbox", "date", "email", "phone", "number",
 ];
 
 interface FormCard {
@@ -76,39 +68,6 @@ export default function FormsManager() {
   function cancelEditing() {
     setEditingType(null);
     setQuestions([]);
-  }
-
-  function addQuestion() {
-    const newQ: FormQuestion = {
-      id: `q-${crypto.randomUUID()}`,
-      type: "text",
-      label: "",
-      placeholder: "",
-      required: false,
-      options: [],
-      order: questions.length,
-    };
-    setQuestions([...questions, newQ]);
-  }
-
-  function updateQuestion(id: string, patch: Partial<FormQuestion>) {
-    setQuestions(prev => prev.map(q => q.id === id ? { ...q, ...patch } : q));
-  }
-
-  function removeQuestion(id: string) {
-    setQuestions(prev => prev.filter(q => q.id !== id).map((q, i) => ({ ...q, order: i })));
-  }
-
-  function moveQuestion(id: string, dir: -1 | 1) {
-    setQuestions(prev => {
-      const idx = prev.findIndex(q => q.id === id);
-      if (idx < 0) return prev;
-      const target = idx + dir;
-      if (target < 0 || target >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next.map((q, i) => ({ ...q, order: i }));
-    });
   }
 
   async function handleSave() {
@@ -212,125 +171,13 @@ export default function FormsManager() {
               </div>
 
               {isEditing && (
-                <div className="border-t border-border/50 p-5 space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs text-muted-foreground">
-                      {questions.length} question{questions.length !== 1 ? "s" : ""}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={addQuestion}
-                        className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border bg-card text-xs font-medium text-secondary hover:bg-muted/40 transition-colors"
-                      >
-                        <Plus size={13} /> Add Question
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="inline-flex items-center gap-1.5 px-4 h-8 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                      >
-                        {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
-                        {saving ? "Saving..." : "Save Form"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {questions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <FileText size={36} className="text-muted-foreground/20 mb-3" />
-                      <p className="text-xs font-medium text-secondary">No questions yet</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">Add questions to build this form</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {questions.map((q, idx) => (
-                        <div key={q.id} className="bg-background rounded-xl border border-border p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="flex flex-col items-center gap-0.5 pt-1">
-                              <GripVertical size={14} className="text-muted-foreground/30" />
-                              <span className="text-[10px] font-bold text-muted-foreground/40">{idx + 1}</span>
-                            </div>
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-[160px_1fr_auto] gap-3">
-                              <select
-                                value={q.type}
-                                onChange={e => updateQuestion(q.id, { type: e.target.value as FormQuestionType })}
-                                className="h-9 px-2.5 rounded-lg border border-border bg-card text-xs text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                              >
-                                {QUESTION_TYPES.map(t => (
-                                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                                ))}
-                              </select>
-                              <input
-                                type="text"
-                                value={q.label}
-                                onChange={e => updateQuestion(q.id, { label: e.target.value })}
-                                placeholder="Question label"
-                                className="h-9 px-3 rounded-lg border border-border bg-card text-xs text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                              />
-                              <div className="flex items-center gap-2">
-                                <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none">
-                                  <input
-                                    type="checkbox"
-                                    checked={q.required}
-                                    onChange={e => updateQuestion(q.id, { required: e.target.checked })}
-                                    className="rounded border-border"
-                                  />
-                                  Required
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-0.5 pt-0.5">
-                              <button
-                                onClick={() => moveQuestion(q.id, -1)}
-                                disabled={idx === 0}
-                                className="p-1 rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-30 transition-colors"
-                                title="Move up"
-                              >
-                                <ChevronUp size={14} />
-                              </button>
-                              <button
-                                onClick={() => moveQuestion(q.id, 1)}
-                                disabled={idx === questions.length - 1}
-                                className="p-1 rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-30 transition-colors"
-                                title="Move down"
-                              >
-                                <ChevronDown size={14} />
-                              </button>
-                              <button
-                                onClick={() => removeQuestion(q.id)}
-                                className="p-1 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                                title="Delete question"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </div>
-                          {(q.type === "select" || q.type === "radio" || q.type === "checkbox") && (
-                            <div className="mt-3 ml-7">
-                              <input
-                                type="text"
-                                value={(q.options || []).join(", ")}
-                                onChange={e => updateQuestion(q.id, { options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
-                                placeholder="Options (comma-separated)"
-                                className="w-full h-8 px-3 rounded-lg border border-border bg-card text-[11px] text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                              />
-                            </div>
-                          )}
-                          {(q.type === "text" || q.type === "textarea" || q.type === "email" || q.type === "phone" || q.type === "number") && (
-                            <div className="mt-3 ml-7">
-                              <input
-                                type="text"
-                                value={q.placeholder || ""}
-                                onChange={e => updateQuestion(q.id, { placeholder: e.target.value })}
-                                placeholder="Placeholder text"
-                                className="w-full h-8 px-3 rounded-lg border border-border bg-card text-[11px] text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className="border-t border-border/50 p-5">
+                  <FormEditor
+                    questions={questions}
+                    onChange={setQuestions}
+                    onSave={handleSave}
+                    saving={saving}
+                  />
                 </div>
               )}
             </div>
