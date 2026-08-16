@@ -26,7 +26,7 @@ export const EmptyState = ({
       animate={{ opacity: 1, y: 0 }}
       className="w-full flex flex-col items-center justify-center py-24 px-8 text-center bg-white rounded-[3rem] border border-dashed border-slate-200 shadow-sm"
     >
-      <div className="w-20 h-20 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-300 mb-8">
+      <div className="w-20 h-20 rounded-[2rem] bg-slate-50 flex items-center justify-center text-muted-foreground mb-8">
         <Icon size={40} strokeWidth={1.2} />
       </div>
       <h3 className="font-display text-2xl font-bold text-deep mb-4 tracking-tight">

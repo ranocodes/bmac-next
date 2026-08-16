@@ -41,6 +41,27 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   );
   const [isPaid, setIsPaid] = useState(initialData?.is_paid ?? initialData?.isPaid ?? false);
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
+  const [duration, setDuration] = useState(initialData?.duration || "");
+  const [effort, setEffort] = useState(initialData?.effort || "");
+  const [audienceFor, setAudienceFor] = useState<string[]>(initialData?.audienceFor || initialData?.audience_for || []);
+  const [audienceForInput, setAudienceForInput] = useState("");
+  const [audienceNotFor, setAudienceNotFor] = useState<string[]>(initialData?.audienceNotFor || initialData?.audience_not_for || []);
+  const [audienceNotForInput, setAudienceNotForInput] = useState("");
+  const [instructorName, setInstructorName] = useState(initialData?.instructorName || initialData?.instructor_name || "");
+  const [instructorBio, setInstructorBio] = useState(initialData?.instructorBio || initialData?.instructor_bio || "");
+  const [instructorPhoto, setInstructorPhoto] = useState(initialData?.instructorPhoto || initialData?.instructor_photo || "");
+  const [curriculum, setCurriculum] = useState<{ title: string; outcome: string }[]>(initialData?.curriculum || []);
+  const [curriculumOpen, setCurriculumOpen] = useState(false);
+  const [curriculumTitle, setCurriculumTitle] = useState("");
+  const [curriculumOutcome, setCurriculumOutcome] = useState("");
+  const [includes, setIncludes] = useState<string[]>(initialData?.includes || []);
+  const [includesInput, setIncludesInput] = useState("");
+  const [refundPolicy, setRefundPolicy] = useState(initialData?.refundPolicy || initialData?.refund_policy || "");
+  const [testimonials, setTestimonials] = useState<{ name: string; designation: string; quote: string }[]>(initialData?.testimonials || []);
+  const [testimonialOpen, setTestimonialOpen] = useState(false);
+  const [testimonialName, setTestimonialName] = useState("");
+  const [testimonialDesignation, setTestimonialDesignation] = useState("");
+  const [testimonialQuote, setTestimonialQuote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState(false);
@@ -95,6 +116,17 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
       details: [detailDuration, detailSchedule, detailEligibility, ...detailOther].join(" | "),
       skills,
       faqs,
+      duration,
+      effort,
+      audience_for: audienceFor,
+      audience_not_for: audienceNotFor,
+      instructor_name: instructorName,
+      instructor_bio: instructorBio,
+      instructor_photo: instructorPhoto,
+      curriculum,
+      includes,
+      refund_policy: refundPolicy,
+      testimonials,
     };
     if (isEdit && params?.id) {
       try {
@@ -433,6 +465,343 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                   <button
                     type="button"
                     onClick={() => { setFaqOpen(false); setFaqQ(""); setFaqA(""); }}
+                    className="px-3 py-2 bg-card border border-border/50 text-secondary text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Detail Page Content */}
+        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pb-2 border-b border-border/20">Detail Page Content</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">Duration</label>
+              <input
+                type="text"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="12 weeks"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">Effort</label>
+              <input
+                type="text"
+                value={effort}
+                onChange={(e) => setEffort(e.target.value)}
+                placeholder="2 hours per week"
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">This program is for</label>
+              <div className="space-y-2 mb-2">
+                {audienceFor.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                    <CheckCircle2 size={14} className="text-primary shrink-0" />
+                    <span className="flex-1 text-sm text-secondary">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAudienceFor(audienceFor.filter((_, j) => j !== i))}
+                      className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-1.5">
+                <input
+                  type="text"
+                  value={audienceForInput}
+                  onChange={(e) => setAudienceForInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = audienceForInput.trim(); if (v) { setAudienceFor([...audienceFor, v]); setAudienceForInput(""); } } }}
+                  placeholder="e.g. Teens ages 13-18"
+                  className="flex-1 px-3 py-2 min-h-[38px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => { const v = audienceForInput.trim(); if (v) { setAudienceFor([...audienceFor, v]); setAudienceForInput(""); } }}
+                  className="w-full sm:w-auto px-3 py-2 bg-primary/10 text-primary text-xs font-medium rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-1"
+                >
+                  <Plus size={12} /> Add
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">This program is not for</label>
+              <div className="space-y-2 mb-2">
+                {audienceNotFor.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                    <X size={14} className="text-destructive shrink-0" />
+                    <span className="flex-1 text-sm text-secondary">{item}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAudienceNotFor(audienceNotFor.filter((_, j) => j !== i))}
+                      className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-1.5">
+                <input
+                  type="text"
+                  value={audienceNotForInput}
+                  onChange={(e) => setAudienceNotForInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = audienceNotForInput.trim(); if (v) { setAudienceNotFor([...audienceNotFor, v]); setAudienceNotForInput(""); } } }}
+                  placeholder="e.g. Advanced developers"
+                  className="flex-1 px-3 py-2 min-h-[38px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => { const v = audienceNotForInput.trim(); if (v) { setAudienceNotFor([...audienceNotFor, v]); setAudienceNotForInput(""); } }}
+                  className="w-full sm:w-auto px-3 py-2 bg-primary/10 text-primary text-xs font-medium rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-1"
+                >
+                  <Plus size={12} /> Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Instructor</label>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={instructorName}
+                    onChange={(e) => setInstructorName(e.target.value)}
+                    placeholder="Instructor name"
+                    className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Photo</label>
+                  <ImagePicker value={instructorPhoto} onChange={setInstructorPhoto} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Bio</label>
+                <textarea
+                  value={instructorBio}
+                  onChange={(e) => setInstructorBio(e.target.value)}
+                  rows={2}
+                  placeholder="One or two sentences about the instructor"
+                  className="w-full px-3 py-2.5 min-h-[50px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Curriculum</label>
+            <div className="space-y-2 mb-2">
+              {curriculum.length === 0 && (
+                <p className="text-xs text-muted-foreground/50 py-2">No curriculum items yet</p>
+              )}
+              {curriculum.map((item, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2.5 bg-background border border-input rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-secondary">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.outcome}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurriculum(curriculum.filter((_, j) => j !== i))}
+                    className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors shrink-0 mt-0.5"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {!curriculumOpen ? (
+              <button
+                type="button"
+                onClick={() => setCurriculumOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+              >
+                <Plus size={14} /> Add module
+              </button>
+            ) : (
+              <div className="space-y-2 p-3 bg-background border border-border/50 rounded-lg">
+                <input
+                  type="text"
+                  value={curriculumTitle}
+                  onChange={(e) => setCurriculumTitle(e.target.value)}
+                  placeholder="Module title"
+                  className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <textarea
+                  value={curriculumOutcome}
+                  onChange={(e) => setCurriculumOutcome(e.target.value)}
+                  rows={2}
+                  placeholder="What the learner can do after this module"
+                  className="w-full px-3 py-2 min-h-[50px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!curriculumTitle.trim() || !curriculumOutcome.trim()) return;
+                      setCurriculum([...curriculum, { title: curriculumTitle.trim(), outcome: curriculumOutcome.trim() }]);
+                      setCurriculumTitle("");
+                      setCurriculumOutcome("");
+                      setCurriculumOpen(false);
+                    }}
+                    disabled={!curriculumTitle.trim() || !curriculumOutcome.trim()}
+                    className="px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    Save module
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCurriculumOpen(false); setCurriculumTitle(""); setCurriculumOutcome(""); }}
+                    className="px-3 py-2 bg-card border border-border/50 text-secondary text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">What's included</label>
+            <div className="space-y-2 mb-2">
+              {includes.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                  <CheckCircle2 size={14} className="text-primary shrink-0" />
+                  <span className="flex-1 text-sm text-secondary">{item}</span>
+                  <button
+                    type="button"
+                    onClick={() => setIncludes(includes.filter((_, j) => j !== i))}
+                    className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-1.5">
+              <input
+                type="text"
+                value={includesInput}
+                onChange={(e) => setIncludesInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = includesInput.trim(); if (v) { setIncludes([...includes, v]); setIncludesInput(""); } } }}
+                placeholder="e.g. Certification on completion"
+                className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => { const v = includesInput.trim(); if (v) { setIncludes([...includes, v]); setIncludesInput(""); } }}
+                className="w-full sm:w-auto px-3 py-2.5 min-h-[44px] bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Plus size={14} /> Add
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Refund policy</label>
+            <textarea
+              value={refundPolicy}
+              onChange={(e) => setRefundPolicy(e.target.value)}
+              rows={2}
+              placeholder="Cancellation and refund policy"
+              className="w-full px-3 py-2.5 min-h-[50px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Testimonials</label>
+            <div className="space-y-2 mb-2">
+              {testimonials.length === 0 && (
+                <p className="text-xs text-muted-foreground/50 py-2">No testimonials yet</p>
+              )}
+              {testimonials.map((t, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2.5 bg-background border border-input rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-secondary">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.designation}</p>
+                    <p className="text-xs text-secondary/80 mt-1 line-clamp-2">{t.quote}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setTestimonials(testimonials.filter((_, j) => j !== i))}
+                    className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors shrink-0 mt-0.5"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {!testimonialOpen ? (
+              <button
+                type="button"
+                onClick={() => setTestimonialOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+              >
+                <Plus size={14} /> Add testimonial
+              </button>
+            ) : (
+              <div className="space-y-2 p-3 bg-background border border-border/50 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={testimonialName}
+                    onChange={(e) => setTestimonialName(e.target.value)}
+                    placeholder="Name"
+                    className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  />
+                  <input
+                    type="text"
+                    value={testimonialDesignation}
+                    onChange={(e) => setTestimonialDesignation(e.target.value)}
+                    placeholder="Designation"
+                    className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  />
+                </div>
+                <textarea
+                  value={testimonialQuote}
+                  onChange={(e) => setTestimonialQuote(e.target.value)}
+                  rows={3}
+                  placeholder="Quote"
+                  className="w-full px-3 py-2 min-h-[60px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!testimonialName.trim() || !testimonialQuote.trim()) return;
+                      setTestimonials([...testimonials, { name: testimonialName.trim(), designation: testimonialDesignation.trim(), quote: testimonialQuote.trim() }]);
+                      setTestimonialName("");
+                      setTestimonialDesignation("");
+                      setTestimonialQuote("");
+                      setTestimonialOpen(false);
+                    }}
+                    disabled={!testimonialName.trim() || !testimonialQuote.trim()}
+                    className="px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTestimonialOpen(false); setTestimonialName(""); setTestimonialDesignation(""); setTestimonialQuote(""); }}
                     className="px-3 py-2 bg-card border border-border/50 text-secondary text-sm font-medium rounded-lg hover:bg-muted transition-colors"
                   >
                     Cancel

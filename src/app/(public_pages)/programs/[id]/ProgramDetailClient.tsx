@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Users, Clock, Send, MapPin, CheckCircle } from "lucide-react";
+import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle, ArrowLeft, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import ShareButtons from "@/components/ui/ShareButtons";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
@@ -32,6 +34,17 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
     applicationsOpen: (p as any).applications_open ?? (p as any).applicationsOpen ?? false,
     isPaid: (p as any).is_paid ?? (p as any).isPaid ?? false,
     price: Number((p as any).price || 0),
+    duration: (p as any).duration || "",
+    effort: (p as any).effort || "",
+    audienceFor: (p as any).audienceFor || (p as any).audience_for || [],
+    audienceNotFor: (p as any).audienceNotFor || (p as any).audience_not_for || [],
+    instructorName: (p as any).instructorName || (p as any).instructor_name || "",
+    instructorBio: (p as any).instructorBio || (p as any).instructor_bio || "",
+    instructorPhoto: (p as any).instructorPhoto || (p as any).instructor_photo || "",
+    curriculum: (p as any).curriculum || [],
+    includes: (p as any).includes || [],
+    refundPolicy: (p as any).refundPolicy || (p as any).refund_policy || "",
+    testimonials: (p as any).testimonials || [],
   }));
   const [program] = useState<Program | null>(all.find(p => p.id === id && p.status === "published") || null);
   const [otherPathways] = useState<Program[]>(all.filter(p => p.id !== id && p.status === "published").slice(0, 3));
@@ -41,6 +54,16 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", motivation: "" });
   const [consent, setConsent] = useState(false);
+
+  const curriculum = (program as any)?.curriculum || [];
+  const audienceFor = (program as any)?.audienceFor || [];
+  const audienceNotFor = (program as any)?.audienceNotFor || [];
+  const includes = (program as any)?.includes || [];
+  const instructorName = (program as any)?.instructorName || "";
+  const instructorBio = (program as any)?.instructorBio || "";
+  const instructorPhoto = (program as any)?.instructorPhoto || "";
+  const refundPolicy = (program as any)?.refundPolicy || "";
+  const testimonials = (program as any)?.testimonials || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,156 +167,298 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   };
 
   if (!program) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Program Not Found</h2>
-          <Link href="/programs" className="text-primary font-bold">Back to Curriculum</Link>
-        </div>
-      </div>
-    );
+    return null;
   }
+
+  const detailsList = program.details.split("|").map(s => s.trim()).filter(Boolean);
 
   return (
     <main suppressHydrationWarning className="bg-background">
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 pb-12 md:pb-20 px-6 overflow-hidden bg-card text-center md:text-left">
-        <div className="absolute inset-0 bg-primary/5 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center relative z-10">
-          <div className="lg:col-span-7 order-2 lg:order-1">
-            <Link href="/programs" className="lg:hidden inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
-              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Curriculum
-            </Link>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Link href="/programs" className="hidden lg:inline-flex items-center gap-2 text-muted-foreground hover:text-primary text-xs font-bold uppercase tracking-widest mb-8 transition-colors group">
-                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Curriculum
-              </Link>
-              
-              <div className="flex items-center justify-center lg:justify-start gap-4 mb-6">
-                <div className={cn("p-3 rounded-2xl shadow-sm hidden md:block", program.color)}>
-                  <div className="w-6 h-6 flex items-center justify-center">
-                    {getIcon(program.icon as string, { size: 24 })}
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto">
+          <Breadcrumbs items={[{ label: "Programs", href: "/programs" }, { label: program.title }]} />
+
+          <div className="mt-8 md:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-20 items-center">
+            <div className="lg:col-span-7 text-center lg:text-left">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
+                  <div className={cn("p-2.5 rounded-lg hidden md:block", program.color)}>
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      {getIcon(program.icon as string, { size: 24 })}
+                    </div>
                   </div>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Official BMAC Program
+                  </span>
+                  <span className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest bg-primary/10 text-primary">
+                    {program.isPaid ? `₦${(program.price || 0).toLocaleString()}` : "Free"}
+                  </span>
                 </div>
-                <span className="text-accent font-bold tracking-[0.2em] uppercase text-[9px] md:text-[10px]">
-                  Official BMAC Program
-                </span>
-                <span className={`px-3 py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest border ${
-                  program.isPaid
-                    ? "bg-accent/10 text-accent border-accent/30"
-                    : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                }`}>
-                  {program.isPaid ? `₦${(program.price || 0).toLocaleString()}` : "Free"}
-                </span>
-              </div>
 
-              <h1 className="font-display text-[clamp(2.25rem,8vw,4.5rem)] font-extrabold text-secondary tracking-tighter leading-[0.95] mb-6 lg:mb-8">
-                {program.title}
-              </h1>
+                <h1 className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-tight mb-6">
+                  {program.title}
+                </h1>
 
-              <p className="text-muted-foreground text-base md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-                {program.desc}
-              </p>
+                <p className="text-muted-foreground text-base md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                  {program.desc}
+                </p>
+
+                <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 md:gap-10">
+                  {(program as any).duration && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary shrink-0">
+                        <Clock size={20} className="md:w-6 md:h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Duration</p>
+                        <p className="text-sm md:text-base font-bold text-secondary leading-tight">{(program as any).duration}</p>
+                      </div>
+                    </div>
+                  )}
+                  {(program as any).effort && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary shrink-0">
+                        <Users size={20} className="md:w-6 md:h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Effort</p>
+                        <p className="text-sm md:text-base font-bold text-secondary leading-tight">{(program as any).effort}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 md:mt-10 lg:hidden">
+                  <a href="#register" className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-card rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
+                    {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"}
+                  </a>
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="lg:col-span-5 relative aspect-[4/3] md:aspect-[3/2] rounded-xl border border-border overflow-hidden"
+            >
+              <Image src={program.img} alt={program.title} fill className="object-cover" priority sizes="(max-width: 1024px) 100vw, 40vw" />
             </motion.div>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="lg:col-span-5 relative h-[300px] md:h-[450px] lg:h-[500px] rounded-bento overflow-hidden shadow-2xl border-4 md:border-8 border-card order-1 lg:order-2"
-          >
-            <Image src={program.img} alt={program.title} fill className="object-cover" priority />
-          </motion.div>
         </div>
       </section>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <ShareButtons title={program.title} />
+      </div>
+
       {/* Main Content Area */}
-      <section className="py-10 md:py-20 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24">
-          
-          <div className="lg:col-span-7">
-            <div className="prose prose-slate lg:prose-lg max-w-none mb-12 md:mb-16 text-center md:text-left">
-              <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6">Overview</h3>
-              <p className="text-muted-foreground text-base md:text-lg leading-[1.7] md:leading-[1.8] mb-8">
+      <section className="py-16 md:py-24 px-4 md:px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+
+          <div className="lg:col-span-7 space-y-16 md:space-y-20">
+            {/* Overview */}
+            <div>
+              <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Overview</h3>
+              <p className="text-secondary/90 text-base md:text-lg leading-[1.7] md:leading-[1.8]">
                 {program.longDesc}
               </p>
             </div>
 
-            <div className="mb-12 md:mb-16">
-               <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-8 text-center md:text-left">What You'll Master</h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                  {(program.skills?.length ? program.skills : [
-                    "Commanding presence and stage authority",
-                    "Advanced rhetorical techniques",
-                    "Critical thinking and rapid response",
-                    "Emotional connection with any audience",
-                    "Professional storytelling frameworks",
-                    "Leadership communication strategies"
-                  ]).map((skill, i) => (
-                    <div key={i} className="flex items-center gap-3 p-4 md:p-5 rounded-xl bg-card border border-border shadow-sm transition-transform hover:-translate-y-1">
-                       <CheckCircle2 className="text-primary flex-shrink-0" size={18} />
-                       <span className="text-[11px] md:text-sm font-bold text-secondary">{skill}</span>
+            {/* Curriculum as progression */}
+            {curriculum.length > 0 && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-2 md:mb-4 tracking-tight">What You&rsquo;ll Learn</h3>
+                <p className="text-muted-foreground text-sm md:text-base mb-6 md:mb-8">Each module ends with a skill you can actually use.</p>
+                <div className="space-y-3 md:space-y-4">
+                  {curriculum.map((mod: { title: string; outcome: string }, i: number) => (
+                    <div key={i} className="rounded-xl border border-border bg-card p-5 md:p-6 flex gap-4 md:gap-5">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 font-display font-bold text-sm">
+                        {i + 1}
+                      </div>
+                      <div>
+                        <p className="font-bold text-secondary text-sm md:text-base mb-1.5">{mod.title}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                          <CheckCircle2 size={14} className="text-primary shrink-0 mt-0.5" />
+                          {mod.outcome}
+                        </p>
+                      </div>
                     </div>
                   ))}
-               </div>
-            </div>
+                </div>
+              </div>
+            )}
 
-            <hr className="border-border/50 mb-12 md:mb-16" />
-
-            <div className="bg-muted/50 rounded-[2rem] md:rounded-bento p-6 md:p-12 border border-border text-center md:text-left">
-               <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-4">Common Questions</h3>
-               <div className="space-y-3 md:space-y-4 text-left">
-               {(program.faqs?.length ? program.faqs : [
-                    { q: "Is this workshop for beginners?", a: "Absolutely. We have specialized modules designed specifically for those starting their journey." },
-                    { q: "Are there any fees?", a: "Most BMAC programs are free for active members. Public competitions may have small registration fees." }
-                  ]).map((faq, i) => (
-                    <div key={i} className="bg-card p-5 md:p-6 rounded-xl shadow-sm border border-border">
-                       <p className="font-bold text-secondary text-sm md:text-base mb-2">{faq.q}</p>
-                       <p className="text-[11px] md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+            {/* Skills */}
+            {program.skills?.length ? (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Skills You&rsquo;ll Build</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  {program.skills.map((skill, i) => (
+                    <div key={i} className="flex items-center gap-3 p-4 md:p-5 rounded-xl bg-card border border-border">
+                      <CheckCircle2 className="text-primary flex-shrink-0" size={18} />
+                      <span className="text-sm font-bold text-secondary">{skill}</span>
                     </div>
                   ))}
-               </div>
-            </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Audience fit */}
+            {(audienceFor.length > 0 || audienceNotFor.length > 0) && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Who It&rsquo;s For</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  {audienceFor.length > 0 && (
+                    <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-5">This program is for</h4>
+                      <ul className="space-y-3.5">
+                        {audienceFor.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <CheckCircle2 size={16} className="text-primary shrink-0 mt-0.5" />
+                            <span className="text-sm text-secondary leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {audienceNotFor.length > 0 && (
+                    <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+                      <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-5">This program is not for</h4>
+                      <ul className="space-y-3.5">
+                        {audienceNotFor.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="w-4 h-4 rounded-md bg-destructive/10 text-destructive flex items-center justify-center shrink-0 mt-0.5">
+                              <span className="text-xs font-bold leading-none">✕</span>
+                            </span>
+                            <span className="text-sm text-muted-foreground leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Instructor */}
+            {instructorName && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Your Instructor</h3>
+                <div className="rounded-xl border border-border bg-card p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+                  {instructorPhoto ? (
+                    <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border border-border shrink-0">
+                      <Image src={instructorPhoto} alt={instructorName} fill className="object-cover" sizes="96px" />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Users size={32} />
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-display text-lg md:text-xl font-bold text-secondary">{instructorName}</p>
+                    {instructorBio && (
+                      <p className="text-sm text-muted-foreground leading-relaxed mt-3">{instructorBio}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* What's included */}
+            {includes.length > 0 && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">What&rsquo;s Included</h3>
+                <div className="grid grid-cols-1 gap-3 md:gap-4">
+                  {includes.map((item: string, i: number) => (
+                    <div key={i} className="flex items-center gap-3 p-4 md:p-5 rounded-xl bg-card border border-border">
+                      <CheckCircle2 className="text-primary flex-shrink-0" size={18} />
+                      <span className="text-sm font-bold text-secondary">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* FAQ */}
+            {(program.faqs?.length ?? 0) > 0 && (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Common Questions</h3>
+                <div className="space-y-3 md:space-y-4">
+                  {program.faqs?.map((faq, i) => (
+                    <div key={i} className="bg-card p-5 md:p-6 rounded-xl border border-border">
+                      <p className="font-bold text-secondary text-sm md:text-base mb-2">{faq.q}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Refund policy */}
+            {refundPolicy && (
+              <div className="rounded-xl border border-border bg-muted/30 p-6 md:p-8">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">Refund policy</h4>
+                <p className="text-sm text-secondary leading-relaxed">{refundPolicy}</p>
+              </div>
+            )}
           </div>
 
-          <aside className="lg:col-span-5 space-y-6 md:space-y-12">
-            <div className="lg:sticky lg:top-32 space-y-6 md:space-y-12">
-               
+          <aside id="register" className="lg:col-span-5 scroll-mt-28">
+            <div className="lg:sticky lg:top-32 space-y-6 md:space-y-8">
+
                {/* Logistics Widget */}
-               <div className="bg-secondary rounded-[2rem] md:rounded-bento p-6 md:p-10 text-secondary-foreground relative overflow-hidden shadow-2xl">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary rounded-full blur-[60px] opacity-20" />
-                  <h3 className="font-display text-xl md:text-2xl font-bold mb-8 relative z-10 text-center md:text-left">Workshop <br className="hidden md:block"/> Logistics</h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 relative z-10">
-                    {program.details.split('|').filter(s => s.trim()).map((detail, i) => (
-                      <div key={i} className="flex items-center gap-4 md:gap-5 justify-start">
-                         <div className="w-10 h-10 rounded-xl bg-card/5 border border-card/10 flex items-center justify-center text-accent flex-shrink-0">
-                            <Clock size={18} />
-                         </div>
-                         <p className="text-xs md:text-sm font-bold leading-tight">{detail}</p>
+               <div className="bg-card border border-border rounded-xl p-6 md:p-8">
+                  <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-6 md:mb-8">Workshop Logistics</h3>
+
+                  <div className="space-y-5">
+                    {(program as any).duration && (
+                      <div className="flex items-center gap-4 md:gap-5">
+                        <div className="w-10 h-10 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
+                          <Clock size={18} />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Duration</p>
+                          <p className="text-sm font-bold text-secondary leading-tight">{(program as any).duration}</p>
+                        </div>
+                      </div>
+                    )}
+                    {(program as any).effort && (
+                      <div className="flex items-center gap-4 md:gap-5">
+                        <div className="w-10 h-10 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
+                          <Users size={18} />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Effort</p>
+                          <p className="text-sm font-bold text-secondary leading-tight">{(program as any).effort}</p>
+                        </div>
+                      </div>
+                    )}
+                    {detailsList.map((detail, i) => (
+                      <div key={i} className="flex items-center gap-4 md:gap-5">
+                        <div className="w-10 h-10 rounded-lg bg-primary/5 border border-border flex items-center justify-center text-primary flex-shrink-0">
+                          <MapPin size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-secondary leading-tight">{detail}</p>
                       </div>
                     ))}
                   </div>
                </div>
 
                {/* RSVP Form */}
-               <div className="bg-gradient-to-br from-card to-muted/30 rounded-[2rem] md:rounded-bento p-6 md:p-10 lg:p-12 shadow-2xl border border-border relative overflow-hidden text-center md:text-left">
-                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl opacity-50 -mr-24 -mt-24 pointer-events-none" />
-                   <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl opacity-30 -ml-16 -mb-16 pointer-events-none" />
-                   <div className="relative z-10">
+               <div className="bg-card border border-border rounded-xl p-6 md:p-10 lg:p-12 text-center md:text-left">
                      <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
                      <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">
                        {program.isPaid
                          ? `Pay ₦${(program.price || 0).toLocaleString()} to reserve your place in the next cohort.`
                          : "Join the next cohort of ambassadors gathering in Jos."}
                      </p>
-                     
+
                    {!program.applicationsOpen ? (
                       <div className="text-center py-8">
                         <p className="font-display text-lg font-bold text-secondary mb-1">Applications Closed</p>
@@ -309,61 +474,89 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                         {applicationId && (
                           <p className="text-[10px] font-mono text-muted-foreground/60 mt-3">Ref: {applicationId}</p>
                         )}
+                        <Link href="/application-status" className="inline-flex items-center gap-2 text-primary font-bold text-sm mt-4 hover:gap-3 transition-all">
+                          Check your application status <ArrowLeft size={15} className="rotate-180" />
+                        </Link>
                       </div>
                     ) : (
                       <form className="space-y-5 md:space-y-6" onSubmit={handleSubmit}>
-                        <div className="space-y-2 text-left group">
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
-                           <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ambassador Name" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
-                        </div>
-                        <div className="space-y-2 text-left group">
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Email Address</label>
-                           <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="email@bmacjos.org" className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
-                        </div>
-                        <div className="space-y-2 text-left group">
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Phone (Optional)</label>
-                           <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} placeholder="+234..." className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" />
-                        </div>
-                        <div className="space-y-2 text-left group">
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Why Do You Want to Join?</label>
-                           <textarea value={formData.motivation} onChange={(e) => setFormData({...formData, motivation: e.target.value})} rows={3} placeholder="Tell us a little about yourself and why this program matters to you..." className="w-full px-5 md:px-6 py-4 md:py-5 bg-background border border-border/60 rounded-xl md:rounded-2xl text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 resize-none" required />
-                        </div>
-                        <label className="flex items-start gap-3 text-left cursor-pointer">
-                           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 w-4 h-4 accent-primary" required />
-                           <span className="text-[10px] text-muted-foreground leading-relaxed">I consent to BMAC contacting me about this application and storing my details in line with our privacy policy.</span>
-                        </label>
+                         <div className="space-y-2 text-left group">
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
+                            <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ambassador Name" className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                         </div>
+                         <div className="space-y-2 text-left group">
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Email Address</label>
+                            <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="email@bmacjos.org" className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
+                         </div>
+                         <div className="space-y-2 text-left group">
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Phone (Optional)</label>
+                            <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} placeholder="+234..." className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" />
+                         </div>
+                         <div className="space-y-2 text-left group">
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Why Do You Want to Join?</label>
+                            <textarea value={formData.motivation} onChange={(e) => setFormData({...formData, motivation: e.target.value})} rows={3} placeholder="Tell us a little about yourself and why this program matters to you..." className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 resize-none" required />
+                         </div>
+                         <label className="flex items-start gap-3 text-left cursor-pointer">
+                            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 w-4 h-4 accent-primary" required />
+                            <span className="text-xs text-muted-foreground leading-relaxed">I consent to BMAC contacting me about this application and storing my details in line with our privacy policy.</span>
+                         </label>
                         {formError && (
                           <p className="text-xs font-bold text-red-500 px-2">{formError}</p>
                         )}
-                        <button disabled={isPending} className="group relative w-full py-4 md:py-5 bg-gradient-to-r from-secondary to-primary text-card rounded-xl md:rounded-2xl font-bold hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-secondary/10 mt-4 active:scale-[0.98] overflow-hidden disabled:opacity-70">
-                           <span className="relative z-10 flex items-center gap-3">
-                              {isPending ? (
-                                <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <>{program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"} <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" /></>
-                              )}
-                           </span>
-                           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full" />
-                         </button>
-                      </form>)}
-                    </div>
-                </div>
-            </div>
-          </aside>
+                        <button disabled={isPending} className="w-full py-4 bg-primary text-card rounded-lg font-bold hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3 mt-4 disabled:opacity-70">
+                           {isPending ? (
+                             <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
+                           ) : (
+                             <>{program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"} <Send size={18} /></>
+                           )}
+                          </button>
+                       </form>)}
+                  </div>
+             </div>
+           </aside>
         </div>
       </section>
 
+      {/* Program Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-t border-border/50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-12 tracking-tight">Alumni Voices</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {testimonials.map((t: { name: string; designation: string; quote: string }, i: number) => (
+                <FadeIn key={i} delay={i * 0.1}>
+                  <blockquote className="rounded-xl border border-border bg-card p-6 h-full">
+                    <div className="flex items-center gap-1 text-primary mb-4">
+                      <Sparkles size={14} />
+                      <Sparkles size={14} />
+                      <Sparkles size={14} />
+                      <Sparkles size={14} />
+                      <Sparkles size={14} />
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-5">&ldquo;{t.quote}&rdquo;</p>
+                    <footer className="text-xs">
+                      <p className="font-bold text-secondary">{t.name}</p>
+                      <p className="text-muted-foreground mt-0.5">{t.designation}</p>
+                    </footer>
+                  </blockquote>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Other Growth Pathways */}
       {otherPathways.length > 0 && (
-        <section className="py-16 md:py-24 px-4 md:px-6 bg-muted/30 border-t border-border/50">
+        <section className="py-16 md:py-24 px-4 md:px-6 border-t border-border/50">
           <div className="max-w-7xl mx-auto text-center">
               <h2 className="font-display text-2xl md:text-3xl font-extrabold text-secondary tracking-tight mb-12">Other Growth Pathways</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {otherPathways.map((item, i) => (
                   <FadeIn key={i} delay={i * 0.1}>
                       <Link href={`/programs/${item.id}`} className="group block h-full">
-                        <BentoCard className="bg-card p-8 h-full flex flex-col items-center border-none shadow-sm hover:shadow-lg transition-all rounded-[2rem]">
-                            <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center mb-6 shrink-0`}>
+                        <BentoCard className="bg-card border border-border rounded-xl p-8 h-full flex flex-col items-center">
+                            <div className={`w-12 h-12 rounded-lg ${item.color} flex items-center justify-center mb-6 shrink-0 mx-auto`}>
                               {getIcon(item.icon as string, { size: 24 })}
                             </div>
                             <h3 className="font-display text-lg font-bold text-secondary group-hover:text-primary transition-colors leading-tight mb-3 text-center">

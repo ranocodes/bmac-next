@@ -52,29 +52,22 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
 
   return (
     <>
-      {/* Floating Island Navbar - Centered Pill */}
-      <div className="fixed top-0 left-0 right-0 z-[1000] flex justify-center pt-6 px-4 pointer-events-none">
-        <header 
-          className={`pointer-events-auto transition-[background-color,border-color,box-shadow,backdrop-filter] duration-500 rounded-full border flex items-center justify-between gap-3 md:gap-4 px-4 md:px-6 py-2.5 ${
-            scrolled 
-              ? "bg-card/70 backdrop-blur-xl border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
-              : "bg-card/10 backdrop-blur-md border-card/20 shadow-none"
-          }`}
-          style={{ width: 'auto', maxWidth: '95vw' }}
-        >
-          <Link href="/" className="font-display font-bold text-xl tracking-tighter text-secondary flex-shrink-0 mr-1">
+      {/* Flat Top Navbar */}
+      <div className={`fixed top-0 left-0 right-0 z-[1000] transition-colors duration-300 ${scrolled ? "bg-background/90 backdrop-blur-md border-b border-border" : "bg-background/80 backdrop-blur-md border-b border-transparent"}`}>
+        <header className="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-4 px-4 md:px-6 h-16">
+          <Link href="/" className="font-display font-bold text-xl tracking-tight text-secondary min-w-0 truncate max-w-[55vw] sm:max-w-none">
             {logoText}<span className="text-primary">.</span>
           </Link>
           
-          <nav className="hidden lg:flex items-center justify-center flex-1 gap-0.5">
+          <nav className="hidden lg:flex items-center gap-0.5 shrink-0">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-[13px] px-3.5 py-1.5 rounded-full transition-all duration-300 font-medium whitespace-nowrap ${
+                className={`text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap ${
                   pathname === link.href 
-                    ? scrolled ? "bg-secondary text-secondary-foreground shadow-sm" : "bg-card/20 text-secondary"
-                    : scrolled ? "text-muted-foreground hover:text-secondary hover:bg-muted" : "text-secondary/70 hover:text-secondary hover:bg-card/10"
+                    ? "text-secondary font-semibold underline underline-offset-4 decoration-primary decoration-2"
+                    : "text-muted-foreground hover:text-secondary hover:bg-muted"
                 }`}
               >
                 {link.name}
@@ -85,19 +78,13 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
           <div className="flex items-center gap-4">
              <Link 
                 href="/get-involved" 
-                className={`hidden md:flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-bold transition-all shadow-lg ${
-                  scrolled 
-                    ? "bg-primary text-primary-foreground hover:bg-secondary shadow-primary/10" 
-                    : "bg-card text-secondary hover:bg-accent shadow-card/10"
-                }`}
+                className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-bold bg-primary text-card hover:bg-primary/90 transition-colors"
               >
                 Join Us
              </Link>
              
              <button 
-                className={`lg:hidden w-10 h-10 flex items-center justify-center rounded-full border transition-[background-color,border-color,color] ${
-                  scrolled ? "bg-card border-border" : "bg-card/20 border-card/20 text-secondary"
-                }`} 
+                className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border" 
                 onClick={() => toggleMenu(true)}
                 aria-label="Toggle Menu"
               >
@@ -115,7 +102,7 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-secondary/60 backdrop-blur-xl z-[2000]"
+              className="fixed inset-0 bg-secondary/50 backdrop-blur-sm z-[2000]"
               onClick={() => toggleMenu(false)}
             />
             <motion.div 
@@ -123,14 +110,14 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-card z-[2001] shadow-2xl p-8 flex flex-col"
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-card z-[2001] border-l border-border p-8 flex flex-col"
             >
               <div className="flex items-center justify-between mb-12">
-                <Link href="/" className="font-display font-bold text-2xl tracking-tighter" onClick={() => toggleMenu(false)}>
+                <Link href="/" className="font-display font-bold text-2xl tracking-tight text-secondary" onClick={() => toggleMenu(false)}>
                   {logoText}<span className="text-primary">.</span>
                 </Link>
                 <button 
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-muted text-secondary hover:bg-muted/80 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-muted text-secondary hover:bg-muted/80 transition-colors"
                   onClick={() => toggleMenu(false)}
                 >
                   <X size={24} />
@@ -160,7 +147,7 @@ export default function Navbar({ logoText = "BMAC", navLinks = defaultLinks }: N
               <div className="pt-8 border-t border-border/50">
                 <Link 
                   href="/get-involved" 
-                  className="w-full bg-primary text-primary-foreground py-5 rounded-[2rem] font-bold flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] transition-all"
+                  className="w-full bg-primary text-card py-4 rounded-lg font-bold flex items-center justify-center gap-3 hover:bg-primary/90 transition-colors"
                   onClick={() => toggleMenu(false)}
                 >
                   Join Us <ArrowRight size={20} />

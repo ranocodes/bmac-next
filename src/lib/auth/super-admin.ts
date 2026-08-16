@@ -80,7 +80,7 @@ export async function getSuperAdminSession(): Promise<SuperAdminSession | null> 
 
   try {
     const payload = JSON.parse(Buffer.from(payloadB64, "base64").toString("utf-8"));
-    if (payload.role !== "super_admin" && payload.role !== "moderator") return null;
+    if (payload.role !== "super_admin" && payload.role !== "moderator" && payload.role !== "administrator") return null;
     const session = payload as SuperAdminSession;
     if (typeof session.createdAt === "number" && Date.now() - session.createdAt > SESSION_TTL_MS) {
       await clearSuperAdminSession();

@@ -59,77 +59,70 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
   return (
     <>
       {/* Dynamic Header */}
-      <section className="relative min-h-[45dvh] flex items-end pb-12 pt-32 overflow-hidden bg-card">
-        <div className="absolute inset-0 bg-primary/5 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(var(--secondary) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-           <motion.div
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.8 }}
-           >
-              <span className="text-primary font-bold tracking-[0.3em] uppercase text-[10px] mb-4 block">The BMAC Chronicle</span>
-              <h1 className="font-display text-[clamp(2.5rem,8vw,5rem)] font-extrabold text-secondary tracking-tighter leading-[0.9]">
-                News & <span className="text-accent italic font-light serif">Momentum</span>.
-              </h1>
-           </motion.div>
+      <section className="bg-background pt-32 pb-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">The BMAC Chronicle</span>
+          <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary mt-2">
+            News & Momentum
+          </h1>
         </div>
       </section>
 
-      <section className="py-12 md:py-20 px-4 md:px-6">
+      <section className="pb-16 md:pb-24 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           
           {/* Left Side: News Feed */}
-          <div className="lg:col-span-8 space-y-16 md:space-y-24">
+          <div className="lg:col-span-8 space-y-16">
             {news.length > 0 ? (
               <>
                 {/* Featured Article */}
-                {news.filter(n => n.featured).map((feat, i) => (
+                {news.filter(n => n.featured).map(feat => (
                   <FadeIn key={feat.id}>
                     <Link href={`/news/${feat.id}`} className="group block">
-                       <div className="relative h-64 md:h-80 lg:h-[500px] rounded-[2rem] md:rounded-bento overflow-hidden mb-8 shadow-xl">
-                          <Image src={feat.img} alt={feat.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" />
-                          <div className="absolute top-6 left-6 md:top-8 md:left-8 bg-card/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary">
+                       <div className="relative h-64 md:h-96 rounded-xl border border-border overflow-hidden mb-6">
+                          <Image src={feat.img} alt={feat.title} fill className="object-cover" />
+                          <div className="absolute top-4 left-4 bg-card px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest text-primary">
                              Featured Story
                           </div>
                        </div>
                        <div className="max-w-2xl text-center md:text-left mx-auto md:mx-0">
-                          <div className="flex items-center justify-center md:justify-start gap-4 mb-4 text-muted-foreground text-xs font-bold uppercase tracking-widest">
-                             <span className="text-accent">{feat.category}</span>
+                          <div className="flex items-center justify-center md:justify-start gap-4 mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                             <span className="text-primary">{feat.category}</span>
                              <div className="w-1 h-1 rounded-full bg-border" />
                              <span>{feat.date}</span>
                           </div>
-                          <h2 className="font-display text-3xl md:text-5xl font-extrabold text-secondary tracking-tight mb-6 group-hover:text-primary transition-colors leading-[1.1]">
+                          <h2 className="font-display text-2xl md:text-4xl font-bold text-secondary tracking-tight group-hover:text-primary transition-colors">
                             {feat.title}
                           </h2>
-                          <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-8">
+                          <p className="text-muted-foreground text-base leading-relaxed mt-4">
                             {feat.desc}
                           </p>
-                          <div className="inline-flex items-center gap-2 font-bold text-sm text-secondary group-hover:gap-4 transition-all">
-                            Read Full Story <ArrowRight size={18} className="text-accent" />
+                          <div className="inline-flex items-center gap-2 font-bold text-sm text-primary mt-6 group-hover:gap-4 transition-all">
+                            Read Full Story <ArrowRight size={16} />
                           </div>
                        </div>
                     </Link>
                   </FadeIn>
                 ))}
 
-                <hr className="border-border/50" />
+                <hr className="border-border" />
 
                 {/* News Feed Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
                    {news.filter(n => !n.featured).map((item, i) => (
-                     <FadeIn key={item.id} delay={i * 0.1}>
+                     <FadeIn key={item.id} delay={i * 0.05}>
                         <Link href={`/news/${item.id}`} className="group h-full flex flex-col">
-                           <div className="relative aspect-video rounded-[2rem] overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
-                              <Image src={item.img} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                           <div className="relative aspect-video rounded-xl border border-border overflow-hidden mb-5">
+                              <Image src={item.img} alt={item.title} fill className="object-cover" />
                            </div>
-                           <div className="flex items-center gap-3 mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              <span className="text-accent">{item.category}</span>
+                           <div className="flex items-center gap-3 mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                              <span className="text-primary">{item.category}</span>
                               <span>{item.date}</span>
                            </div>
-                           <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-4 leading-tight group-hover:text-primary transition-colors">
+                           <h3 className="font-display text-xl font-bold text-secondary leading-tight group-hover:text-primary transition-colors">
                               {item.title}
                            </h3>
-                           <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mt-auto">
+                           <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 mt-2">
                               {item.desc}
                            </p>
                         </Link>
@@ -149,25 +142,23 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
           </div>
 
           {/* Right Side: Simple Sidebar */}
-          <aside className="hidden lg:block lg:col-span-4">
-             <div className="sticky top-28 space-y-8">
+          <aside className="lg:col-span-4">
+             <div className="lg:sticky lg:top-28 space-y-6">
                 {/* Upcoming Events Mini-Widget */}
-                <div className="bg-card/60 backdrop-blur-xl border border-border/50 p-8 rounded-bento shadow-2xl overflow-hidden relative">
-                   <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-                   
-                   <div className="flex items-center justify-between mb-8 relative z-10">
-                      <h4 className="font-display font-extrabold text-xl text-secondary">Events</h4>
-                      <Link href="/events" className="text-[9px] font-bold uppercase tracking-widest text-primary hover:text-secondary transition-colors">
+                <div className="bg-card border border-border rounded-xl p-6">
+                   <div className="flex items-center justify-between mb-6">
+                      <h4 className="font-display font-bold text-xl text-secondary">Events</h4>
+                      <Link href="/events" className="text-[11px] font-bold uppercase tracking-widest text-primary hover:text-secondary transition-colors">
                          View All
                       </Link>
                    </div>
 
-                   <div className="relative space-y-6">
+                   <div className="space-y-5">
                        {events.slice(0, 2).map((event, i) => (
-                         <Link href={`/news/events/${event.id}`} key={event.id} className="block group">
-                           <div className="flex gap-4 items-center relative z-10 transition-transform group-hover:translate-x-2">
+                         <Link href={`/events/${event.id}`} key={event.id} className="block group">
+                           <div className="flex gap-4 items-center">
                               <div className={cn(
-                                "min-w-[42px] h-[42px] flex flex-col items-center justify-center rounded-xl transition-colors",
+                                "min-w-[42px] h-[42px] flex flex-col items-center justify-center rounded-lg transition-colors",
                                 i === 0 ? "bg-secondary text-white" : "bg-muted text-secondary"
                               )}>
                                   <span className="text-[8px] font-bold uppercase opacity-60">{formatEventDate(event.date).month}</span>
@@ -175,13 +166,13 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
                               </div>
                               <div className="flex-1">
                                  {i === 0 && (
-                                   <div className="flex items-center text-[9px] font-bold uppercase tracking-widest text-primary mb-1">
+                                   <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-primary mb-1">
                                       <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 animate-pulse" />
                                       Happening Soon
                                    </div>
                                  )}
-                                 <h5 className="font-bold text-[12px] text-secondary group-hover:text-primary transition-colors leading-tight line-clamp-1">{event.title}</h5>
-                                 <p className="text-[9px] text-muted-foreground mt-0.5 uppercase font-bold tracking-tighter">{event.venue}</p>
+                                 <h5 className="font-bold text-xs text-secondary group-hover:text-primary transition-colors leading-tight line-clamp-1">{event.title}</h5>
+                                 <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-tighter">{event.venue}</p>
                               </div>
                            </div>
                          </Link>
@@ -190,14 +181,12 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
                 </div>
 
                 {/* Sticky Newsletter */}
-                <div className="bg-card border border-border/50 rounded-bento p-8 relative overflow-hidden group shadow-lg">
-                   <div className="relative z-10">
-                      <h3 className="font-display text-xl font-extrabold text-secondary mb-3">Stay Notified.</h3>
-                      <p className="text-muted-foreground text-xs leading-relaxed mb-6">Get our official Friday updates with the latest stories, workshop alerts, and leadership tips.</p>
-                      <button onClick={() => setIsModalOpen(true)} className="w-full py-4 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-primary transition-all shadow-lg active:scale-[0.98]">
-                         Subscribe Now
-                      </button>
-                   </div>
+                <div className="bg-card border border-border rounded-xl p-6">
+                   <h3 className="font-display text-xl font-bold text-secondary">Stay Notified</h3>
+                   <p className="text-muted-foreground text-xs leading-relaxed mt-2 mb-5">Get our official Friday updates with the latest stories, workshop alerts, and leadership tips.</p>
+                   <button onClick={() => setIsModalOpen(true)} className="w-full py-3 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
+                      Subscribe Now
+                   </button>
                 </div>
              </div>
           </aside>

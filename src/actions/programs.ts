@@ -14,6 +14,7 @@ import { recordEvent } from "@/lib/analytics/record";
 import { sendWorkflowEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
+import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
 import type {
   Program,
   ProgramApplication,
@@ -261,6 +262,70 @@ export async function createProgramOrder(input: {
   } catch (err) {
     console.error("createProgramOrder error:", err);
     return { error: "Failed to start application payment" };
+  }
+}
+
+export interface ApplicationLookupResult {
+  applicationId: string;
+  status: string;
+  programId: string;
+  programTitle: string;
+  cohortTitle?: string;
+  appliedAt: string;
+}
+
+export async function lookupApplicationStatus(input: {
+  email: string;
+  applicationId: string;
+}): Promise<{ error?: string; result?: ApplicationLookupResult }> {
+  const cleanEmail = (input.email || "").trim().toLowerCase();
+  const cleanRef = (input.applicationId || "").trim();
+  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { error: "Please enter a valid email address." };
+  }
+  if (cleanRef.length > 80) {
+    return { error: "Application reference looks invalid." };
+  }
+  if (!/^app-/i.test(cleanRef)) {
+    return { error: "Application references start with “app-” (e.g. app-abc123)." };
+  }
+
+  const guard = await assertSafe("application-status", cleanEmail, await getClientIp());
+  if (guard.error) return { error: guard.error };
+
+  try {
+    await recordSubmission("application-status", cleanEmail, await getClientIp());
+    const rows = await db.query<any>(
+      `SELECT pa.id, pa.status, pa.program_id, pa.created_at,
+              LOWER(COALESCE(p.email, '')) AS email,
+              pr.title AS program_title,
+              c.title AS cohort_title
+       FROM public.program_applications pa
+       JOIN public.people p ON p.id = pa.person_id
+       JOIN public.programs pr ON pr.id = pa.program_id
+       LEFT JOIN public.participants pt ON pt.person_id = p.id AND pt.status != 'dropped'
+       LEFT JOIN public.cohorts c ON c.id = pt.cohort_id AND c.program_id = pa.program_id
+       WHERE pa.id = $1 AND LOWER(COALESCE(p.email, '')) = LOWER($2)
+       LIMIT 1`,
+      [cleanRef, cleanEmail]
+    );
+    const row = rows[0];
+    if (!row) {
+      return { error: "No application matches that reference and email. Double-check both and try again." };
+    }
+    return {
+      result: {
+        applicationId: row.id,
+        status: row.status,
+        programId: row.program_id,
+        programTitle: row.program_title || "",
+        cohortTitle: row.cohort_title || undefined,
+        appliedAt: row.created_at,
+      },
+    };
+  } catch (err) {
+    console.error("lookupApplicationStatus error:", err);
+    return { error: "Something went wrong. Try again." };
   }
 }
 

@@ -17,6 +17,17 @@ export interface Program {
   applicationsOpen?: boolean;
   isPaid?: boolean;
   price?: number;
+  duration?: string;
+  effort?: string;
+  audienceFor?: string[];
+  audienceNotFor?: string[];
+  instructorName?: string;
+  instructorBio?: string;
+  instructorPhoto?: string;
+  curriculum?: { title: string; outcome: string }[];
+  includes?: string[];
+  refundPolicy?: string;
+  testimonials?: { name: string; designation: string; quote: string }[];
 }
 
 export interface ProgramApplication {
@@ -91,6 +102,12 @@ export interface EventPass {
   maxPerPerson?: number;
   allowPublicRegistration?: boolean;
   remindersEnabled?: boolean;
+  img?: string;
+  agenda?: { time: string; title: string }[];
+  audienceFor?: string[];
+  audienceNotFor?: string[];
+  faqs?: { q: string; a: string }[];
+  policies?: string;
 }
 
 export type WorkflowStatus = "open" | "in_progress" | "resolved" | "closed";

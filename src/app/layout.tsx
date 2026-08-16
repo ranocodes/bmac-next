@@ -15,9 +15,18 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "BMAC Jos — Brilliant Minds Ambassadors Club",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  title: {
+    default: "BMAC Jos — Brilliant Minds Ambassadors Club",
+    template: "%s",
+  },
   description:
     "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
+  openGraph: {
+    siteName: "BMAC Jos",
+    type: "website",
+    locale: "en_NG",
+  },
 };
 
 export const viewport: Viewport = {
@@ -39,6 +48,22 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} ${outfit.variable} antialiased`}
         suppressHydrationWarning={true}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "EducationalOrganization",
+              name: "Brilliant Minds Ambassadors Club",
+              url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+              description:
+                "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
+              email: "hello@bmacjos.org",
+              telephone: "+2348034567891",
+              address: { "@type": "PostalAddress", addressLocality: "Jos", addressCountry: "NG" },
+            }),
+          }}
+        />
         {children}
         <TrackView />
       </body>

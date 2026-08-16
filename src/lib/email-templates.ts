@@ -10,6 +10,7 @@ export type EmailTemplateKey =
   | "admin-deleted"
   | "admin-delete-attempt"
   | "google-forms-link"
+  | "application-received"
   | "donation-thanks"
   | "donation-alert"
   | "form-submit-alert"
@@ -26,6 +27,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "admin-deleted": "Admin account deleted",
   "admin-delete-attempt": "Self-deletion blocked",
   "google-forms-link": "Application form link",
+  "application-received": "Application received",
   "donation-thanks": "Donation thank-you",
   "donation-alert": "Donation alert (admins)",
   "form-submit-alert": "Application alert (admins)",
@@ -174,6 +176,22 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "{{formLink}}",
       "",
       "This link is unique to you. If you did not apply, you can ignore this email.",
+    ].join("\n"),
+  },
+  "application-received": {
+    subject: "We received your {{kindLabel}} application — BMAC",
+    html: shell(
+      "Application received, {{firstName}}!",
+      "Thanks for your interest in <strong>{{kindLabel}}</strong>. We've received your application and our team will review it. Expect a response within <strong>48 hours</strong>.",
+      undefined,
+      "If you did not apply, you can ignore this email. Questions? Reply to this email."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Thanks for your interest in {{kindLabel}}. We've received your application and our team will review it. Expect a response within 48 hours.",
+      "",
+      "If you did not apply, you can ignore this email. Questions? Reply to this email.",
     ].join("\n"),
   },
   "donation-thanks": {
@@ -336,6 +354,7 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "admin-deleted",
   "admin-delete-attempt",
   "google-forms-link",
+  "application-received",
   "donation-thanks",
   "donation-alert",
   "form-submit-alert",

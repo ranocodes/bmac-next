@@ -46,6 +46,15 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (pathname.startsWith("/news/events/")) {
+    const eventId = pathname.replace("/news/events/", "");
+    if (eventId && !eventId.includes("/")) {
+      const target = new URL(`/events/${eventId}`, request.url);
+      target.search = request.nextUrl.search;
+      return NextResponse.redirect(target, 308);
+    }
+  }
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     if (
       pathname === "/admin/login" ||
@@ -74,5 +83,6 @@ export const config = {
         { type: "header", key: "purpose", value: "prefetch" },
       ],
     },
+    "/news/events/:path*",
   ],
 };
