@@ -318,6 +318,7 @@ export async function sendNewsletterBroadcastEmail(opts: {
   firstName?: string;
   subject: string;
   body: string;
+  bodyHtml?: string;
   unsubscribeUrl?: string;
 }): Promise<{ error?: string }> {
   return sendRequest({
@@ -326,6 +327,7 @@ export async function sendNewsletterBroadcastEmail(opts: {
     firstName: opts.firstName || "",
     subject: opts.subject,
     body: opts.body,
+    bodyHtml: opts.bodyHtml || "",
     unsubscribeUrl: absolutizeUrl(opts.unsubscribeUrl || ""),
   });
 }
