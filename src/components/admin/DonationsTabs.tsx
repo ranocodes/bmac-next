@@ -22,22 +22,24 @@ export default function DonationsTabs({
   return (
     <div className="space-y-6 max-w-[1400px]">
       <div className="flex items-center gap-3">
-        <Heart size={24} className="text-primary shrink-0" />
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <Heart size={18} />
+        </div>
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Donations</h1>
-          <p className="text-sm text-muted-foreground mt-1">Giving records and payment transactions</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Donations</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Giving records and payment transactions</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-1 p-1 bg-muted/40 rounded-2xl w-fit">
+      <div className="flex items-center gap-1 p-1 bg-muted/40 rounded-lg w-fit">
         {tabs.map(t => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`inline-flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-medium transition-colors ${
+            className={`inline-flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-medium transition-colors ${
               tab === t.key
-                ? "bg-card text-secondary shadow-sm"
+                ? "bg-card text-secondary"
                 : "text-muted-foreground hover:text-secondary"
             }`}
           >

@@ -208,13 +208,13 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
         </div>
       </div>
 
-      <h1 className="text-xl sm:text-2xl font-bold text-secondary mb-4 sm:mb-5">
+      <h1 className="font-display text-2xl font-bold tracking-tight text-secondary mb-4 sm:mb-5">
         {isEdit ? "Edit Program" : "New Program"}
       </h1>
 
       <form className="space-y-4">
         {/* Basic Info */}
-        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pb-2 border-b border-border/20">Basic Info</p>
 
           <div>
@@ -224,7 +224,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Program title"
-              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
             />
           </div>
 
@@ -235,13 +235,13 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               onChange={(e) => setDesc(e.target.value)}
               rows={3}
               placeholder="Brief summary of the program"
-              className="w-full px-3 py-2.5 min-h-[60px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+              className="w-full px-3 py-2.5 min-h-[60px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
             />
           </div>
         </div>
 
         {/* Visuals */}
-        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pb-2 border-b border-border/20">Visuals</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -278,7 +278,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
         </div>
 
         {/* Content Sections */}
-        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pb-2 border-b border-border/20">Content Sections</p>
 
           {/* Logistics Details */}
@@ -287,7 +287,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Duration</label>
-                <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg">
+                <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg">
                   <Timer size={14} className="text-muted-foreground shrink-0" />
                   <input
                     type="text"
@@ -300,7 +300,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               </div>
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Schedule</label>
-                <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg">
+                <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg">
                   <Calendar size={14} className="text-muted-foreground shrink-0" />
                   <input
                     type="text"
@@ -313,7 +313,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               </div>
               <div>
                 <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Eligibility</label>
-                <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg">
+                <div className="flex items-center gap-2 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg">
                   <Users size={14} className="text-muted-foreground shrink-0" />
                   <input
                     type="text"
@@ -328,7 +328,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Other Details</label>
                 <div className="space-y-1.5">
                   {detailOther.map((d, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 min-h-[38px] bg-background border border-input rounded-lg">
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 min-h-[38px] bg-background border border-border rounded-lg">
                       <span className="flex-1 text-sm text-secondary">{d}</span>
                       <button
                         type="button"
@@ -346,7 +346,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                       onChange={(e) => setDetailOtherInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = detailOtherInput.trim(); if (v) { setDetailOther([...detailOther, v]); setDetailOtherInput(""); } } }}
                       placeholder="e.g. Venue: Jos Museum"
-                      className="flex-1 px-3 py-2 min-h-[38px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                      className="flex-1 px-3 py-2 min-h-[38px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
                     />
                     <button
                       type="button"
@@ -371,7 +371,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 <p className="text-xs text-muted-foreground/50 py-2">No skills added yet</p>
               )}
               {skills.map((s, i) => (
-                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-input rounded-lg">
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-background border border-border rounded-lg">
                   <CheckCircle2 size={14} className="text-primary shrink-0" />
                   <span className="flex-1 text-sm text-secondary">{s}</span>
                   <button
@@ -391,7 +391,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
                 placeholder="e.g. Commanding presence and stage authority"
-                className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
               />
               <button
                 type="button"
@@ -413,7 +413,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 <p className="text-xs text-muted-foreground/50 py-2">No FAQs added yet</p>
               )}
               {faqs.map((faq, i) => (
-                <div key={i} className="flex items-start gap-2 px-3 py-2.5 bg-background border border-input rounded-lg">
+                <div key={i} className="flex items-start gap-2 px-3 py-2.5 bg-background border border-border rounded-lg">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-secondary">{faq.q}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{faq.a}</p>
@@ -444,14 +444,14 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                   value={faqQ}
                   onChange={(e) => setFaqQ(e.target.value)}
                   placeholder="Question"
-                  className="w-full px-3 py-2 min-h-[40px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                  className="w-full px-3 py-2 min-h-[40px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
                 />
                 <textarea
                   value={faqA}
                   onChange={(e) => setFaqA(e.target.value)}
                   rows={2}
                   placeholder="Answer"
-                  className="w-full px-3 py-2 min-h-[50px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
+                  className="w-full px-3 py-2 min-h-[50px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
                 />
                 <div className="flex gap-2">
                   <button
@@ -813,7 +813,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
         </div>
 
         {/* Metadata */}
-        <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pb-2 border-b border-border/20">Metadata</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -825,7 +825,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
                   landingPage
                     ? "bg-primary/10 border-primary/30 text-primary"
-                    : "bg-background border-input text-secondary/70"
+                    : "bg-background border-border text-secondary/70"
                 }`}
               >
                 <div className={`w-10 h-6 rounded-full relative transition-colors shrink-0 ${
@@ -868,9 +868,9 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                     className={`flex-1 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium capitalize transition-colors ${
                       status === s
                         ? s === "published"
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : "bg-background text-secondary/70 border border-input"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-amber-50 text-amber-700 border border-amber-200"
+                        : "bg-background text-secondary/70 border border-border"
                     }`}
                   >
                     {s}
@@ -886,7 +886,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
                   applicationsOpen
                     ? "bg-primary/10 border-primary/30 text-primary"
-                    : "bg-background border-input text-secondary/70"
+                    : "bg-background border-border text-secondary/70"
                 }`}
               >
                 <div className={`w-10 h-6 rounded-full relative transition-colors shrink-0 ${
@@ -916,7 +916,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                 className={`w-full flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
                   isPaid
                     ? "bg-primary/10 border-primary/30 text-primary"
-                    : "bg-background border-input text-secondary/70"
+                    : "bg-background border-border text-secondary/70"
                 }`}
               >
                 <div className={`w-10 h-6 rounded-full relative transition-colors shrink-0 ${
@@ -946,7 +946,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="0"
-                    className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                    className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
                   />
                 </div>
               )}

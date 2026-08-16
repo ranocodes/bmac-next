@@ -63,27 +63,27 @@ export default function PartnerForm({ initialData }: { initialData?: Partner | n
 
   return (
     <div className="w-full max-w-2xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/partners" className="w-9 h-9 flex items-center justify-center rounded-xl bg-background border border-input text-muted-foreground hover:text-secondary hover:border-muted-foreground/30 transition-all">
+      <div className="flex items-center gap-3">
+        <Link href="/admin/partners" className="w-9 h-9 flex items-center justify-center rounded-lg bg-muted text-secondary hover:bg-muted/70 transition-colors">
           <ArrowLeft size={16} />
         </Link>
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">{isEdit ? "Edit Partner" : "New Partner"}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{isEdit ? "Update partner organization details" : "Add a new partner organization"}</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">{isEdit ? "Edit Partner" : "New Partner"}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{isEdit ? "Update partner organization details" : "Add a new partner organization"}</p>
         </div>
       </div>
 
-      <div className="bg-card/50 border border-border/50 rounded-xl p-3 sm:p-4 space-y-4">
+      <div className="bg-card rounded-xl border border-border p-3 sm:p-4 space-y-4">
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Organization Name <span className="text-destructive">*</span></label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="UNICEF"
-            className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors ${missingFields.includes("name") ? "border-destructive" : "border-input focus:border-primary/50"}`} />
+            className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors ${missingFields.includes("name") ? "border-destructive" : "border-border focus:border-primary/50"}`} />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Website URL</label>
           <input type="text" value={url} onChange={e => setUrl(e.target.value)} placeholder="https://www.unicef.org"
-            className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
+            className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors" />
         </div>
 
         <div>
@@ -106,7 +106,7 @@ export default function PartnerForm({ initialData }: { initialData?: Partner | n
             </div>
           )}
           <button type="button" onClick={() => setShowPicker(true)}
-            className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm transition-colors ${missingFields.includes("logo") ? "border-destructive text-muted-foreground" : "border-input text-muted-foreground hover:border-primary/50"}`}>
+            className={`w-full px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm transition-colors ${missingFields.includes("logo") ? "border-destructive text-muted-foreground" : "border-border text-muted-foreground hover:border-primary/50"}`}>
             {logo ? "Change Logo" : "Select Logo"}
           </button>
         </div>
@@ -116,7 +116,7 @@ export default function PartnerForm({ initialData }: { initialData?: Partner | n
           <div className="flex gap-2">
             {(["active", "hidden"] as const).map(s => (
               <button key={s} type="button" onClick={() => setStatus(s)}
-                className={`flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-lg text-sm font-medium capitalize transition-all ${status === s ? "bg-primary text-primary-foreground" : "bg-background border border-input text-secondary hover:border-primary/50"}`}>
+                className={`flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-lg text-sm font-medium capitalize transition-all ${status === s ? "bg-primary text-primary-foreground" : "bg-background border border-border text-secondary hover:border-primary/50"}`}>
                 {s === "active" ? <Eye size={15} /> : <EyeOff size={15} />}
                 {s}
               </button>
@@ -141,8 +141,8 @@ export default function PartnerForm({ initialData }: { initialData?: Partner | n
       </div>
 
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-secondary/20 backdrop-blur-sm p-4" onClick={() => setShowPicker(false)}>
-          <div className="bg-card rounded-2xl shadow-xl border border-border/50 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowPicker(false)}>
+          <div className="bg-card rounded-xl shadow-xl border border-border max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={e => e.stopPropagation()}>
             <ImagePicker value={logo} onChange={(url: string) => { setLogo(url); setShowPicker(false); }} />
           </div>
         </div>

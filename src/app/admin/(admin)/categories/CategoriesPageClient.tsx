@@ -43,10 +43,12 @@ export default function CategoriesPageClient({ initialData }: { initialData: Cat
   return (
     <div className="space-y-6 max-w-[600px]">
       <div className="flex items-center gap-3">
-        <Tag size={24} className="text-primary shrink-0" />
+        <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
+          <Tag size={18} />
+        </div>
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">Categories</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage news and event categories</p>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">Categories</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Manage news and event categories</p>
         </div>
       </div>
 
@@ -56,17 +58,17 @@ export default function CategoriesPageClient({ initialData }: { initialData: Cat
           value={newName}
           onChange={e => setNewName(e.target.value)}
           placeholder="New category name"
-          className="flex-1 h-12 sm:h-11 px-5 sm:px-4 rounded-xl border border-input bg-card text-base sm:text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          className="flex-1 h-12 sm:h-11 px-5 sm:px-4 rounded-lg border border-border bg-card text-base sm:text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
         <button
           type="submit"
-          className="flex items-center justify-center gap-2 h-12 sm:h-11 px-6 sm:px-5 rounded-2xl bg-primary text-primary-foreground text-base sm:text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all"
+          className="flex items-center justify-center gap-2 h-12 sm:h-11 px-6 sm:px-5 rounded-lg bg-primary text-primary-foreground text-base sm:text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all"
         >
           <Plus size={16} /> Add
         </button>
       </form>
 
-      <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         {categories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Tag size={40} className="text-muted-foreground/20 mb-3" />
@@ -74,7 +76,7 @@ export default function CategoriesPageClient({ initialData }: { initialData: Cat
             <p className="text-xs text-muted-foreground mt-1">Add your first category above</p>
           </div>
         ) : (
-          <div className="divide-y divide-border/20">
+          <div className="divide-y divide-border/50">
             {categories.map(cat => (
               <div key={cat.id} className="flex items-center justify-between px-5 py-4 group">
                 <div className="flex items-center gap-3">
