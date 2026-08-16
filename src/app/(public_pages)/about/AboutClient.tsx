@@ -50,25 +50,31 @@ export default function AboutClient({ initialTeam, initialStats }: AboutClientPr
 
       {/* Story Section */}
       <section className="py-24 px-6 relative">
-        <div className="max-w-3xl mx-auto text-center">
-          <FadeIn>
-            <div className="section-eyebrow">Our Story</div>
-            <h2 className="font-display text-[clamp(2rem,5vw,3rem)] font-extrabold text-secondary tracking-tighter leading-[1.1] mb-8">
-              From a Local Hub <br/> to a <span className="text-primary">National Movement</span>.
-            </h2>
-            <div className="space-y-6 text-muted-foreground text-base lg:text-lg leading-relaxed">
-              <p>
-                Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
-                State by Suleiman Peace Jagaban — a visionary who saw the
-                untapped potential in the youth around him.
-              </p>
-              <p>
-                What began with five members meeting in a community hall has become
-                a movement of over 350 trained young people. Our ambassadors are now 
-                winning regional championships and leading change across Nigeria.
-              </p>
-            </div>
-          </FadeIn>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+          <div className="lg:col-span-5">
+            <FadeIn className="lg:sticky lg:top-32">
+              <div className="section-eyebrow">Our Story</div>
+              <h2 className="font-display text-[clamp(2rem,5vw,3.25rem)] font-extrabold text-secondary tracking-tighter leading-[1.1] mt-2">
+                From a Local Hub <br/> to a <span className="text-primary">National Movement</span>.
+              </h2>
+            </FadeIn>
+          </div>
+          <div className="lg:col-span-7">
+            <FadeIn delay={0.1}>
+              <div className="max-w-prose space-y-6 text-muted-foreground text-base lg:text-lg leading-relaxed">
+                <p>
+                  Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau
+                  State by Suleiman Peace Jagaban — a visionary who saw the
+                  untapped potential in the youth around him.
+                </p>
+                <p>
+                  What began with five members meeting in a community hall has become
+                  a movement of over 350 trained young people. Our ambassadors are now 
+                  winning regional championships and leading change across Nigeria.
+                </p>
+              </div>
+            </FadeIn>
+          </div>
         </div>
       </section>
 
