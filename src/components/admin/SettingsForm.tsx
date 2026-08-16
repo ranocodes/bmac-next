@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, RotateCcw, User, Globe, FileText, ExternalLink, Settings } from "lucide-react";
+import { Plus, X, Save, RotateCcw, User, Globe, FileText, ExternalLink, Settings, BookOpen, Phone } from "lucide-react";
 import {
   saveSiteSettings,
   updateAdminProfile,
@@ -38,6 +38,21 @@ const DEFAULT = {
     { name: "Twitter", href: "https://twitter.com/bmacjos", icon: "Twitter" },
   ],
   copyright: "Brilliant Minds Ambassadors Club. All rights reserved.",
+  about_story: {
+    eyebrow: "Our Story",
+    heading: "From a Local Hub to a National Movement.",
+    paragraphs: [
+      "Brilliant Minds Ambassadors Club (BMAC) was founded in Jos, Plateau State by Suleiman Peace Jagaban — a visionary who saw the untapped potential in the youth around him.",
+      "What began with five members meeting in a community hall has become a movement of over 350 trained young people. Our ambassadors are now winning regional championships and leading change across Nigeria.",
+    ],
+  },
+  contact_info: {
+    email: "hello@bmacjos.org",
+    phone: "+234 803 456 7891",
+    whatsapp: "2348034567891",
+    address: "Nalado Street, Jos",
+    hours: "Mon - Sat: 9am - 5pm",
+  },
 };
 
 const GOOGLE_FORM_FIELDS = [
@@ -59,6 +74,12 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
     initialData?.social_links || DEFAULT.social_links
   );
   const [copyright, setCopyright] = useState(initialData?.copyright || DEFAULT.copyright);
+  const [aboutStory, setAboutStory] = useState<{ eyebrow: string; heading: string; paragraphs: string[] }>(
+    initialData?.about_story && initialData.about_story.heading ? initialData.about_story : DEFAULT.about_story
+  );
+  const [contactInfo, setContactInfo] = useState<{ email: string; phone: string; whatsapp: string; address: string; hours: string }>(
+    initialData?.contact_info && initialData.contact_info.email ? initialData.contact_info : DEFAULT.contact_info
+  );
   const [savingSite, setSavingSite] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const { toast } = useToast();
@@ -107,6 +128,8 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
       navigation: DEFAULT.navigation,
       social_links: socialLinks,
       copyright,
+      about_story: aboutStory,
+      contact_info: contactInfo,
     });
     setSavingSite(false);
     toast("Settings saved", "success");
@@ -232,6 +255,80 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
           <Save className="w-3.5 h-3.5" />
           {savingSite ? "Saving..." : "Save Site Settings"}
+        </button>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
+          <BookOpen size={16} className="text-primary" />
+          <h2 className="font-display text-base font-bold text-secondary">About Story</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">The story section shown on the About page.</p>
+        <div>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Eyebrow</label>
+          <input type="text" value={aboutStory.eyebrow} onChange={e => setAboutStory(s => ({ ...s, eyebrow: e.target.value }))}
+            className={inputCls()} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Heading</label>
+          <input type="text" value={aboutStory.heading} onChange={e => setAboutStory(s => ({ ...s, heading: e.target.value }))}
+            className={inputCls()} />
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-medium text-secondary/80">Paragraphs</label>
+            <button type="button" onClick={() => setAboutStory(s => ({ ...s, paragraphs: [...s.paragraphs, ""] }))}
+              className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+              <Plus size={12} /> Add Paragraph
+            </button>
+          </div>
+          <div className="space-y-3">
+            {aboutStory.paragraphs.map((p, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <textarea
+                  value={p}
+                  onChange={e => setAboutStory(s => ({ ...s, paragraphs: s.paragraphs.map((x, j) => j === i ? e.target.value : x) }))}
+                  rows={3}
+                  className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                />
+                <button type="button" onClick={() => setAboutStory(s => ({ ...s, paragraphs: s.paragraphs.filter((_, j) => j !== i) }))}
+                  className="w-8 h-8 mt-1 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <button onClick={handleSaveSite} disabled={savingSite}
+          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
+          <Save className="w-3.5 h-3.5" />
+          {savingSite ? "Saving..." : "Save About Story"}
+        </button>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
+          <Phone size={16} className="text-primary" />
+          <h2 className="font-display text-base font-bold text-secondary">Contact Info</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">Shown in the footer and on the contact page.</p>
+        {([
+          ["email", "Email", "hello@bmacjos.org"],
+          ["phone", "Phone / WhatsApp", "+234 803 456 7891"],
+          ["whatsapp", "WhatsApp Number (digits only)", "2348034567891"],
+          ["address", "Address / Hub", "Nalado Street, Jos"],
+          ["hours", "Hours", "Mon - Sat: 9am - 5pm"],
+        ] as const).map(([key, label, placeholder]) => (
+          <div key={key}>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">{label}</label>
+            <input type="text" value={(contactInfo as Record<string, string>)[key]} onChange={e => setContactInfo(s => ({ ...s, [key]: e.target.value }))} placeholder={placeholder}
+              className={inputCls()} />
+          </div>
+        ))}
+        <button onClick={handleSaveSite} disabled={savingSite}
+          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
+          <Save className="w-3.5 h-3.5" />
+          {savingSite ? "Saving..." : "Save Contact Info"}
         </button>
       </div>
 

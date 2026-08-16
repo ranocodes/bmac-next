@@ -218,12 +218,28 @@ export interface Testimonial {
   status?: "draft" | "published";
 }
 
+export interface AboutStory {
+  eyebrow: string;
+  heading: string;
+  paragraphs: string[];
+}
+
+export interface ContactInfo {
+  email: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  hours: string;
+}
+
 export interface SiteSettings {
   id: string;
   logo_text: string;
   navigation: { name: string; href: string }[];
   social_links: { name: string; href: string; icon: string }[];
   copyright: string;
+  about_story?: AboutStory;
+  contact_info?: ContactInfo;
 }
 
 export interface Category {
