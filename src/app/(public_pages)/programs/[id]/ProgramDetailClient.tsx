@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle, ArrowLeft, Sparkles } from "lucide-react";
@@ -14,6 +14,79 @@ import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
 import { submitApplication, createProgramOrder, verifyProgramPayment } from "@/actions/programs";
 import { loadPaystack } from "@/lib/paystack";
+import type { ProgramInstructor } from "@/types/cms";
+
+function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [ref, threshold]);
+  return visible;
+}
+
+function InstructorCard({ instructor, color, index }: { instructor: ProgramInstructor; color: string; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const visible = useInView(ref);
+  const [expanded, setExpanded] = useState(false);
+
+  const colorMap: Record<string, string> = {
+    "text-emerald-400": "ring-emerald-400/60",
+    "text-blue-400": "ring-blue-400/60",
+    "text-purple-400": "ring-purple-400/60",
+    "text-amber-400": "ring-amber-400/60",
+    "text-rose-400": "ring-rose-400/60",
+    "text-cyan-400": "ring-cyan-400/60",
+    "text-primary": "ring-primary/60",
+    "text-accent": "ring-accent/60",
+  };
+  const ringColor = colorMap[color] || "ring-primary/60";
+  const shouldTruncate = instructor.bio && instructor.bio.length > 120;
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-xl border border-border bg-gradient-to-br from-card/80 to-card backdrop-blur-sm p-6 md:p-8 flex flex-col items-center text-center transition-all duration-700 ease-out",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      )}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      {instructor.photo ? (
+        <div className={cn("relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden ring-3 ring-offset-2 ring-offset-card shadow-lg mb-4", ringColor)}>
+          <Image src={instructor.photo} alt={instructor.name} fill className="object-cover" sizes="96px" />
+        </div>
+      ) : (
+        <div className={cn("w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 ring-3 ring-offset-2 ring-offset-card shadow-lg", ringColor)}>
+          <Users size={32} />
+        </div>
+      )}
+      <p className="font-display text-lg md:text-xl font-bold text-secondary">{instructor.name}</p>
+      {instructor.role && (
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary mt-1.5">{instructor.role}</p>
+      )}
+      {instructor.bio && (
+        <div className="mt-3">
+          <p className={cn("text-sm text-muted-foreground leading-relaxed", !expanded && shouldTruncate && "line-clamp-3")}>
+            {instructor.bio}
+          </p>
+          {shouldTruncate && (
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              className="text-xs text-primary font-medium mt-1.5 hover:text-primary/80 transition-colors"
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ProgramDetailClientProps {
   id: string;
@@ -41,6 +114,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
     instructorName: (p as any).instructorName || (p as any).instructor_name || "",
     instructorBio: (p as any).instructorBio || (p as any).instructor_bio || "",
     instructorPhoto: (p as any).instructorPhoto || (p as any).instructor_photo || "",
+    instructors: (p as any).instructors || [],
     curriculum: (p as any).curriculum || [],
     includes: (p as any).includes || [],
     refundPolicy: (p as any).refundPolicy || (p as any).refund_policy || "",
@@ -62,6 +136,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   const instructorName = (program as any)?.instructorName || "";
   const instructorBio = (program as any)?.instructorBio || "";
   const instructorPhoto = (program as any)?.instructorPhoto || "";
+  const instructors = ((program as any)?.instructors || []) as { name: string; bio: string; photo?: string; role?: string }[];
   const refundPolicy = (program as any)?.refundPolicy || "";
   const testimonials = (program as any)?.testimonials || [];
 
@@ -346,8 +421,19 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
               </div>
             )}
 
-            {/* Instructor */}
-            {instructorName && (
+            {/* Instructors */}
+            {instructors.length > 0 ? (
+              <div>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">
+                  {instructors.length === 1 ? "Your Instructor" : "Your Instructors"}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {instructors.map((inst, i) => (
+                    <InstructorCard key={i} instructor={inst} color={program.color} index={i} />
+                  ))}
+                </div>
+              </div>
+            ) : instructorName ? (
               <div>
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Your Instructor</h3>
                 <div className="rounded-xl border border-border bg-card p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
@@ -368,7 +454,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* What's included */}
             {includes.length > 0 && (

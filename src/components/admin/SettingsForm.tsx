@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, RotateCcw, User, Globe, FileText, ExternalLink, Settings, BookOpen, Phone } from "lucide-react";
+import { Plus, X, Save, RotateCcw, User, Globe, FileText, Settings, BookOpen, Phone } from "lucide-react";
 import {
   saveSiteSettings,
   updateAdminProfile,
-  getGoogleForms,
-  saveGoogleForms,
   getEmailTemplates,
   saveEmailTemplates,
   resetEmailTemplate,
@@ -55,13 +53,6 @@ const DEFAULT = {
   },
 };
 
-const GOOGLE_FORM_FIELDS = [
-  { key: "join", label: "Join BMAC (membership)" },
-  { key: "volunteer", label: "Volunteer" },
-  { key: "school", label: "School Chapter" },
-  { key: "partner", label: "Partner With Us" },
-];
-
 function inputCls() {
   return "w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors";
 }
@@ -80,17 +71,12 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
   const [contactInfo, setContactInfo] = useState<{ email: string; phone: string; whatsapp: string; address: string; hours: string }>(
     initialData?.contact_info && initialData.contact_info.email ? initialData.contact_info : DEFAULT.contact_info
   );
+  const [navigation, setNavigation] = useState<{ name: string; href: string }[]>(
+    initialData?.navigation || DEFAULT.navigation
+  );
   const [savingSite, setSavingSite] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const { toast } = useToast();
-
-  const [googleForms, setGoogleForms] = useState<Record<string, string>>({
-    join: "",
-    volunteer: "",
-    school: "",
-    partner: "",
-  });
-  const [savingForms, setSavingForms] = useState(false);
 
   const [templates, setTemplates] = useState<Record<string, EmailTemplate>>(DEFAULT_EMAIL_TEMPLATES);
   const [activeTemplate, setActiveTemplate] = useState(EMAIL_TEMPLATE_KEYS[0]);
@@ -98,9 +84,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
   const [savingTemplates, setSavingTemplates] = useState(false);
 
   useEffect(() => {
-    getGoogleForms()
-      .then(setGoogleForms)
-      .catch(() => {});
     getEmailTemplates()
       .then(setTemplates)
       .catch(() => {})
@@ -123,25 +106,21 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
   async function handleSaveSite() {
     if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
     setSavingSite(true);
-    await saveSiteSettings({
-      logo_text: logoText,
-      navigation: DEFAULT.navigation,
-      social_links: socialLinks,
-      copyright,
-      about_story: aboutStory,
-      contact_info: contactInfo,
-    });
-    setSavingSite(false);
-    toast("Settings saved", "success");
-  }
-
-  async function handleSaveForms() {
-    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
-    setSavingForms(true);
-    const res = await saveGoogleForms(googleForms);
-    setSavingForms(false);
-    if (res?.error) { toast(res.error, "error"); return; }
-    toast("Google Forms links saved", "success");
+    try {
+      await saveSiteSettings({
+        logo_text: logoText,
+        navigation,
+        social_links: socialLinks,
+        copyright,
+        about_story: aboutStory,
+        contact_info: contactInfo,
+      });
+      toast("Settings saved", "success");
+    } catch {
+      toast("Failed to save settings", "error");
+    } finally {
+      setSavingSite(false);
+    }
   }
 
   async function handleSaveTemplates() {
@@ -329,35 +308,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
           <Save className="w-3.5 h-3.5" />
           {savingSite ? "Saving..." : "Save Contact Info"}
-        </button>
-      </div>
-
-      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
-          <ExternalLink size={16} className="text-primary" />
-          <h2 className="font-display text-base font-bold text-secondary">Google Forms Links</h2>
-        </div>
-        <p className="text-xs text-muted-foreground -mt-1">
-          Each get-involved option emails applicants a link to complete the next step. Paste your Google Form URLs below.
-        </p>
-        <div className="space-y-3">
-          {GOOGLE_FORM_FIELDS.map(field => (
-            <div key={field.key}>
-              <label className="block text-sm font-medium text-secondary/80 mb-1.5">{field.label}</label>
-              <input
-                type="url"
-                value={googleForms[field.key] || ""}
-                onChange={e => setGoogleForms(prev => ({ ...prev, [field.key]: e.target.value }))}
-                placeholder="https://forms.gle/..."
-                className={inputCls()}
-              />
-            </div>
-          ))}
-        </div>
-        <button onClick={handleSaveForms} disabled={savingForms}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-          <Save className="w-3.5 h-3.5" />
-          {savingForms ? "Saving..." : "Save Google Forms Links"}
         </button>
       </div>
 

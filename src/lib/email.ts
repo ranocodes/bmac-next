@@ -72,21 +72,6 @@ export async function sendAdminDeleteAttemptAlert(email: string, actor: string):
   return sendRequest({ type: "admin-delete-attempt", email, actor });
 }
 
-export async function sendGoogleFormLinkEmail(opts: {
-  email: string;
-  firstName?: string;
-  kindLabel: string;
-  formLink: string;
-}): Promise<{ error?: string }> {
-  return sendRequest({
-    type: "google-forms-link",
-    email: opts.email,
-    firstName: opts.firstName || "",
-    kindLabel: opts.kindLabel,
-    formLink: opts.formLink,
-  });
-}
-
 export async function sendApplicationReceivedEmail(opts: {
   email: string;
   firstName?: string;

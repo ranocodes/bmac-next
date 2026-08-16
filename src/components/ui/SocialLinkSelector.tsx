@@ -21,7 +21,7 @@ export default function SocialLinkSelector({ value, onChange }: SocialLinkSelect
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const selected = SOCIAL_PLATFORMS.find(p => p.name === value);
+  const selected = SOCIAL_PLATFORMS.find(p => p.name.toLowerCase() === (value ?? '').toLowerCase());
 
   return (
     <div ref={ref} className="relative w-full sm:w-44">

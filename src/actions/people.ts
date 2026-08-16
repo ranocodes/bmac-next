@@ -9,6 +9,7 @@ import { createAdminNotification, getSuperAdminEmails } from "@/lib/notification
 import { createWorkflowRecord } from "@/lib/workflows";
 import { recordConsent } from "@/lib/consent";
 import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
+import { submitForm } from "@/actions/forms";
 import type { Person, PersonRecord, PersonRecordKind, PersonRole, PersonRow, WorkflowKind } from "@/types/cms";
 
 interface PersonDbRow {
@@ -343,6 +344,21 @@ export async function applyAsPerson(opts: {
       },
     },
   });
+
+  const entityTypeForForm: Record<string, string> = {
+    member: "membership",
+    volunteer: "volunteer",
+    partner: "partner",
+    program: "school-chapter",
+  };
+  await submitForm(entityTypeForForm[opts.kind] || "membership", null, {
+    name: opts.name.trim(),
+    email: person.email,
+    phone: opts.phone || "",
+    notes: opts.notes ? opts.notes.slice(0, 500) : "",
+    consent_privacy: Boolean(opts.privacy),
+    consent_marketing: Boolean(opts.marketing),
+  }, person.id);
 
   let emailSent = false;
   let emailError = "";
