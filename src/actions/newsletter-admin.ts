@@ -117,7 +117,8 @@ export async function sendToRows(
 ): Promise<{ sent: number; errors: number }> {
   let sent = 0;
   let errors = 0;
-  for (const r of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
     const res = await sendNewsletterBroadcastEmail({
       email: r.email,
       firstName: r.first_name,
@@ -139,8 +140,13 @@ export async function sendToRows(
         [r.email]
       );
     }
+    if (i < rows.length - 1) await sleep(75);
   }
   return { sent, errors };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function upsertBroadcastLog(opts: {
@@ -161,8 +167,8 @@ export async function upsertBroadcastLog(opts: {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
      ON CONFLICT (id) DO UPDATE SET
        recipient_count = EXCLUDED.recipient_count,
-       sent_count = EXCLUDED.sent_count,
-       error_count = EXCLUDED.error_count,
+       sent_count = public.broadcast_log.sent_count + EXCLUDED.sent_count,
+       error_count = public.broadcast_log.error_count + EXCLUDED.error_count,
        status = EXCLUDED.status,
        updated_at = now()`,
     [

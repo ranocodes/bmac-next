@@ -45,14 +45,12 @@ export default function NewsletterClient({
   initialSources,
   initialBroadcasts,
   initialTemplates,
-  cronEnabled,
 }: {
   initialSubscribers: NewsletterSubscriber[];
   initialTotal: number;
   initialSources: string[];
   initialBroadcasts: Broadcast[];
   initialTemplates: NewsletterTemplate[];
-  cronEnabled: boolean;
 }) {
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>(initialSubscribers);
   const [total, setTotal] = useState(initialTotal);
@@ -176,6 +174,21 @@ export default function NewsletterClient({
     } catch { /* ignore */ }
   }, []);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setShowConfirm(false);
+      setShowTestModal(false);
+      setShowPreview(false);
+      setShowTemplates(false);
+    };
+    const anyOpen = showConfirm || showTestModal || !showPreview || showTemplates;
+    if (anyOpen) {
+      document.addEventListener("keydown", handleKey);
+      return () => document.removeEventListener("keydown", handleKey);
+    }
+  }, [showConfirm, showTestModal, showPreview, showTemplates]);
+
   const filtered = useMemo(() => {
     if (!searchQuery && !sourceFilter) return subscribers;
     return subscribers;
@@ -261,6 +274,7 @@ export default function NewsletterClient({
     let totalErrors = 0;
     let totalCount = 0;
     let campaignId = "";
+    let completed = false;
 
     try {
       while (!controller.signal.aborted) {
@@ -284,7 +298,7 @@ export default function NewsletterClient({
         totalErrors += res.errors;
         setProgress({ sent: totalSent, total: totalCount });
 
-        if (res.done) break;
+        if (res.done) { completed = true; break; }
         offset += CHUNK_SIZE;
       }
     } catch (err) {
@@ -299,7 +313,7 @@ export default function NewsletterClient({
     setAbortController(null);
     setProgress(null);
 
-    if (sending && !composeFeedback) {
+    if (completed) {
       const msg = totalErrors > 0
         ? `Sent ${totalSent}/${totalCount} (${totalErrors} errors)`
         : `Sent ${totalSent} newsletter(s)`;

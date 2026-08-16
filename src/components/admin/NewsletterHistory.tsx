@@ -77,7 +77,9 @@ export default function NewsletterHistory({ broadcasts, onCancel }: NewsletterHi
                 <td className="py-2.5 px-3 text-right">
                   {(b.status === "scheduled" || b.status === "sending") && (
                     <button
-                      onClick={() => onCancel(b.id)}
+                      onClick={() => {
+                        if (window.confirm(`Cancel broadcast "${b.subject}"?`)) onCancel(b.id);
+                      }}
                       title="Cancel broadcast"
                       className="text-[10px] font-bold text-destructive hover:text-destructive/80 transition-colors"
                     >

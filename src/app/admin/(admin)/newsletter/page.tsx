@@ -25,7 +25,6 @@ export default async function NewsletterPage() {
       initialSources={sources}
       initialBroadcasts={broadcasts}
       initialTemplates={templates}
-      cronEnabled={!!process.env.CRON_SECRET}
     />
   );
 }
