@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle, ArrowLeft, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
@@ -224,7 +225,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   };
 
   if (!program) {
-    return null;
+    notFound();
   }
 
   const detailsList = program.details.split("|").map(s => s.trim()).filter(Boolean);
