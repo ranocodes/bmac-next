@@ -11,7 +11,7 @@ import {
 import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification } from "@/lib/notifications";
 import { recordEvent } from "@/lib/analytics/record";
-import { sendWorkflowEmail } from "@/actions/emails";
+import { sendWorkflowEmail, sendPublicCredentialsEmail, sendApplicationStatusEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
 import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
@@ -392,11 +392,31 @@ export async function updateApplicationStatus(input: {
       last_name: string;
     };
     if (person) {
-      await sendWorkflowEmail("application-status", person.email, `${person.first_name} ${person.last_name}`, {
-        applicationId: input.applicationId,
-        status: input.status,
-        programTitle: app.program_id,
-      });
+      const program = await db.getById("programs", app.program_id) as { title?: string } | null;
+      const programTitle = program?.title || app.program_id;
+
+      if (input.status === "rejected") {
+        await sendApplicationStatusEmail({
+          email: person.email,
+          firstName: person.first_name,
+          programTitle,
+          status: "rejected",
+          note: " Not selected this time — try next cohort.",
+        });
+      } else if (input.status === "accepted") {
+        await sendWorkflowEmail("program", person.email, `${person.first_name} ${person.last_name}`, {
+          applicationId: input.applicationId,
+          status: input.status,
+          programTitle,
+          action: "accepted",
+        });
+      } else {
+        await sendWorkflowEmail("application-status", person.email, `${person.first_name} ${person.last_name}`, {
+          applicationId: input.applicationId,
+          status: input.status,
+          programTitle,
+        });
+      }
     }
 
     await createAdminNotification({
@@ -506,9 +526,12 @@ export async function addParticipantToCohort(input: {
       program_id: string;
     };
     if (person && cohortInfo) {
+      const program = await db.getById("programs", cohortInfo.program_id) as { title?: string } | null;
+      const programTitle = program?.title || cohortInfo.program_id;
+
       await sendWorkflowEmail("program", person.email, `${person.first_name} ${person.last_name}`, {
         cohortTitle: cohortInfo.title,
-        programTitle: cohortInfo.program_id,
+        programTitle,
         action: "accepted",
       });
 
@@ -771,5 +794,74 @@ export async function getCohortAttendanceSummary(cohortId: string): Promise<
   } catch (err) {
     console.error("getCohortAttendanceSummary error:", err);
     return [];
+  }
+}
+
+export async function sendPublicCredentials(input: {
+  personId: string;
+  programId: string;
+}): Promise<{ success: boolean; error?: string; password?: string }> {
+  try {
+    await requireAdmin();
+
+    const person = await db.getById("people", input.personId) as {
+      id: string;
+      email: string;
+      first_name: string;
+      last_name: string;
+    } | null;
+    if (!person) return { success: false, error: "Person not found" };
+
+    const program = await db.getById("programs", input.programId) as {
+      id: string;
+      title: string;
+      settings?: { googleDriveLink?: string };
+    } | null;
+
+    const { hashPassword, generateRandomPassword } = await import("@/lib/auth/public-auth");
+    const rawPassword = generateRandomPassword();
+    const passwordHash = await hashPassword(rawPassword);
+
+    const existing = await db.query<{ id: string }>(
+      `SELECT id FROM public.public_users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [person.email]
+    );
+
+    if (existing.length > 0) {
+      await db.update("public_users", existing[0].id, {
+        password_hash: passwordHash,
+        must_change_password: true,
+        auth_status: "active",
+      });
+    } else {
+      await db.create("public_users", {
+        id: `pu-${crypto.randomUUID()}`,
+        email: person.email,
+        password_hash: passwordHash,
+        must_change_password: true,
+        auth_status: "active",
+      });
+    }
+
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`;
+    const driveLink = program?.settings?.googleDriveLink || undefined;
+
+    await sendPublicCredentialsEmail({
+      email: person.email,
+      firstName: person.first_name,
+      password: rawPassword,
+      loginUrl,
+      driveLink,
+    });
+
+    await logActivity("system", "credentials_sent", "public_users", {
+      resourceId: person.id,
+      details: `Credentials sent to ${person.email} for ${program?.title || input.programId}`,
+    });
+
+    return { success: true, password: rawPassword };
+  } catch (err) {
+    console.error("sendPublicCredentials error:", err);
+    return { success: false, error: "Failed to send credentials" };
   }
 }

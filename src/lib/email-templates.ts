@@ -19,7 +19,9 @@ export type EmailTemplateKey =
   | "registration-confirmed"
   | "ticket-receipt"
   | "application-status"
-  | "event-reminder";
+  | "event-reminder"
+  | "public-credentials"
+  | "public-welcome";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   credentials: "Admin credentials",
@@ -37,6 +39,8 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "ticket-receipt": "Event ticket receipt",
   "application-status": "Application status update",
   "event-reminder": "Event reminder",
+  "public-credentials": "Public account credentials",
+  "public-welcome": "Welcome to BMAC program",
 };
 
 const shell = (heading: string, message: string, cta?: { label: string; url: string }, footer?: string) => `<!DOCTYPE html>
@@ -346,6 +350,45 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "View your pass: {{passUrl}}",
     ].join("\n"),
   },
+  "public-credentials": {
+    subject: "Your BMAC account credentials",
+    html: shell(
+      "Welcome to BMAC",
+      "Hi <strong>{{firstName}}</strong>, you've been accepted into a BMAC program! Use the credentials below to sign in to your account.",
+      { label: "Sign In", url: "{{loginUrl}}" },
+      "You'll be asked to change your password on first login."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "You've been accepted into a BMAC program!",
+      "",
+      "Email: {{email}}",
+      "Password: {{password}}",
+      "",
+      "Sign in at: {{loginUrl}}",
+      "",
+      "You'll be asked to change your password on first login.",
+    ].join("\n"),
+  },
+  "public-welcome": {
+    subject: "Welcome to {{programTitle}} — BMAC",
+    html: shell(
+      "You're in, {{firstName}}!",
+      "Congratulations! You've been accepted into <strong>{{programTitle}}</strong>. Sign in to your BMAC account to access program materials and track your progress.",
+      { label: "Go to My Account", url: "{{loginUrl}}" },
+      "If you have questions, reply to this email."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Congratulations! You've been accepted into {{programTitle}}.",
+      "",
+      "Sign in at: {{loginUrl}}",
+      "",
+      "If you have questions, reply to this email.",
+    ].join("\n"),
+  },
 };
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
@@ -364,4 +407,6 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "ticket-receipt",
   "application-status",
   "event-reminder",
+  "public-credentials",
+  "public-welcome",
 ];

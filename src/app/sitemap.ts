@@ -7,18 +7,18 @@ const baseUrl = (
 
 export const dynamic = "force-dynamic";
 
-const staticRoutes: { path: string; priority: number; changeFrequency: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never" }[] = [
-  { path: "/", priority: 1.0, changeFrequency: "weekly" },
-  { path: "/about", priority: 0.8, changeFrequency: "monthly" },
-  { path: "/programs", priority: 0.9, changeFrequency: "weekly" },
-  { path: "/events", priority: 0.9, changeFrequency: "weekly" },
-  { path: "/gallery", priority: 0.6, changeFrequency: "monthly" },
-  { path: "/news", priority: 0.7, changeFrequency: "weekly" },
-  { path: "/contact", priority: 0.7, changeFrequency: "monthly" },
-  { path: "/get-involved", priority: 0.8, changeFrequency: "monthly" },
-  { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
-  { path: "/donor-lookup", priority: 0.5, changeFrequency: "monthly" },
-  { path: "/application-status", priority: 0.5, changeFrequency: "monthly" },
+const staticRoutes = [
+  { path: "/", priority: 1.0, changeFrequency: "weekly" as const },
+  { path: "/about", priority: 0.8, changeFrequency: "monthly" as const },
+  { path: "/programs", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/events", priority: 0.9, changeFrequency: "weekly" as const },
+  { path: "/gallery", priority: 0.6, changeFrequency: "monthly" as const },
+  { path: "/news", priority: 0.7, changeFrequency: "weekly" as const },
+  { path: "/contact", priority: 0.7, changeFrequency: "monthly" as const },
+  { path: "/get-involved", priority: 0.8, changeFrequency: "monthly" as const },
+  { path: "/privacy", priority: 0.3, changeFrequency: "yearly" as const },
+  { path: "/donor-lookup", priority: 0.5, changeFrequency: "monthly" as const },
+  { path: "/application-status", priority: 0.5, changeFrequency: "monthly" as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

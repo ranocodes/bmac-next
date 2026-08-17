@@ -269,6 +269,7 @@ export async function sendApplicationStatusEmail(opts: {
   firstName?: string;
   kindLabel?: string;
   status?: string;
+  note?: string;
 }): Promise<{ error?: string }> {
   return sendRequest({
     type: "application-status",
@@ -276,6 +277,7 @@ export async function sendApplicationStatusEmail(opts: {
     firstName: opts.firstName || "",
     kindLabel: opts.kindLabel || "",
     status: opts.status || "",
+    note: opts.note || "",
   });
 }
 
@@ -314,5 +316,37 @@ export async function sendNewsletterBroadcastEmail(opts: {
     body: opts.body,
     bodyHtml: opts.bodyHtml || "",
     unsubscribeUrl: absolutizeUrl(opts.unsubscribeUrl || ""),
+  });
+}
+
+export async function sendPublicCredentialsEmail(opts: {
+  email: string;
+  firstName?: string;
+  password: string;
+  loginUrl: string;
+  driveLink?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "public-credentials",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    password: opts.password,
+    loginUrl: absolutizeUrl(opts.loginUrl),
+    driveLink: opts.driveLink || "",
+  });
+}
+
+export async function sendPublicWelcomeEmail(opts: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  loginUrl: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "public-welcome",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    programTitle: opts.programTitle,
+    loginUrl: absolutizeUrl(opts.loginUrl),
   });
 }
