@@ -51,10 +51,11 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Management", icon: ClipboardList,
+    label: "People", icon: Users,
     children: [
       { label: "Partners", href: "/admin/partners", icon: Handshake, permission: "manage_partners" },
-      { label: "Stats", href: "/admin/stats", icon: BarChart3, permission: "manage_stats" },
+      { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
+      { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
     ],
   },
   {
@@ -63,18 +64,17 @@ const navGroups: NavGroup[] = [
       { label: "Inbox", href: "/admin/inbox", icon: Inbox, permission: "manage_workflows" },
       { label: "Check-In", href: "/admin/checkin", icon: QrCode, permission: "check_in_attendees" },
       { label: "Analytics", href: "/admin/analytics", icon: BarChart3, permission: "view_analytics" },
+      { label: "Stats", href: "/admin/stats", icon: BarChart3, permission: "manage_stats" },
+      { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
     ],
   },
   {
     label: "System", icon: Shield,
     children: [
-      { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
-      { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
-      { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
-      { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
-      { label: "Email Sequences", href: "/admin/email-sequences", icon: Mail, permission: "access_settings" },
       { label: "Forms", href: "/admin/forms", icon: FileText, permission: "access_settings" },
-      { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
+      { label: "Email Sequences", href: "/admin/email-sequences", icon: Mail, permission: "access_settings" },
+      { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
+      { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },
@@ -125,6 +125,10 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("bmac_admin_sidebar_groups");
+      if (saved) return JSON.parse(saved);
+    } catch {}
     const activeGroup = navGroups.find(g =>
       g.children.some(c => c.href && pathname.startsWith(c.href))
     );
@@ -156,7 +160,13 @@ export default function AdminLayout({ children, user: userProp, error }: { child
     .map(g => ({ ...g, children: g.children.filter(c => hasAccess(permissions, c)) }))
     .filter(g => groupHasAccess(permissions, g));
 
-  const toggleGroup = (label: string) => setOpenGroups(p => ({ ...p, [label]: !p[label] }));
+  const toggleGroup = (label: string) => {
+    setOpenGroups(p => {
+      const next = { ...p, [label]: !p[label] };
+      localStorage.setItem("bmac_admin_sidebar_groups", JSON.stringify(next));
+      return next;
+    });
+  };
 
   const denied = !checkRouteAccess(pathname, permissions);
 
@@ -219,7 +229,7 @@ export default function AdminLayout({ children, user: userProp, error }: { child
                     <div className="absolute left-full top-0 ml-2 w-48 bg-card border border-border/50 rounded-xl shadow-lg z-50 py-2">
                       {group.children.map(child => (
                         <Link key={child.href} href={child.href!} onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 h-9 px-4 text-sm font-medium transition-all ${pathname === child.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-secondary hover:bg-muted"}`}>
+                          className={`flex items-center gap-3 h-9 px-4 text-sm font-medium transition-all border-l-2 ${pathname === child.href ? "bg-primary/10 text-primary border-primary" : "text-muted-foreground hover:text-secondary hover:bg-muted border-transparent"}`}>
                           {child.icon && <child.icon size={16} />}
                           <span>{child.label}</span>
                         </Link>
@@ -239,10 +249,9 @@ export default function AdminLayout({ children, user: userProp, error }: { child
                     <div className="ml-2 pl-3 border-l border-border/30 space-y-0.5 mt-0.5">
                       {group.children.map(child => (
                         <Link key={child.href} href={child.href!} onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 h-9 px-3 rounded-xl text-sm font-medium transition-all ${pathname === child.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-secondary hover:bg-muted"}`}>
+                          className={`flex items-center gap-3 h-9 px-3 rounded-xl text-sm font-medium transition-all border-l-2 ${pathname === child.href ? "bg-primary/10 text-primary border-primary" : "text-muted-foreground hover:text-secondary hover:bg-muted border-transparent"}`}>
                           {child.icon && <child.icon size={16} />}
                           <span>{child.label}</span>
-                          {pathname === child.href && <ChevronRight size={14} className="ml-auto text-primary" />}
                         </Link>
                       ))}
                     </div>

@@ -15,6 +15,7 @@ import {
   getFormSubmissions,
 } from "@/actions/forms";
 import { useToast } from "@/components/ui/Toast";
+import StatusBadge from "@/components/admin/StatusBadge";
 import { db } from "@/lib/db";
 import type { FormDefinition } from "@/types/cms";
 
@@ -136,14 +137,8 @@ export default function FormsManager() {
                   </div>
                   {card.loading ? (
                     <Loader2 size={16} className="text-muted-foreground/40 animate-spin shrink-0 mt-0.5" />
-                  ) : hasForm ? (
-                    <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 uppercase tracking-wider">
-                      Active
-                    </span>
                   ) : (
-                    <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground uppercase tracking-wider">
-                      None
-                    </span>
+                    <StatusBadge status={hasForm ? "active" : "inactive"} />
                   )}
                 </div>
 

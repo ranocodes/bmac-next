@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import StatusBadge from "@/components/admin/StatusBadge";
 import { replyToSubmission, updateWorkflowStatus, deleteWorkflow } from "@/actions/workflows";
 import type { WorkflowStatus, WorkflowPriority } from "@/types/cms";
 
@@ -240,8 +241,8 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
                 <button key={item.id} onClick={() => { setSelectedId(item.id); setMobileView("detail"); }}
                   className={`w-full text-left px-4 py-4 border-b border-border/50 last:border-0 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${km.color}`}>{km.label}</span>
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${sm.color}`}>{sm.label}</span>
+                    <StatusBadge status={item.kind} />
+                    <StatusBadge status={item.status} />
                   </div>
                   <p className="mt-2 text-sm font-medium text-secondary line-clamp-1">{item.title || "Untitled"}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{item.summary}</p>
@@ -269,15 +270,9 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
                     className="lg:hidden inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-colors">
                     <ArrowLeft size={15} /> All
                   </button>
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${(kindMeta[selected.kind] || kindMeta.contact).color}`}>
-                    {(kindMeta[selected.kind] || kindMeta.contact).label}
-                  </span>
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${(statusMeta[selected.status] || statusMeta.open).color}`}>
-                    {selected.status.replace("_", " ")}
-                  </span>
-                  <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider bg-muted text-muted-foreground">
-                    {selected.priority}
-                  </span>
+                  <StatusBadge status={selected.kind} />
+                  <StatusBadge status={selected.status} />
+                  <StatusBadge status={selected.priority} />
                 </div>
                 <h2 className="mt-4 font-display text-xl font-bold text-secondary">{selected.title}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{selected.summary}</p>

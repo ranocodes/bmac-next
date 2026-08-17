@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Mail, Clock, CheckCircle, XCircle, Ban, Filter, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { cancelSequence } from "@/actions/email-sequences";
 import { useToast } from "@/components/ui/Toast";
+import StatusBadge from "@/components/admin/StatusBadge";
 import type { EmailSequenceRow } from "@/actions/email-sequences";
 
 const statusConfig: Record<string, { label: string; icon: typeof Mail; color: string }> = {
@@ -149,9 +150,7 @@ export default function EmailSequencesAdmin({
                       <td className="px-4 py-3 text-secondary font-medium">{seq.email}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{seq.template_type}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
-                          <Icon size={12} /> {sc.label}
-                        </span>
+                        <StatusBadge status={seq.status} />
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(seq.scheduled_at)}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{seq.sent_at ? formatDate(seq.sent_at) : "—"}</td>
