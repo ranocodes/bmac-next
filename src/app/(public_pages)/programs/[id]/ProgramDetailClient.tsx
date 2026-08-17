@@ -16,6 +16,7 @@ import { getIcon } from "@/lib/iconMapper";
 import { submitApplication, createProgramOrder, verifyProgramPayment } from "@/actions/programs";
 import { loadPaystack } from "@/lib/paystack";
 import type { ProgramInstructor } from "@/types/cms";
+import StatusBanner from "@/components/admin/StatusBanner";
 
 function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
   const [visible, setVisible] = useState(false);
@@ -529,11 +530,12 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                      </p>
 
                    {!program.applicationsOpen ? (
-                      <div className="text-center py-8">
-                        <p className="font-display text-lg font-bold text-secondary mb-1">Applications Closed</p>
-                        <p className="text-xs text-muted-foreground">This program is not currently accepting applications. Check back soon.</p>
-                      </div>
-                    ) : submitted ? (
+                     <StatusBanner
+                       title="Applications Closed"
+                       description="This program is not currently accepting applications. Check back soon."
+                       variant="closed"
+                     />
+                   ) : submitted ? (
                       <div className="text-center py-8">
                         <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                           <CheckCircle size={28} className="text-emerald-600" />

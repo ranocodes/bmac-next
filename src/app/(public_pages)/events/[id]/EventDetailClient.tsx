@@ -16,6 +16,7 @@ import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
 import { buildIcs, downloadIcs } from "@/lib/ics";
 import type { EventPass } from "@/types/cms";
+import StatusBanner from "@/components/admin/StatusBanner";
 
 function formatDisplayDate(raw: string | undefined): string {
   if (!raw) return "";
@@ -98,6 +99,11 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   const policies = (event as any).policies || "";
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const publishedTestimonials = initialTestimonials.filter((t: any) => t.status === "published");
+  const registrationClosed = !event || event.status !== "published" || event.allowPublicRegistration === false;
+  const deadlinePassed = event?.registrationDeadline ? (() => {
+    const d = new Date(event.registrationDeadline!);
+    return !isNaN(d.getTime()) && d.getTime() < Date.now();
+  })() : false;
 
   const handleAddToCalendar = () => {
     if (!event) return;
@@ -262,7 +268,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
           <div className="mt-8 md:mt-12 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 flex-wrap">
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest">
-                {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}
+                {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : event.allowPublicRegistration !== false ? "Registration Open" : "Registration Closed"}
               </span>
               <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                 <Calendar size={14} className="text-primary" /> {formatDisplayDate(event.date)}
@@ -432,6 +438,13 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
           <aside id="register" className="lg:col-span-5 scroll-mt-28">
             <div className="lg:sticky lg:top-32">
                {!isReserved ? (
+                  (registrationClosed || deadlinePassed) ? (
+                    <StatusBanner
+                      title={deadlinePassed ? "Registration Deadline Passed" : "Registration Closed"}
+                      description={deadlinePassed ? "The registration deadline for this event has passed." : "Registration for this event is currently closed."}
+                      variant="closed"
+                    />
+                  ) : (
                   <motion.div className="bg-card border border-border rounded-xl p-6 md:p-10">
                       <div className="text-center md:text-left mb-6 md:mb-10">
                         <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-3 tracking-tight">Secure Your Pass</h3>
@@ -502,6 +515,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
                           {event.policies ? <> See our <a href="#good-to-know" className="underline underline-offset-2 hover:text-primary transition-colors">policy</a> for cancellations.</> : null}
                         </p>
                    </motion.div>
+                  )
                ) : (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}

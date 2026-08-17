@@ -34,6 +34,7 @@ export default async function ProgramDetail({ params }: { params: Promise<{ id: 
   const programs = await db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" });
   if (!programs.some((p: any) => p.id === id)) notFound();
   const program = programs.find((p: any) => p.id === id);
+  if (program.status !== "published") notFound();
   const jsonLd = program
     ? {
         "@context": "https://schema.org",

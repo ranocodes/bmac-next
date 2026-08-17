@@ -15,6 +15,9 @@ interface EventOrderRow {
   price: number;
   date: string;
   venue: string;
+  status: string;
+  allow_public_registration: boolean;
+  registration_deadline: string | null;
 }
 
 export async function createTicketOrder(opts: {
@@ -36,11 +39,19 @@ export async function createTicketOrder(opts: {
   }
   const quantity = Math.max(1, opts.quantity || 1);
   const rows = await db.query<EventOrderRow>(
-    "SELECT id, title, is_paid, price, date, venue FROM public.events WHERE id = $1",
+    "SELECT id, title, is_paid, price, date, venue, status, allow_public_registration, registration_deadline FROM public.events WHERE id = $1",
     [opts.eventId]
   );
   const event = rows[0];
   if (!event) return { error: "Event not found" };
+  if (event.status !== "published") return { error: "Registration is closed" };
+  if (event.allow_public_registration === false) return { error: "Registration is closed to the public" };
+  if (event.registration_deadline) {
+    const deadline = new Date(event.registration_deadline);
+    if (!isNaN(deadline.getTime()) && deadline.getTime() < Date.now()) {
+      return { error: "Registration deadline has passed" };
+    }
+  }
   if (!event.is_paid) return { error: "This event is free — use the register form." };
 
   const used = await reserveCapacity(opts.eventId, quantity);
