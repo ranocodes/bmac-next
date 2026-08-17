@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -61,6 +61,16 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState("");
   const [showStickyCta, setShowStickyCta] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackFiredRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowStickyCta(window.scrollY > 480);
@@ -183,24 +193,35 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
         },
         callback: function(response: any) {
           console.log("Payment successful. Reference: " + response.reference);
+          callbackFiredRef.current = true;
           setIsPending(true);
           setFormError("");
           const poll = setInterval(async () => {
-            const res = await verifyTicketPayment(order.reference || "");
-            if (res.status === "confirmed" && res.passUrl) {
-              clearInterval(poll);
-              setPassInfo({ passUrl: res.passUrl, reference: order.reference || "" });
-              setIsPending(false);
-              setIsReserved(true);
+            try {
+              const res = await verifyTicketPayment(order.reference || "");
+              if (res.status === "confirmed" && res.passUrl) {
+                clearInterval(poll);
+                pollRef.current = null;
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                setPassInfo({ passUrl: res.passUrl, reference: order.reference || "" });
+                setIsPending(false);
+                setIsReserved(true);
+              }
+            } catch (err) {
+              console.error("Poll verification error:", err);
             }
           }, 3000);
-          setTimeout(() => {
+          pollRef.current = poll;
+          const timeout = setTimeout(() => {
             clearInterval(poll);
+            pollRef.current = null;
             setIsPending(false);
             setFormError("Payment received — verification is taking longer than usual. We'll confirm your pass by email shortly.");
           }, 60000);
+          timeoutRef.current = timeout;
         },
         onClose: function() {
+          if (callbackFiredRef.current) return;
           setIsPending(false);
           setFormError("Payment not confirmed yet — we're verifying your payment. Check back shortly.");
         }
