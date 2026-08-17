@@ -5,19 +5,16 @@ import {
   FileText,
   ClipboardList,
   Pencil,
-  X,
   Trash2,
   Loader2,
 } from "lucide-react";
 import {
   getFormDefinition,
-  upsertFormDefinition,
   deleteFormDefinition,
   getFormSubmissions,
 } from "@/actions/forms";
-import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
-import type { FormQuestion, FormDefinition } from "@/types/cms";
+import type { FormDefinition } from "@/types/cms";
 
 const FORM_TYPES = [
   { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
@@ -39,9 +36,6 @@ export default function FormsManager() {
   const [cards, setCards] = useState<FormCard[]>(
     FORM_TYPES.map(ft => ({ entityType: ft.entityType, definition: null, submissionCount: 0, loading: true }))
   );
-  const [editingType, setEditingType] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
-  const [saving, setSaving] = useState(false);
   const { toast, confirm } = useToast();
 
   useEffect(() => {
@@ -59,34 +53,6 @@ export default function FormsManager() {
     });
   }, []);
 
-  function startEditing(entityType: string) {
-    const card = cards.find(c => c.entityType === entityType);
-    setQuestions(card?.definition?.questions ? [...card.definition.questions.map(q => ({ ...q }))] : []);
-    setEditingType(entityType);
-  }
-
-  function cancelEditing() {
-    setEditingType(null);
-    setQuestions([]);
-  }
-
-  async function handleSave() {
-    if (!editingType) return;
-    setSaving(true);
-    const sorted = questions.map((q, i) => ({ ...q, order: i }));
-    const def = await upsertFormDefinition(editingType, null, sorted);
-    const subs = await getFormSubmissions(editingType);
-    setCards(prev => prev.map(c =>
-      c.entityType === editingType
-        ? { ...c, definition: def, submissionCount: subs.length }
-        : c
-    ));
-    setEditingType(null);
-    setQuestions([]);
-    setSaving(false);
-    toast("Form saved", "success");
-  }
-
   async function handleDelete(entityType: string) {
     const ok = await confirm("Delete this form definition? This cannot be undone.", { confirmText: "Delete" });
     if (!ok) return;
@@ -96,8 +62,7 @@ export default function FormsManager() {
         ? { ...c, definition: null, submissionCount: 0 }
         : c
     ));
-    if (editingType === entityType) cancelEditing();
-    toast("Form deleted", "success");
+                    toast("Form deleted", "success");
   }
 
   return (
@@ -115,11 +80,10 @@ export default function FormsManager() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FORM_TYPES.map(ft => {
           const card = cards.find(c => c.entityType === ft.entityType)!;
-          const isEditing = editingType === ft.entityType;
           const hasForm = !!card.definition;
 
           return (
-            <div key={ft.entityType} className={`bg-card rounded-xl border transition-colors ${isEditing ? "border-primary/30" : "border-border"}`}>
+            <div key={ft.entityType} className="bg-card rounded-xl border border-border">
               <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="min-w-0">
@@ -151,17 +115,18 @@ export default function FormsManager() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => isEditing ? cancelEditing() : startEditing(ft.entityType)}
-                    disabled={editingType !== null && !isEditing}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border border-border bg-card text-secondary hover:bg-muted/40 disabled:opacity-40 transition-colors"
+                  <a
+                    href={`/admin/forms/${ft.entityType}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border border-border bg-card text-secondary hover:bg-muted/40 transition-colors"
                   >
-                    {isEditing ? <><X size={13} /> Cancel</> : <><Pencil size={13} /> Edit</>}
-                  </button>
+                    <Pencil size={13} /> Edit
+                  </a>
                   {hasForm && (
                     <button
                       onClick={() => handleDelete(ft.entityType)}
-                      disabled={editingType !== null}
+                      disabled={false}
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
                     >
                       <Trash2 size={13} /> Delete
@@ -170,16 +135,7 @@ export default function FormsManager() {
                 </div>
               </div>
 
-              {isEditing && (
-                <div className="border-t border-border/50 p-5">
-                  <FormEditor
-                    questions={questions}
-                    onChange={setQuestions}
-                    onSave={handleSave}
-                    saving={saving}
-                  />
-                </div>
-              )}
+
             </div>
           );
         })}
