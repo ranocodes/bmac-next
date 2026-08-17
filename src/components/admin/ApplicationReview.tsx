@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, User, Mail, CalendarDays, Phone, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Send, User, Mail, CalendarDays, Phone, CheckCircle, XCircle, CircleHelp } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { updateWorkflowStatus, replyToSubmission } from "@/actions/workflows";
+import { sendApplicationStatusEmail } from "@/actions/emails";
 import StatusBadge from "@/components/admin/StatusBadge";
 import type { WorkflowStatus } from "@/types/cms";
 
@@ -60,16 +61,19 @@ function timeAgo(iso?: string): string {
 
 export default function ApplicationReview({ detail }: DetailProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toast, confirm } = useToast();
   const { record, person } = detail;
   const details = parseDetails(record.details);
 
   const [reply, setReply] = useState("");
+  const [requestInfoMsg, setRequestInfoMsg] = useState("");
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(record.status);
+  const [showRequestInfo, setShowRequestInfo] = useState(false);
 
   const history = Array.isArray(details.history) ? details.history : [];
+  const programTitle = details.programTitle || record.title || "Program";
 
   async function handleMarkResolved() {
     setSaving(true);
@@ -87,6 +91,82 @@ export default function ApplicationReview({ detail }: DetailProps) {
     if (result.error) { toast(result.error, "error"); return; }
     setCurrentStatus("closed");
     toast("Closed", "success");
+  }
+
+  async function handleAccept() {
+    const ok = await confirm(
+      `Accept this application and send an acceptance email to ${record.submitterEmail || "the applicant"}?`,
+      { confirmText: "Accept & Send Email", variant: "default" }
+    );
+    if (!ok) return;
+
+    setSaving(true);
+    const result = await updateWorkflowStatus(record.id, { status: "resolved" as WorkflowStatus });
+    if (result.error) { setSaving(false); toast(result.error, "error"); return; }
+
+    const emailResult = await sendApplicationStatusEmail({
+      email: record.submitterEmail,
+      firstName: record.submitterName || "there",
+      programTitle,
+      status: "accepted",
+      note: details.cohortTitle ? `You have been accepted into the ${details.cohortTitle} cohort.` : undefined,
+    });
+    setSaving(false);
+
+    setCurrentStatus("resolved");
+    if (emailResult.error) {
+      toast("Status updated but email failed: " + emailResult.error, "error");
+    } else {
+      toast("Application accepted — email sent", "success");
+    }
+  }
+
+  async function handleReject() {
+    const ok = await confirm(
+      `Reject this application and send a rejection email to ${record.submitterEmail || "the applicant"}?`,
+      { confirmText: "Reject & Send Email" }
+    );
+    if (!ok) return;
+
+    setSaving(true);
+    const result = await updateWorkflowStatus(record.id, { status: "closed" as WorkflowStatus });
+    if (result.error) { setSaving(false); toast(result.error, "error"); return; }
+
+    const emailResult = await sendApplicationStatusEmail({
+      email: record.submitterEmail,
+      firstName: record.submitterName || "there",
+      programTitle,
+      status: "rejected",
+      note: " Not selected this time — try next cohort.",
+    });
+    setSaving(false);
+
+    setCurrentStatus("closed");
+    if (emailResult.error) {
+      toast("Status updated but email failed: " + emailResult.error, "error");
+    } else {
+      toast("Application rejected — email sent", "success");
+    }
+  }
+
+  async function handleRequestInfo() {
+    if (!requestInfoMsg.trim()) return;
+
+    setSending(true);
+    const result = await replyToSubmission(record.id, { body: requestInfoMsg.trim() });
+    if (result.error) { setSending(false); toast(result.error, "error"); return; }
+
+    const statusResult = await updateWorkflowStatus(record.id, { status: "in_progress" as WorkflowStatus });
+    setSending(false);
+
+    if (statusResult.error) {
+      toast("Reply sent but status update failed: " + statusResult.error, "error");
+    } else {
+      setCurrentStatus("in_progress");
+      toast("Info request sent — status set to In Progress", "success");
+    }
+    setRequestInfoMsg("");
+    setShowRequestInfo(false);
   }
 
   async function handleReply() {
@@ -150,25 +230,98 @@ export default function ApplicationReview({ detail }: DetailProps) {
         )}
 
         <div className="mt-6 flex flex-wrap gap-2">
-          {currentStatus !== "resolved" && (
+          {currentStatus === "open" && (
+            <>
+              <button
+                onClick={handleAccept}
+                disabled={saving}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50"
+              >
+                <CheckCircle size={15} /> {saving ? "Saving…" : "Accept"}
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={saving}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all disabled:opacity-50"
+              >
+                <XCircle size={15} /> {saving ? "Saving…" : "Reject"}
+              </button>
+              {!showRequestInfo && (
+                <button
+                  onClick={() => setShowRequestInfo(true)}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted/80 transition-all disabled:opacity-50"
+                >
+                  <CircleHelp size={15} /> Request Info
+                </button>
+              )}
+            </>
+          )}
+          {currentStatus === "in_progress" && (
+            <>
+              <button
+                onClick={handleAccept}
+                disabled={saving}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50"
+              >
+                <CheckCircle size={15} /> {saving ? "Saving…" : "Accept"}
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={saving}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all disabled:opacity-50"
+              >
+                <XCircle size={15} /> {saving ? "Saving…" : "Reject"}
+              </button>
+            </>
+          )}
+          {currentStatus === "open" && !showRequestInfo && (
             <button
               onClick={handleMarkResolved}
               disabled={saving}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
             >
-              <CheckCircle size={15} /> {saving ? "Saving…" : "Mark Resolved"}
+              {saving ? "Saving…" : "Mark Resolved"}
             </button>
           )}
-          {currentStatus !== "closed" && (
+          {currentStatus !== "closed" && currentStatus !== "resolved" && (
             <button
               onClick={handleClose}
               disabled={saving}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted/80 transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
             >
-              <XCircle size={15} /> {saving ? "Saving…" : "Close"}
+              {saving ? "Saving…" : "Close"}
             </button>
           )}
         </div>
+
+        {showRequestInfo && (
+          <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
+            <p className="text-sm font-medium text-secondary mb-2">What information do you need from the applicant?</p>
+            <textarea
+              value={requestInfoMsg}
+              onChange={e => setRequestInfoMsg(e.target.value)}
+              rows={3}
+              placeholder="e.g. Please provide your transcript, references, or any missing documents…"
+              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+            />
+            <div className="mt-3 flex items-center gap-2 justify-end">
+              <button
+                onClick={() => { setShowRequestInfo(false); setRequestInfoMsg(""); }}
+                className="h-9 px-4 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestInfo}
+                disabled={sending || !requestInfoMsg.trim()}
+                className="h-9 px-4 rounded-xl bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50"
+              >
+                {sending ? "Sending…" : "Send Request"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-card rounded-xl border border-border p-6">
