@@ -73,6 +73,7 @@ const navGroups: NavGroup[] = [
       { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
       { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
       { label: "Volunteer Hours", href: "/admin/volunteer-hours", icon: Clock, permission: "manage_people" },
+      { label: "Email Sequences", href: "/admin/email-sequences", icon: Mail, permission: "access_settings" },
       { label: "Forms", href: "/admin/forms", icon: FileText, permission: "access_settings" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },

@@ -13,6 +13,7 @@ import { createAdminNotification } from "@/lib/notifications";
 import { recordEvent } from "@/lib/analytics/record";
 import { sendWorkflowEmail, sendPublicCredentialsEmail, sendApplicationStatusEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
+import { scheduleWelcomeSequence } from "@/actions/email-sequences";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
 import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
 import type {
@@ -409,6 +410,9 @@ export async function updateApplicationStatus(input: {
           status: input.status,
           programTitle,
           action: "accepted",
+        });
+        await scheduleWelcomeSequence(person.id, person.email, person.first_name).catch((err) => {
+          console.error("Welcome sequence scheduling failed:", err);
         });
       } else {
         await sendWorkflowEmail("application-status", person.email, `${person.first_name} ${person.last_name}`, {

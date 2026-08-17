@@ -9,7 +9,7 @@ function absolutizeUrl(path: string): string {
   return base ? `${base}${path.startsWith("/") ? path : `/${path}`}` : path;
 }
 
-async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
+export async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
   try {
     const res = await fetch(`${SERVICE_URL}/send`, {
       method: "POST",
