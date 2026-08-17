@@ -93,6 +93,7 @@ export default function NewsletterClient({
 
   const [templateName, setTemplateName] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [scheduleTime, setScheduleTime] = useState("");
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -431,7 +432,7 @@ export default function NewsletterClient({
   const handleSaveTemplate = async () => {
     const name = templateName.trim();
     if (!name) {
-      setComposeFeedback({ type: "error", message: "Template name required" });
+      setShowSaveTemplate(true);
       return;
     }
     const res = await saveNewsletterTemplate({ name, subject, body });
@@ -439,6 +440,8 @@ export default function NewsletterClient({
       setComposeFeedback({ type: "error", message: res.error });
     } else {
       setComposeFeedback({ type: "success", message: `Template "${name}" saved` });
+      setTemplateName("");
+      setShowSaveTemplate(false);
       loadTemplates();
     }
   };
@@ -612,21 +615,61 @@ export default function NewsletterClient({
                 <Save size={13} /> <span className="hidden sm:inline">Save template</span><span className="sm:hidden">Save</span>
               </button>
 
-              <div className="relative">
+              <button
+                onClick={() => { setShowTemplates(!showTemplates); if (!showTemplates) loadTemplates(); }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 lg:py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors"
+              >
+                <ChevronDown size={13} /> <span className="hidden sm:inline">Templates ({templates.length})</span><span className="sm:hidden">({templates.length})</span>
+              </button>
+            </div>
+
+            {showSaveTemplate && (
+              <div className="flex items-center gap-2 mt-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Template name…"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveTemplate(); if (e.key === "Escape") { setShowSaveTemplate(false); setTemplateName(""); } }}
+                  className="flex-1 min-w-0 px-3 py-1.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50"
+                />
                 <button
-                  onClick={() => setShowTemplates(!showTemplates)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 lg:py-2.5 border border-border rounded-lg text-xs font-bold hover:bg-muted/60 transition-colors"
+                  onClick={handleSaveTemplate}
+                  disabled={!templateName.trim()}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg text-xs font-bold hover:bg-primary transition-all disabled:opacity-60"
                 >
-                  <ChevronDown size={13} /> <span className="hidden sm:inline">Templates ({templates.length})</span><span className="sm:hidden">({templates.length})</span>
+                  <Save size={12} /> Save
                 </button>
-                {showTemplates && templates.length > 0 && (
-                  <div className="absolute z-10 top-full mt-1 left-0 bg-card border border-border rounded-lg shadow-lg p-2 w-64 max-h-48 overflow-y-auto">
+                <button
+                  onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }}
+                  className="px-2 py-1.5 text-xs text-muted-foreground hover:text-secondary transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {showTemplates && (
+              <div className="mt-3 bg-muted/30 rounded-lg border border-border/50 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Saved templates</p>
+                {templates.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No templates saved yet.</p>
+                ) : (
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
                     {templates.map((t) => (
-                      <div key={t.name} className="flex items-center gap-2 p-2 rounded hover:bg-muted/50">
-                        <button onClick={() => loadTemplate(t)} className="flex-1 text-left text-sm text-secondary truncate">
+                      <div key={t.name} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group">
+                        <button onClick={() => { loadTemplate(t); setShowTemplates(false); }} className="flex-1 text-left text-sm text-secondary truncate">
                           {t.name}
                         </button>
-                        <button onClick={() => handleDeleteTemplate(t.name)} className="text-muted-foreground hover:text-destructive">
+                        <span className="text-[10px] text-muted-foreground hidden group-hover:inline">
+                          {t.subject ? `"${t.subject}"` : "no subject"}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteTemplate(t.name)}
+                          title={`Delete "${t.name}"`}
+                          className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        >
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -634,7 +677,7 @@ export default function NewsletterClient({
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <Calendar size={13} className="text-muted-foreground" />
