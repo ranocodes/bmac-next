@@ -27,7 +27,7 @@ export default function PasswordChangeForm() {
     try {
       const result = await changePassword(current, newPass);
       if (result.error) { setError(result.error); setLoading(false); return; }
-      router.push("/account");
+      router.push("/dashboard");
     } catch {
       setError("Something went wrong. Try again.");
       setLoading(false);

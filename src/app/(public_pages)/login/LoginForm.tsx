@@ -27,7 +27,7 @@ export default function LoginForm() {
       if (result.mustChangePassword) {
         router.push("/account/password");
       } else {
-        router.push("/account");
+        router.push("/dashboard");
       }
     } catch {
       setError("Something went wrong. Try again.");
