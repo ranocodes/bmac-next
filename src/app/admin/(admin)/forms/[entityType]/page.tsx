@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
   getFormDefinition,
   upsertFormDefinition,
   getFormSubmissions,
 } from "@/actions/forms";
+import { db } from "@/lib/db";
 import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import type { FormQuestion } from "@/types/cms";
@@ -25,29 +26,40 @@ const FORM_LABELS: Record<string, string> = {
 export default function FormEditPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const entityType = params.entityType as string;
+  const programId = searchParams.get("programId");
   const { toast } = useToast();
 
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submissionCount, setSubmissionCount] = useState(0);
+  const [programName, setProgramName] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      getFormDefinition(entityType),
-      getFormSubmissions(entityType),
-    ]).then(([def, subs]) => {
+    async function load() {
+      const [def, subs] = await Promise.all([
+        getFormDefinition(entityType, programId ?? undefined),
+        getFormSubmissions(entityType, programId ?? undefined),
+      ]);
       setQuestions(def?.questions ? def.questions.map(q => ({ ...q })) : []);
       setSubmissionCount(subs.length);
+
+      if (programId) {
+        const program = await db.getById<{ id: string; title: string }>("programs", programId);
+        setProgramName(program?.title ?? null);
+      }
+
       setLoading(false);
-    });
-  }, [entityType]);
+    }
+    load();
+  }, [entityType, programId]);
 
   async function handleSave() {
     setSaving(true);
     const sorted = questions.map((q, i) => ({ ...q, order: i }));
-    await upsertFormDefinition(entityType, null, sorted);
+    await upsertFormDefinition(entityType, programId ?? null, sorted);
     setSaving(false);
     toast("Form saved", "success");
   }
@@ -72,7 +84,7 @@ export default function FormEditPage() {
 
       <div>
         <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">
-          {FORM_LABELS[entityType] || entityType}
+          {programName ? `${programName} Application` : FORM_LABELS[entityType] || entityType}
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
           {questions.length} question{questions.length !== 1 ? "s" : ""} · {submissionCount} submission{submissionCount !== 1 ? "s" : ""}

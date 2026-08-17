@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   FileText,
   ClipboardList,
@@ -14,6 +15,7 @@ import {
   getFormSubmissions,
 } from "@/actions/forms";
 import { useToast } from "@/components/ui/Toast";
+import { db } from "@/lib/db";
 import type { FormDefinition } from "@/types/cms";
 
 const FORM_TYPES = [
@@ -25,8 +27,16 @@ const FORM_TYPES = [
   { entityType: "member", label: "Membership Application", desc: "Form for joining BMAC" },
 ];
 
+interface Program {
+  id: string;
+  title: string;
+}
+
 interface FormCard {
   entityType: string;
+  entityId?: string;
+  label: string;
+  desc: string;
   definition: FormDefinition | null;
   submissionCount: number;
   loading: boolean;
@@ -34,7 +44,14 @@ interface FormCard {
 
 export default function FormsManager() {
   const [cards, setCards] = useState<FormCard[]>(
-    FORM_TYPES.map(ft => ({ entityType: ft.entityType, definition: null, submissionCount: 0, loading: true }))
+    FORM_TYPES.map(ft => ({
+      entityType: ft.entityType,
+      label: ft.label,
+      desc: ft.desc,
+      definition: null,
+      submissionCount: 0,
+      loading: true,
+    }))
   );
   const { toast, confirm } = useToast();
 
@@ -53,16 +70,41 @@ export default function FormsManager() {
     });
   }, []);
 
-  async function handleDelete(entityType: string) {
+  useEffect(() => {
+    async function loadProgramForms() {
+      const programs = await db.getAll<Program>("programs", { orderBy: "created_at", orderDir: "DESC" });
+      const programCards: FormCard[] = await Promise.all(
+        programs.map(async (program) => {
+          const [def, subs] = await Promise.all([
+            getFormDefinition("program", program.id),
+            getFormSubmissions("program", program.id),
+          ]);
+          return {
+            entityType: "program",
+            entityId: program.id,
+            label: `${program.title} Application`,
+            desc: `Form for ${program.title}`,
+            definition: def,
+            submissionCount: subs.length,
+            loading: false,
+          };
+        })
+      );
+      setCards(prev => [...prev, ...programCards]);
+    }
+    loadProgramForms();
+  }, []);
+
+  async function handleDelete(entityType: string, entityId?: string) {
     const ok = await confirm("Delete this form definition? This cannot be undone.", { confirmText: "Delete" });
     if (!ok) return;
-    await deleteFormDefinition(entityType);
+    await deleteFormDefinition(entityType, entityId);
     setCards(prev => prev.map(c =>
-      c.entityType === entityType
+      c.entityType === entityType && c.entityId === entityId
         ? { ...c, definition: null, submissionCount: 0 }
         : c
     ));
-                    toast("Form deleted", "success");
+    toast("Form deleted", "success");
   }
 
   return (
@@ -78,17 +120,19 @@ export default function FormsManager() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FORM_TYPES.map(ft => {
-          const card = cards.find(c => c.entityType === ft.entityType)!;
+        {cards.map((card) => {
           const hasForm = !!card.definition;
+          const editHref = card.entityType === "program" && card.entityId
+            ? `/admin/forms/program?programId=${card.entityId}`
+            : `/admin/forms/${card.entityType}`;
 
           return (
-            <div key={ft.entityType} className="bg-card rounded-xl border border-border">
+            <div key={`${card.entityType}-${card.entityId ?? "standalone"}`} className="bg-card rounded-xl border border-border">
               <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="min-w-0">
-                    <h3 className="font-display text-sm font-bold text-secondary">{ft.label}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{ft.desc}</p>
+                    <h3 className="font-display text-sm font-bold text-secondary">{card.label}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
                   </div>
                   {card.loading ? (
                     <Loader2 size={16} className="text-muted-foreground/40 animate-spin shrink-0 mt-0.5" />
@@ -115,17 +159,15 @@ export default function FormsManager() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <a
-                    href={`/admin/forms/${ft.entityType}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={editHref}
                     className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border border-border bg-card text-secondary hover:bg-muted/40 transition-colors"
                   >
                     <Pencil size={13} /> Edit
-                  </a>
+                  </Link>
                   {hasForm && (
                     <button
-                      onClick={() => handleDelete(ft.entityType)}
+                      onClick={() => handleDelete(card.entityType, card.entityId)}
                       disabled={false}
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
                     >
@@ -134,8 +176,6 @@ export default function FormsManager() {
                   )}
                 </div>
               </div>
-
-
             </div>
           );
         })}
