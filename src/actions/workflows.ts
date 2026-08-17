@@ -47,6 +47,25 @@ export async function getWorkflowQueueCounts(): Promise<{
   return { byStatus, open };
 }
 
+export async function getInboxStats(): Promise<{
+  total: number;
+  open: number;
+  byKind: Record<string, number>;
+  byStatus: Record<string, number>;
+}> {
+  await requirePermission("manage_workflows");
+  const all = await listWorkflowRecords({ limit: 1000 });
+  const byKind: Record<string, number> = {};
+  const byStatus: Record<string, number> = {};
+  let open = 0;
+  for (const r of all) {
+    byKind[r.kind] = (byKind[r.kind] || 0) + 1;
+    byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+    if (r.status === "open") open++;
+  }
+  return { total: all.length, open, byKind, byStatus };
+}
+
 export async function getWorkflowDetail(
   id: string
 ): Promise<{

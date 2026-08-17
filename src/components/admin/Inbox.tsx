@@ -33,6 +33,13 @@ const kindMeta: Record<string, { label: string; color: string }> = {
   ticket: { label: "Ticket", color: "text-cyan-700 bg-cyan-50" },
 };
 
+const STREAMS = [
+  { key: "all", label: "All" },
+  { key: "general", label: "General Inquiries", kinds: ["contact", "partner", "donation"] },
+  { key: "membership", label: "Club Membership", kinds: ["member", "volunteer"] },
+  { key: "cohort", label: "Cohort Applications", kinds: ["program"] },
+] as const;
+
 const statusMeta: Record<string, { label: string; color: string }> = {
   open: { label: "Open", color: "text-amber-700 bg-amber-50" },
   in_progress: { label: "In Progress", color: "text-blue-700 bg-blue-50" },
@@ -77,12 +84,13 @@ function timeAgo(iso?: string): string {
   return days === 1 ? "yesterday" : `${days}d ago`;
 }
 
-export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
+export default function Inbox({ initialData = [], stats }: { initialData?: any[]; stats?: { total: number; open: number; byKind: Record<string, number>; byStatus: Record<string, number> } }) {
   const [items, setItems] = useState<WorkflowItem[]>(() => initialData.map(normalize));
   const [selectedId, setSelectedId] = useState<string | null>(() => (initialData.length ? normalize(initialData[0]).id : null));
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [search, setSearch] = useState("");
   const [filterKind, setFilterKind] = useState<string>("all");
+  const [activeStream, setActiveStream] = useState<string>("all");
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -93,15 +101,29 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
   const selected = useMemo(() => items.find(i => i.id === selectedId) || null, [items, selectedId]);
 
   const filtered = useMemo(() => {
+    const streamDef = STREAMS.find(s => s.key === activeStream);
     return items.filter(i => {
+      if (streamDef && "kinds" in streamDef && !(streamDef as any).kinds.includes(i.kind)) return false;
       if (filterKind !== "all" && i.kind !== filterKind) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (i.title + " " + i.summary + " " + i.submitterName + " " + i.submitterEmail).toLowerCase().includes(q);
     });
-  }, [items, search, filterKind]);
+  }, [items, search, filterKind, activeStream]);
 
   const unreadCount = items.filter(i => i.status === "open").length;
+
+  const streamOpenCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of STREAMS) {
+      if (s.key === "all") {
+        counts[s.key] = items.filter(i => i.status === "open").length;
+      } else if ("kinds" in s) {
+        counts[s.key] = items.filter(i => i.status === "open" && (s as any).kinds.includes(i.kind)).length;
+      }
+    }
+    return counts;
+  }, [items]);
 
   async function handleReply() {
     if (!selected || !reply.trim()) return;
@@ -179,6 +201,21 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search submissions..."
               className="w-full h-10 pl-9 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
+          <div className="flex gap-1.5">
+            {STREAMS.map(s => (
+              <button key={s.key} onClick={() => { setActiveStream(s.key); setFilterKind("all"); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                  activeStream === s.key ? "bg-primary/10 text-primary border-primary/20" : "bg-card border-border text-secondary hover:border-primary/40"
+                }`}>
+                {s.label}
+                {streamOpenCounts[s.key] > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                    {streamOpenCounts[s.key]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {[{ k: "all", label: "All" }, ...Object.entries(kindMeta).map(([k, m]) => ({ k, label: m.label }))].map(f => (
               <button key={f.k} onClick={() => setFilterKind(f.k)}
@@ -193,7 +230,7 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
             {filtered.length === 0 ? (
               <div className="text-center py-16">
                 <InboxIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">{search || filterKind !== "all" ? "No submissions match" : "No submissions yet"}</p>
+                <p className="text-sm text-muted-foreground">{search || filterKind !== "all" || activeStream !== "all" ? "No submissions match" : "No submissions yet"}</p>
               </div>
             ) : filtered.map(item => {
               const km = kindMeta[item.kind] || kindMeta.contact;
