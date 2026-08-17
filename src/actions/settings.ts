@@ -12,7 +12,6 @@ import {
 import { logActivity } from "@/actions/activity-logs";
 
 export interface SiteSettingsRow extends SiteSettings {
-  google_forms?: Record<string, string>;
   email_templates?: Record<string, Partial<EmailTemplate>>;
 }
 
@@ -29,38 +28,6 @@ export async function saveSiteSettings(data: Record<string, unknown>) {
     return db.update("site_settings", existing[0].id, data);
   }
   return db.create("site_settings", { id: `settings-${Date.now()}`, ...data });
-}
-
-const DEFAULT_GOOGLE_FORMS: Record<string, string> = {
-  join: "",
-  volunteer: "",
-  school: "",
-  partner: "",
-};
-
-export async function getGoogleForms(): Promise<Record<string, string>> {
-  await requireAdmin();
-  const settings = await getSiteSettings();
-  return { ...DEFAULT_GOOGLE_FORMS, ...((settings?.google_forms as Record<string, string>) || {}) };
-}
-
-export async function saveGoogleForms(links: Record<string, string>): Promise<{ error?: string }> {
-  await requirePermission("access_settings");
-  const clean: Record<string, string> = {};
-  for (const key of ["join", "volunteer", "school", "partner"]) {
-    const val = (links[key] || "").trim();
-    if (val && !/^https?:\/\/.+/.test(val)) {
-      return { error: `${key} link must start with http:// or https://` };
-    }
-    clean[key] = val;
-  }
-  const settings = await getSiteSettings();
-  if (settings) {
-    await db.update("site_settings", settings.id, { google_forms: clean });
-  } else {
-    await db.create("site_settings", { id: `settings-${Date.now()}`, google_forms: clean });
-  }
-  return {};
 }
 
 export async function getEmailTemplates(): Promise<Record<string, EmailTemplate>> {

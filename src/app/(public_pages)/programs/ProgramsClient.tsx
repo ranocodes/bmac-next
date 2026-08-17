@@ -38,10 +38,10 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
             Leadership Ecosystem
           </span>
           <h1 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-secondary mt-2">
-            Our Core Curriculum
+            Our Core Programs
           </h1>
           <p className="text-muted-foreground max-w-lg text-base md:text-lg mt-4 leading-relaxed">
-            A hands-on curriculum built to turn Jos's brightest minds into confident public speakers and leaders.
+            A hands-on set of programs built to turn Jos's brightest minds into confident public speakers and leaders.
           </p>
         </div>
       </section>

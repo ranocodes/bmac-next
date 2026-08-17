@@ -24,6 +24,7 @@ export interface Program {
   instructorName?: string;
   instructorBio?: string;
   instructorPhoto?: string;
+  instructors?: ProgramInstructor[];
   curriculum?: { title: string; outcome: string }[];
   includes?: string[];
   refundPolicy?: string;
@@ -359,3 +360,49 @@ export interface PersonRecord {
 }
 
 export type PersonRow = Person & { recordCount: number };
+
+export interface ProgramInstructor {
+  name: string;
+  bio: string;
+  photo?: string;
+  role?: string;
+}
+
+export type FormQuestionType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "radio"
+  | "checkbox"
+  | "date"
+  | "email"
+  | "phone"
+  | "number";
+
+export interface FormQuestion {
+  id: string;
+  type: FormQuestionType;
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  options?: string[];
+  order: number;
+}
+
+export interface FormDefinition {
+  id: string;
+  entityType: string;
+  entityId?: string;
+  questions: FormQuestion[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FormSubmission {
+  id: string;
+  entityType: string;
+  entityId?: string;
+  personId?: string;
+  answers: Record<string, unknown>;
+  createdAt: string;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { Calendar, MapPin, Send, Clock, CheckCircle2, X, CalendarPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
@@ -248,7 +249,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   };
 
   if (!event) {
-    return null;
+    notFound();
   }
 
   return (

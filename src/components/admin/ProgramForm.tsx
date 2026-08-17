@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle, ChevronUp, ChevronDown, FileText } from "lucide-react";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import IconPicker from "@/components/ui/IconPicker";
 import ImagePicker from "@/components/ui/ImagePicker";
+import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
+import { getFormDefinition, upsertFormDefinition } from "@/actions/forms";
+import type { ProgramInstructor } from "@/types/cms";
+import type { FormQuestion } from "@/types/cms";
 
 const COLOR_OPTIONS = [
   { name: "Emerald", class: "text-emerald-400" },
@@ -47,9 +51,13 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   const [audienceForInput, setAudienceForInput] = useState("");
   const [audienceNotFor, setAudienceNotFor] = useState<string[]>(initialData?.audienceNotFor || initialData?.audience_not_for || []);
   const [audienceNotForInput, setAudienceNotForInput] = useState("");
-  const [instructorName, setInstructorName] = useState(initialData?.instructorName || initialData?.instructor_name || "");
-  const [instructorBio, setInstructorBio] = useState(initialData?.instructorBio || initialData?.instructor_bio || "");
-  const [instructorPhoto, setInstructorPhoto] = useState(initialData?.instructorPhoto || initialData?.instructor_photo || "");
+  const [instructors, setInstructors] = useState<ProgramInstructor[]>(() => {
+    if (initialData?.instructors?.length) return initialData.instructors;
+    const name = initialData?.instructorName || initialData?.instructor_name || "";
+    const photo = initialData?.instructorPhoto || initialData?.instructor_photo || "";
+    if (name || photo) return [{ name, photo, role: "", bio: "" }];
+    return [];
+  });
   const [curriculum, setCurriculum] = useState<{ title: string; outcome: string }[]>(initialData?.curriculum || []);
   const [curriculumOpen, setCurriculumOpen] = useState(false);
   const [curriculumTitle, setCurriculumTitle] = useState("");
@@ -85,6 +93,27 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
+  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
+  const [formLoaded, setFormLoaded] = useState(false);
+  const [formSaving, setFormSaving] = useState(false);
+
+  useEffect(() => {
+    if (isEdit && params?.id && !formLoaded) {
+      getFormDefinition("program", params.id as string).then((def) => {
+        if (def) setFormQuestions(def.questions);
+        setFormLoaded(true);
+      });
+    }
+  }, [isEdit, params?.id, formLoaded]);
+
+  async function handleSaveForm() {
+    if (!params?.id) return;
+    setFormSaving(true);
+    const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
+    await upsertFormDefinition("program", params.id as string, sorted);
+    setFormSaving(false);
+    toast("Form saved", "success");
+  }
 
   async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
@@ -120,9 +149,10 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
       effort,
       audience_for: audienceFor,
       audience_not_for: audienceNotFor,
-      instructor_name: instructorName,
-      instructor_bio: instructorBio,
-      instructor_photo: instructorPhoto,
+      instructor_name: instructors[0]?.name || "",
+      instructor_bio: instructors[0]?.bio || "",
+      instructor_photo: instructors[0]?.photo || "",
+      instructors,
       curriculum,
       includes,
       refund_policy: refundPolicy,
@@ -576,34 +606,82 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Instructor</label>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">Instructors</label>
             <div className="space-y-3">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={instructorName}
-                    onChange={(e) => setInstructorName(e.target.value)}
-                    placeholder="Instructor name"
-                    className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
-                  />
+              {instructors.length === 0 && (
+                <p className="text-xs text-muted-foreground/50 py-2">No instructors added yet</p>
+              )}
+              {instructors.map((inst, i) => (
+                <div key={i} className="bg-background border border-border rounded-lg p-3 sm:p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => { if (i > 0) { const next = [...instructors]; [next[i - 1], next[i]] = [next[i], next[i - 1]]; setInstructors(next); } }}
+                          disabled={i === 0}
+                          className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-secondary disabled:opacity-20 transition-colors"
+                        >
+                          <ChevronUp size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { if (i < instructors.length - 1) { const next = [...instructors]; [next[i], next[i + 1]] = [next[i + 1], next[i]]; setInstructors(next); } }}
+                          disabled={i === instructors.length - 1}
+                          className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-secondary disabled:opacity-20 transition-colors"
+                        >
+                          <ChevronDown size={12} />
+                        </button>
+                      </div>
+                      <span className="text-xs font-semibold text-muted-foreground">Instructor {i + 1}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setInstructors(instructors.filter((_, j) => j !== i))}
+                      className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={inst.name}
+                        onChange={(e) => { const next = [...instructors]; next[i] = { ...next[i], name: e.target.value }; setInstructors(next); }}
+                        placeholder="Instructor name"
+                        className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Role</label>
+                      <input
+                        type="text"
+                        value={inst.role || ""}
+                        onChange={(e) => { const next = [...instructors]; next[i] = { ...next[i], role: e.target.value }; setInstructors(next); }}
+                        placeholder="e.g. Lead Instructor"
+                        className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Photo</label>
+                    <ImagePicker 
+                      value={inst.photo || ""} 
+                      onChange={(val) => { const next = [...instructors]; next[i] = { ...next[i], photo: val }; setInstructors(next); }}
+                      previewShape="round"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Photo</label>
-                  <ImagePicker value={instructorPhoto} onChange={setInstructorPhoto} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Bio</label>
-                <textarea
-                  value={instructorBio}
-                  onChange={(e) => setInstructorBio(e.target.value)}
-                  rows={2}
-                  placeholder="One or two sentences about the instructor"
-                  className="w-full px-3 py-2.5 min-h-[50px] bg-background border border-input rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors resize-none"
-                />
-              </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setInstructors([...instructors, { name: "", photo: "", role: "", bio: "" }])}
+                className="flex items-center gap-1.5 text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+              >
+                <Plus size={14} /> Add Instructor
+              </button>
             </div>
           </div>
 
@@ -967,6 +1045,18 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               <p className="font-medium">{saveError ? "Save failed" : "Required fields missing"}</p>
               <p className="text-destructive/80 mt-0.5">{error}</p>
             </div>
+          </div>
+        )}
+
+        {isEdit && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <FormEditor
+              questions={formQuestions}
+              onChange={setFormQuestions}
+              onSave={handleSaveForm}
+              saving={formSaving}
+              label="Application Form"
+            />
           </div>
         )}
       </form>

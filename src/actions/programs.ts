@@ -478,8 +478,9 @@ export async function addParticipantToCohort(input: {
       return { success: false, error: "Cohort is full" };
     }
 
+    const participantId = genId("part");
     await db.create("participants", {
-      id: genId("part"),
+      id: participantId,
       cohort_id: input.cohortId,
       person_id: input.personId,
       status: "enrolled",
@@ -509,6 +510,39 @@ export async function addParticipantToCohort(input: {
         cohortTitle: cohortInfo.title,
         programTitle: cohortInfo.program_id,
         action: "accepted",
+      });
+
+      await createWorkflowRecord({
+        kind: "program",
+        refId: input.applicationId ?? "",
+        title: `Accepted to ${cohortInfo.title}`,
+        summary: `${person.first_name} ${person.last_name} enrolled in ${cohortInfo.title}`,
+        status: "closed",
+        priority: "normal",
+        assigneeEmail: "",
+        submitterName: `${person.first_name} ${person.last_name}`,
+        submitterEmail: person.email,
+        source: "cohort_enrollment",
+        details: { cohortId: input.cohortId, personId: input.personId },
+      });
+
+      await upsertPersonRecord(person.id, "program", {
+        refId: cohortInfo.program_id,
+        refTitle: cohortInfo.title,
+        status: "active",
+        meta: { cohortId: input.cohortId, applicationId: input.applicationId },
+      });
+
+      await logActivity("system", "cohort_enrollment", "participants", {
+        resourceId: participantId,
+        details: `Enrolled in cohort ${cohortInfo.title}`,
+      });
+
+      await createAdminNotification({
+        title: "New cohort enrollment",
+        message: `${person.first_name} ${person.last_name} enrolled in ${cohortInfo.title}`,
+        type: "program",
+        link: `/admin/programs/${cohortInfo.program_id}`,
       });
     }
 

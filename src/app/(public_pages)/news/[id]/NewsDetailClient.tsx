@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Calendar, Bookmark, Send, CheckCircle2, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import FadeIn from "@/components/FadeIn";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
@@ -103,17 +104,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
   };
 
   if (!article) {
-    return (
-      <main className="bg-background min-h-screen flex items-center justify-center px-6">
-        <div className="text-center max-w-md">
-          <h1 className="font-display text-3xl font-bold text-secondary mb-4">Story Not Found</h1>
-          <p className="text-muted-foreground mb-8">This article may have been removed or the link is invalid.</p>
-          <Link href="/news" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-            Back to Chronicle
-          </Link>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
   return (

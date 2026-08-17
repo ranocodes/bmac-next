@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Users,
   HeartHandshake,
@@ -17,8 +17,10 @@ import Modal from "@/components/Modal";
 import { BentoCard } from "@/components/ui/BentoCard";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
 import { applyAsPerson } from "@/actions/people";
+import { getFormDefinition, submitForm } from "@/actions/forms";
 import { loadPaystack } from "@/lib/paystack";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
+import type { FormDefinition, FormQuestion } from "@/types/cms";
 
 interface Way {
   id: string;
@@ -80,6 +82,13 @@ const submitLabelMap: Record<string, string> = {
   partner: "Submit Partnership Proposal",
 };
 
+const entityTypeMap: Record<string, string> = {
+  join: "membership",
+  volunteer: "volunteer",
+  school: "school-chapter",
+  partner: "partner",
+};
+
 function GetInvolvedInner() {
   const [selectedWay, setSelectedWay] = useState<Way | null>(null);
   const [donateAmount, setDonateAmount] = useState("10000");
@@ -93,13 +102,27 @@ function GetInvolvedInner() {
     message: string;
     reference?: string;
   } | null>(null);
+  const [formDefs, setFormDefs] = useState<Record<string, FormDefinition | null>>({});
+  const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, unknown>>({});
   const { toast } = useToast();
+
+  useEffect(() => {
+    for (const way of ways) {
+      const entityType = entityTypeMap[way.id];
+      if (entityType && !formDefs[way.id]) {
+        getFormDefinition(entityType).then(def => {
+          setFormDefs(prev => ({ ...prev, [way.id]: def }));
+        });
+      }
+    }
+  }, []);
 
   const openWay = (way: Way) => {
     setFormError("");
     setSubmitted(null);
     setConsent({ privacy: false, marketing: false });
     setFormData({ name: "", email: "", phone: "", company_website: "", notes: "" });
+    setDynamicAnswers({});
     setSelectedWay(way);
   };
 
@@ -174,6 +197,39 @@ function GetInvolvedInner() {
 
     if (selectedWay.id === "donate") {
       await handlePaystackDonation();
+      return;
+    }
+
+    const entityType = entityTypeMap[selectedWay.id];
+    const def = entityType ? formDefs[selectedWay.id] : null;
+
+    if (def) {
+      const answers: Record<string, unknown> = {
+        ...dynamicAnswers,
+        _name: formData.name,
+        _email: formData.email,
+        _phone: formData.phone,
+        _notes: formData.notes,
+      };
+      const requiredMissing = def.questions.filter(q => q.required && !answers[q.id]);
+      if (requiredMissing.length) {
+        setFormError(`Please fill in: ${requiredMissing.map(q => q.label).join(", ")}`);
+        setIsSubmitting(false);
+        return;
+      }
+      try {
+        await submitForm(entityType, null, answers);
+      } catch (err) {
+        setFormError(err instanceof Error ? err.message : "Something went wrong.");
+        setIsSubmitting(false);
+        return;
+      }
+      setIsSubmitting(false);
+      setSubmitted({
+        title: "Application Sent!",
+        message: "We've received your application and will get back to you within 48 hours.",
+      });
+      toast("Application sent!", "success");
       return;
     }
 
@@ -259,8 +315,13 @@ function GetInvolvedInner() {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       Learn More
                     </span>
-                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-card transition-colors">
-                      <ArrowRight size={16} />
+                    <div className="flex items-center gap-2">
+                      {formDefs[way.id] && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary">Custom Form</span>
+                      )}
+                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-card transition-colors">
+                        <ArrowRight size={16} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -464,6 +525,93 @@ function GetInvolvedInner() {
                       className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
                     />
                   </div>
+
+                  {(() => {
+                    const entityType = entityTypeMap[selectedWay.id];
+                    const def = entityType ? formDefs[selectedWay.id] : null;
+                    if (!def) return null;
+                    return (
+                      <div className="space-y-4 pt-4 border-t border-border/50">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Additional Questions</p>
+                        {def.questions.map((q: FormQuestion) => (
+                          <div key={q.id} className="space-y-1.5">
+                            <label className="block text-sm font-semibold text-secondary">
+                              {q.label} {q.required && <span className="text-destructive">*</span>}
+                            </label>
+                            {q.type === "textarea" ? (
+                              <textarea
+                                placeholder={q.placeholder || ""}
+                                value={(dynamicAnswers[q.id] as string) || ""}
+                                onChange={e => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                rows={3}
+                                className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
+                              />
+                            ) : q.type === "select" ? (
+                              <select
+                                value={(dynamicAnswers[q.id] as string) || ""}
+                                onChange={e => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                              >
+                                <option value="">Select...</option>
+                                {(q.options || []).map((opt: string) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : q.type === "radio" ? (
+                              <div className="flex flex-wrap gap-3">
+                                {(q.options || []).map((opt: string) => (
+                                  <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name={`q-${q.id}`}
+                                      value={opt}
+                                      checked={dynamicAnswers[q.id] === opt}
+                                      onChange={() => setDynamicAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                                      className="accent-primary"
+                                    />
+                                    {opt}
+                                  </label>
+                                ))}
+                              </div>
+                            ) : q.type === "checkbox" ? (
+                              <div className="flex flex-wrap gap-3">
+                                {(q.options || []).map((opt: string) => {
+                                  const checked = Array.isArray(dynamicAnswers[q.id]) && (dynamicAnswers[q.id] as string[]).includes(opt);
+                                  return (
+                                    <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={() => {
+                                          setDynamicAnswers(prev => {
+                                            const current = Array.isArray(prev[q.id]) ? [...(prev[q.id] as string[])] : [];
+                                            return {
+                                              ...prev,
+                                              [q.id]: checked ? current.filter(v => v !== opt) : [...current, opt],
+                                            };
+                                          });
+                                        }}
+                                        className="accent-primary"
+                                      />
+                                      {opt}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <input
+                                type={q.type === "number" ? "number" : q.type === "date" ? "date" : q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
+                                placeholder={q.placeholder || ""}
+                                value={(dynamicAnswers[q.id] as string) || ""}
+                                onChange={e => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   {formError && (
                     <p className="text-xs font-bold text-red-500 px-2">{formError}</p>
                   )}
