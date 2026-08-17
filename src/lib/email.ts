@@ -350,3 +350,14 @@ export async function sendPublicWelcomeEmail(opts: {
     loginUrl: absolutizeUrl(opts.loginUrl),
   });
 }
+
+export async function sendPublicPasswordResetEmail(opts: {
+  email: string;
+  resetLink: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "public-password-reset",
+    email: opts.email,
+    resetLink: absolutizeUrl(opts.resetLink),
+  });
+}

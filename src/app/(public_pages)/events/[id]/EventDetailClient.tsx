@@ -335,7 +335,16 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
       </section>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <ShareButtons title={event.title} url={shareUrl} />
+        <div className="flex items-center flex-wrap gap-2">
+          <ShareButtons title={event.title} url={shareUrl} />
+          <button
+            type="button"
+            onClick={handleAddToCalendar}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors"
+          >
+            <CalendarPlus size={14} /> Add to Calendar
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}

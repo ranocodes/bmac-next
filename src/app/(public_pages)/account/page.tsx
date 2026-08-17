@@ -10,8 +10,11 @@ import {
   ArrowRight,
   Mail,
   LogOut,
+  Award,
+  Clock,
 } from "lucide-react";
 import LogoutButton from "./LogoutButton";
+import VolunteerHoursWidget from "./VolunteerHoursWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +30,7 @@ interface CohortRow {
   start_date: string;
   end_date: string;
   participant_status: string;
+  participant_id: string;
 }
 
 interface AttendanceRow {
@@ -117,6 +121,12 @@ export default async function AccountPage() {
   );
   const email = rows[0]?.email || session.email;
 
+  const personRows = await db.query<{ id: string }>(
+    `SELECT id FROM public.people WHERE lower(email) = LOWER($1) LIMIT 1`,
+    [email]
+  );
+  const personId = personRows[0]?.id || "";
+
   const [applications, cohorts, attendance, roles] = await Promise.all([
     db.query<ApplicationRow>(
       `SELECT pa.id, pa.status, pa.created_at, pr.title AS program_title
@@ -128,7 +138,7 @@ export default async function AccountPage() {
       [email]
     ),
     db.query<CohortRow>(
-      `SELECT c.title AS cohort_title, c.start_date, c.end_date, pt.status AS participant_status
+      `SELECT c.title AS cohort_title, c.start_date, c.end_date, pt.status AS participant_status, pt.id AS participant_id
        FROM participants pt
        JOIN cohorts c ON c.id = pt.cohort_id
        JOIN people p ON p.id = pt.person_id
@@ -252,7 +262,18 @@ export default async function AccountPage() {
                           {formatDate(c.start_date)} — {formatDate(c.end_date)}
                         </p>
                       </div>
-                      {statusBadge(c.participant_status, ENROLLED_STYLE)}
+                      <div className="flex items-center gap-2">
+                        {(c.participant_status === "certificate_eligible" || c.participant_status === "completed") && (
+                          <Link
+                            href={`/certificate/${c.participant_id}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/20 transition-colors"
+                          >
+                            <Award className="h-3 w-3" /> Certificate
+                          </Link>
+                        )}
+                        {statusBadge(c.participant_status, ENROLLED_STYLE)}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -340,6 +361,15 @@ export default async function AccountPage() {
             )}
           </section>
         </div>
+
+        {/* Volunteer Hours */}
+        <section className="mt-8">
+          <h2 className="font-display text-sm font-semibold text-secondary flex items-center gap-2 mb-3">
+            <Clock className="h-4 w-4 text-primary" />
+            Volunteer Hours
+          </h2>
+          <VolunteerHoursWidget personId={personId} email={email} />
+        </section>
 
         <div className="mt-10 flex flex-col items-center gap-4">
           <LogoutButton />

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import crypto from "crypto";
 import { db } from "@/lib/db";
 import { logActivity } from "./activity-logs";
 import { isLoginLocked, recordLoginAttempt } from "@/lib/rate-limit";
@@ -12,6 +13,7 @@ import {
   hashPassword,
   getPublicSession,
 } from "@/lib/auth/public-auth";
+import { sendPublicPasswordResetEmail } from "@/lib/email";
 
 interface PublicUserRow {
   id: string;
@@ -125,5 +127,127 @@ export async function changePassword(
   } catch (e) {
     console.error("changePassword error:", e);
     return { error: "Failed to change password" };
+  }
+}
+
+interface PasswordResetRow {
+  id: string;
+  email: string;
+  token_hash: string;
+  expires_at: string;
+  used: boolean;
+}
+
+async function ensurePasswordResetsTable() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS public.public_password_resets (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+      email TEXT NOT NULL,
+      token_hash TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used BOOLEAN DEFAULT false,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `, []);
+}
+
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export async function requestPublicPasswordReset(
+  email: string
+): Promise<{ error?: string }> {
+  try {
+    if (!email) return { error: "Email is required" };
+
+    await ensurePasswordResetsTable();
+
+    const rows = await db.query<PublicUserRow>(
+      `SELECT id, email FROM public.public_users WHERE LOWER(email) = LOWER($1) AND auth_status = 'active' LIMIT 1`,
+      [email]
+    );
+
+    if (!rows.length) {
+      return {};
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashToken(token);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    await db.query(
+      `INSERT INTO public.public_password_resets (email, token_hash, expires_at) VALUES ($1, $2, $3)`,
+      [rows[0].email, tokenHash, expiresAt]
+    );
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const resetLink = `${appUrl}/reset-password/${token}`;
+
+    await sendPublicPasswordResetEmail({
+      email: rows[0].email,
+      resetLink,
+    });
+
+    logActivity(rows[0].email, "password_reset_request", "auth", {
+      details: "Public user password reset email sent",
+    });
+
+    return {};
+  } catch (e) {
+    console.error("requestPublicPasswordReset error:", e);
+    return { error: "Failed to process request. Try again." };
+  }
+}
+
+export async function executePublicPasswordReset(
+  token: string,
+  newPassword: string
+): Promise<{ error?: string }> {
+  try {
+    if (!token || !newPassword) return { error: "Token and password required" };
+    if (newPassword.length < 8) return { error: "Password must be at least 8 characters" };
+
+    await ensurePasswordResetsTable();
+
+    const tokenHash = hashToken(token);
+
+    const rows = await db.query<PasswordResetRow>(
+      `SELECT id, email, token_hash, expires_at, used
+       FROM public.public_password_resets
+       WHERE token_hash = $1 AND used = false
+       ORDER BY created_at DESC LIMIT 1`,
+      [tokenHash]
+    );
+
+    if (!rows.length) {
+      return { error: "Invalid or expired reset link" };
+    }
+
+    const reset = rows[0];
+    if (new Date(reset.expires_at) < new Date()) {
+      return { error: "Reset link has expired. Request a new one." };
+    }
+
+    const newHash = await hashPassword(newPassword);
+
+    await db.query(
+      `UPDATE public.public_users SET password_hash = $1, must_change_password = false WHERE LOWER(email) = LOWER($2)`,
+      [newHash, reset.email]
+    );
+
+    await db.query(
+      `UPDATE public.public_password_resets SET used = true WHERE id = $1`,
+      [reset.id]
+    );
+
+    logActivity(reset.email, "password_reset", "auth", {
+      details: "Public user password reset completed",
+    });
+
+    return {};
+  } catch (e) {
+    console.error("executePublicPasswordReset error:", e);
+    return { error: "Failed to reset password. Try again." };
   }
 }

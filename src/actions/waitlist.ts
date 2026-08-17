@@ -148,6 +148,15 @@ export async function promoteFromWaitlist(eventId: string, n = 1): Promise<{ pro
   return { promoted };
 }
 
+export async function removeFromWaitlist(id: string): Promise<{ success: boolean; error?: string }> {
+  const rows = await db.query<{ id: string }>(
+    `DELETE FROM public.event_waitlist WHERE id = $1 AND status = 'waiting' RETURNING id`,
+    [id]
+  );
+  if (!rows.length) return { success: false, error: "Entry not found or already promoted" };
+  return { success: true };
+}
+
 export async function listWaitlist(eventId: string): Promise<WaitlistEntry[]> {
   const rows = await db.query<WaitlistEntry>(
     `SELECT id, event_id AS "eventId", person_id AS "personId", name, email, phone, status, created_at AS "createdAt", promoted_at AS "promotedAt"

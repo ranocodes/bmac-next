@@ -799,7 +799,7 @@ export async function getCohortAttendanceSummary(cohortId: string): Promise<
 
 export async function sendPublicCredentials(input: {
   personId: string;
-  programId: string;
+  programId?: string;
 }): Promise<{ success: boolean; error?: string; password?: string }> {
   try {
     await requireAdmin();
@@ -812,11 +812,24 @@ export async function sendPublicCredentials(input: {
     } | null;
     if (!person) return { success: false, error: "Person not found" };
 
-    const program = await db.getById("programs", input.programId) as {
-      id: string;
-      title: string;
-      settings?: { googleDriveLink?: string };
-    } | null;
+    let driveLink: string | undefined;
+    let contextLabel = "BMAC";
+
+    if (input.programId) {
+      const program = await db.getById("programs", input.programId) as {
+        id: string;
+        title: string;
+        settings?: { googleDriveLink?: string };
+      } | null;
+      driveLink = program?.settings?.googleDriveLink || undefined;
+      contextLabel = program?.title || input.programId;
+    } else {
+      const record = await db.query<{ ref_title: string }>(
+        `SELECT ref_title FROM public.person_records WHERE person_id = $1 AND status = 'active' ORDER BY created_at DESC LIMIT 1`,
+        [input.personId]
+      );
+      if (record.length) contextLabel = record[0].ref_title;
+    }
 
     const { hashPassword, generateRandomPassword } = await import("@/lib/auth/public-auth");
     const rawPassword = generateRandomPassword();
@@ -844,7 +857,6 @@ export async function sendPublicCredentials(input: {
     }
 
     const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`;
-    const driveLink = program?.settings?.googleDriveLink || undefined;
 
     await sendPublicCredentialsEmail({
       email: person.email,
@@ -856,7 +868,7 @@ export async function sendPublicCredentials(input: {
 
     await logActivity("system", "credentials_sent", "public_users", {
       resourceId: person.id,
-      details: `Credentials sent to ${person.email} for ${program?.title || input.programId}`,
+      details: `Credentials sent to ${person.email} for ${contextLabel}`,
     });
 
     return { success: true, password: rawPassword };

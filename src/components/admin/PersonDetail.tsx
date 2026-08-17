@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Calendar, Heart, Users, Handshake, FileText, Mail, Phone, Shield, Briefcase, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, Heart, Users, Handshake, FileText, Mail, Phone, Shield, Briefcase, MessageSquare, Pencil, Trash2, KeyRound, Send } from "lucide-react";
 import { updatePerson, deletePerson } from "@/actions/people";
+import { sendPublicCredentials } from "@/actions/programs";
 import { useToast } from "@/components/ui/Toast";
 import type { Person, PersonRecord, PersonRecordKind, PersonRole } from "@/types/cms";
 
@@ -65,6 +66,8 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sendingCredentials, setSendingCredentials] = useState(false);
+  const [credentialsBanner, setCredentialsBanner] = useState<{ email: string; password: string } | null>(null);
   const [form, setForm] = useState<{
     firstName: string;
     lastName: string;
@@ -99,6 +102,16 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
     router.refresh();
   }
 
+  async function handleSendCredentials() {
+    if (sendingCredentials) return;
+    setSendingCredentials(true);
+    const result = await sendPublicCredentials({ personId: person.id });
+    setSendingCredentials(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    setCredentialsBanner({ email: person.email, password: result.password || "" });
+    toast("Login credentials sent", "success");
+  }
+
   async function handleDelete() {
     if (!confirmDelete) { setConfirmDelete(true); return; }
     setDeleting(true);
@@ -117,6 +130,11 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
           <ArrowLeft size={16} /> Back to People
         </Link>
         <div className="flex items-center gap-2">
+          <button onClick={handleSendCredentials} disabled={sendingCredentials || !person.email}
+            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors disabled:opacity-50">
+            {sendingCredentials ? <Send size={14} className="animate-pulse" /> : <KeyRound size={14} />}
+            {sendingCredentials ? "Sending…" : "Send Login"}
+          </button>
           <button onClick={() => setEditing(v => !v)}
             className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
             <Pencil size={14} /> {editing ? "Cancel" : "Edit"}
@@ -216,6 +234,14 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
           </div>
         )}
       </div>
+
+      {credentialsBanner && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+          <p className="text-sm font-semibold text-emerald-800">Login credentials sent to {credentialsBanner.email}</p>
+          <p className="text-xs text-emerald-700">Password: <code className="bg-emerald-100 px-1.5 py-0.5 rounded font-mono">{credentialsBanner.password}</code></p>
+          <p className="text-xs text-emerald-600">Share this password securely. The user will be prompted to change it on first login.</p>
+        </div>
+      )}
 
       {groups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">

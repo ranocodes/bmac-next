@@ -26,7 +26,7 @@ export async function GET(
 
   doc.fontSize(22).text('BMAC — Donation Receipt', { align: 'center' });
   doc.moveDown(0.3);
-  doc.fontSize(9).fillColor('#666666').text('Book Makers & Authors Community', { align: 'center' });
+  doc.fontSize(9).fillColor('#666666').text('Brilliant Minds Academic & Career Foundation', { align: 'center' });
   doc.text('Plateau State, Nigeria', { align: 'center' });
   doc.moveDown(1.2);
 
@@ -50,7 +50,7 @@ export async function GET(
 
   doc.fontSize(9).fillColor('#666666').text(
     'This receipt was generated electronically by BMAC. It acknowledges receipt of the donation listed above. ' +
-    'For enquiries, contact the Book Makers & Authors Community.',
+    'For enquiries, contact the Brilliant Minds Academic & Career Foundation.',
     { align: 'justify' }
   );
   doc.end();
