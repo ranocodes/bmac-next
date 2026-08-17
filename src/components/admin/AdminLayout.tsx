@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, FileText, Clock, type LucideIcon,
+  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, FileText, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -72,7 +72,6 @@ const navGroups: NavGroup[] = [
       { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
       { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
       { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
-      { label: "Volunteer Hours", href: "/admin/volunteer-hours", icon: Clock, permission: "manage_people" },
       { label: "Email Sequences", href: "/admin/email-sequences", icon: Mail, permission: "access_settings" },
       { label: "Forms", href: "/admin/forms", icon: FileText, permission: "access_settings" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },

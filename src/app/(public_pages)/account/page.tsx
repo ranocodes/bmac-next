@@ -11,10 +11,8 @@ import {
   Mail,
   LogOut,
   Award,
-  Clock,
 } from "lucide-react";
 import LogoutButton from "./LogoutButton";
-import VolunteerHoursWidget from "./VolunteerHoursWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -361,15 +359,6 @@ export default async function AccountPage() {
             )}
           </section>
         </div>
-
-        {/* Volunteer Hours */}
-        <section className="mt-8">
-          <h2 className="font-display text-sm font-semibold text-secondary flex items-center gap-2 mb-3">
-            <Clock className="h-4 w-4 text-primary" />
-            Volunteer Hours
-          </h2>
-          <VolunteerHoursWidget personId={personId} email={email} />
-        </section>
 
         <div className="mt-10 flex flex-col items-center gap-4">
           <LogoutButton />
