@@ -132,7 +132,12 @@ export async function findOrCreatePerson(input: {
       } catch (insertErr) {
         console.warn("findOrCreatePerson insert conflict:", errMessage(insertErr));
       }
-      const inserted = await db.query<PersonDbRow>(reselect.q, reselect.p);
+      let inserted: PersonDbRow[] = [];
+      try {
+        inserted = await db.query<PersonDbRow>(reselect.q, reselect.p);
+      } catch (reselectErr) {
+        console.error("findOrCreatePerson reselect error:", errMessage(reselectErr));
+      }
       person = inserted.length ? rowToPerson(inserted[0]) : null;
       if (person) {
         logActivity("system", "person_create", "people", {
@@ -293,11 +298,6 @@ export async function applyAsPerson(opts: {
   await recordSubmission(`apply:${opts.kind}`, opts.email, await getClientIp());
   const person = await findOrCreatePerson({ firstName: opts.name, email: opts.email, phone: opts.phone });
   if (!person) return { error: "Something went wrong. Try again." };
-  await recordConsent(
-    person.id,
-    { privacy: opts.privacy, marketing: opts.marketing, contact: true },
-    "get-involved"
-  );
 
   const roleMap: Record<string, PersonRole[]> = {
     member: ["member"],
@@ -313,37 +313,57 @@ export async function applyAsPerson(opts: {
   };
   const kindLabel = kindLabelMap[opts.kind] || "BMAC";
 
-  await ensurePersonRoles(person.id, roleMap[opts.kind] || []);
-  const record = await upsertPersonRecord(person.id, kindMap[opts.kind] || "program", {
-    status: "pending",
-    meta: opts.notes ? { notes: opts.notes.slice(0, 500) } : {},
-  });
+  try {
+    await recordConsent(
+      person.id,
+      { privacy: opts.privacy, marketing: opts.marketing, contact: true },
+      "get-involved"
+    );
+    await ensurePersonRoles(person.id, roleMap[opts.kind] || []);
+  } catch (err) {
+    console.error("applyAsPerson consent/roles error:", err);
+  }
+
+  let record: PersonRecord | null = null;
+  try {
+    record = await upsertPersonRecord(person.id, kindMap[opts.kind] || "program", {
+      status: "pending",
+      meta: opts.notes ? { notes: opts.notes.slice(0, 500) } : {},
+    });
+  } catch (err) {
+    console.error("applyAsPerson upsertPersonRecord error:", err);
+  }
+
   const workflowKindMap: Record<string, WorkflowKind> = {
     member: "member",
     volunteer: "volunteer",
     partner: "partner",
     program: "program",
   };
-  await createWorkflowRecord({
-    kind: workflowKindMap[opts.kind] || "member",
-    refId: person.id,
-    title: `${kindLabel} application: ${opts.name.trim()}`,
-    summary: `${opts.name.trim()} submitted a ${kindLabel} application.`,
-    status: "open",
-    priority: "normal",
-    submitterName: opts.name.trim(),
-    submitterEmail: person.email,
-    source: "get-involved",
-    details: {
-      personRecordId: record?.id || "",
-      phone: opts.phone || "",
-      notes: opts.notes ? opts.notes.slice(0, 500) : "",
-      consent: {
-        privacy: Boolean(opts.privacy),
-        marketing: Boolean(opts.marketing),
+  try {
+    await createWorkflowRecord({
+      kind: workflowKindMap[opts.kind] || "member",
+      refId: person.id,
+      title: `${kindLabel} application: ${opts.name.trim()}`,
+      summary: `${opts.name.trim()} submitted a ${kindLabel} application.`,
+      status: "open",
+      priority: "normal",
+      submitterName: opts.name.trim(),
+      submitterEmail: person.email,
+      source: "get-involved",
+      details: {
+        personRecordId: record?.id || "",
+        phone: opts.phone || "",
+        notes: opts.notes ? opts.notes.slice(0, 500) : "",
+        consent: {
+          privacy: Boolean(opts.privacy),
+          marketing: Boolean(opts.marketing),
+        },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error("applyAsPerson createWorkflowRecord error:", err);
+  }
 
   const entityTypeForForm: Record<string, string> = {
     member: "membership",
@@ -351,14 +371,18 @@ export async function applyAsPerson(opts: {
     partner: "partner",
     program: "school-chapter",
   };
-  await submitForm(entityTypeForForm[opts.kind] || "membership", null, {
-    name: opts.name.trim(),
-    email: person.email,
-    phone: opts.phone || "",
-    notes: opts.notes ? opts.notes.slice(0, 500) : "",
-    consent_privacy: Boolean(opts.privacy),
-    consent_marketing: Boolean(opts.marketing),
-  }, person.id);
+  try {
+    await submitForm(entityTypeForForm[opts.kind] || "membership", null, {
+      name: opts.name.trim(),
+      email: person.email,
+      phone: opts.phone || "",
+      notes: opts.notes ? opts.notes.slice(0, 500) : "",
+      consent_privacy: Boolean(opts.privacy),
+      consent_marketing: Boolean(opts.marketing),
+    }, person.id);
+  } catch (err) {
+    console.error("applyAsPerson submitForm error:", err);
+  }
 
   let emailSent = false;
   let emailError = "";
@@ -383,12 +407,16 @@ export async function applyAsPerson(opts: {
     }
   }
 
-  await createAdminNotification({
-    title: "New application received",
-    message: `${opts.name.trim()} submitted a ${kindLabel} application (${person.email}).`,
-    type: "form_submission",
-    link: "/admin/inbox",
-  });
+  try {
+    await createAdminNotification({
+      title: "New application received",
+      message: `${opts.name.trim()} submitted a ${kindLabel} application (${person.email}).`,
+      type: "form_submission",
+      link: "/admin/inbox",
+    });
+  } catch (err) {
+    console.error("applyAsPerson createAdminNotification error:", err);
+  }
 
   return { emailSent, emailError, kindLabel };
 }

@@ -9,8 +9,8 @@ export async function createItem(table: string, data: Record<string, unknown>) {
   if (table === "events" && data.status === "published" && data.allow_public_registration === undefined) {
     data.allow_public_registration = true;
   }
-  if (table === "programs" && data.status === "published" && data.applicationsOpen === undefined) {
-    data.applicationsOpen = true;
+  if (table === "programs" && data.status === "published" && data.applications_open === undefined) {
+    data.applications_open = true;
   }
   const result = await db.create(table, data);
   const title = (data.title || data.name || result?.id || "item") as string;
@@ -26,8 +26,8 @@ export async function updateItem(table: string, id: string, data: Record<string,
   if (table === "events" && data.status === "published" && data.allow_public_registration === undefined) {
     data.allow_public_registration = true;
   }
-  if (table === "programs" && data.status === "published" && data.applicationsOpen === undefined) {
-    data.applicationsOpen = true;
+  if (table === "programs" && data.status === "published" && data.applications_open === undefined) {
+    data.applications_open = true;
   }
   const result = await db.update(table, id, data);
   const title = (data.title || data.name || id) as string;

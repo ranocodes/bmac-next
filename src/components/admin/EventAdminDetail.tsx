@@ -95,7 +95,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   }
 
   async function handleSendReminders() {
-    const ok = await confirm("Send event reminder emails to all confirmed attendees?");
+    const ok = await confirm("Send event reminder emails to all confirmed attendees?", { confirmText: "Send", variant: "default" });
     if (!ok) return;
     setBusy(true);
     const res = await sendEventReminders(eventId);

@@ -120,15 +120,20 @@ export async function submitForm(
   entityId: string | null,
   answers: Record<string, unknown>,
   personId?: string
-): Promise<FormSubmission> {
-  const id = genId("formsub");
-  const rows = await db.query<FormSubmissionDbRow>(
-    `INSERT INTO public.form_submissions (id, entity_type, entity_id, person_id, answers)
-     VALUES ($1, $2, $3, $4, $5::jsonb)
-     RETURNING *`,
-    [id, entityType, entityId, personId ?? null, JSON.stringify(answers)]
-  );
-  return rowToFormSubmission(rows[0]);
+): Promise<FormSubmission | null> {
+  try {
+    const id = genId("formsub");
+    const rows = await db.query<FormSubmissionDbRow>(
+      `INSERT INTO public.form_submissions (id, entity_type, entity_id, person_id, answers)
+       VALUES ($1, $2, $3, $4, $5::jsonb)
+       RETURNING *`,
+      [id, entityType, entityId, personId ?? null, JSON.stringify(answers)]
+    );
+    return rows.length ? rowToFormSubmission(rows[0]) : null;
+  } catch (err) {
+    console.error("submitForm error:", err);
+    return null;
+  }
 }
 
 export async function getFormSubmissions(

@@ -511,20 +511,22 @@ function GetInvolvedInner() {
                       className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor={`gi-notes-${selectedWay.id}`} className="block text-sm font-semibold text-secondary">
-                      Why you&apos;d like to join <span className="text-muted-foreground font-normal">(optional)</span>
-                    </label>
-                    <textarea
-                      id={`gi-notes-${selectedWay.id}`}
-                      name="notes"
-                      placeholder="Tell us about your motivation, skills, or what you hope to contribute..."
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      rows={3}
-                      className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
-                    />
-                  </div>
+                  {selectedWay.id !== "donate" && (
+                    <div className="space-y-1.5">
+                      <label htmlFor={`gi-notes-${selectedWay.id}`} className="block text-sm font-semibold text-secondary">
+                        {selectedWay.id === "partner" ? "How would you like to collaborate?" : "Why you&apos;d like to join"} <span className="text-muted-foreground font-normal">(optional)</span>
+                      </label>
+                      <textarea
+                        id={`gi-notes-${selectedWay.id}`}
+                        name="notes"
+                        placeholder={selectedWay.id === "partner" ? "Describe your organization and partnership goals..." : "Tell us about your motivation, skills, or what you hope to contribute..."}
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows={3}
+                        className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
+                      />
+                    </div>
+                  )}
 
                   {(() => {
                     const entityType = entityTypeMap[selectedWay.id];

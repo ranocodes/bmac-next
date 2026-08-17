@@ -53,7 +53,7 @@ export async function submitApplication(input: {
     if (!program || program.status !== "published") {
       return { error: "Program not available for applications" };
     }
-    if (!program.applicationsOpen) {
+    if (!(program as any).applications_open && !program.applicationsOpen) {
       return { error: "Applications are not open for this program" };
     }
     if (input.dateOfBirth) {
@@ -183,7 +183,7 @@ export async function createProgramOrder(input: {
     if (!program || program.status !== "published") {
       return { error: "Program not available for applications" };
     }
-    if (!program.applicationsOpen) {
+    if (!(program as any).applications_open && !program.applicationsOpen) {
       return { error: "Applications are not open for this program" };
     }
     if (!program.isPaid) {

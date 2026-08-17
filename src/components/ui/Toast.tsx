@@ -11,6 +11,7 @@ interface Toast {
 
 interface ConfirmOptions {
   confirmText?: string;
+  variant?: "destructive" | "default";
 }
 
 interface ToastCtx {
@@ -44,6 +45,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [errors, setErrors] = useState<{ id: number; message: string }[]>([]);
   const [confirmMsg, setConfirmMsg] = useState<string | null>(null);
   const [confirmBtn, setConfirmBtn] = useState("Delete");
+  const [confirmVariant, setConfirmVariant] = useState<"destructive" | "default">("destructive");
   const [confirmResolve, setConfirmResolve] = useState<((v: boolean) => void) | null>(null);
 
   const dismissError = useCallback((id: number) => {
@@ -64,6 +66,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     return new Promise(resolve => {
       setConfirmMsg(message);
       setConfirmBtn(options?.confirmText || "Delete");
+      setConfirmVariant(options?.variant || "destructive");
       setConfirmResolve(() => (v: boolean) => {
         setConfirmMsg(null);
         resolve(v);
@@ -106,7 +109,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <p className="text-sm text-secondary font-medium mb-6">{confirmMsg}</p>
             <div className="flex items-center gap-3 justify-end">
               <button onClick={() => confirmResolve?.(false)} className="h-9 px-4 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all">Cancel</button>
-              <button onClick={() => confirmResolve?.(true)} className="h-9 px-4 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all">{confirmBtn}</button>
+              <button onClick={() => confirmResolve?.(true)} className={`h-9 px-4 rounded-xl text-sm font-semibold transition-all ${confirmVariant === "destructive" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}>{confirmBtn}</button>
             </div>
           </div>
         </div>
