@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Save, RotateCcw, User, Globe, FileText, Settings, BookOpen, Phone } from "lucide-react";
+import { Plus, X, Save, RotateCcw, User, Globe, FileText, Settings, BookOpen, Phone, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import {
   saveSiteSettings,
   updateAdminProfile,
@@ -74,14 +75,14 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
   const [navigation, setNavigation] = useState<{ name: string; href: string }[]>(
     initialData?.navigation || DEFAULT.navigation
   );
-  const [savingSite, setSavingSite] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingAll, setSavingAll] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const { toast } = useToast();
 
   const [templates, setTemplates] = useState<Record<string, EmailTemplate>>(DEFAULT_EMAIL_TEMPLATES);
   const [activeTemplate, setActiveTemplate] = useState(EMAIL_TEMPLATE_KEYS[0]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
-  const [savingTemplates, setSavingTemplates] = useState(false);
 
   useEffect(() => {
     getEmailTemplates()
@@ -103,9 +104,9 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
     toast("Profile updated", "success");
   }
 
-  async function handleSaveSite() {
+  async function handleSaveAll() {
     if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
-    setSavingSite(true);
+    setSavingAll(true);
     try {
       await saveSiteSettings({
         logo_text: logoText,
@@ -115,21 +116,14 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         about_story: aboutStory,
         contact_info: contactInfo,
       });
-      toast("Settings saved", "success");
+      await saveEmailTemplates(templates);
+      setIsDirty(false);
+      toast("All settings saved", "success");
     } catch {
       toast("Failed to save settings", "error");
     } finally {
-      setSavingSite(false);
+      setSavingAll(false);
     }
-  }
-
-  async function handleSaveTemplates() {
-    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
-    setSavingTemplates(true);
-    const res = await saveEmailTemplates(templates);
-    setSavingTemplates(false);
-    if (res?.error) { toast(res.error, "error"); return; }
-    toast("Email templates saved", "success");
   }
 
   async function handleResetTemplate() {
@@ -145,10 +139,30 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
 
   function patchActive(patch: Partial<EmailTemplate>) {
     setTemplates(prev => ({ ...prev, [activeTemplate]: { ...prev[activeTemplate], ...patch } }));
+    setIsDirty(true);
   }
 
   return (
-    <div className="w-full max-w-2xl space-y-6">
+    <div className="w-full space-y-6">
+      <div className="sticky top-0 z-40 bg-background border-b border-border/50 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 -mt-2">
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/admin" className="flex items-center gap-1.5 min-h-[44px] px-2 text-sm text-muted-foreground hover:text-secondary transition-colors shrink-0">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Back</span>
+          </Link>
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <button
+              onClick={handleSaveAll}
+              disabled={savingAll || !isDirty}
+              className="flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm"
+            >
+              <Save className="w-3.5 h-3.5" />
+              {savingAll ? "Saving..." : "Save All Settings"}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-lg bg-muted text-secondary flex items-center justify-center">
           <Settings size={18} />
@@ -188,7 +202,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         </div>
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Logo Text</label>
-          <input type="text" value={logoText} onChange={e => setLogoText(e.target.value)} placeholder="BMAC"
+          <input type="text" value={logoText} onChange={e => { setLogoText(e.target.value); setIsDirty(true); }} placeholder="BMAC"
             className={inputCls()} />
           <p className="text-xs text-muted-foreground/60 mt-1">Preview: <span className="font-display font-extrabold text-secondary">{logoText || "BMAC"}<span className="text-primary">.</span></span></p>
         </div>
@@ -196,7 +210,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-secondary/80">Social Links</label>
-            <button type="button" onClick={() => setSocialLinks([...socialLinks, { name: "", href: "", icon: "" }])}
+            <button type="button" onClick={() => { setSocialLinks([...socialLinks, { name: "", href: "", icon: "" }]); setIsDirty(true); }}
               className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
               <Plus size={12} /> Add Social
             </button>
@@ -205,15 +219,15 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
             {socialLinks.map((link, i) => (
               <div key={i} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 bg-background border border-border/30 rounded-lg">
                 <input type="text" value={link.name} onChange={e => {
-                  const next = [...socialLinks]; next[i] = { ...next[i], name: e.target.value }; setSocialLinks(next);
+                  const next = [...socialLinks]; next[i] = { ...next[i], name: e.target.value }; setSocialLinks(next); setIsDirty(true);
                 }} placeholder="Instagram"
                   className="flex-1 px-3 py-2 min-h-[40px] bg-muted/50 border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
                 <input type="text" value={link.href} onChange={e => {
-                  const next = [...socialLinks]; next[i] = { ...next[i], href: e.target.value }; setSocialLinks(next);
+                  const next = [...socialLinks]; next[i] = { ...next[i], href: e.target.value }; setSocialLinks(next); setIsDirty(true);
                 }} placeholder="https://..."
                   className="flex-[2] px-3 py-2 min-h-[40px] bg-muted/50 border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 transition-colors" />
                 <SocialLinkSelector value={link.icon} onChange={(v) => {
-                  const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next);
+                  const next = [...socialLinks]; next[i] = { ...next[i], icon: v }; setSocialLinks(next); setIsDirty(true);
                 }} />
                 <button type="button" onClick={() => setSocialLinks(socialLinks.filter((_, j) => j !== i))}
                   className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all shrink-0">
@@ -226,15 +240,9 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
 
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Copyright</label>
-          <input type="text" value={copyright} onChange={e => setCopyright(e.target.value)} placeholder="Brilliant Minds Ambassadors Club. All rights reserved."
+          <input type="text" value={copyright} onChange={e => { setCopyright(e.target.value); setIsDirty(true); }} placeholder="Brilliant Minds Ambassadors Club. All rights reserved."
             className={inputCls()} />
         </div>
-
-        <button onClick={handleSaveSite} disabled={savingSite}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-          <Save className="w-3.5 h-3.5" />
-          {savingSite ? "Saving..." : "Save Site Settings"}
-        </button>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
@@ -245,18 +253,18 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         <p className="text-xs text-muted-foreground -mt-1">The story section shown on the About page.</p>
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Eyebrow</label>
-          <input type="text" value={aboutStory.eyebrow} onChange={e => setAboutStory(s => ({ ...s, eyebrow: e.target.value }))}
+          <input type="text" value={aboutStory.eyebrow} onChange={e => { setAboutStory(s => ({ ...s, eyebrow: e.target.value })); setIsDirty(true); }}
             className={inputCls()} />
         </div>
         <div>
           <label className="block text-sm font-medium text-secondary/80 mb-1.5">Heading</label>
-          <input type="text" value={aboutStory.heading} onChange={e => setAboutStory(s => ({ ...s, heading: e.target.value }))}
+          <input type="text" value={aboutStory.heading} onChange={e => { setAboutStory(s => ({ ...s, heading: e.target.value })); setIsDirty(true); }}
             className={inputCls()} />
         </div>
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-sm font-medium text-secondary/80">Paragraphs</label>
-            <button type="button" onClick={() => setAboutStory(s => ({ ...s, paragraphs: [...s.paragraphs, ""] }))}
+            <button type="button" onClick={() => { setAboutStory(s => ({ ...s, paragraphs: [...s.paragraphs, ""] })); setIsDirty(true); }}
               className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
               <Plus size={12} /> Add Paragraph
             </button>
@@ -266,7 +274,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
               <div key={i} className="flex items-start gap-2">
                 <textarea
                   value={p}
-                  onChange={e => setAboutStory(s => ({ ...s, paragraphs: s.paragraphs.map((x, j) => j === i ? e.target.value : x) }))}
+                  onChange={e => { setAboutStory(s => ({ ...s, paragraphs: s.paragraphs.map((x, j) => j === i ? e.target.value : x) })); setIsDirty(true); }}
                   rows={3}
                   className="flex-1 px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
                 />
@@ -278,11 +286,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
             ))}
           </div>
         </div>
-        <button onClick={handleSaveSite} disabled={savingSite}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-          <Save className="w-3.5 h-3.5" />
-          {savingSite ? "Saving..." : "Save About Story"}
-        </button>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
@@ -300,15 +303,10 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         ] as const).map(([key, label, placeholder]) => (
           <div key={key}>
             <label className="block text-sm font-medium text-secondary/80 mb-1.5">{label}</label>
-            <input type="text" value={(contactInfo as Record<string, string>)[key]} onChange={e => setContactInfo(s => ({ ...s, [key]: e.target.value }))} placeholder={placeholder}
+            <input type="text" value={(contactInfo as Record<string, string>)[key]} onChange={e => { setContactInfo(s => ({ ...s, [key]: e.target.value })); setIsDirty(true); }} placeholder={placeholder}
               className={inputCls()} />
           </div>
         ))}
-        <button onClick={handleSaveSite} disabled={savingSite}
-          className="flex items-center justify-center gap-1.5 min-h-[44px] w-full px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-          <Save className="w-3.5 h-3.5" />
-          {savingSite ? "Saving..." : "Save Contact Info"}
-        </button>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
@@ -361,12 +359,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           />
         </div>
         <div className="flex gap-2">
-          <button onClick={handleSaveTemplates} disabled={savingTemplates}
-            className="flex items-center justify-center gap-1.5 min-h-[44px] flex-1 px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm">
-            <Save className="w-3.5 h-3.5" />
-            {savingTemplates ? "Saving..." : "Save Email Templates"}
-          </button>
-          <button onClick={handleResetTemplate} disabled={savingTemplates}
+          <button onClick={handleResetTemplate}
             title={`Reset ${EMAIL_TEMPLATE_LABELS[activeTemplate]} to default`}
             className="flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 text-sm font-semibold rounded-lg border border-border bg-background text-secondary hover:bg-accent transition-colors disabled:opacity-50">
             <RotateCcw className="w-3.5 h-3.5" />
