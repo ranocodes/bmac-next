@@ -143,3 +143,17 @@ export async function getFormSubmissions(
   );
   return rows.map(rowToFormSubmission);
 }
+
+export async function getAllPrograms(): Promise<{ id: string; title: string }[]> {
+  return db.query<{ id: string; title: string }>(
+    `SELECT id, title FROM public.programs ORDER BY created_at DESC`
+  );
+}
+
+export async function getProgramTitle(programId: string): Promise<string | null> {
+  const rows = await db.query<{ title: string }>(
+    `SELECT title FROM public.programs WHERE id = $1`,
+    [programId]
+  );
+  return rows[0]?.title ?? null;
+}

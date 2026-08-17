@@ -13,10 +13,10 @@ import {
   getFormDefinition,
   deleteFormDefinition,
   getFormSubmissions,
+  getAllPrograms,
 } from "@/actions/forms";
 import { useToast } from "@/components/ui/Toast";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { db } from "@/lib/db";
 import type { FormDefinition } from "@/types/cms";
 
 const FORM_TYPES = [
@@ -73,7 +73,7 @@ export default function FormsManager() {
 
   useEffect(() => {
     async function loadProgramForms() {
-      const programs = await db.getAll<Program>("programs", { orderBy: "created_at", orderDir: "DESC" });
+      const programs = await getAllPrograms();
       const programCards: FormCard[] = await Promise.all(
         programs.map(async (program) => {
           const [def, subs] = await Promise.all([

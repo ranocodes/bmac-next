@@ -7,8 +7,8 @@ import {
   getFormDefinition,
   upsertFormDefinition,
   getFormSubmissions,
+  getProgramTitle,
 } from "@/actions/forms";
-import { db } from "@/lib/db";
 import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import type { FormQuestion } from "@/types/cms";
@@ -47,8 +47,8 @@ export default function FormEditPage() {
       setSubmissionCount(subs.length);
 
       if (programId) {
-        const program = await db.getById<{ id: string; title: string }>("programs", programId);
-        setProgramName(program?.title ?? null);
+        const title = await getProgramTitle(programId);
+        setProgramName(title);
       }
 
       setLoading(false);
