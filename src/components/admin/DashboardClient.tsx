@@ -6,9 +6,21 @@ import {
   Newspaper, Calendar, BookOpen, Image, Users, Star,
   ArrowRight, Plus, Sparkle, Activity, ClipboardList,
   TrendingUp, UserCheck, RefreshCw, Globe, LayoutDashboard,
+  CheckCircle, XCircle, Clock,
 } from "lucide-react";
 import { useAdmin } from "@/lib/auth/admin-context";
+import { useToast } from "@/components/ui/Toast";
+import { updateApplicationStatus } from "@/actions/programs";
 import type { NewsArticle, EventPass } from "@/types/cms";
+
+interface PendingApplication {
+  id: string;
+  program_title: string;
+  applicant_name: string;
+  applicant_email: string;
+  status: string;
+  created_at: string;
+}
 
 interface DashboardProps {
   initialCounts: Record<string, number>;
@@ -39,11 +51,14 @@ const quickActions = [
 
 export default function DashboardClient({ initialCounts, recentNews, recentEvents, recentActivity, todayCount }: DashboardProps) {
   const user = useAdmin();
+  const { toast } = useToast();
   const [greeting, setGreeting] = useState("Good day");
   const [liveCounts, setLiveCounts] = useState(initialCounts);
   const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
   const [visitorStats, setVisitorStats] = useState<VisitorStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingApps, setPendingApps] = useState<PendingApplication[]>([]);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     const h = new Date().getHours();
@@ -66,6 +81,19 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    async function fetchPending() {
+      try {
+        const res = await fetch("/api/admin/pending-applications");
+        if (res.ok) {
+          const data = await res.json();
+          setPendingApps(data.applications || []);
+        }
+      } catch {}
+    }
+    fetchPending();
+  }, []);
+
   async function handleRefresh() {
     setRefreshing(true);
     try {
@@ -81,6 +109,38 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
   }
 
   const canViewActivity = user?.permissions.includes("manage_users") ?? false;
+
+  async function handleQuickAccept(app: PendingApplication) {
+    setProcessingId(app.id);
+    const result = await updateApplicationStatus({
+      applicationId: app.id,
+      status: "accepted",
+      adminEmail: user?.email || "",
+    });
+    if (result.error) {
+      toast(result.error, "error");
+    } else {
+      setPendingApps(prev => prev.filter(a => a.id !== app.id));
+      toast(`Accepted ${app.applicant_name || "applicant"}`, "success");
+    }
+    setProcessingId(null);
+  }
+
+  async function handleQuickReject(app: PendingApplication) {
+    setProcessingId(app.id);
+    const result = await updateApplicationStatus({
+      applicationId: app.id,
+      status: "rejected",
+      adminEmail: user?.email || "",
+    });
+    if (result.error) {
+      toast(result.error, "error");
+    } else {
+      setPendingApps(prev => prev.filter(a => a.id !== app.id));
+      toast(`Rejected ${app.applicant_name || "applicant"}`, "success");
+    }
+    setProcessingId(null);
+  }
 
   const statCards: {
     label: string;
@@ -141,7 +201,48 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
         })}
       </div>
 
-
+      {/* Pending Applications Quick Review */}
+      {pendingApps.length > 0 && (
+        <div className="bg-card rounded-xl border border-border p-5 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Clock size={16} className="text-amber-500" />
+              <h2 className="text-sm font-semibold text-secondary">Pending Applications</h2>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">{pendingApps.length}</span>
+            </div>
+            <Link href="/admin/inbox" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">View all</Link>
+          </div>
+          <div className="space-y-2">
+            {pendingApps.slice(0, 5).map((app) => (
+              <div key={app.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                  <BookOpen size={15} className="text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-secondary truncate">{app.applicant_name || "Unknown"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{app.program_title} &middot; {app.applicant_email}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => handleQuickAccept(app)}
+                    disabled={processingId === app.id}
+                    className="h-8 px-3 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition-all disabled:opacity-50"
+                  >
+                    <CheckCircle size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleQuickReject(app)}
+                    disabled={processingId === app.id}
+                    className="h-8 px-3 rounded-lg bg-red-50 text-red-700 text-xs font-semibold hover:bg-red-100 transition-all disabled:opacity-50"
+                  >
+                    <XCircle size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="bg-card rounded-xl border border-border p-5 md:p-6">
