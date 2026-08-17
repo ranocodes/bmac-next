@@ -79,9 +79,9 @@ function QuestionCard({
   return (
     <div className={`group rounded-xl border transition-all duration-200 ${expanded ? "border-primary/30 bg-card shadow-sm" : "border-border/60 bg-card/60 hover:border-border hover:bg-card"}`}>
       {/* Collapsed header */}
-      <div className="flex items-center gap-2.5 px-3.5 py-3 cursor-pointer select-none" onClick={onToggle}>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5 sm:py-3 cursor-pointer select-none" onClick={onToggle}>
         <div className="flex items-center gap-0.5">
-          <GripVertical size={14} className="text-muted-foreground/25 group-hover:text-muted-foreground/50 transition-colors" />
+          <GripVertical size={14} className="text-muted-foreground/25 group-hover:text-muted-foreground/50 transition-colors hidden sm:block" />
           <span className="w-6 h-6 rounded-lg bg-primary/8 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
             {idx + 1}
           </span>
@@ -95,21 +95,21 @@ function QuestionCard({
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">{config.label} {q.required && "· Required"}</p>
         </div>
-        <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
           <button onClick={() => onMove(-1)} disabled={idx === 0}
-            className="p-1 rounded-md text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-20 transition-colors">
+            className="p-1.5 rounded-md text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-20 transition-colors">
             <ChevronUp size={14} />
           </button>
           <button onClick={() => onMove(1)} disabled={idx === total - 1}
-            className="p-1 rounded-md text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-20 transition-colors">
+            className="p-1.5 rounded-md text-muted-foreground hover:text-secondary hover:bg-muted/40 disabled:opacity-20 transition-colors">
             <ChevronDown size={14} />
           </button>
           <button onClick={onDuplicate}
-            className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
+            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors">
             <Copy size={13} />
           </button>
           <button onClick={onRemove}
-            className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
             <Trash2 size={13} />
           </button>
         </div>
@@ -118,11 +118,11 @@ function QuestionCard({
 
       {/* Expanded body */}
       {expanded && (
-        <div className="px-4 pb-4 pt-1 border-t border-border/30 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="px-3 pb-4 pt-1 sm:px-4 border-t border-border/30 space-y-4" onClick={e => e.stopPropagation()}>
           {/* Type selector grid */}
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Field Type</label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {ALL_TYPES.map(t => {
                 const tc = TYPE_CONFIG[t];
                 const TI = tc.icon;
@@ -132,14 +132,14 @@ function QuestionCard({
                     key={t}
                     type="button"
                     onClick={() => onUpdate({ type: t, ...(active ? {} : { options: t === q.type ? q.options : [] }) })}
-                    className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-[10px] font-medium transition-all
+                    className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg text-[10px] font-medium transition-all min-w-0
                       ${active
                         ? "bg-primary/10 text-primary ring-1 ring-primary/20"
                         : "bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-secondary"
                       }`}
                   >
                     <TI size={16} className={active ? tc.color : ""} />
-                    {tc.label}
+                    <span className="truncate w-full text-center">{tc.label}</span>
                   </button>
                 );
               })}
@@ -159,7 +159,7 @@ function QuestionCard({
           </div>
 
           {/* Placeholder + Required row */}
-          <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+          <div className="flex flex-col sm:grid sm:grid-cols-[1fr_auto] gap-3 items-stretch sm:items-end">
             {isChoiceType && (
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Placeholder</label>
@@ -173,7 +173,7 @@ function QuestionCard({
               </div>
             )}
             {!isChoiceType && <div />}
-            <label className="inline-flex items-center gap-2 h-10 px-3.5 rounded-lg border border-border cursor-pointer select-none hover:bg-muted/30 transition-colors">
+            <label className="inline-flex items-center gap-2 h-10 px-3.5 rounded-lg border border-border cursor-pointer select-none hover:bg-muted/30 transition-colors shrink-0">
               <input
                 type="checkbox"
                 checked={q.required}
@@ -206,7 +206,7 @@ function QuestionCard({
                   </span>
                 ))}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={optionInput}
@@ -222,8 +222,8 @@ function QuestionCard({
                       }
                     }
                   }}
-                  placeholder="Type an option and press Enter"
-                  className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-xs text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                  placeholder="Type an option, press Enter or comma"
+                  className="flex-1 h-10 sm:h-9 px-3 rounded-lg border border-border bg-background text-xs text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
                 />
                 <button
                   type="button"
@@ -235,7 +235,7 @@ function QuestionCard({
                       setOptionInput("");
                     }
                   }}
-                  className="h-9 px-3 rounded-lg border border-border bg-muted/30 text-xs font-medium text-secondary hover:bg-muted/60 transition-colors"
+                  className="h-10 sm:h-9 px-4 rounded-lg border border-border bg-muted/30 text-xs font-medium text-secondary hover:bg-muted/60 transition-colors shrink-0"
                 >
                   Add
                 </button>
@@ -353,7 +353,7 @@ export default function FormEditor({ questions, onChange, onSave, saving, label 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {label && <p className="text-sm font-semibold text-secondary">{label}</p>}
           <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-primary/10 text-primary">
@@ -364,7 +364,7 @@ export default function FormEditor({ questions, onChange, onSave, saving, label 
           <button
             type="button"
             onClick={addQuestion}
-            className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg border border-border bg-card text-xs font-medium text-secondary hover:bg-muted/40 transition-colors"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 h-9 rounded-lg border border-border bg-card text-xs font-medium text-secondary hover:bg-muted/40 transition-colors"
           >
             <Plus size={14} /> Add Question
           </button>
@@ -372,7 +372,7 @@ export default function FormEditor({ questions, onChange, onSave, saving, label 
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             {saving ? "Saving..." : "Save Form"}
