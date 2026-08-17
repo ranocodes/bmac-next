@@ -109,13 +109,22 @@ function GetInvolvedInner() {
   useEffect(() => {
     for (const way of ways) {
       const entityType = entityTypeMap[way.id];
-      if (entityType && !formDefs[way.id]) {
+      if (entityType && !(way.id in formDefs)) {
         getFormDefinition(entityType).then(def => {
           setFormDefs(prev => ({ ...prev, [way.id]: def }));
         });
       }
     }
   }, []);
+
+  const visibleWays = ways.filter(way => {
+    const entityType = entityTypeMap[way.id];
+    if (!entityType) return true;
+    const def = formDefs[way.id];
+    if (def === undefined) return true;
+    if (def === null) return false;
+    return def.questions.length > 0;
+  });
 
   const openWay = (way: Way) => {
     setFormError("");
@@ -293,7 +302,7 @@ function GetInvolvedInner() {
         <div className="max-w-7xl mx-auto">
           {/* CMS-READY UNIFORM GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ways.map((way, i) => (
+            {visibleWays.map((way, i) => (
               <BentoCard
                 key={way.id}
                 delay={i * 0.1}

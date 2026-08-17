@@ -9,7 +9,8 @@ const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").rep
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const programs = await db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" });
+  const all = await db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" });
+  const programs = (all || []).filter((p: any) => p.status === "published");
   const program = programs.find((p: any) => p.id === id);
   if (!program) return {};
   const title = program.title;
@@ -31,10 +32,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProgramDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const programs = await db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" });
+  const all = await db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" });
+  const programs = (all || []).filter((p: any) => p.status === "published");
   if (!programs.some((p: any) => p.id === id)) notFound();
   const program = programs.find((p: any) => p.id === id);
-  if (program.status !== "published") notFound();
+  if (!program) notFound();
   const jsonLd = program
     ? {
         "@context": "https://schema.org",

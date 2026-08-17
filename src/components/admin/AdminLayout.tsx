@@ -125,15 +125,18 @@ export default function AdminLayout({ children, user: userProp, error }: { child
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    try {
-      const saved = localStorage.getItem("bmac_admin_sidebar_groups");
-      if (saved) return JSON.parse(saved);
-    } catch {}
     const activeGroup = navGroups.find(g =>
       g.children.some(c => c.href && pathname.startsWith(c.href))
     );
     return activeGroup ? { [activeGroup.label]: true } : {};
   });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("bmac_admin_sidebar_groups");
+      if (saved) setOpenGroups(JSON.parse(saved));
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("bmac_admin_sidebar_collapsed");
