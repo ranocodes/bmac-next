@@ -8,9 +8,7 @@ import {
   getDeviceBreakdown,
   getConversionFunnels,
 } from "@/actions/analytics";
-import dynamic from "next/dynamic";
-
-const AnalyticsClient = dynamic(() => import("@/components/admin/AnalyticsClient"), { ssr: false });
+import AnalyticsClient from "@/components/admin/AnalyticsClient";
 
 export default async function AnalyticsPage() {
   await requirePage("view_analytics");

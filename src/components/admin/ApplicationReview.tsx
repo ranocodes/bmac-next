@@ -37,6 +37,7 @@ interface DetailProps {
       records: { id: string; kind: string; status: string; createdAt: string }[];
       isAdmin: boolean;
     } | null;
+    answers?: Record<string, unknown> | null;
   };
 }
 
@@ -64,6 +65,7 @@ export default function ApplicationReview({ detail }: DetailProps) {
   const { toast, confirm } = useToast();
   const { record, person } = detail;
   const details = parseDetails(record.details);
+  const answers = detail.answers as Record<string, unknown> | null | undefined;
 
   const [reply, setReply] = useState("");
   const [requestInfoMsg, setRequestInfoMsg] = useState("");
@@ -226,6 +228,20 @@ export default function ApplicationReview({ detail }: DetailProps) {
             {person.records.length > 1 && (
               <p className="text-xs text-muted-foreground mt-1">{person.records.length} total records for this person</p>
             )}
+          </div>
+        )}
+
+        {answers && Object.keys(answers).length > 0 && (
+          <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">Application Answers</p>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+              {Object.entries(answers).map(([key, value]) => (
+                <div key={key}>
+                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{key.replace(/[_-]/g, " ")}</dt>
+                  <dd className="text-sm text-secondary mt-0.5">{value === null || value === undefined || value === "" ? "—" : String(value)}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         )}
 

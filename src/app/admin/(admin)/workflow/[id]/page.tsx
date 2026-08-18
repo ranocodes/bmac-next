@@ -12,5 +12,5 @@ export default async function WorkflowDetailPage({
   const { id } = await params;
   const data = await getWorkflowDetail(id);
   if (!data) notFound();
-  return <WorkflowDetail record={data.record} person={data.person} />;
+  return <WorkflowDetail record={data.record} person={data.person} answers={data.answers} />;
 }

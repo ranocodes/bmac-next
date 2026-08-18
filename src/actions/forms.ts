@@ -27,7 +27,7 @@ function question(
   return { id, type, label, placeholder, required, order, options };
 }
 
-export function getDefaultFormQuestions(entityType: string): FormQuestion[] {
+export async function getDefaultFormQuestions(entityType: string): Promise<FormQuestion[]> {
   const normalized = normalizeEntityType(entityType);
   const base = [
     question("name", "text", "Full Name", "e.g. Amina Yusuf", true, 0),
@@ -165,7 +165,7 @@ export async function getFormDefinitionOrDefault(
     id: `default-${normalized}${entityId ? `-${entityId}` : ""}`,
     entityType: normalized,
     entityId,
-    questions: getDefaultFormQuestions(normalized),
+    questions: await getDefaultFormQuestions(normalized),
     createdAt: new Date(0).toISOString(),
     updatedAt: new Date(0).toISOString(),
   };

@@ -41,6 +41,7 @@ function timeAgo(iso?: string): string {
 export default function WorkflowDetail({
   record,
   person,
+  answers,
 }: {
   record: WorkflowRecord;
   person: {
@@ -48,6 +49,7 @@ export default function WorkflowDetail({
     records: unknown[];
     isAdmin: boolean;
   } | null;
+  answers?: Record<string, unknown> | null;
 }) {
   const [status, setStatus] = useState<WorkflowStatus>(record.status);
   const [priority, setPriority] = useState<WorkflowPriority>(record.priority);
@@ -127,6 +129,20 @@ export default function WorkflowDetail({
               <p className="mt-2 text-xs text-muted-foreground">Form link: <span className="font-mono text-primary break-all">{record.details.formLink}</span></p>
             )}
           </div>
+
+          {answers && Object.keys(answers).length > 0 && (
+            <div className="bg-card rounded-xl border border-border p-6">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-3">Application Answers</h3>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                {Object.entries(answers).map(([key, value]) => (
+                  <div key={key}>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{key.replace(/[_-]/g, " ")}</dt>
+                    <dd className="text-sm text-secondary mt-0.5">{value === null || value === undefined || value === "" ? "—" : String(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
 
           <div className="bg-card rounded-xl border border-border p-6">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-4">Update Workflow</h3>
