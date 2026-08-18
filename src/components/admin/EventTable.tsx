@@ -5,13 +5,20 @@ import Link from "next/link";
 import { Calendar, Plus, Pencil, Trash2, Search, ExternalLink } from "lucide-react";
 import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
+import type { EventPass } from "@/types/cms";
 
-export default function EventTable({ initialData }: { initialData: any[] }) {
-  const [events, setEvents] = useState<any[]>([...initialData].reverse().map((e: any) => ({
+interface EventRow extends Omit<EventPass, "date" | "desc"> {
+  date: string;
+  desc: string;
+  isPaid: boolean;
+}
+
+export default function EventTable({ initialData }: { initialData: EventPass[] }) {
+  const [events, setEvents] = useState<EventRow[]>([...initialData].reverse().map(e => ({
     ...e,
-    date: e.date || e.event_date || "",
-    desc: e.desc || e.description || "",
-    isPaid: e.isPaid ?? e.is_paid ?? false,
+    date: e.date || (e as any).event_date || "",
+    desc: e.desc || (e as any).description || "",
+    isPaid: e.isPaid ?? (e as any).is_paid ?? false,
   })));
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
@@ -21,7 +28,7 @@ export default function EventTable({ initialData }: { initialData: any[] }) {
     if (!ok) return;
     await deleteItem("events", id);
     toast("Event deleted");
-    setEvents(prev => prev.filter((e: any) => e.id !== id));
+    setEvents(prev => prev.filter(e => e.id !== id));
   }
 
   const filtered = search
@@ -87,7 +94,8 @@ export default function EventTable({ initialData }: { initialData: any[] }) {
                     <Pencil size={14} />
                   </Link>
                   <button onClick={() => handleDelete(e.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                    aria-label="Delete event">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -134,7 +142,8 @@ export default function EventTable({ initialData }: { initialData: any[] }) {
                             <Pencil size={14} />
                           </Link>
                           <button onClick={() => handleDelete(e.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                            aria-label="Delete event">
                             <Trash2 size={14} />
                           </button>
                         </div>

@@ -22,11 +22,21 @@ interface PendingApplication {
   created_at: string;
 }
 
+interface ActivityItem {
+  id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  entity_title: string;
+  admin_name: string;
+  created_at: string;
+}
+
 interface DashboardProps {
   initialCounts: Record<string, number>;
-  recentNews: any[];
-  recentEvents: any[];
-  recentActivity: any[];
+  recentNews: NewsArticle[];
+  recentEvents: EventPass[];
+  recentActivity: ActivityItem[];
   todayCount: number;
 }
 

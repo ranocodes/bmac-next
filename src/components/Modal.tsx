@@ -58,6 +58,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
               whileTap={{ scale: 0.9 }}
               className="absolute top-4 right-6 md:top-6 md:right-6 z-50 w-10 h-10 flex items-center justify-center bg-card/80 backdrop-blur-md border border-border/50 rounded-full text-secondary shadow-sm hover:bg-card transition-colors"
               onClick={onClose}
+              aria-label="Close"
             >
               <X size={20} />
             </motion.button>

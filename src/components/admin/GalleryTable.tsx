@@ -6,10 +6,11 @@ import { Image, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { deleteItem } from "@/actions/crud";
 import { useAdmin } from "@/lib/auth/admin-context";
+import type { GalleryItem } from "@/types/cms";
 
-export default function GalleryTable({ initialData = [] }: { initialData?: any[] }) {
-  const [items, setItems] = useState<any[]>(() =>
-    initialData.map((g: any) => ({ ...g, status: g.status || "draft" })).reverse()
+export default function GalleryTable({ initialData = [] }: { initialData?: GalleryItem[] }) {
+  const [items, setItems] = useState<GalleryItem[]>(() =>
+    initialData.map(g => ({ ...g, status: g.status || "draft" })).reverse()
   );
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
@@ -70,7 +71,7 @@ export default function GalleryTable({ initialData = [] }: { initialData?: any[]
             {filtered.map(g => (
               <div key={g.id} className="w-full text-left bg-card rounded-xl border border-border px-4 py-3.5 flex items-center gap-3 hover:bg-muted/40 transition-colors">
                 <div className="w-14 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                  <img src={g.img} alt="" loading="lazy" className="w-full h-full object-cover" />
+                  <img src={g.img} alt={g.alt || "Gallery image"} loading="lazy" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-secondary truncate">{g.alt || g.img.split("/").pop()}</p>
@@ -84,7 +85,8 @@ export default function GalleryTable({ initialData = [] }: { initialData?: any[]
                     <Pencil size={14} />
                   </Link>
                   <button onClick={() => handleDelete(g.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                    aria-label="Delete gallery image">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -110,7 +112,7 @@ export default function GalleryTable({ initialData = [] }: { initialData?: any[]
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-14 h-10 rounded-lg overflow-hidden bg-muted shrink-0">
-                            <img src={g.img} alt="" loading="lazy" className="w-full h-full object-cover" />
+                            <img src={g.img} alt={g.alt || "Gallery image"} loading="lazy" className="w-full h-full object-cover" />
                           </div>
                           <p className="font-medium text-secondary hidden sm:inline truncate max-w-[120px]">{g.img.split("/").pop()}</p>
                         </div>
@@ -139,7 +141,8 @@ export default function GalleryTable({ initialData = [] }: { initialData?: any[]
                             <Pencil size={14} />
                           </Link>
                           <button onClick={() => handleDelete(g.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                            aria-label="Delete gallery image">
                             <Trash2 size={14} />
                           </button>
                         </div>

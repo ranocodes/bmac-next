@@ -26,7 +26,8 @@ export default function SocialLinkSelector({ value, onChange }: SocialLinkSelect
   return (
     <div ref={ref} className="relative w-full sm:w-44">
       <button type="button" onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-3 py-2 min-h-[40px] bg-muted/50 border border-input rounded-lg text-sm transition-colors">
+        className="w-full flex items-center gap-2 px-3 py-2 min-h-[40px] bg-muted/50 border border-input rounded-lg text-sm transition-colors"
+        aria-haspopup="listbox" aria-expanded={open}>
         {selected ? (
           <>
             <selected.icon size={16} className="text-primary shrink-0" />

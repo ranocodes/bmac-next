@@ -61,7 +61,8 @@ export default function LoginForm({ hasAdmins }: Props) {
                 placeholder="Enter your password"
                 className="w-full h-11 px-4 pr-11 rounded-xl border border-input bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
               <button type="button" onClick={() => setShow(!show)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-secondary"
+                aria-label={show ? "Hide password" : "Show password"}>
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>

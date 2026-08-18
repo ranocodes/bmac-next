@@ -9,7 +9,18 @@ import DeleteReasonModal from "./DeleteReasonModal";
 import type { Permission } from "@/types/cms";
 import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
-const roleIcons: Record<string, any> = {
+interface AdminUserRow {
+  id: string;
+  email: string;
+  first_name?: string;
+  firstName?: string;
+  role: string;
+  permissions: Permission[];
+  created_at?: string;
+  createdAt?: string;
+}
+
+const roleIcons: Record<string, typeof ShieldAlert> = {
   super_admin: ShieldAlert,
   administrator: ShieldCheck,
   moderator: Shield,
@@ -23,11 +34,11 @@ const roleColors: Record<string, string> = {
 
 const allPermissions = PERMISSION_LABELS;
 
-export default function UsersTable({ initialData }: { initialData: any[] }) {
-  const [users, setUsers] = useState<any[]>([]);
+export default function UsersTable({ initialData }: { initialData: AdminUserRow[] }) {
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [search, setSearch] = useState("");
   const currentUser = useAdmin();
-  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [editingUser, setEditingUser] = useState<AdminUserRow | null>(null);
   const [editPerms, setEditPerms] = useState<Permission[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -42,7 +53,7 @@ export default function UsersTable({ initialData }: { initialData: any[] }) {
     setUsers(mapped);
   }, [initialData]);
 
-  function openPermissionEditor(user: any) {
+  function openPermissionEditor(user: AdminUserRow) {
     setEditingUser(user);
     setEditPerms([...user.permissions]);
   }

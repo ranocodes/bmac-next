@@ -175,17 +175,15 @@ export default function NewsletterClient({
   }, []);
 
   useEffect(() => {
+    if (!(showConfirm || showTestModal || showTemplates)) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setShowConfirm(false);
       setShowTestModal(false);
       setShowTemplates(false);
     };
-    const anyOpen = showConfirm || showTestModal || showTemplates;
-    if (anyOpen) {
-      document.addEventListener("keydown", handleKey);
-      return () => document.removeEventListener("keydown", handleKey);
-    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
   }, [showConfirm, showTestModal, showTemplates]);
 
   const filtered = useMemo(() => {

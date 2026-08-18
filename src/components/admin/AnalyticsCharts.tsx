@@ -103,7 +103,7 @@ function Donut({ data, centerLabel }: { data: { label: string; value: number }[]
   );
 
   return (
-    <svg viewBox="0 0 200 200" className="w-full max-w-[220px] mx-auto" role="img">
+    <svg viewBox="0 0 200 200" className="w-full max-w-[220px] mx-auto" role="img" aria-label="Application status distribution chart">
       {segments.map((s, i) => (
         <circle
           key={data[i].label}
