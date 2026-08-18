@@ -172,7 +172,10 @@ export async function getFormDefinitionOrDefault(
 ): Promise<FormDefinition> {
   const normalized = normalizeEntityType(entityType);
   const existing = await getFormDefinition(normalized, entityId);
-  if (existing && existing.questions.length > 0) return existing;
+  const validQuestions = existing?.questions.filter(q => q.label && q.label.trim() !== "") ?? [];
+  if (existing && validQuestions.length > 0) {
+    return { ...existing, questions: validQuestions };
+  }
   return {
     id: `default-${normalized}${entityId ? `-${entityId}` : ""}`,
     entityType: normalized,
