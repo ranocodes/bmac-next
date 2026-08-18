@@ -54,7 +54,7 @@ const navGroups: NavGroup[] = [
     label: "People", icon: Users,
     children: [
       { label: "Partners", href: "/admin/partners", icon: Handshake, permission: "manage_partners" },
-      { label: "People", href: "/admin/people", icon: Users, permission: "manage_people" },
+      { label: "Members", href: "/admin/members", icon: Users, permission: "manage_people" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
     ],
   },

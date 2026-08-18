@@ -99,6 +99,36 @@ export async function getInboxStatsByStream(): Promise<{
   return counts;
 }
 
+const APPLICATION_KINDS = ["program", "member", "volunteer"] as const;
+
+export async function listApplicationWorkflows(
+  filters: WorkflowFilters = {}
+): Promise<WorkflowRecord[]> {
+  await requirePermission("manage_workflows");
+  const all = await listWorkflowRecords({ limit: filters.limit || 500 });
+  return all.filter(r => (APPLICATION_KINDS as readonly string[]).includes(r.kind));
+}
+
+export async function getApplicationInboxStats(): Promise<{
+  total: number;
+  open: number;
+  byKind: Record<string, number>;
+  byStatus: Record<string, number>;
+}> {
+  await requirePermission("manage_workflows");
+  const all = await listWorkflowRecords({ limit: 1000 });
+  const apps = all.filter(r => (APPLICATION_KINDS as readonly string[]).includes(r.kind));
+  const byKind: Record<string, number> = {};
+  const byStatus: Record<string, number> = {};
+  let open = 0;
+  for (const r of apps) {
+    byKind[r.kind] = (byKind[r.kind] || 0) + 1;
+    byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+    if (r.status === "open") open++;
+  }
+  return { total: apps.length, open, byKind, byStatus };
+}
+
 export async function getWorkflowDetail(
   id: string
 ): Promise<{
@@ -114,26 +144,42 @@ export async function getWorkflowDetail(
     records: { id: string; kind: string; status: string; createdAt: string }[];
     isAdmin: boolean;
   } | null;
+  answers: Record<string, unknown> | null;
 } | null> {
   await requirePermission("manage_workflows");
   const record = await getWorkflow(id);
   if (!record) return null;
+
+  let personId = record.refId;
+
+  // For program workflows, refId is an application id — resolve person from program_applications
+  if (record.kind === "program" && record.refId && record.refId.startsWith("app-")) {
+    try {
+      const appRows = await db.query<{ person_id: string }>(
+        "SELECT person_id FROM public.program_applications WHERE id = $1",
+        [record.refId]
+      );
+      if (appRows.length) personId = appRows[0].person_id;
+    } catch (err) {
+      console.error("getWorkflowDetail program application lookup error:", err);
+    }
+  }
 
   let person: {
     person: { id: string; firstName: string; lastName: string; email: string; phone: string };
     records: { id: string; kind: string; status: string; createdAt: string }[];
     isAdmin: boolean;
   } | null = null;
-  if (record.refId) {
+  if (personId) {
     try {
       const pRows = await db.query<{
         id: string; first_name: string; last_name: string; email: string; phone: string;
-      }>("SELECT id, first_name, last_name, email, phone FROM public.people WHERE id = $1", [record.refId]);
+      }>("SELECT id, first_name, last_name, email, phone FROM public.people WHERE id = $1", [personId]);
       if (pRows.length) {
         const p = pRows[0];
         const recRows = await db.query<{
           id: string; kind: string; status: string; created_at: string;
-        }>("SELECT id, kind, status, created_at FROM public.person_records WHERE person_id = $1 ORDER BY created_at DESC", [record.refId]);
+        }>("SELECT id, kind, status, created_at FROM public.person_records WHERE person_id = $1 ORDER BY created_at DESC", [personId]);
         const adminRows = await db.query<{ id: string }>(
           "SELECT id FROM public.admin_users WHERE LOWER(email) = LOWER($1)",
           [p.email]
@@ -155,7 +201,39 @@ export async function getWorkflowDetail(
     }
   }
 
-  return { record, person };
+  // Load form submission answers
+  let answers: Record<string, unknown> | null = null;
+  const formSubmissionId = record.details?.formSubmissionId;
+  if (formSubmissionId) {
+    try {
+      const subRows = await db.query<{ answers: unknown }>(
+        "SELECT answers FROM public.form_submissions WHERE id = $1",
+        [formSubmissionId]
+      );
+      if (subRows.length && subRows[0].answers) {
+        answers = typeof subRows[0].answers === "string" ? JSON.parse(subRows[0].answers as string) : subRows[0].answers as Record<string, unknown>;
+      }
+    } catch (err) {
+      console.error("getWorkflowDetail form submission lookup error:", err);
+    }
+  }
+
+  // Fallback: find latest form submission by person
+  if (!answers && personId) {
+    try {
+      const subRows = await db.query<{ answers: unknown }>(
+        "SELECT answers FROM public.form_submissions WHERE person_id = $1 ORDER BY created_at DESC LIMIT 1",
+        [personId]
+      );
+      if (subRows.length && subRows[0].answers) {
+        answers = typeof subRows[0].answers === "string" ? JSON.parse(subRows[0].answers as string) : subRows[0].answers as Record<string, unknown>;
+      }
+    } catch (err) {
+      console.error("getWorkflowDetail fallback form submission lookup error:", err);
+    }
+  }
+
+  return { record, person, answers };
 }
 
 export async function updateWorkflowStatus(

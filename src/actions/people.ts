@@ -267,6 +267,44 @@ export async function exportPeople(): Promise<PersonRow[]> {
   return fetchPeopleRows();
 }
 
+async function fetchMemberRows(): Promise<PersonRow[]> {
+  const rows = await db.query<PersonRowDb>(
+    `SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.roles, p.notes, p.created_at, p.updated_at,
+            COUNT(DISTINCT pr.id)::int AS record_count,
+            EXISTS (SELECT 1 FROM public.admin_users au WHERE au.email IS NOT NULL AND LOWER(au.email) = LOWER(p.email)) AS is_admin
+     FROM public.people p
+     INNER JOIN public.person_records pr ON pr.person_id = p.id
+     WHERE pr.status = 'accepted'
+       AND pr.kind IN ('member', 'volunteer')
+     GROUP BY p.id
+     UNION
+     SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.roles, p.notes, p.created_at, p.updated_at,
+            1 AS record_count,
+            EXISTS (SELECT 1 FROM public.admin_users au WHERE au.email IS NOT NULL AND LOWER(au.email) = LOWER(p.email)) AS is_admin
+     FROM public.people p
+     INNER JOIN public.participants pt ON pt.person_id = p.id
+     INNER JOIN public.cohorts c ON c.id = pt.cohort_id
+     WHERE pt.status IN ('accepted', 'enrolled', 'completed')
+     GROUP BY p.id
+     ORDER BY created_at DESC`
+  );
+  return rows.map((r) => {
+    const person = rowToPerson(r);
+    if (r.is_admin && !person.roles.includes("admin")) person.roles = [...person.roles, "admin"];
+    return { ...person, recordCount: Number(r.record_count ?? 0) };
+  });
+}
+
+export async function getMembers(): Promise<PersonRow[]> {
+  await requirePermission("manage_people");
+  return fetchMemberRows();
+}
+
+export async function exportMembers(): Promise<PersonRow[]> {
+  await requirePermission("export_data");
+  return fetchMemberRows();
+}
+
 const kindLabelMap: Record<string, string> = {
   member: "Membership",
   volunteer: "Volunteer",

@@ -35,19 +35,19 @@ const kindMeta: Record<string, { label: string; color: string }> = {
 };
 
 const STREAMS = [
-  { key: "all", label: "All", icon: InboxIcon },
-  { key: "applications", label: "Applications", icon: FileText, kinds: ["program", "volunteer", "member", "school-chapter", "partner"] },
-  { key: "donations", label: "Donations", icon: Banknote, kinds: ["donation"] },
-  { key: "inquiries", label: "Inquiries", icon: MessageCircle, kinds: ["contact"] },
-  { key: "events", label: "Events", icon: Calendar, kinds: ["event_registration", "ticket"] },
+  { key: "all", label: "All Applications", icon: InboxIcon },
+  { key: "applications", label: "All Applications", icon: FileText, kinds: ["program", "volunteer", "member"] },
+  { key: "program", label: "Cohort", icon: FileText, kinds: ["program"] },
+  { key: "volunteer", label: "Volunteer", icon: FileText, kinds: ["volunteer"] },
+  { key: "member", label: "Membership", icon: FileText, kinds: ["member"] },
 ] as const;
 
 const EMPTY_MESSAGES: Record<string, { message: string; sub?: string }> = {
-  all: { message: "No submissions yet" },
-  applications: { message: "No pending applications", sub: "Applications from programs, volunteering, membership, and partnerships will appear here." },
-  donations: { message: "No donation records", sub: "Donation submissions and payment records will appear here." },
-  inquiries: { message: "No inquiries", sub: "Contact form submissions and general inquiries will appear here." },
-  events: { message: "No event registrations", sub: "Event signups and ticket purchases will appear here." },
+  all: { message: "No applications yet" },
+  applications: { message: "No pending applications", sub: "Applications from programs, volunteering, and membership will appear here." },
+  program: { message: "No cohort applications", sub: "Program and cohort applications will appear here." },
+  volunteer: { message: "No volunteer applications", sub: "Volunteer applications will appear here." },
+  member: { message: "No membership applications", sub: "Membership applications will appear here." },
 };
 
 type SortOption = "newest" | "priority";
