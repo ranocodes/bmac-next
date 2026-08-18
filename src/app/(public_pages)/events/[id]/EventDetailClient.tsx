@@ -192,7 +192,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
           ]
         },
         callback: function(response: any) {
-          console.log("Payment successful. Reference: " + response.reference);
+          /* payment confirmed */
           callbackFiredRef.current = true;
           setIsPending(true);
           setFormError("");

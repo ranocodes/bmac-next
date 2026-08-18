@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Calendar, Plus, Pencil, Trash2, Search, ExternalLink } from "lucide-react";
 import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
-import { useAdmin } from "@/lib/auth/admin-context";
-import type { EventPass } from "@/types/cms";
 
 export default function EventTable({ initialData }: { initialData: any[] }) {
   const [events, setEvents] = useState<any[]>([...initialData].reverse().map((e: any) => ({

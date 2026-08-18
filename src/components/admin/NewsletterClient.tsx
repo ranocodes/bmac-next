@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Mail, Send, Search, Users, Loader2, CheckCircle2, AlertCircle,
-  Download, Upload, Plus, Trash2, X, Clock, Eye, Smartphone, Monitor,
+  Download, Upload, Plus, Trash2, X, Clock, Smartphone, Monitor,
   Save, ChevronDown, ChevronUp, Calendar, AlertTriangle, Ban,
 } from "lucide-react";
 import {
@@ -28,7 +28,6 @@ import type {
   Broadcast,
   NewsletterTemplate,
 } from "@/actions/newsletter-admin";
-import EmailPreview from "@/components/ui/EmailPreview";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import NewsletterHistory from "@/components/admin/NewsletterHistory";
 
@@ -84,7 +83,6 @@ export default function NewsletterClient({
   const [confirmAudienceCount, setConfirmAudienceCount] = useState(0);
 
   const [showHistory, setShowHistory] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
 
   const [addEmail, setAddEmail] = useState("");
   const [adding, setAdding] = useState(false);
@@ -181,15 +179,14 @@ export default function NewsletterClient({
       if (e.key !== "Escape") return;
       setShowConfirm(false);
       setShowTestModal(false);
-      setShowPreview(false);
       setShowTemplates(false);
     };
-    const anyOpen = showConfirm || showTestModal || !showPreview || showTemplates;
+    const anyOpen = showConfirm || showTestModal || showTemplates;
     if (anyOpen) {
       document.addEventListener("keydown", handleKey);
       return () => document.removeEventListener("keydown", handleKey);
     }
-  }, [showConfirm, showTestModal, showPreview, showTemplates]);
+  }, [showConfirm, showTestModal, showTemplates]);
 
   const filtered = useMemo(() => {
     if (!searchQuery && !sourceFilter) return subscribers;
@@ -283,6 +280,7 @@ export default function NewsletterClient({
         const res = await sendNewsletterBroadcast({
           subject,
           body,
+          bodyHtml: body,
           offset,
           limit: CHUNK_SIZE,
           audienceSource: sourceFilter || undefined,
@@ -333,7 +331,7 @@ export default function NewsletterClient({
     if (!testEmails.trim()) return;
     setSendingTest(true);
     setTestFeedback(null);
-    const res = await sendNewsletterTest({ subject, body, to: testEmails });
+    const res = await sendNewsletterTest({ subject, body, bodyHtml: body, to: testEmails });
     setSendingTest(false);
     if (res.error) {
       setTestFeedback({ type: "error", message: res.error });
@@ -353,6 +351,7 @@ export default function NewsletterClient({
     const res = await scheduleNewsletterBroadcast({
       subject,
       body,
+      bodyHtml: body,
       scheduledFor: new Date(scheduleTime).toISOString(),
       audienceSource: sourceFilter || undefined,
     });
@@ -522,12 +521,6 @@ export default function NewsletterClient({
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-                <button
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:text-secondary transition-colors"
-                >
-                  <Eye size={13} /> {showPreview ? "Hide" : "Show"} preview
-                </button>
               </div>
             </div>
 
@@ -845,7 +838,7 @@ export default function NewsletterClient({
               <p><span className="font-semibold">Subject:</span> {subject}</p>
               <p><span className="font-semibold">Audience:</span> {confirmAudienceCount} subscriber(s){sourceFilter ? ` (${sourceFilter})` : ""}</p>
               <div className="bg-muted/40 rounded-lg p-3 max-h-48 overflow-y-auto">
-                <EmailPreview subject={subject} markdown={body} />
+                <div dangerouslySetInnerHTML={{ __html: body }} className="text-sm" />
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">

@@ -205,7 +205,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
             ],
           },
           callback: function(response: any) {
-            console.log("Payment successful. Reference: " + response.reference);
+              /* payment confirmed */
             setIsPending(true);
             setFormError("");
             const poll = setInterval(async () => {

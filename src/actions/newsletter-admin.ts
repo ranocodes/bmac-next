@@ -439,6 +439,7 @@ export async function listNewsletterTemplates(): Promise<NewsletterTemplate[]> {
 export async function scheduleNewsletterBroadcast(opts: {
   subject: string;
   body: string;
+  bodyHtml?: string;
   scheduledFor: string;
   audienceSource?: string;
 }): Promise<{ campaignId?: string; error?: string }> {
@@ -453,7 +454,7 @@ export async function scheduleNewsletterBroadcast(opts: {
   }
 
   const campaignId = `bc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-  const bodyHtml = markdownToHtml(body);
+  const bodyHtml = opts.bodyHtml || markdownToHtml(body);
 
   await db.query(
     `INSERT INTO public.broadcast_log
@@ -474,8 +475,8 @@ export async function flushScheduledBroadcasts(): Promise<{
   sent: number;
   errors: number;
 }> {
-  const dueRows = await db.query<{ id: string; subject: string; body_md: string; audience_source: string | null }>(
-    `SELECT id, subject, body_md, audience_source
+  const dueRows = await db.query<{ id: string; subject: string; body_md: string; body_html: string; audience_source: string | null }>(
+    `SELECT id, subject, body_md, body_html, audience_source
      FROM public.broadcast_log
      WHERE status = 'scheduled' AND scheduled_for IS NOT NULL AND scheduled_for <= now()
      FOR UPDATE SKIP LOCKED
@@ -500,8 +501,8 @@ export async function flushScheduledBroadcasts(): Promise<{
     while (!done) {
       const result = await performChunk({
         subject: row.subject,
-        bodyMd: row.body_md,
-        bodyHtml: markdownToHtml(row.body_md),
+        bodyMd: row.body_html,
+        bodyHtml: row.body_html || markdownToHtml(row.body_md),
         offset,
         limit: CHUNK_SIZE,
         audienceSource: row.audience_source || undefined,

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { Plus, Send, Trash2, Loader2, Mail, Users, Clock, CheckCircle2, ArrowLeft, Eye, Code } from "lucide-react";
+import { Plus, Send, Trash2, Loader2, Mail, Users, Clock, CheckCircle2, ArrowLeft } from "lucide-react";
 import { listCampaigns, getCampaign, saveCampaign, sendCampaign, deleteCampaign } from "@/actions/campaigns";
 import type { EmailCampaign } from "@/actions/campaigns";
 import { useToast } from "@/components/ui/Toast";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 const AUDIENCES = [
   { key: "all", label: "All Subscribers" },
@@ -16,7 +17,7 @@ const AUDIENCES = [
 export default function CampaignsAdmin() {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"list" | "edit" | "preview">("list");
+  const [view, setView] = useState<"list" | "edit">("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
@@ -121,11 +122,8 @@ export default function CampaignsAdmin() {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between ml-1">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email Body (HTML)</label>
-              <button type="button" onClick={() => setView("preview")} className="text-xs text-primary font-bold flex items-center gap-1 hover:underline"><Eye size={12} /> Preview</button>
-            </div>
-            <textarea value={htmlBody} onChange={e => setHtmlBody(e.target.value)} rows={14} placeholder="<h1>Hello!</h1><p>Your email content here...</p>" className="w-full px-3 py-3 bg-background border border-border rounded-lg text-sm font-mono text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 resize-y" />
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Body</label>
+            <RichTextEditor value={htmlBody} onChange={setHtmlBody} minHeight={320} />
           </div>
 
           <div className="space-y-2">
@@ -141,24 +139,6 @@ export default function CampaignsAdmin() {
               {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Send Now
             </button>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === "preview" && htmlBody) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setView("edit")} className="p-2 rounded-lg hover:bg-muted transition-colors"><ArrowLeft size={18} /></button>
-          <h1 className="font-display text-xl font-bold text-secondary">Preview</h1>
-        </div>
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="p-4 border-b border-border bg-muted/30 flex items-center gap-2">
-            <Mail size={14} className="text-muted-foreground" />
-            <span className="text-sm font-bold text-secondary">{subject || "No subject"}</span>
-          </div>
-          <iframe srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">${htmlBody}</body></html>`} className="w-full min-h-[500px] bg-white" sandbox="allow-same-origin" />
         </div>
       </div>
     );

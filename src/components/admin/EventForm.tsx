@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, CheckCircle, AlertCircle, ChevronDown, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, AlertCircle, Plus } from "lucide-react";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ImagePicker from "@/components/ui/ImagePicker";
 import CategorySelect from "@/components/ui/CategorySelect";
