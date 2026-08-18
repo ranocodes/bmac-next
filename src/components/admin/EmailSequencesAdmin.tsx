@@ -132,6 +132,7 @@ export default function EmailSequencesAdmin({
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Scheduled</th>
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Sent</th>
+                  <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Updated</th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Action</th>
                 </tr>
               </thead>
@@ -154,6 +155,7 @@ export default function EmailSequencesAdmin({
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(seq.scheduled_at)}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{seq.sent_at ? formatDate(seq.sent_at) : "—"}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{seq.updated_at ? formatDate(seq.updated_at) : "—"}</td>
                       <td className="px-4 py-3 text-right">
                         {seq.status === "pending" && (
                           <button onClick={() => handleCancel(seq.id)} disabled={cancelling === seq.id}

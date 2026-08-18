@@ -247,6 +247,8 @@ export async function sendTicketReceiptEmail(opts: {
   email: string;
   firstName?: string;
   eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
   quantity?: number;
   amountLabel?: string;
   passUrl?: string;
@@ -257,6 +259,8 @@ export async function sendTicketReceiptEmail(opts: {
     email: opts.email,
     firstName: opts.firstName || "",
     eventName: opts.eventName,
+    eventDate: opts.eventDate || "",
+    eventLocation: opts.eventLocation || "",
     quantity: opts.quantity || 0,
     amountLabel: opts.amountLabel || "",
     passUrl: absolutizeUrl(opts.passUrl || ""),

@@ -36,6 +36,7 @@ export async function sendWorkflowEmail(
     action?: string;
     eventTitle?: string;
     eventDate?: string;
+    eventLocation?: string;
     passUrl?: string;
     reference?: string;
     amountLabel?: string;
@@ -116,6 +117,8 @@ export async function sendWorkflowEmail(
           email,
           firstName,
           eventName: opts.eventTitle || "",
+          eventDate: opts.eventDate || "",
+          eventLocation: opts.eventLocation || "",
           quantity: 1,
           amountLabel: opts.amountLabel || "",
           passUrl: opts.passUrl || "",

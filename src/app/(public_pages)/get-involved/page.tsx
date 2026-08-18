@@ -61,9 +61,9 @@ const ways: Way[] = [
 ];
 
 const entityTypeMap: Record<string, string> = {
-  join: "membership",
+  join: "member",
   volunteer: "volunteer",
-  school: "school-chapter",
+  school: "program",
   partner: "partner",
 };
 

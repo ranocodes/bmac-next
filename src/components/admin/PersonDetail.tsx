@@ -62,6 +62,11 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
     .map(s => ({ ...s, items: records.filter(r => r.kind === s.kind) }))
     .filter(s => s.items.length > 0);
 
+  const hasLoginEligibleRole = roles.some(r => r !== "admin");
+  const hasLoginEligibleRecord = records.some(r =>
+    ["member", "volunteer", "partner", "program", "event_registration", "donation"].includes(r.kind)
+  );
+
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -130,11 +135,13 @@ export default function PersonDetail({ person, records, isAdmin }: { person: Per
           <ArrowLeft size={16} /> Back to People
         </Link>
         <div className="flex items-center gap-2">
-          <button onClick={handleSendCredentials} disabled={sendingCredentials || !person.email}
-            className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors disabled:opacity-50">
-            {sendingCredentials ? <Send size={14} className="animate-pulse" /> : <KeyRound size={14} />}
-            {sendingCredentials ? "Sending…" : "Send Login"}
-          </button>
+          {(hasLoginEligibleRole || hasLoginEligibleRecord) && (
+            <button onClick={handleSendCredentials} disabled={sendingCredentials || !person.email}
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors disabled:opacity-50">
+              {sendingCredentials ? <Send size={14} className="animate-pulse" /> : <KeyRound size={14} />}
+              {sendingCredentials ? "Sending…" : "Send Login"}
+            </button>
+          )}
           <button onClick={() => setEditing(v => !v)}
             className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg border border-border bg-card text-sm font-medium text-secondary hover:bg-muted/40 transition-colors">
             <Pencil size={14} /> {editing ? "Cancel" : "Edit"}

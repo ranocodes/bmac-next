@@ -20,6 +20,7 @@ import {
   EMAIL_TEMPLATE_LABELS,
   type EmailTemplate,
 } from "@/lib/email-templates";
+import EmailTemplateEditor from "@/components/ui/EmailTemplateEditor";
 
 const DEFAULT = {
   logo_text: "BMAC",
@@ -341,16 +342,15 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">HTML Body</label>
-          <textarea
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Email Body</label>
+          <EmailTemplateEditor
             value={active?.html || ""}
-            onChange={e => patchActive({ html: e.target.value })}
-            rows={10}
-            className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+            onChange={html => patchActive({ html })}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Plain Text Body</label>
+          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Plain Text Version</label>
+          <p className="text-xs text-muted-foreground mb-1.5">Fallback for email clients that don't support HTML.</p>
           <textarea
             value={active?.text || ""}
             onChange={e => patchActive({ text: e.target.value })}

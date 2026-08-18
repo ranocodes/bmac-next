@@ -36,8 +36,8 @@ export default async function LiveImpactStats({ className = "" }: { className?: 
     <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${className}`}>
       {stats.map((stat, i) => (
         <div key={i} className="text-center p-4">
-          <p className="text-2xl md:text-3xl font-display font-bold text-secondary">{stat.num}</p>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">{stat.label}</p>
+                  <p className="text-2xl md:text-3xl font-display font-bold text-card">{stat.num}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-card/70 mt-1">{stat.label}</p>
         </div>
       ))}
     </div>

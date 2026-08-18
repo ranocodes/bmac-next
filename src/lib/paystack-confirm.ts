@@ -119,11 +119,13 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
         resource_id: ticket.id,
         details: `Ticket ${ticket.reference} confirmed after payment verification`,
       });
-      const eventRows = await db.query<{ title: string }>(
-        "SELECT title FROM public.events WHERE id = $1",
+      const eventRows = await db.query<{ title: string; date: string; venue: string }>(
+        "SELECT title, date, venue FROM public.events WHERE id = $1",
         [ticket.event_id]
       );
       const eventTitle = eventRows[0]?.title || "Event";
+      const eventDate = eventRows[0]?.date || "";
+      const eventLocation = eventRows[0]?.venue || "";
       const passUrl = ticket.qr_token
         ? `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || ""}/pass/${ticket.qr_token}`
         : "";
@@ -135,6 +137,8 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
         email: ticket.payer_email || customer?.email || "",
         firstName: ticket.payer_name?.split(" ")[0] || "",
         eventName: eventTitle,
+        eventDate,
+        eventLocation,
         quantity: ticket.quantity,
         amountLabel,
         passUrl,

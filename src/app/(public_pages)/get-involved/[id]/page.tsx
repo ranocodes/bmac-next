@@ -5,9 +5,9 @@ import InvolvementDetailClient from "./InvolvementDetailClient";
 export const dynamic = "force-dynamic";
 
 const ENTITY_MAP: Record<string, string> = {
-  join: "membership",
+  join: "member",
   volunteer: "volunteer",
-  school: "school-chapter",
+  school: "program",
   partner: "partner",
 };
 
