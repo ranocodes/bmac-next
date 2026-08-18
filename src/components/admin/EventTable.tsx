@@ -79,16 +79,12 @@ export default function EventTable({ initialData }: { initialData: EventPass[] }
             {filtered.map((e: any) => (
               <div key={e.id} className="w-full text-left bg-card rounded-xl border border-border px-4 py-3.5 flex items-center gap-3 hover:bg-muted/40 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-secondary truncate">{e.title}</p>
+                  <Link href={`/admin/events/${e.id}`} className="text-sm font-medium text-secondary truncate hover:text-primary transition-colors block">{e.title}</Link>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {e.date} &middot; {e.category} &middot; {e.isPaid ? `₦${e.price?.toLocaleString()}` : "Free"}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Link href={`/admin/events/${e.id}`}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
-                    <ExternalLink size={14} />
-                  </Link>
                   <Link href={`/admin/events/${e.id}/edit`}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                     <Pencil size={14} />
@@ -118,9 +114,11 @@ export default function EventTable({ initialData }: { initialData: EventPass[] }
                 <tbody>
                   {filtered.map((e: any) => (
                     <tr key={e.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 truncate max-w-[200px]">
                         <div>
-                          <p className="font-medium text-secondary">{e.title}</p>
+                          <Link href={`/admin/events/${e.id}`} className="font-medium text-secondary hover:text-primary transition-colors">
+                            {e.title}
+                          </Link>
                           <p className="text-xs text-muted-foreground mt-0.5 sm:hidden">{e.date} &middot; {e.category}</p>
                         </div>
                       </td>
@@ -128,15 +126,11 @@ export default function EventTable({ initialData }: { initialData: EventPass[] }
                         <span className="inline-block px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">{e.category}</span>
                       </td>
                       <td className="px-5 py-4 text-muted-foreground hidden md:table-cell">{e.date}</td>
-                      <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">
+                      <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell whitespace-nowrap">
                         {e.isPaid ? `₦${e.price?.toLocaleString()}` : "Free"}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/admin/events/${e.id}`}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
-                            <ExternalLink size={14} />
-                          </Link>
                           <Link href={`/admin/events/${e.id}/edit`}
                             className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                             <Pencil size={14} />

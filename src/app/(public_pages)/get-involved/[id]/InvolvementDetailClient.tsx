@@ -231,7 +231,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
       <section className="relative overflow-hidden bg-background border-b border-border/40">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-28 md:pt-36 pb-16 md:pb-24">
+        <div className="relative max-w-6xl mx-auto px-6 pt-20 md:pt-36 pb-10 md:pb-24">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Link
               href="/get-involved"
@@ -242,14 +242,14 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
             </Link>
           </motion.div>
 
-          <div className="flex flex-col md:flex-row items-start gap-8 md:gap-12">
+          <div className="flex flex-col md:flex-row items-start gap-6 md:gap-12">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className={`p-6 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}
+              className={`p-4 md:p-6 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}
             >
-              <HeroIcon size={40} className="text-background" />
+              <HeroIcon size={32} className="text-background md:w-10 md:h-10" />
             </motion.div>
 
             <div className="flex-1">
@@ -265,7 +265,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-secondary tracking-tight leading-[1.1]"
+                className="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-secondary tracking-tight leading-[1.1]"
               >
                 {page.title}
               </motion.h1>
@@ -304,7 +304,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
       <div className="max-w-6xl mx-auto px-6">
         {/* SECTIONS GRID */}
         {page.sections.length > 0 && (
-          <section className="py-16 md:py-24">
+          <section className="py-10 md:py-24">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -332,7 +332,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                   <motion.div
                     key={i}
                     variants={item}
-                    className="group relative bg-background border border-border/60 rounded-none p-7 md:p-8 hover:border-secondary transition-all duration-300"
+                    className="group relative bg-background border border-border/60 rounded-none p-5 md:p-8 hover:border-secondary transition-all duration-300"
                   >
                     <div className="flex items-start gap-5">
                       <div className={`p-3 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}>
@@ -356,12 +356,12 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
 
         {/* BENEFITS */}
         {page.benefits.length > 0 && (
-          <section className="pb-16 md:pb-24">
+          <section className="pb-10 md:pb-24">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-none border border-border/60 bg-background p-8 md:p-12"
+              className="relative overflow-hidden rounded-none border border-border/60 bg-background p-5 md:p-12"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
               <div className="relative">
@@ -394,8 +394,8 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
 
       {/* FORM SECTION */}
       <section className="border-t border-border/50 bg-muted/10">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16">
+        <div className="max-w-6xl mx-auto px-6 py-10 md:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-16">
             {/* FORM HEADER */}
             <div className="lg:col-span-2">
               <motion.div
@@ -442,7 +442,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="bg-background border border-border/60 rounded-none p-6 md:p-10"
+                className="bg-background border border-border/60 rounded-none p-5 md:p-10"
               >
                 {submitted ? (
                   <div className="text-center py-12">

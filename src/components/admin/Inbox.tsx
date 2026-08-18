@@ -54,10 +54,7 @@ type SortOption = "newest" | "priority";
 
 const SORT_OPTIONS: { key: SortOption; label: string }[] = [
   { key: "newest", label: "Newest first" },
-  { key: "priority", label: "Priority (urgent first)" },
 ];
-
-const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 const statusMeta: Record<string, { label: string; color: string }> = {
   open: { label: "Open", color: "text-amber-700 bg-amber-50" },
@@ -131,7 +128,6 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
       return (i.title + " " + i.summary + " " + i.submitterName + " " + i.submitterEmail).toLowerCase().includes(q);
     });
     result = [...result].sort((a, b) => {
-      if (sortBy === "priority") return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
     return result;
@@ -151,39 +147,7 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
     return counts;
   }, [items]);
 
-  async function handleReply() {
-    if (!selected || !reply.trim()) return;
-    setSending(true);
-    const result = await replyToSubmission(selected.id, { body: reply.trim() });
-    setSending(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    const history = Array.isArray(selected.details.history) ? selected.details.history : [];
-    const entry = { type: "reply", by: "admin", at: result.repliedAt || new Date().toISOString(), note: reply.trim() };
-    setItems(prev => prev.map(i => i.id === selected.id ? {
-      ...i,
-      lastContactedAt: result.repliedAt || i.lastContactedAt,
-      details: { ...i.details, history: [...history, entry] },
-    } : i));
-    setReply("");
-    toast("Reply sent to " + selected.submitterEmail, "success");
-  }
 
-  const [statusDraft, setStatusDraft] = useState<Record<string, string>>({});
-  const [priorityDraft, setPriorityDraft] = useState<Record<string, string>>({});
-
-  async function handleSaveStatus() {
-    if (!selected) return;
-    setSaving(true);
-    const status = (statusDraft[selected.id] ?? selected.status) as WorkflowStatus;
-    const priority = (priorityDraft[selected.id] ?? selected.priority) as WorkflowPriority;
-    const result = await updateWorkflowStatus(selected.id, { status, priority });
-    setSaving(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    setItems(prev => prev.map(i => i.id === selected.id ? { ...i, status: status as string, priority: priority as string } : i));
-    setStatusDraft(p => { const c = { ...p }; delete c[selected.id]; return c; });
-    setPriorityDraft(p => { const c = { ...p }; delete c[selected.id]; return c; });
-    toast("Status updated", "success");
-  }
 
   async function handleDelete() {
     if (!selected) return;
@@ -309,7 +273,6 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
                   className={`w-full text-left px-4 py-4 border-b border-border/50 last:border-0 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
                   <div className="flex items-center justify-between gap-2">
                     <StatusBadge status={item.kind} />
-                    <StatusBadge status={item.status} />
                   </div>
                   <p className="mt-2 text-sm font-medium text-secondary line-clamp-1">{item.title || "Untitled"}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{item.summary}</p>
@@ -338,8 +301,6 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
                     <ArrowLeft size={15} /> All
                   </button>
                   <StatusBadge status={selected.kind} />
-                  <StatusBadge status={selected.status} />
-                  <StatusBadge status={selected.priority} />
                 </div>
                 <h2 className="mt-4 font-display text-xl font-bold text-secondary">{selected.title}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{selected.summary}</p>
@@ -356,93 +317,11 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
                   <p className="flex items-center gap-2 text-secondary"><CalendarDays size={14} className="text-muted-foreground" /> Submitted {new Date(selected.createdAt).toLocaleString()}</p>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-border/60 pt-5">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Status</label>
-                    <select
-                      value={statusDraft[selected.id] ?? selected.status}
-                      onChange={e => setStatusDraft(p => ({ ...p, [selected.id]: e.target.value }))}
-                      className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    >
-                      {["open", "in_progress", "resolved", "closed"].map(s => (
-                        <option key={s} value={s}>{s.replace("_", " ")}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Priority</label>
-                    <select
-                      value={priorityDraft[selected.id] ?? selected.priority}
-                      onChange={e => setPriorityDraft(p => ({ ...p, [selected.id]: e.target.value }))}
-                      className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    >
-                      {["low", "normal", "high", "urgent"].map(pr => (
-                        <option key={pr} value={pr}>{pr}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button onClick={handleSaveStatus} disabled={saving}
-                    className="h-10 px-4 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
-                    {saving ? "Saving…" : "Save Status"}
-                  </button>
-                  <button onClick={handleDelete} disabled={deleting}
-                    className={`ml-auto inline-flex items-center gap-2 h-10 px-4 rounded-lg text-sm font-semibold border transition-all disabled:opacity-50 ${
-                      confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-destructive hover:bg-destructive/5"
-                    }`}>
-                    <Trash2 size={15} />
-                    {deleting ? "Deleting…" : confirmDelete ? "Confirm delete?" : "Delete"}
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-5 lg:p-6 border-b border-border/60">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Message</h3>
-                <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">
-                  {selected.details.message || selected.details.notes || selected.summary || "—"}
-                </p>
-                {selected.details.formLink && (
-                  <p className="mt-2 text-xs text-muted-foreground">Form link: <span className="font-mono text-primary break-all">{selected.details.formLink}</span></p>
-                )}
-              </div>
-
-              <div className="p-5 lg:p-6 border-b border-border/60">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">History</h3>
-                {Array.isArray(selected.details.history) && selected.details.history.length > 0 ? (
-                  <div className="space-y-3">
-                    {selected.details.history.map((h: any, idx: number) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${h.type === "reply" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                          <MessageSquareReply size={13} />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            {h.type === "reply" ? "Replied" : "Note"} · {h.by || "admin"} · {h.at ? new Date(h.at).toLocaleString() : ""}
-                          </p>
-                          <p className="mt-0.5 text-sm text-secondary">{h.note}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No replies yet.</p>
-                )}
-              </div>
-
-              <div className="p-5 lg:p-6">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Reply by email</h3>
-                <textarea
-                  value={reply}
-                  onChange={e => setReply(e.target.value)}
-                  rows={4}
-                  placeholder={`Reply to ${selected.submitterEmail || "submitter"}…`}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                />
-                <div className="mt-3 flex justify-end">
-                  <button onClick={handleReply} disabled={sending || !reply.trim() || !selected.submitterEmail}
-                    className="flex items-center gap-2 h-11 px-5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
-                    <Send size={15} />
-                    {sending ? "Sending…" : "Send Reply"}
-                  </button>
+                <div className="mt-6">
+                  <a href={`/admin/inbox/${selected.id}`}
+                    className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-secondary text-secondary-foreground text-sm font-bold hover:bg-primary transition-all">
+                    Review Application →
+                  </a>
                 </div>
               </div>
             </div>

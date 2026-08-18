@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, User, Mail, CalendarDays, Phone, CheckCircle, XCircle, CircleHelp } from "lucide-react";
+import { ArrowLeft, User, Mail, CalendarDays, Phone, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { updateWorkflowStatus, replyToSubmission, acceptApplicationWorkflow, rejectApplicationWorkflow } from "@/actions/workflows";
+import { acceptApplicationWorkflow, rejectApplicationWorkflow } from "@/actions/workflows";
 import { sendPublicCredentials } from "@/actions/programs";
 import StatusBadge from "@/components/admin/StatusBadge";
-import type { WorkflowStatus } from "@/types/cms";
 
 interface DetailProps {
   detail: {
@@ -48,18 +47,6 @@ function parseDetails(d: unknown): Record<string, any> {
   return (d ?? {}) as Record<string, any>;
 }
 
-function timeAgo(iso?: string): string {
-  if (!iso) return "—";
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return days === 1 ? "yesterday" : `${days}d ago`;
-}
-
 export default function ApplicationReview({ detail }: DetailProps) {
   const router = useRouter();
   const { toast, confirm } = useToast();
@@ -67,33 +54,8 @@ export default function ApplicationReview({ detail }: DetailProps) {
   const details = parseDetails(record.details);
   const answers = detail.answers as Record<string, unknown> | null | undefined;
 
-  const [reply, setReply] = useState("");
-  const [requestInfoMsg, setRequestInfoMsg] = useState("");
-  const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(record.status);
-  const [showRequestInfo, setShowRequestInfo] = useState(false);
-
-  const history = Array.isArray(details.history) ? details.history : [];
-  const programTitle = details.programTitle || record.title || "Program";
-
-  async function handleMarkResolved() {
-    setSaving(true);
-    const result = await updateWorkflowStatus(record.id, { status: "resolved" as WorkflowStatus });
-    setSaving(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    setCurrentStatus("resolved");
-    toast("Marked as resolved", "success");
-  }
-
-  async function handleClose() {
-    setSaving(true);
-    const result = await updateWorkflowStatus(record.id, { status: "closed" as WorkflowStatus });
-    setSaving(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    setCurrentStatus("closed");
-    toast("Closed", "success");
-  }
 
   async function handleAccept() {
     const ok = await confirm(
@@ -125,36 +87,6 @@ export default function ApplicationReview({ detail }: DetailProps) {
     toast("Application rejected — email sent", "success");
   }
 
-  async function handleRequestInfo() {
-    if (!requestInfoMsg.trim()) return;
-
-    setSending(true);
-    const result = await replyToSubmission(record.id, { body: requestInfoMsg.trim() });
-    if (result.error) { setSending(false); toast(result.error, "error"); return; }
-
-    const statusResult = await updateWorkflowStatus(record.id, { status: "in_progress" as WorkflowStatus });
-    setSending(false);
-
-    if (statusResult.error) {
-      toast("Reply sent but status update failed: " + statusResult.error, "error");
-    } else {
-      setCurrentStatus("in_progress");
-      toast("Info request sent — status set to In Progress", "success");
-    }
-    setRequestInfoMsg("");
-    setShowRequestInfo(false);
-  }
-
-  async function handleReply() {
-    if (!reply.trim()) return;
-    setSending(true);
-    const result = await replyToSubmission(record.id, { body: reply.trim() });
-    setSending(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    setReply("");
-    toast("Reply sent to " + record.submitterEmail, "success");
-  }
-
   const [sendingLogin, setSendingLogin] = useState(false);
   async function handleSendLogin() {
     if (!person?.person?.id) { toast("No person record found", "error"); return; }
@@ -166,8 +98,27 @@ export default function ApplicationReview({ detail }: DetailProps) {
     toast("Portal login sent to " + record.submitterEmail, "success");
   }
 
+  const renderAnswer = (value: unknown) => {
+    if (value === null || value === undefined || value === "") {
+      return <span className="text-muted-foreground">Not provided</span>;
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 0) return <span className="text-muted-foreground">Not provided</span>;
+      return (
+        <div className="flex flex-wrap gap-2 mt-1">
+          {value.map((v, i) => (
+            <span key={i} className="inline-flex items-center px-2 py-1 rounded-md bg-muted text-secondary text-xs font-medium">
+              {String(v)}
+            </span>
+          ))}
+        </div>
+      );
+    }
+    return <span className="text-secondary whitespace-pre-wrap">{String(value)}</span>;
+  };
+
   return (
-    <div className="space-y-6 max-w-[900px]">
+    <div className="space-y-6 max-w-4xl">
       <button
         onClick={() => router.back()}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-secondary transition-colors"
@@ -175,214 +126,88 @@ export default function ApplicationReview({ detail }: DetailProps) {
         <ArrowLeft size={15} /> Back to inbox
       </button>
 
-      <div className="bg-card rounded-xl border border-border p-6">
-        <div className="flex items-center gap-2 flex-wrap">
-          <StatusBadge status={currentStatus} size="md" />
-          <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider bg-muted text-muted-foreground">
-            {record.kind}
-          </span>
-          <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider bg-muted text-muted-foreground">
-            {record.priority}
-          </span>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-secondary">{record.title || "Untitled"}</h1>
+          <p className="text-sm text-muted-foreground">{record.submitterName || record.submitterEmail || "Unknown applicant"}</p>
         </div>
-
-        <h1 className="mt-4 font-display text-2xl font-bold text-secondary">{record.title || "Untitled"}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{record.summary}</p>
-
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-          {record.submitterName && (
-            <p className="flex items-center gap-2 text-secondary"><User size={14} className="text-muted-foreground" /> {record.submitterName}</p>
-          )}
-          {record.submitterEmail && (
-            <p className="flex items-center gap-2 text-secondary truncate"><Mail size={14} className="text-muted-foreground" /> {record.submitterEmail}</p>
-          )}
-          {details.phone && (
-            <p className="flex items-center gap-2 text-secondary"><Phone size={14} className="text-muted-foreground" /> {details.phone}</p>
-          )}
-          <p className="flex items-center gap-2 text-secondary"><CalendarDays size={14} className="text-muted-foreground" /> Submitted {new Date(record.createdAt).toLocaleString()}</p>
-        </div>
-
-        {person?.person && (
-          <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Person Record</p>
-            <p className="text-sm text-secondary">
-              {person.person.firstName} {person.person.lastName}
-              {person.isAdmin && <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">Admin</span>}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">{person.person.email} · {person.person.phone || "No phone"}</p>
-            {person.records.length > 1 && (
-              <p className="text-xs text-muted-foreground mt-1">{person.records.length} total records for this person</p>
-            )}
-          </div>
-        )}
-
-        {answers && Object.keys(answers).length > 0 && (
-          <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border/50">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">Application Answers</p>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-              {Object.entries(answers).map(([key, value]) => (
-                <div key={key}>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">{key.replace(/[_-]/g, " ")}</dt>
-                  <dd className="text-sm text-secondary mt-0.5">{value === null || value === undefined || value === "" ? "—" : String(value)}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        )}
-
-        <div className="mt-6 flex flex-wrap gap-2">
-          {currentStatus === "open" && (
-            <>
-              <button
-                onClick={handleAccept}
-                disabled={saving}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50"
-              >
-                <CheckCircle size={15} /> {saving ? "Saving…" : "Accept"}
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={saving}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all disabled:opacity-50"
-              >
-                <XCircle size={15} /> {saving ? "Saving…" : "Reject"}
-              </button>
-              {!showRequestInfo && (
-                <button
-                  onClick={() => setShowRequestInfo(true)}
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-muted text-muted-foreground text-sm font-semibold hover:bg-muted/80 transition-all disabled:opacity-50"
-                >
-                  <CircleHelp size={15} /> Request Info
-                </button>
-              )}
-            </>
-          )}
-          {currentStatus === "in_progress" && (
-            <>
-              <button
-                onClick={handleAccept}
-                disabled={saving}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50"
-              >
-                <CheckCircle size={15} /> {saving ? "Saving…" : "Accept"}
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={saving}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 transition-all disabled:opacity-50"
-              >
-                <XCircle size={15} /> {saving ? "Saving…" : "Reject"}
-              </button>
-            </>
-          )}
-          {currentStatus === "open" && !showRequestInfo && (
-            <button
-              onClick={handleMarkResolved}
-              disabled={saving}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Mark Resolved"}
-            </button>
-          )}
-          {currentStatus !== "closed" && currentStatus !== "resolved" && (
-            <button
-              onClick={handleClose}
-              disabled={saving}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Close"}
-            </button>
-          )}
-          {currentStatus === "resolved" && record.kind === "program" && (
-            <button
-              onClick={handleSendLogin}
-              disabled={sendingLogin}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
-            >
-              {sendingLogin ? "Sending…" : "Send Student Portal Login"}
-            </button>
-          )}
-        </div>
-
-        {showRequestInfo && (
-          <div className="mt-4 p-4 rounded-lg border border-border bg-muted/30">
-            <p className="text-sm font-medium text-secondary mb-2">What information do you need from the applicant?</p>
-            <textarea
-              value={requestInfoMsg}
-              onChange={e => setRequestInfoMsg(e.target.value)}
-              rows={3}
-              placeholder="e.g. Please provide your transcript, references, or any missing documents…"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-            />
-            <div className="mt-3 flex items-center gap-2 justify-end">
-              <button
-                onClick={() => { setShowRequestInfo(false); setRequestInfoMsg(""); }}
-                className="h-9 px-4 rounded-xl border border-input text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRequestInfo}
-                disabled={sending || !requestInfoMsg.trim()}
-                className="h-9 px-4 rounded-xl bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50"
-              >
-                {sending ? "Sending…" : "Send Request"}
-              </button>
-            </div>
-          </div>
-        )}
+        <StatusBadge status={currentStatus} size="md" />
       </div>
 
-      <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Message</h3>
-        <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">
-          {details.message || details.notes || record.summary || "—"}
-        </p>
-        {details.formLink && (
-          <p className="mt-2 text-xs text-muted-foreground">Form link: <span className="font-mono text-primary break-all">{details.formLink}</span></p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm bg-card p-4 rounded-xl border border-border">
+        {record.submitterName && (
+          <p className="flex items-center gap-2 text-secondary"><User size={14} className="text-muted-foreground" /> {record.submitterName}</p>
         )}
+        {record.submitterEmail && (
+          <p className="flex items-center gap-2 text-secondary truncate"><Mail size={14} className="text-muted-foreground" /> {record.submitterEmail}</p>
+        )}
+        {details.phone && (
+          <p className="flex items-center gap-2 text-secondary"><Phone size={14} className="text-muted-foreground" /> {details.phone}</p>
+        )}
+        <p className="flex items-center gap-2 text-secondary"><CalendarDays size={14} className="text-muted-foreground" /> Submitted {new Date(record.createdAt).toLocaleString()}</p>
       </div>
 
-      <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">History</h3>
-        {history.length > 0 ? (
-          <div className="space-y-3">
-            {history.map((h: any, idx: number) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${h.type === "reply" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                  <Send size={13} />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    {h.type === "reply" ? "Replied" : h.type === "status" ? "Status change" : "Note"} · {h.by || "admin"} · {h.at ? new Date(h.at).toLocaleString() : ""}
-                  </p>
-                  <p className="mt-0.5 text-sm text-secondary">{h.note}</p>
+      <div className="bg-card rounded-xl border border-border p-6 md:p-8 space-y-6">
+        <h2 className="text-lg font-bold text-secondary border-b border-border/50 pb-2 mb-6">Application Answers</h2>
+        
+        {answers && Object.keys(answers).length > 0 ? (
+          <div className="space-y-6">
+            {Object.entries(answers).map(([key, value]) => (
+              <div key={key} className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-secondary">{key.replace(/[_-]/g, " ")}</h3>
+                <div className="text-sm">
+                  {renderAnswer(value)}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No history yet.</p>
+          <div className="space-y-6">
+             <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-secondary">Message / Notes</h3>
+                <div className="text-sm text-secondary whitespace-pre-wrap">{details.message || details.notes || record.summary || "No answers provided."}</div>
+             </div>
+          </div>
         )}
       </div>
 
-      <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Reply by email</h3>
-        <textarea
-          value={reply}
-          onChange={e => setReply(e.target.value)}
-          rows={4}
-          placeholder={`Reply to ${record.submitterEmail || "submitter"}…`}
-          className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-        />
-        <div className="mt-3 flex justify-end">
-          <button onClick={handleReply} disabled={sending || !reply.trim() || !record.submitterEmail}
-            className="flex items-center gap-2 h-11 px-5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
-            <Send size={15} />
-            {sending ? "Sending…" : "Send Reply"}
-          </button>
-        </div>
+      <div className="bg-card rounded-xl border border-border p-6 md:p-8">
+        <h2 className="text-lg font-bold text-secondary border-b border-border/50 pb-2 mb-6">Decision</h2>
+        
+        {currentStatus === "closed" ? (
+          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm font-semibold flex items-center justify-center">
+            Application rejected
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={handleAccept}
+              disabled={saving}
+              className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
+            >
+              <CheckCircle size={18} /> {saving ? "Saving…" : "Accept"}
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={saving}
+              className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90 transition-all disabled:opacity-50"
+            >
+              <XCircle size={18} /> {saving ? "Saving…" : "Reject"}
+            </button>
+          </div>
+        )}
+        
+        {currentStatus === "resolved" && record.kind === "program" && (
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <button
+              onClick={handleSendLogin}
+              disabled={sendingLogin}
+              className="w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all disabled:opacity-50"
+            >
+              {sendingLogin ? "Sending…" : "Send Student Portal Login"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

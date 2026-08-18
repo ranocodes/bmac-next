@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Users, CheckCircle2, TicketCheck, Wallet, Download, Bell, RefreshCcw, Calendar, MapPin, Clock3, XCircle, ListOrdered, Trash2 } from "lucide-react";
-import { getEventAdminDetail, exportEventRegistrants, setEventCheckedIn, setCapacityUsedOverride, sendEventReminders } from "@/actions/events";
+import { getEventAdminDetail, exportEventRegistrants, setEventCheckedIn, setCapacityUsedOverride, sendEventReminders, verifyEventPayment } from "@/actions/events";
 import { listWaitlist, promoteFromWaitlist, removeFromWaitlist, type WaitlistEntry } from "@/actions/waitlist";
+import PaymentVerificationModal from "./PaymentVerificationModal";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
 import type { EventAdminDetail } from "@/actions/events";
@@ -21,6 +22,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   const [waitlistLoaded, setWaitlistLoaded] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 25;
+  const [verifyingPaymentFor, setVerifyingPaymentFor] = useState<any | null>(null);
   const { toast, confirm } = useToast();
   const admin = useAdmin();
   const canExport = admin?.permissions?.includes("export_data");
@@ -149,6 +151,17 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
       toast(`${entry.name} removed from waitlist`);
       await loadWaitlist();
     }
+  }
+
+  async function handleVerifyPayment(ticketId: string) {
+    const res = await verifyEventPayment(ticketId);
+    if (res.error) {
+      toast(res.error, "error");
+      return;
+    }
+    toast("Payment verified");
+    setVerifyingPaymentFor(null);
+    await refresh();
   }
 
   const pct = event.capacity > 0 ? Math.min(100, Math.round((event.capacity_used / event.capacity) * 100)) : 0;
@@ -334,9 +347,18 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                     </td>
                     <td className="px-5 py-4 text-muted-foreground font-mono text-xs hidden sm:table-cell">{r.reference}</td>
                     <td className="px-5 py-4 hidden md:table-cell">
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        r.status === "confirmed" ? "bg-green-50 text-green-700" : r.status === "pending" ? "bg-amber-50 text-amber-700" : "bg-muted text-muted-foreground"
-                      }`}>{r.status}</span>
+                      {r.status === "pending" ? (
+                        <button
+                          onClick={() => setVerifyingPaymentFor(r)}
+                          className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                        >
+                          {r.status}
+                        </button>
+                      ) : (
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          r.status === "confirmed" ? "bg-green-50 text-green-700" : "bg-muted text-muted-foreground"
+                        }`}>{r.status}</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.quantity}</td>
                     <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.amount ? `${currency}${(Number(r.amount) * r.quantity / 100).toLocaleString("en-NG")}` : "—"}</td>
@@ -452,6 +474,13 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
           </div>
         )}
       </div>
+      {verifyingPaymentFor && (
+        <PaymentVerificationModal
+          attendee={verifyingPaymentFor}
+          onConfirm={handleVerifyPayment}
+          onClose={() => setVerifyingPaymentFor(null)}
+        />
+      )}
     </div>
   );
 }
