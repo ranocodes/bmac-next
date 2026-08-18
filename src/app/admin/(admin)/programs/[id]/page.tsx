@@ -3,9 +3,10 @@ import { getProgramDetail } from "@/actions/programs";
 import ProgramAdminDetail from "@/components/admin/ProgramAdminDetail";
 import { notFound } from "next/navigation";
 
-export default async function ProgramDetailPage({ params }: { params: { id: string } }) {
+export default async function ProgramDetailPage(props: { params: Promise<{ id: string }> }) {
   await requirePage("manage_programs");
-  const data = await getProgramDetail(params.id);
+  const { id } = await props.params;
+  const data = await getProgramDetail(id);
   if (!data) notFound();
-  return <ProgramAdminDetail initialData={data} programId={params.id} />;
+  return <ProgramAdminDetail initialData={data} programId={id} />;
 }
