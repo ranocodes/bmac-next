@@ -104,7 +104,7 @@ export default function GetInvolved() {
                   
                   <div className="flex flex-col h-full p-5 sm:p-6 md:p-8 relative z-10">
                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-none ${way.color} flex items-center justify-center mb-6 md:mb-8 group-hover:scale-95 transition-transform duration-300 shadow-sm`}>
-                      {React.cloneElement(way.icon, { className: "w-5 h-5 md:w-6 md:h-6" })}
+                      {React.cloneElement(way.icon as React.ReactElement<{ className?: string }>, { className: "w-5 h-5 md:w-6 md:h-6" })}
                     </div>
                     <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2 md:mb-3 tracking-tight">
                       {way.title}
