@@ -186,7 +186,7 @@ export async function createProgramOrder(input: {
     if (!(program as any).applications_open && !program.applicationsOpen) {
       return { error: "Applications are not open for this program" };
     }
-    if (!program.isPaid) {
+    if (!(program as any).is_paid && !program.isPaid) {
       return { error: "This program is free — use the apply form." };
     }
     if (input.dateOfBirth) {
