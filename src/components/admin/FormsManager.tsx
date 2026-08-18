@@ -22,6 +22,7 @@ import type { FormDefinition } from "@/types/cms";
 const FORM_TYPES = [
   { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
   { entityType: "partner", label: "Partner Application", desc: "Form for partnership inquiries" },
+  { entityType: "school-chapter", label: "School Chapter Request", desc: "Form for school chapter inquiries" },
   { entityType: "donation", label: "Donation Form", desc: "Custom fields for donations" },
   { entityType: "contact", label: "Contact Form", desc: "Fields for the contact page" },
   { entityType: "newsletter", label: "Newsletter Signup", desc: "Extra fields for newsletter" },

@@ -16,6 +16,7 @@ import type { FormQuestion } from "@/types/cms";
 const FORM_LABELS: Record<string, string> = {
   volunteer: "Volunteer Application",
   partner: "Partner Application",
+  "school-chapter": "School Chapter Request",
   donation: "Donation Form",
   contact: "Contact Form",
   newsletter: "Newsletter Signup",

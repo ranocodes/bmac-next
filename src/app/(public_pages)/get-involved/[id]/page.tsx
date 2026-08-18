@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 const ENTITY_MAP: Record<string, string> = {
   join: "member",
   volunteer: "volunteer",
-  school: "program",
+  school: "school-chapter",
   partner: "partner",
 };
 

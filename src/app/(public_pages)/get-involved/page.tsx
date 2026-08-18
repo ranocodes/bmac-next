@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Users,
   HeartHandshake,
@@ -12,7 +12,6 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { BentoCard } from "@/components/ui/BentoCard";
-import { getFormDefinition } from "@/actions/forms";
 
 interface Way {
   id: string;
@@ -63,30 +62,12 @@ const ways: Way[] = [
 const entityTypeMap: Record<string, string> = {
   join: "member",
   volunteer: "volunteer",
-  school: "program",
+  school: "school-chapter",
   partner: "partner",
 };
 
 export default function GetInvolved() {
-  const [formDefs, setFormDefs] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    for (const way of ways) {
-      const entityType = entityTypeMap[way.id];
-      if (entityType && !(way.id in formDefs)) {
-        getFormDefinition(entityType).then(def => {
-          setFormDefs(prev => ({ ...prev, [way.id]: !!def }));
-        });
-      }
-    }
-  }, []);
-
-  const visibleWays = ways.filter(way => {
-    const entityType = entityTypeMap[way.id];
-    if (!entityType) return true;
-    if (!(way.id in formDefs)) return true;
-    return formDefs[way.id];
-  });
+  const visibleWays = ways;
 
   return (
     <main className="bg-background">
