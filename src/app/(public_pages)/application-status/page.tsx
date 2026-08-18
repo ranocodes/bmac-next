@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, FileText, Loader2, Mail, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Search, FileText, Loader2, Mail, CheckCircle2, Clock, XCircle, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { lookupApplicationStatus } from "@/actions/programs";
 
@@ -24,12 +24,19 @@ const STATUS_META: Record<string, { label: string; tone: "ok" | "warn" | "bad" |
   withdrawn: { label: "Withdrawn", tone: "info", hint: "This application was withdrawn." },
 };
 
+function StatusIcon({ tone }: { tone: string }) {
+  if (tone === "ok") return <CheckCircle2 size={18} />;
+  if (tone === "bad") return <XCircle size={18} />;
+  return <Clock size={18} />;
+}
+
 export default function ApplicationStatusPage() {
   const [email, setEmail] = useState("");
   const [reference, setReference] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
+  const [results, setResults] = useState<Result[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,13 +44,18 @@ export default function ApplicationStatusPage() {
     setLoading(true);
     setError("");
     setResult(null);
-    const res = await lookupApplicationStatus({ email, applicationId: reference });
+    setResults([]);
+    const res = await lookupApplicationStatus({ email, applicationId: reference || undefined });
     setLoading(false);
     if (res.error) {
       setError(res.error);
       return;
     }
-    setResult(res.result || null);
+    if (res.result) {
+      setResult(res.result);
+    } else if (res.results) {
+      setResults(res.results);
+    }
   };
 
   const meta = result ? STATUS_META[result.status] || STATUS_META.submitted : null;
@@ -57,7 +69,7 @@ export default function ApplicationStatusPage() {
             Check Your Application
           </h1>
           <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto">
-            Enter the email you applied with and your application reference. No login needed.
+            Enter the email you applied with. Optionally add your reference for a specific application.
           </p>
         </div>
       </section>
@@ -80,7 +92,7 @@ export default function ApplicationStatusPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Application Reference</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Application Reference <span className="text-muted-foreground/60">(optional)</span></label>
               <div className="relative">
                 <FileText size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -88,11 +100,10 @@ export default function ApplicationStatusPage() {
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
                   placeholder="app-…"
-                  required
                   className="w-full pl-13 md:pl-14 pr-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
                 />
               </div>
-              <p className="text-xs text-muted-foreground px-2">Found in your confirmation email, e.g. <span className="font-mono font-bold">app-4f9a…</span></p>
+              <p className="text-xs text-muted-foreground px-2">Leave empty to see all your applications.</p>
             </div>
             {error && (
               <p className="text-sm font-bold text-red-500 px-2">{error}</p>
@@ -121,7 +132,7 @@ export default function ApplicationStatusPage() {
                       : meta.tone === "warn" ? "bg-amber-500/10 text-amber-600"
                       : "bg-muted text-muted-foreground"
                     }`}>
-                      {meta.tone === "ok" ? <CheckCircle2 size={22} /> : meta.tone === "bad" ? <XCircle size={22} /> : <Clock size={22} />}
+                      <StatusIcon tone={meta.tone} />
                     </div>
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Status</p>
@@ -155,6 +166,54 @@ export default function ApplicationStatusPage() {
                 </div>
 
                 <p className="text-center text-sm text-muted-foreground mt-6">
+                  Questions about your application?{" "}
+                  <Link href="/contact" className="font-bold text-primary hover:underline">Contact us</Link>
+                </p>
+              </motion.div>
+            )}
+
+            {results.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                className="mt-8 space-y-4"
+              >
+                <p className="text-sm font-bold text-secondary">
+                  Found {results.length} application{results.length !== 1 ? "s" : ""}
+                </p>
+                {results.map((r) => {
+                  const m = STATUS_META[r.status] || STATUS_META.submitted;
+                  return (
+                    <div key={r.applicationId} className="bg-card border border-border rounded-xl p-5 flex items-center gap-4 hover:border-primary/30 transition-colors">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        m.tone === "ok" ? "bg-primary/10 text-primary"
+                        : m.tone === "bad" ? "bg-red-500/10 text-red-500"
+                        : m.tone === "warn" ? "bg-amber-500/10 text-amber-600"
+                        : "bg-muted text-muted-foreground"
+                      }`}>
+                        <StatusIcon tone={m.tone} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-secondary text-sm truncate">{r.programTitle}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            m.tone === "ok" ? "text-primary bg-primary/10"
+                            : m.tone === "bad" ? "text-red-500 bg-red-500/10"
+                            : m.tone === "warn" ? "text-amber-600 bg-amber-500/10"
+                            : "text-muted-foreground bg-muted"
+                          }`}>{m.label}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{r.applicationId}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(r.appliedAt).toLocaleDateString("en-NG", { year: "numeric", month: "short", day: "numeric" })}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight size={16} className="text-muted-foreground/40 shrink-0" />
+                    </div>
+                  );
+                })}
+                <p className="text-center text-sm text-muted-foreground mt-4">
                   Questions about your application?{" "}
                   <Link href="/contact" className="font-bold text-primary hover:underline">Contact us</Link>
                 </p>

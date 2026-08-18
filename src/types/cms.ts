@@ -16,6 +16,7 @@ export interface Program {
   landingPage?: boolean;
   applicationsOpen?: boolean;
   isPaid?: boolean;
+  paymentTiming?: "immediate" | "after_acceptance";
   price?: number;
   duration?: string;
   effort?: string;

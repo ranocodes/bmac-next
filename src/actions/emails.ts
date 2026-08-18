@@ -11,6 +11,7 @@ import {
   sendEventReminderEmail as libSendEventReminderEmail,
   sendPublicCredentialsEmail as libSendPublicCredentialsEmail,
   sendPublicWelcomeEmail as libSendPublicWelcomeEmail,
+  sendPaymentRequiredEmail as libSendPaymentRequiredEmail,
 } from "@/lib/email";
 
 export type WorkflowKind =
@@ -226,6 +227,32 @@ export async function sendPublicWelcomeEmail(input: {
     return { sent: !sent.error, error: sent.error };
   } catch (err) {
     console.error("sendPublicWelcomeEmail error:", err);
+    return { sent: false, error: "Email dispatch failed" };
+  }
+}
+
+export async function sendPaymentRequiredEmail(input: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  amountLabel: string;
+  reference: string;
+  paymentUrl: string;
+}): Promise<{ sent: boolean; error?: string }> {
+  if (!input.email) return { sent: false, error: "No email provided" };
+
+  try {
+    const sent = await libSendPaymentRequiredEmail({
+      email: input.email,
+      firstName: input.firstName || "",
+      programTitle: input.programTitle,
+      amountLabel: input.amountLabel,
+      reference: input.reference,
+      paymentUrl: input.paymentUrl,
+    });
+    return { sent: !sent.error, error: sent.error };
+  } catch (err) {
+    console.error("sendPaymentRequiredEmail error:", err);
     return { sent: false, error: "Email dispatch failed" };
   }
 }

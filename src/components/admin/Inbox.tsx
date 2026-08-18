@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2, ArrowLeft } from "lucide-react";
+import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2, ArrowLeft, FileText, Banknote, MessageCircle, Calendar, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { replyToSubmission, updateWorkflowStatus, deleteWorkflow } from "@/actions/workflows";
@@ -35,11 +35,29 @@ const kindMeta: Record<string, { label: string; color: string }> = {
 };
 
 const STREAMS = [
-  { key: "all", label: "All" },
-  { key: "general", label: "General Inquiries", kinds: ["contact", "partner", "donation"] },
-  { key: "membership", label: "Club Membership", kinds: ["member", "volunteer"] },
-  { key: "cohort", label: "Cohort Applications", kinds: ["program"] },
+  { key: "all", label: "All", icon: InboxIcon },
+  { key: "applications", label: "Applications", icon: FileText, kinds: ["program", "volunteer", "member", "school-chapter", "partner"] },
+  { key: "donations", label: "Donations", icon: Banknote, kinds: ["donation"] },
+  { key: "inquiries", label: "Inquiries", icon: MessageCircle, kinds: ["contact"] },
+  { key: "events", label: "Events", icon: Calendar, kinds: ["event_registration", "ticket"] },
 ] as const;
+
+const EMPTY_MESSAGES: Record<string, { message: string; sub?: string }> = {
+  all: { message: "No submissions yet" },
+  applications: { message: "No pending applications", sub: "Applications from programs, volunteering, membership, and partnerships will appear here." },
+  donations: { message: "No donation records", sub: "Donation submissions and payment records will appear here." },
+  inquiries: { message: "No inquiries", sub: "Contact form submissions and general inquiries will appear here." },
+  events: { message: "No event registrations", sub: "Event signups and ticket purchases will appear here." },
+};
+
+type SortOption = "newest" | "priority";
+
+const SORT_OPTIONS: { key: SortOption; label: string }[] = [
+  { key: "newest", label: "Newest first" },
+  { key: "priority", label: "Priority (urgent first)" },
+];
+
+const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 const statusMeta: Record<string, { label: string; color: string }> = {
   open: { label: "Open", color: "text-amber-700 bg-amber-50" },
@@ -92,6 +110,8 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
   const [search, setSearch] = useState("");
   const [filterKind, setFilterKind] = useState<string>("all");
   const [activeStream, setActiveStream] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortOpen, setSortOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -103,14 +123,19 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
 
   const filtered = useMemo(() => {
     const streamDef = STREAMS.find(s => s.key === activeStream);
-    return items.filter(i => {
+    let result = items.filter(i => {
       if (streamDef && "kinds" in streamDef && !(streamDef as any).kinds.includes(i.kind)) return false;
       if (filterKind !== "all" && i.kind !== filterKind) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (i.title + " " + i.summary + " " + i.submitterName + " " + i.submitterEmail).toLowerCase().includes(q);
     });
-  }, [items, search, filterKind, activeStream]);
+    result = [...result].sort((a, b) => {
+      if (sortBy === "priority") return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return result;
+  }, [items, search, filterKind, activeStream, sortBy]);
 
   const unreadCount = items.filter(i => i.status === "open").length;
 
@@ -203,19 +228,23 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
               className="w-full h-10 pl-9 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
           <div className="flex gap-1.5">
-            {STREAMS.map(s => (
-              <button key={s.key} onClick={() => { setActiveStream(s.key); setFilterKind("all"); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                  activeStream === s.key ? "bg-primary/10 text-primary border-primary/20" : "bg-card border-border text-secondary hover:border-primary/40"
-                }`}>
-                {s.label}
-                {streamOpenCounts[s.key] > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
-                    {streamOpenCounts[s.key]}
-                  </span>
-                )}
-              </button>
-            ))}
+            {STREAMS.map(s => {
+              const Icon = s.icon;
+              return (
+                <button key={s.key} onClick={() => { setActiveStream(s.key); setFilterKind("all"); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    activeStream === s.key ? "bg-primary/10 text-primary border-primary/20" : "bg-card border-border text-secondary hover:border-primary/40"
+                  }`}>
+                  <Icon size={13} />
+                  {s.label}
+                  {streamOpenCounts[s.key] > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                      {streamOpenCounts[s.key]}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {[{ k: "all", label: "All" }, ...Object.entries(kindMeta).map(([k, m]) => ({ k, label: m.label }))].map(f => (
@@ -227,11 +256,49 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
               </button>
             ))}
           </div>
+          <div className="relative">
+            <button onClick={() => setSortOpen(p => !p)}
+              className="flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-card text-xs font-medium text-muted-foreground hover:text-secondary hover:border-primary/40 transition-all">
+              <Clock size={12} />
+              {SORT_OPTIONS.find(o => o.key === sortBy)?.label}
+              <ChevronDown size={12} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+            </button>
+            {sortOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 w-48 bg-card border border-border rounded-xl shadow-lg py-1.5">
+                {SORT_OPTIONS.map(o => (
+                  <button key={o.key} onClick={() => { setSortBy(o.key); setSortOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                      sortBy === o.key ? "text-primary bg-primary/5" : "text-secondary hover:bg-muted"
+                    }`}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="bg-card rounded-xl border border-border overflow-hidden">
             {filtered.length === 0 ? (
               <div className="text-center py-16">
-                <InboxIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">{search || filterKind !== "all" || activeStream !== "all" ? "No submissions match" : "No submissions yet"}</p>
+                {(() => {
+                  const streamDef = STREAMS.find(s => s.key === activeStream);
+                  const StreamIcon = streamDef?.icon ?? InboxIcon;
+                  const emptyInfo = EMPTY_MESSAGES[activeStream] || EMPTY_MESSAGES.all;
+                  if (search || filterKind !== "all") {
+                    return (
+                      <>
+                        <InboxIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">No submissions match</p>
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <StreamIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground font-medium">{emptyInfo.message}</p>
+                      {emptyInfo.sub && <p className="text-xs text-muted-foreground/60 mt-1 max-w-[240px] mx-auto">{emptyInfo.sub}</p>}
+                    </>
+                  );
+                })()}
               </div>
             ) : filtered.map(item => {
               const km = kindMeta[item.kind] || kindMeta.contact;

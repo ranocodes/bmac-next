@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
 import { submitApplication, createProgramOrder, verifyProgramPayment } from "@/actions/programs";
 import { loadPaystack } from "@/lib/paystack";
-import type { ProgramInstructor } from "@/types/cms";
+import { getFormDefinitionOrDefault } from "@/actions/forms";
+import type { ProgramInstructor, FormQuestion } from "@/types/cms";
 import StatusBanner from "@/components/admin/StatusBanner";
 
 function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
@@ -112,6 +113,18 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", motivation: "" });
   const [consent, setConsent] = useState(false);
+  const [formDefQuestions, setFormDefQuestions] = useState<FormQuestion[]>([]);
+  const [formDefLoaded, setFormDefLoaded] = useState(false);
+  const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, unknown>>({});
+
+  useEffect(() => {
+    if (program?.id) {
+      getFormDefinitionOrDefault("program", program.id).then(def => {
+        setFormDefQuestions(def.questions.map(q => ({ ...q, order: q.order ?? 0 })).sort((a, b) => a.order - b.order));
+        setFormDefLoaded(true);
+      });
+    }
+  }, [program?.id]);
 
   const curriculum = (program as any)?.curriculum || [];
   const audienceFor = (program as any)?.audienceFor || [];
@@ -141,6 +154,14 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
       phone: formData.phone || undefined,
       motivation: formData.motivation,
       consent,
+      answers: {
+        ...dynamicAnswers,
+        name: formData.name.trim(),
+        email: formData.email,
+        phone: formData.phone || "",
+        motivation: formData.motivation,
+        consent,
+      },
     };
 
     if (program.isPaid) {
@@ -551,6 +572,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                       </div>
                     ) : (
                       <form className="space-y-5 md:space-y-6" onSubmit={handleSubmit}>
+                         {/* Core fields */}
                          <div className="space-y-2 text-left group">
                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
                             <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ambassador Name" className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
@@ -563,6 +585,71 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Phone (Optional)</label>
                             <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} placeholder="+234..." className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" />
                          </div>
+
+                         {/* Dynamic questions from form editor */}
+                         {formDefQuestions.filter(q => !["name","email","phone","motivation","consent"].includes(q.id)).map(q => (
+                           <div key={q.id} className="space-y-2 text-left group">
+                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">
+                               {q.label} {q.required && <span className="text-destructive">*</span>}
+                             </label>
+                             {q.type === "textarea" ? (
+                               <textarea
+                                 rows={3}
+                                 placeholder={q.placeholder || ""}
+                                 value={(dynamicAnswers[q.id] as string) || ""}
+                                 onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                 required={q.required}
+                                 className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 resize-none"
+                               />
+                             ) : q.type === "select" ? (
+                               <select
+                                 value={(dynamicAnswers[q.id] as string) || ""}
+                                 onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                 required={q.required}
+                                 className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300"
+                               >
+                                 <option value="">Select...</option>
+                                 {(q.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                               </select>
+                             ) : q.type === "radio" ? (
+                               <div className="flex flex-wrap gap-3">
+                                 {(q.options || []).map(opt => (
+                                   <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
+                                     <input type="radio" name={`q-${q.id}`} value={opt} checked={dynamicAnswers[q.id] === opt} onChange={() => setDynamicAnswers(prev => ({ ...prev, [q.id]: opt }))} className="accent-primary" />
+                                     {opt}
+                                   </label>
+                                 ))}
+                               </div>
+                             ) : q.type === "checkbox" ? (
+                               <div className="flex flex-wrap gap-3">
+                                 {(q.options || []).map(opt => {
+                                   const checked = Array.isArray(dynamicAnswers[q.id]) && (dynamicAnswers[q.id] as string[]).includes(opt);
+                                   return (
+                                     <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
+                                       <input type="checkbox" checked={checked} onChange={() => {
+                                         setDynamicAnswers(prev => {
+                                           const current = Array.isArray(prev[q.id]) ? [...(prev[q.id] as string[])] : [];
+                                           return { ...prev, [q.id]: checked ? current.filter(v => v !== opt) : [...current, opt] };
+                                         });
+                                       }} className="accent-primary" />
+                                       {opt}
+                                     </label>
+                                   );
+                                 })}
+                               </div>
+                             ) : (
+                               <input
+                                 type={q.type === "number" ? "number" : q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
+                                 placeholder={q.placeholder || ""}
+                                 value={(dynamicAnswers[q.id] as string) || ""}
+                                 onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                 required={q.required}
+                                 className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40"
+                               />
+                             )}
+                           </div>
+                         ))}
+
                          <div className="space-y-2 text-left group">
                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Why Do You Want to Join?</label>
                             <textarea value={formData.motivation} onChange={(e) => setFormData({...formData, motivation: e.target.value})} rows={3} placeholder="Tell us a little about yourself and why this program matters to you..." className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 resize-none" required />

@@ -365,3 +365,22 @@ export async function sendPublicPasswordResetEmail(opts: {
     resetLink: absolutizeUrl(opts.resetLink),
   });
 }
+
+export async function sendPaymentRequiredEmail(opts: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  amountLabel: string;
+  reference: string;
+  paymentUrl: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "payment-required",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    programTitle: opts.programTitle,
+    amountLabel: opts.amountLabel,
+    reference: opts.reference,
+    paymentLink: absolutizeUrl(opts.paymentUrl),
+  });
+}

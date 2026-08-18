@@ -5,23 +5,20 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import {
   getFormDefinition,
+  getFormDefinitionOrDefault,
   upsertFormDefinition,
   getFormSubmissions,
-  getProgramTitle,
 } from "@/actions/forms";
 import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import type { FormQuestion } from "@/types/cms";
 
+const ALLOWED_TYPES = ["partner", "volunteer", "member"] as const;
+
 const FORM_LABELS: Record<string, string> = {
   volunteer: "Volunteer Application",
   partner: "Partner Application",
-  "school-chapter": "School Chapter Request",
-  donation: "Donation Form",
-  contact: "Contact Form",
-  newsletter: "Newsletter Signup",
   member: "Membership Application",
-  program: "Program Application",
 };
 
 export default function FormEditPage() {
@@ -36,26 +33,25 @@ export default function FormEditPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submissionCount, setSubmissionCount] = useState(0);
-  const [programName, setProgramName] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!ALLOWED_TYPES.includes(entityType as any)) {
+      router.replace("/admin/forms");
+      return;
+    }
     async function load() {
-      const [def, subs] = await Promise.all([
-        getFormDefinition(entityType, programId ?? undefined),
-        getFormSubmissions(entityType, programId ?? undefined),
+      const normalized = entityType === "membership" ? "member" : entityType;
+      const [saved, defaultDef, subs] = await Promise.all([
+        getFormDefinition(normalized, programId ?? undefined),
+        getFormDefinitionOrDefault(normalized, programId ?? undefined),
+        getFormSubmissions(normalized, programId ?? undefined),
       ]);
-      setQuestions(def?.questions ? def.questions.map(q => ({ ...q })) : []);
+      setQuestions(saved?.questions?.length ? saved.questions.map(q => ({ ...q })) : defaultDef.questions.map(q => ({ ...q })));
       setSubmissionCount(subs.length);
-
-      if (programId) {
-        const title = await getProgramTitle(programId);
-        setProgramName(title);
-      }
-
       setLoading(false);
     }
     load();
-  }, [entityType, programId]);
+  }, [entityType, programId, router]);
 
   async function handleSave() {
     setSaving(true);
@@ -85,7 +81,7 @@ export default function FormEditPage() {
 
       <div>
         <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">
-          {programName ? `${programName} Application` : FORM_LABELS[entityType] || entityType}
+          {FORM_LABELS[entityType] || entityType}
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
           {questions.length} question{questions.length !== 1 ? "s" : ""} · {submissionCount} submission{submissionCount !== 1 ? "s" : ""}

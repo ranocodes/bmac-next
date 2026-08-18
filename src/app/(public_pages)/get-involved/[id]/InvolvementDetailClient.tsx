@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
-import { getFormDefinition, submitForm } from "@/actions/forms";
+import { getFormDefinitionOrDefault } from "@/actions/forms";
 import { applyAsPerson } from "@/actions/people";
 import { loadPaystack } from "@/lib/paystack";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
@@ -123,7 +123,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
 
   useEffect(() => {
     if (!entityType) return;
-    getFormDefinition(entityType).then(def => {
+    getFormDefinitionOrDefault(entityType).then(def => {
       setFormDef(def);
       setLoadingForm(false);
     });
@@ -161,13 +161,6 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
         setIsSubmitting(false);
         return;
       }
-      try {
-        await submitForm(entityType!, null, answers);
-      } catch (err) {
-        setFormError(err instanceof Error ? err.message : "Something went wrong.");
-        setIsSubmitting(false);
-        return;
-      }
     }
 
     const kindMap: Record<string, "member" | "volunteer" | "partner" | "program"> = {
@@ -186,6 +179,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
         notes: formData._notes,
         privacy: consent.privacy,
         marketing: consent.marketing,
+        answers,
       });
       if (res.error) {
         setFormError(res.error);

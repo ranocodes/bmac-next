@@ -282,6 +282,7 @@ export async function applyAsPerson(opts: {
   notes?: string;
   privacy?: boolean;
   marketing?: boolean;
+  answers?: Record<string, unknown>;
   [HONEYPOT_FIELD]?: string;
 }): Promise<{ error?: string; emailSent?: boolean; emailError?: string; kindLabel?: string }> {
   const guard = await assertSafe(`apply:${opts.kind}`, opts.email, await getClientIp(), opts as Record<string, unknown>);
@@ -340,6 +341,28 @@ export async function applyAsPerson(opts: {
     partner: "partner",
     program: "program",
   };
+
+  let formSubmissionId = "";
+  const entityTypeForForm: Record<string, string> = {
+    member: "member",
+    volunteer: "volunteer",
+    partner: "partner",
+    program: "program",
+  };
+  try {
+    const submitted = await submitForm(entityTypeForForm[opts.kind] || "member", null, opts.answers || {
+      name: opts.name.trim(),
+      email: person.email,
+      phone: opts.phone || "",
+      notes: opts.notes ? opts.notes.slice(0, 500) : "",
+      consent_privacy: Boolean(opts.privacy),
+      consent_marketing: Boolean(opts.marketing),
+    }, person.id);
+    if (submitted?.id) formSubmissionId = submitted.id;
+  } catch (err) {
+    console.error("applyAsPerson submitForm error:", err);
+  }
+
   try {
     await createWorkflowRecord({
       kind: workflowKindMap[opts.kind] || "member",
@@ -355,6 +378,7 @@ export async function applyAsPerson(opts: {
         personRecordId: record?.id || "",
         phone: opts.phone || "",
         notes: opts.notes ? opts.notes.slice(0, 500) : "",
+        formSubmissionId,
         consent: {
           privacy: Boolean(opts.privacy),
           marketing: Boolean(opts.marketing),
@@ -363,25 +387,6 @@ export async function applyAsPerson(opts: {
     });
   } catch (err) {
     console.error("applyAsPerson createWorkflowRecord error:", err);
-  }
-
-  const entityTypeForForm: Record<string, string> = {
-    member: "membership",
-    volunteer: "volunteer",
-    partner: "partner",
-    program: "school-chapter",
-  };
-  try {
-    await submitForm(entityTypeForForm[opts.kind] || "membership", null, {
-      name: opts.name.trim(),
-      email: person.email,
-      phone: opts.phone || "",
-      notes: opts.notes ? opts.notes.slice(0, 500) : "",
-      consent_privacy: Boolean(opts.privacy),
-      consent_marketing: Boolean(opts.marketing),
-    }, person.id);
-  } catch (err) {
-    console.error("applyAsPerson submitForm error:", err);
   }
 
   let emailSent = false;

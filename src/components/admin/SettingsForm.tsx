@@ -20,7 +20,9 @@ import {
   EMAIL_TEMPLATE_LABELS,
   type EmailTemplate,
 } from "@/lib/email-templates";
-import EmailTemplateEditor from "@/components/ui/EmailTemplateEditor";
+import dynamic from "next/dynamic";
+
+const EmailTemplateEditor = dynamic(() => import("@/components/ui/EmailTemplateEditor"), { ssr: false });
 
 const DEFAULT = {
   logo_text: "BMAC",

@@ -2,7 +2,7 @@
 
 Hey! This is a website I built for Brilliant Minds Ambassadors Club (BMAC) Jos, a youth empowerment NGO here in Plateau State, Nigeria.
 
-![Homepage](screenshoot/homepage.png)
+![Homepage](screenshoot/home.png)
 
 ## What it does
 
@@ -10,17 +10,15 @@ On the public side, people can browse BMAC's programs, read news, register for e
 
 On the admin side, the team gets a dashboard where they can manage all of that themselves: news, events, programs, gallery, whatever. There's also traffic stats and an activity log so you can see who changed what.
 
-![Admin dashboard](screenshoot/admin-dashboard.png)
+**Screenshots:**
+### About page
+![About page](screenshoot/about.png)
 
-**More screenshots:**
+## Programs page
+![Programs page](screenshoot/programs.png)
 
-![Programs page](screenshoot/programs%20page.png)
-![Program detail page](screenshoot/programs%20detail%20page.png)
-![Event page](screenshoot/event%20page.png)
-![News page](screenshoot/news%20page.png)
-![Get involved page](screenshoot/get-involved%20page.png)
-![Gallery page](screenshoot/gallery%20page.png)
-![About page](screenshoot/about%20page.png)
+## Programs detail page
+![Program detail page](screenshoot/programs-details.png)
 
 ## Tech stack
 

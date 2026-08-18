@@ -6,6 +6,7 @@ import { BookOpen, Plus, Pencil, Trash2, Search, ClipboardCheck } from "lucide-r
 import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { Program } from "@/types/cms";
 
 export default function ProgramTable({ initialData }: { initialData: any[] }) {
@@ -57,20 +58,21 @@ export default function ProgramTable({ initialData }: { initialData: any[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
-          <BookOpen size={48} className="text-muted-foreground/20 mb-4" />
-          <p className="text-sm font-medium text-secondary">
-            {search ? "No programs match your search" : "No programs yet"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {search ? "Try a different term" : "Create your first program to get started"}
-          </p>
-          {!search && (
-            <Link href="/admin/programs/new" className="mt-5 flex items-center gap-2 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.97] transition-all">
-              <Plus size={15} /> New Program
-            </Link>
-          )}
-        </div>
+        search ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
+            <BookOpen size={48} className="text-muted-foreground/20 mb-4" />
+            <p className="text-sm font-medium text-secondary">No programs match your search</p>
+            <p className="text-xs text-muted-foreground mt-1">Try a different term</p>
+          </div>
+        ) : (
+          <EmptyState
+            icon={BookOpen}
+            title="No programs yet"
+            description="Create your first program to get started"
+            ctaText="New Program"
+            ctaHref="/admin/programs/new"
+          />
+        )
       ) : (
         <>
           <div className="lg:hidden space-y-2">

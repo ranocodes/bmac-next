@@ -1,3 +1,4 @@
+// DEPRECATED: not used as of 2026-08-18
 "use client";
 
 import React, { useEffect } from "react";

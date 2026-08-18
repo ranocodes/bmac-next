@@ -10,7 +10,7 @@ import ImagePicker from "@/components/ui/ImagePicker";
 import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
-import { getFormDefinition, upsertFormDefinition } from "@/actions/forms";
+import { getFormDefinitionOrDefault, upsertFormDefinition } from "@/actions/forms";
 import type { ProgramInstructor } from "@/types/cms";
 import type { FormQuestion } from "@/types/cms";
 
@@ -44,6 +44,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
     initialData?.applications_open ?? initialData?.applicationsOpen ?? false
   );
   const [isPaid, setIsPaid] = useState(initialData?.is_paid ?? initialData?.isPaid ?? false);
+  const [paymentTiming, setPaymentTiming] = useState<"immediate" | "after_acceptance">(initialData?.payment_timing ?? initialData?.paymentTiming ?? "immediate");
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
   const [duration, setDuration] = useState(initialData?.duration || "");
   const [effort, setEffort] = useState(initialData?.effort || "");
@@ -99,8 +100,8 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
 
   useEffect(() => {
     if (isEdit && params?.id && !formLoaded) {
-      getFormDefinition("program", params.id as string).then((def) => {
-        if (def) setFormQuestions(def.questions);
+      getFormDefinitionOrDefault("program", params.id as string).then((def) => {
+        setFormQuestions(def.questions.map(q => ({ ...q })));
         setFormLoaded(true);
       });
     }
@@ -141,6 +142,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
       landing_page: landingPage,
       applications_open: applicationsOpen,
       is_paid: isPaid,
+      payment_timing: isPaid ? paymentTiming : "immediate",
       price: isPaid ? Math.max(0, Number(price) || 0) : 0,
       details: [detailDuration, detailSchedule, detailEligibility, ...detailOther].join(" | "),
       skills,
@@ -1026,6 +1028,57 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
                     placeholder="0"
                     className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
                   />
+                </div>
+              )}
+              {isPaid && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment Timing</p>
+                  <label className={`flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
+                    paymentTiming === "immediate"
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-background border-border text-secondary/70"
+                  }`}>
+                    <input
+                      type="radio"
+                      name="paymentTiming"
+                      value="immediate"
+                      checked={paymentTiming === "immediate"}
+                      onChange={() => setPaymentTiming("immediate")}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                      paymentTiming === "immediate" ? "border-primary" : "border-muted-foreground/40"
+                    }`}>
+                      {paymentTiming === "immediate" && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-sm font-medium">Pay immediately after filling out the form</span>
+                      <span className="block text-[10px] mt-0.5 opacity-60">Applicant pays via Paystack at submission time</span>
+                    </div>
+                  </label>
+                  <label className={`flex items-center gap-3 px-4 py-3 min-h-[44px] rounded-lg border transition-colors cursor-pointer ${
+                    paymentTiming === "after_acceptance"
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-background border-border text-secondary/70"
+                  }`}>
+                    <input
+                      type="radio"
+                      name="paymentTiming"
+                      value="after_acceptance"
+                      checked={paymentTiming === "after_acceptance"}
+                      onChange={() => setPaymentTiming("after_acceptance")}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                      paymentTiming === "after_acceptance" ? "border-primary" : "border-muted-foreground/40"
+                    }`}>
+                      {paymentTiming === "after_acceptance" && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-sm font-medium">Pay only after application is accepted</span>
+                      <span className="block text-[10px] mt-0.5 opacity-60">Applicant submits free, pays upon acceptance</span>
+                    </div>
+                  </label>
                 </div>
               )}
             </div>

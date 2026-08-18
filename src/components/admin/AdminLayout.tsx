@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, History, PanelLeftClose, PanelLeftOpen,
-  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, FileText, type LucideIcon,
+  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, FileText, Send, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -73,6 +73,7 @@ const navGroups: NavGroup[] = [
     children: [
       { label: "Forms", href: "/admin/forms", icon: FileText, permission: "access_settings" },
       { label: "Email Sequences", href: "/admin/email-sequences", icon: Mail, permission: "access_settings" },
+      { label: "Campaigns", href: "/admin/campaigns", icon: Send, permission: "access_settings" },
       { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
       { label: "Activity Log", href: "/admin/logs", icon: History, permission: "manage_logs" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
@@ -108,6 +109,7 @@ const routePermissions: Record<string, Permission> = {
   "/admin/inbox": "manage_workflows",
   "/admin/checkin": "check_in_attendees",
   "/admin/newsletter": "manage_newsletter",
+  "/admin/campaigns": "access_settings",
   "/admin/donations": "manage_payments",
 };
 

@@ -66,6 +66,39 @@ export async function getInboxStats(): Promise<{
   return { total: all.length, open, byKind, byStatus };
 }
 
+export async function getInboxStatsByStream(): Promise<{
+  applications: number;
+  donations: number;
+  inquiries: number;
+  events: number;
+  other: number;
+  total: number;
+}> {
+  await requirePermission("manage_workflows");
+  const rows = await db.query<{ stream: string; open_count: string }>(`
+    SELECT
+      CASE
+        WHEN kind IN ('program', 'volunteer', 'member', 'school-chapter', 'partner') THEN 'applications'
+        WHEN kind = 'donation' THEN 'donations'
+        WHEN kind = 'contact' THEN 'inquiries'
+        WHEN kind IN ('event_registration', 'ticket') THEN 'events'
+        ELSE 'other'
+      END as stream,
+      COUNT(*) FILTER (WHERE status IN ('open', 'in_progress')) as open_count
+    FROM workflow_records
+    GROUP BY stream
+  `);
+  const counts = { applications: 0, donations: 0, inquiries: 0, events: 0, other: 0, total: 0 };
+  for (const r of rows) {
+    const key = r.stream as keyof typeof counts;
+    if (key in counts) {
+      counts[key] = Number(r.open_count ?? 0);
+      counts.total += Number(r.open_count ?? 0);
+    }
+  }
+  return counts;
+}
+
 export async function getWorkflowDetail(
   id: string
 ): Promise<{

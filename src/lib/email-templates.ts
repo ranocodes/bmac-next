@@ -29,7 +29,8 @@ export type EmailTemplateKey =
   | "renewal-reminder-7"
   | "renewal-reminder-1"
   | "re-engagement-30"
-  | "re-engagement-60";
+  | "re-engagement-60"
+  | "payment-required";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   credentials: "Admin credentials",
@@ -57,6 +58,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "renewal-reminder-1": "Membership renews tomorrow",
   "re-engagement-30": "We miss you — 30 days",
   "re-engagement-60": "We miss you — 60 days",
+  "payment-required": "Payment required after acceptance",
 };
 
 const shell = (heading: string, message: string, cta?: { label: string; url: string }, footer?: string) => `<!DOCTYPE html>
@@ -534,6 +536,28 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "We haven't seen you in a while. BMAC is always growing.",
       "",
       "Sign in at: {{loginUrl}}",
+    ].join("\n"),
+  },
+  "payment-required": {
+    subject: "Complete your payment for {{programTitle}} — BMAC",
+    html: shell(
+      "Congratulations, {{firstName}}!",
+      "Your application for <strong>{{programTitle}}</strong> has been accepted! Please complete your payment of <strong>{{amountLabel}}</strong> to secure your spot.",
+      { label: "Complete Payment", url: "{{paymentLink}}" },
+      "Reference: <strong>{{reference}}</strong>. If you have questions, reply to this email."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Your application for {{programTitle}} has been accepted!",
+      "",
+      "Please complete your payment of {{amountLabel}} to secure your spot:",
+      "",
+      "{{paymentLink}}",
+      "",
+      "Reference: {{reference}}",
+      "",
+      "If you have questions, reply to this email.",
     ].join("\n"),
   },
 };

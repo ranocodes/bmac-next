@@ -11,28 +11,19 @@ import {
 } from "lucide-react";
 import {
   getFormDefinition,
+  getFormDefinitionOrDefault,
   deleteFormDefinition,
   getFormSubmissions,
-  getAllPrograms,
 } from "@/actions/forms";
 import { useToast } from "@/components/ui/Toast";
 import StatusBadge from "@/components/admin/StatusBadge";
 import type { FormDefinition } from "@/types/cms";
 
 const FORM_TYPES = [
-  { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
   { entityType: "partner", label: "Partner Application", desc: "Form for partnership inquiries" },
-  { entityType: "school-chapter", label: "School Chapter Request", desc: "Form for school chapter inquiries" },
-  { entityType: "donation", label: "Donation Form", desc: "Custom fields for donations" },
-  { entityType: "contact", label: "Contact Form", desc: "Fields for the contact page" },
-  { entityType: "newsletter", label: "Newsletter Signup", desc: "Extra fields for newsletter" },
+  { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
   { entityType: "member", label: "Membership Application", desc: "Form for joining BMAC" },
 ];
-
-interface Program {
-  id: string;
-  title: string;
-}
 
 interface FormCard {
   entityType: string;
@@ -61,40 +52,16 @@ export default function FormsManager() {
     FORM_TYPES.forEach(ft => {
       Promise.all([
         getFormDefinition(ft.entityType),
+        getFormDefinitionOrDefault(ft.entityType),
         getFormSubmissions(ft.entityType),
-      ]).then(([def, subs]) => {
+      ]).then(([def, defaultDef, subs]) => {
         setCards(prev => prev.map(c =>
           c.entityType === ft.entityType
-            ? { ...c, definition: def, submissionCount: subs.length, loading: false }
+            ? { ...c, definition: def ?? defaultDef, submissionCount: subs.length, loading: false }
             : c
         ));
       });
     });
-  }, []);
-
-  useEffect(() => {
-    async function loadProgramForms() {
-      const programs = await getAllPrograms();
-      const programCards: FormCard[] = await Promise.all(
-        programs.map(async (program) => {
-          const [def, subs] = await Promise.all([
-            getFormDefinition("program", program.id),
-            getFormSubmissions("program", program.id),
-          ]);
-          return {
-            entityType: "program",
-            entityId: program.id,
-            label: `${program.title} Application`,
-            desc: `Form for ${program.title}`,
-            definition: def,
-            submissionCount: subs.length,
-            loading: false,
-          };
-        })
-      );
-      setCards(prev => [...prev, ...programCards]);
-    }
-    loadProgramForms();
   }, []);
 
   async function handleDelete(entityType: string, entityId?: string) {
@@ -124,9 +91,7 @@ export default function FormsManager() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => {
           const hasForm = !!card.definition;
-          const editHref = card.entityType === "program" && card.entityId
-            ? `/admin/forms/program?programId=${card.entityId}`
-            : `/admin/forms/${card.entityType}`;
+          const editHref = `/admin/forms/${card.entityType}`;
 
           return (
             <div key={`${card.entityType}-${card.entityId ?? "standalone"}`} className="bg-card rounded-xl border border-border">
