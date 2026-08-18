@@ -312,25 +312,27 @@ export interface ApplicationLookupResult {
 }
 
 export async function lookupApplicationStatus(input: {
-  email: string;
-  applicationId?: string;
+  query: string;
 } ): Promise<{ error?: string; result?: ApplicationLookupResult; results?: ApplicationLookupResult[] }> {
-  const cleanEmail = (input.email || "").trim().toLowerCase();
-  const cleanRef = (input.applicationId || "").trim();
-  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-    return { error: "Please enter a valid email address." };
+  const raw = (input.query || "").trim();
+  if (!raw) {
+    return { error: "Please enter your email or application reference." };
   }
 
-  const guard = await assertSafe("application-status", cleanEmail, await getClientIp());
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+  const isRef = /^app-/i.test(raw);
+
+  if (!isEmail && !isRef) {
+    return { error: "Please enter a valid email address or application reference (starts with app-)." };
+  }
+
+  const guard = await assertSafe("application-status", raw, await getClientIp());
   if (guard.error) return { error: guard.error };
 
   try {
-    await recordSubmission("application-status", cleanEmail, await getClientIp());
+    await recordSubmission("application-status", raw, await getClientIp());
 
-    if (cleanRef) {
-      if (cleanRef.length > 80 || !/^app-/i.test(cleanRef)) {
-        return { error: "Application references start with app- (e.g. app-abc123)." };
-      }
+    if (isRef) {
       const rows = await db.query<any>(
         `SELECT pa.id, pa.status, pa.program_id, pa.created_at,
                 pr.title AS program_title,
@@ -340,13 +342,13 @@ export async function lookupApplicationStatus(input: {
          JOIN public.programs pr ON pr.id = pa.program_id
          LEFT JOIN public.participants pt ON pt.person_id = p.id AND pt.status != 'dropped'
          LEFT JOIN public.cohorts c ON c.id = pt.cohort_id AND c.program_id = pa.program_id
-         WHERE pa.id = $1 AND LOWER(COALESCE(p.email, '')) = LOWER($2)
+         WHERE LOWER(pa.id) = LOWER($1)
          LIMIT 1`,
-        [cleanRef, cleanEmail]
+        [raw]
       );
       const row = rows[0];
       if (!row) {
-        return { error: "No application matches that reference and email. Double-check both and try again." };
+        return { error: "No application found with that reference." };
       }
       return {
         result: {
@@ -360,6 +362,7 @@ export async function lookupApplicationStatus(input: {
       };
     }
 
+    const cleanEmail = raw.toLowerCase();
     const rows = await db.query<any>(
       `SELECT pa.id, pa.status, pa.program_id, pa.created_at,
               pr.title AS program_title,
@@ -369,7 +372,7 @@ export async function lookupApplicationStatus(input: {
        JOIN public.programs pr ON pr.id = pa.program_id
        LEFT JOIN public.participants pt ON pt.person_id = p.id AND pt.status != 'dropped'
        LEFT JOIN public.cohorts c ON c.id = pt.cohort_id AND c.program_id = pa.program_id
-       WHERE LOWER(COALESCE(p.email, '')) = LOWER($1)
+       WHERE LOWER(COALESCE(p.email, '')) = $1
        ORDER BY pa.created_at DESC`,
       [cleanEmail]
     );
@@ -710,7 +713,17 @@ export async function getProgramDetail(programId: string): Promise<{
   participants: any[];
 } | null> {
   try {
-    const program = await db.getById("programs", programId);
+    let program = await db.getById("programs", programId);
+    if (!program) {
+      const slugRows = await db.query<any>(
+        `SELECT id FROM public.programs WHERE LOWER(slug) = LOWER($1) LIMIT 1`,
+        [programId]
+      );
+      if (slugRows.length > 0) {
+        programId = slugRows[0].id;
+        program = await db.getById("programs", programId);
+      }
+    }
     if (!program) return null;
 
     const applications = await db.query<any>(

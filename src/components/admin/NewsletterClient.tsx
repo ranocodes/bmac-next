@@ -29,6 +29,7 @@ import type {
   NewsletterTemplate,
 } from "@/actions/newsletter-admin";
 import EmailPreview from "@/components/ui/EmailPreview";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 import NewsletterHistory from "@/components/admin/NewsletterHistory";
 
 const DRAFT_KEY = "bmac-newsletter-draft:v1";
@@ -538,20 +539,12 @@ export default function NewsletterClient({
                 placeholder="Subject line"
                 className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
               />
-              <textarea
+              <RichTextEditor
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Markdown body… (supports **bold**, *italic*, headings, lists, links)"
-                rows={8}
-                className="w-full px-4 py-2.5 bg-muted/40 border border-border rounded-lg text-sm font-mono focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-y sm:rows-12"
+                onChange={setBody}
+                minHeight={240}
               />
             </div>
-
-            {showPreview && (
-              <div className="mt-4">
-                <EmailPreview subject={subject} markdown={body} />
-              </div>
-            )}
 
             {composeFeedback && (
               <div className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm mt-4 ${

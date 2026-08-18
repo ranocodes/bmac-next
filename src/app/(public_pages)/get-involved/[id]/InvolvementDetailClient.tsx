@@ -87,13 +87,6 @@ const ACCENT_MAP: Record<string, { gradient: string; ring: string; bg: string; b
   },
 };
 
-const BASE_FIELDS: { id: string; label: string; type: string; placeholder: string; required: boolean }[] = [
-  { id: "_name", label: "Full Name", type: "text", placeholder: "e.g. Amina Yusuf", required: true },
-  { id: "_email", label: "Email Address", type: "email", placeholder: "you@example.com", required: true },
-  { id: "_phone", label: "Phone (WhatsApp)", type: "tel", placeholder: "e.g. +234 803 456 7891", required: false },
-  { id: "_notes", label: "Why you'd like to join", type: "textarea", placeholder: "Tell us about your motivation, skills, or what you hope to contribute...", required: false },
-];
-
 const DONATE_AMOUNTS = ["5000", "10000", "25000", "50000", "custom"];
 
 interface Props {
@@ -109,7 +102,8 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
 
   const [formDef, setFormDef] = useState<FormDefinition | null>(null);
   const [loadingForm, setLoadingForm] = useState(!!entityType);
-  const [formData, setFormData] = useState<Record<string, string>>({ _name: "", _email: "", _phone: "", _notes: "" });
+  const [donateName, setDonateName] = useState("");
+  const [donateEmail, setDonateEmail] = useState("");
   const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, unknown>>({});
   const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,13 +140,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
       return;
     }
 
-    const answers: Record<string, unknown> = {
-      ...dynamicAnswers,
-      _name: formData._name,
-      _email: formData._email,
-      _phone: formData._phone,
-      _notes: formData._notes,
-    };
+    const answers: Record<string, unknown> = { ...dynamicAnswers };
 
     if (formDef) {
       const requiredMissing = formDef.questions.filter(q => q.required && q.label && !answers[q.id]);
@@ -163,20 +151,30 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
       }
     }
 
+    const name = String(answers.name || "");
+    const email = String(answers.email || "");
+    const phone = String(answers.phone || "");
+
+    if (!name || !email) {
+      setFormError("Please fill in your name and email.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const kindMap: Record<string, "member" | "volunteer" | "partner" | "program"> = {
       join: "member",
       volunteer: "volunteer",
       partner: "partner",
-      school: "program",
+      school: "school-chapter" as any,
     };
 
     try {
       const res = await applyAsPerson({
-        kind: kindMap[slug] || "member",
-        name: formData._name,
-        email: formData._email,
-        phone: formData._phone,
-        notes: formData._notes,
+        kind: (kindMap[slug] || "member") as any,
+        name,
+        email,
+        phone,
+        notes: String(answers.motivation || answers.notes || ""),
         privacy: consent.privacy,
         marketing: consent.marketing,
         answers,
@@ -215,8 +213,8 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
       const reference = `BMAC-${Math.floor(Math.random() * 1000000000 + 1)}`;
       const { createPendingDonation } = await import("@/actions/donations");
       const pending = await createPendingDonation({
-        name: formData._name,
-        email: formData._email,
+        name: donateName,
+        email: donateEmail,
         amount: amountN,
         reference,
       });
@@ -228,14 +226,14 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
       const PaystackPop = await loadPaystack();
       const handler = PaystackPop.setup({
         key: paystackKey,
-        email: formData._email,
+        email: donateEmail,
         amount: amountN * 100,
         currency: "NGN",
         ref: reference,
         metadata: {
           source_type: "donation",
           source_id: slug,
-          payer_name: formData._name,
+          payer_name: donateName,
           record_id: pending.donation.recordId,
         },
         callback: function () {
@@ -512,72 +510,67 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                       <input type="text" id="company_website" name="company_website" tabIndex={-1} autoComplete="off" />
                     </div>
 
-                    {/* BASE FIELDS */}
-                    {BASE_FIELDS.map((field) => (
-                      <div key={field.id} className="space-y-1.5">
-                        <label className="block text-sm font-semibold text-secondary">
-                          {field.label} {!field.required && <span className="text-muted-foreground font-normal">(optional)</span>}
-                        </label>
-                        {field.type === "textarea" ? (
-                          <textarea
-                            placeholder={field.placeholder}
-                            value={formData[field.id] || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                            rows={3}
-                            className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
-                          />
-                        ) : (
-                          <input
-                            type={field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text"}
-                            placeholder={field.placeholder}
-                            value={formData[field.id] || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                            required={field.required}
-                            className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                          />
-                        )}
-                      </div>
-                    ))}
-
-                    {/* DONATE AMOUNTS */}
+                    {/* DONATE: optional name/email + amount */}
                     {isDonate && (
-                      <div className="space-y-3 pt-2">
-                        <label className="block text-sm font-semibold text-secondary">Donation Amount</label>
-                        <div className="flex flex-wrap gap-2">
-                          {DONATE_AMOUNTS.map((amt) => (
-                            <button
-                              key={amt}
-                              type="button"
-                              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                                donateAmount === amt
-                                  ? `${accent.solid} border-transparent text-white shadow-md`
-                                  : "bg-background border-border text-secondary hover:border-primary/40"
-                              }`}
-                              onClick={() => setDonateAmount(amt)}
-                            >
-                              {amt === "custom" ? "Custom" : `₦${parseInt(amt).toLocaleString()}`}
-                            </button>
-                          ))}
-                        </div>
-                        {donateAmount === "custom" && (
+                      <>
+                        <div className="space-y-1.5">
+                          <label className="block text-sm font-semibold text-secondary">Your Name <span className="text-muted-foreground font-normal">(optional)</span></label>
                           <input
-                            type="number"
-                            placeholder="Enter amount (₦)"
+                            type="text"
+                            placeholder="e.g. Amina Yusuf"
+                            value={donateName}
+                            onChange={(e) => setDonateName(e.target.value)}
                             className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                            value={customAmount}
-                            onChange={(e) => setCustomAmount(e.target.value)}
                           />
-                        )}
-                        <Link
-                          href="/donor-lookup"
-                          className="block text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors pt-1"
-                        >
-                          Already donated? Look up your donations &amp; receipts →
-                        </Link>
-                      </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-sm font-semibold text-secondary">Email Address <span className="text-muted-foreground font-normal">(optional — for receipt)</span></label>
+                          <input
+                            type="email"
+                            placeholder="you@example.com"
+                            value={donateEmail}
+                            onChange={(e) => setDonateEmail(e.target.value)}
+                            className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                          />
+                        </div>
+                        <div className="space-y-3 pt-2">
+                          <label className="block text-sm font-semibold text-secondary">Donation Amount</label>
+                          <div className="flex flex-wrap gap-2">
+                            {DONATE_AMOUNTS.map((amt) => (
+                              <button
+                                key={amt}
+                                type="button"
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                                  donateAmount === amt
+                                    ? `${accent.solid} border-transparent text-white shadow-md`
+                                    : "bg-background border-border text-secondary hover:border-primary/40"
+                                }`}
+                                onClick={() => setDonateAmount(amt)}
+                              >
+                                {amt === "custom" ? "Custom" : `\u20A6${parseInt(amt).toLocaleString()}`}
+                              </button>
+                            ))}
+                          </div>
+                          {donateAmount === "custom" && (
+                            <input
+                              type="number"
+                              placeholder="Enter amount (\u20A6)"
+                              className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                              value={customAmount}
+                              onChange={(e) => setCustomAmount(e.target.value)}
+                            />
+                          )}
+                          <Link
+                            href="/donor-lookup"
+                            className="block text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors pt-1"
+                          >
+                            Already donated? Look up your donations &amp; receipts →
+                          </Link>
+                        </div>
+                      </>
                     )}
 
-                    {/* DYNAMIC QUESTIONS FROM FORM EDITOR */}
+                    {/* APPLICATIONS: dynamic questions from form definition only */}
                     {loadingForm && entityType && (
                       <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground">
                         <Loader2 size={16} className="animate-spin" />
@@ -586,10 +579,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                     )}
 
                     {!loadingForm && dynamicQuestions.length > 0 && (
-                      <div className="space-y-4 pt-4 border-t border-border/50">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                          Additional Questions
-                        </p>
+                      <div className="space-y-4">
                         {dynamicQuestions.map((q: FormQuestion) => (
                           <div key={q.id} className="space-y-1.5">
                             <label className="block text-sm font-semibold text-secondary">

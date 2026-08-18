@@ -259,6 +259,7 @@ export async function performChunk(opts: {
 export async function sendNewsletterBroadcast(opts: {
   subject: string;
   body: string;
+  bodyHtml?: string;
   offset?: number;
   limit?: number;
   audienceSource?: string;
@@ -278,7 +279,7 @@ export async function sendNewsletterBroadcast(opts: {
   }
 
   const campaignId = opts.campaignId || `bc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-  const bodyHtml = markdownToHtml(body);
+  const bodyHtml = opts.bodyHtml || markdownToHtml(body);
   const limit = Math.min(Math.max(Number(opts.limit) || 100, 1), 200);
   const offset = Math.max(Number(opts.offset) || 0, 0);
 
@@ -298,6 +299,7 @@ export async function sendNewsletterBroadcast(opts: {
 export async function sendNewsletterTest(opts: {
   subject: string;
   body: string;
+  bodyHtml?: string;
   to: string;
 }): Promise<{ sent: number; errors: number; error?: string }> {
   const admin = await requirePermission("manage_newsletter");
@@ -317,7 +319,7 @@ export async function sendNewsletterTest(opts: {
     return { sent: 0, errors: 0, error: "No valid email addresses provided (invalid format)" };
   }
 
-  const bodyHtml = markdownToHtml(body);
+  const bodyHtml = opts.bodyHtml || markdownToHtml(body);
   const unsubscribeBase = "/api/newsletter/unsubscribe";
   let sent = 0;
   let errors = 0;

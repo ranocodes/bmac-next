@@ -66,6 +66,22 @@ export async function getDefaultFormQuestions(entityType: string): Promise<FormQ
     ];
   }
 
+  if (normalized === "school-chapter") {
+    return [
+      ...base,
+      question("school_name", "text", "School Name", "Name of your school", true, 3),
+      question("school_location", "text", "School Location", "City, State", true, 4),
+      question("student_count", "text", "Approximate Number of Students", "e.g. 200", false, 5),
+      question("programs", "checkbox", "Which programs are you interested in?", "", true, 6, [
+        "Spelling Bee",
+        "Poetry",
+        "Creative Writing",
+        "Public Speaking",
+      ]),
+      question("additional_details", "textarea", "Anything else you'd like us to know?", "Tell us more about your school and what you hope to achieve.", false, 7),
+    ];
+  }
+
   return [
     ...base,
     question("motivation", "textarea", "Why would you like to join BMAC?", "Tell us about your motivation and what you hope to contribute.", true, 3),

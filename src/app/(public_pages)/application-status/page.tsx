@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, FileText, Loader2, Mail, CheckCircle2, Clock, XCircle, ChevronRight } from "lucide-react";
+import { Search, Loader2, CheckCircle2, Clock, XCircle, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { lookupApplicationStatus } from "@/actions/programs";
 
@@ -16,23 +16,22 @@ type Result = {
 };
 
 const STATUS_META: Record<string, { label: string; tone: "ok" | "warn" | "bad" | "info"; hint: string }> = {
-  submitted: { label: "Submitted", tone: "info", hint: "We've received your application and it's in the queue." },
-  in_review: { label: "In Review", tone: "warn", hint: "Our team is reviewing your application." },
-  accepted: { label: "Accepted", tone: "ok", hint: "Congratulations — you've been accepted." },
-  waitlisted: { label: "Waitlisted", tone: "warn", hint: "You're on the waitlist. We'll reach out if a spot opens." },
-  rejected: { label: "Not Selected", tone: "bad", hint: "We're not able to offer a place this round. You're welcome to reapply." },
+  submitted: { label: "Under Review", tone: "warn", hint: "Your application has been received and is being reviewed by our team." },
+  in_review: { label: "Under Review", tone: "warn", hint: "Our team is actively reviewing your application." },
+  accepted: { label: "Admitted", tone: "ok", hint: "Congratulations — you've been admitted!" },
+  waitlisted: { label: "Under Review", tone: "warn", hint: "You're on the waitlist. We'll reach out if a spot opens." },
+  rejected: { label: "Not Admitted", tone: "bad", hint: "We're not able to offer a place this round. You're welcome to reapply." },
   withdrawn: { label: "Withdrawn", tone: "info", hint: "This application was withdrawn." },
 };
 
 function StatusIcon({ tone }: { tone: string }) {
-  if (tone === "ok") return <CheckCircle2 size={18} />;
-  if (tone === "bad") return <XCircle size={18} />;
-  return <Clock size={18} />;
+  if (tone === "ok") return <CheckCircle2 size={20} />;
+  if (tone === "bad") return <XCircle size={20} />;
+  return <Clock size={20} />;
 }
 
 export default function ApplicationStatusPage() {
-  const [email, setEmail] = useState("");
-  const [reference, setReference] = useState("");
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -45,7 +44,7 @@ export default function ApplicationStatusPage() {
     setError("");
     setResult(null);
     setResults([]);
-    const res = await lookupApplicationStatus({ email, applicationId: reference || undefined });
+    const res = await lookupApplicationStatus({ query });
     setLoading(false);
     if (res.error) {
       setError(res.error);
@@ -69,7 +68,7 @@ export default function ApplicationStatusPage() {
             Check Your Application
           </h1>
           <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto">
-            Enter the email you applied with. Optionally add your reference for a specific application.
+            Enter the email you applied with or your application reference.
           </p>
         </div>
       </section>
@@ -78,32 +77,18 @@ export default function ApplicationStatusPage() {
         <div className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 md:p-10 space-y-5">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Email Used</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Email or Reference</label>
               <div className="relative">
-                <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="you@example.com or app-..."
                   required
                   className="w-full pl-13 md:pl-14 pr-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-2">Application Reference <span className="text-muted-foreground/60">(optional)</span></label>
-              <div className="relative">
-                <FileText size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  placeholder="app-…"
-                  className="w-full pl-13 md:pl-14 pr-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all font-bold placeholder:text-muted-foreground/40"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground px-2">Leave empty to see all your applications.</p>
             </div>
             {error && (
               <p className="text-sm font-bold text-red-500 px-2">{error}</p>
@@ -126,7 +111,7 @@ export default function ApplicationStatusPage() {
               >
                 <div className="bg-card border border-border rounded-xl p-6 md:p-8">
                   <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
                       meta.tone === "ok" ? "bg-primary/10 text-primary"
                       : meta.tone === "bad" ? "bg-red-500/10 text-red-500"
                       : meta.tone === "warn" ? "bg-amber-500/10 text-amber-600"
@@ -135,7 +120,7 @@ export default function ApplicationStatusPage() {
                       <StatusIcon tone={meta.tone} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Status</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Admission Status</p>
                       <h2 className="font-display text-2xl font-bold text-secondary">{meta.label}</h2>
                       <p className="text-sm text-muted-foreground mt-2">{meta.hint}</p>
                     </div>
@@ -148,7 +133,7 @@ export default function ApplicationStatusPage() {
                     </div>
                     {result.cohortTitle && (
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                        <span className="text-muted-foreground">Assigned cohort</span>
+                        <span className="text-muted-foreground">Cohort</span>
                         <span className="font-bold text-secondary text-right">{result.cohortTitle}</span>
                       </div>
                     )}
