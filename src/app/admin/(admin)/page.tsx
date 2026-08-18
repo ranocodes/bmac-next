@@ -11,6 +11,8 @@ export default async function AdminDashboard() {
       recentEvents={stats.recentEvents}
       recentActivity={stats.recentActivity}
       todayCount={stats.todayCount}
+      revenueByMonth={stats.revenueByMonth}
+      memberGrowth={stats.memberGrowth}
     />
   );
 }

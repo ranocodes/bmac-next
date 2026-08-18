@@ -126,8 +126,8 @@ export default function ProgramTable({ initialData }: { initialData: any[] }) {
                           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
                             <BookOpen size={14} className="text-muted-foreground" />
                           </div>
-                          <div>
-                            <p className="font-medium text-secondary">{p.title}</p>
+                          <div className="truncate max-w-[200px]">
+                            <p className="font-medium text-secondary truncate">{p.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 sm:hidden">
                               {p.landingPage ? "On Homepage" : "Hidden"} &middot; {p.status === "published" ? "Published" : "Draft"}
                             </p>
