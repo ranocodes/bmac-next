@@ -2,14 +2,10 @@
 
 import crypto from "crypto";
 import { db } from "@/lib/db";
+import { ADMIN_FORM_TYPES, FORM_TYPE_ALIASES } from "@/lib/form-constants";
 import type { FormDefinition, FormQuestion, FormSubmission } from "@/types/cms";
 
-export const ADMIN_FORM_TYPES = ["partner", "volunteer", "member"] as const;
 export type AdminFormType = (typeof ADMIN_FORM_TYPES)[number];
-
-const FORM_TYPE_ALIASES: Record<string, string> = {
-  membership: "member",
-};
 
 function normalizeEntityType(entityType: string): string {
   return FORM_TYPE_ALIASES[entityType] || entityType;

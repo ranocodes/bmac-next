@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, User, Mail, CalendarDays, Phone, CheckCircle, XCircle, CircleHelp } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { updateWorkflowStatus, replyToSubmission } from "@/actions/workflows";
-import { sendApplicationStatusEmail } from "@/actions/emails";
+import { updateWorkflowStatus, replyToSubmission, acceptApplicationWorkflow, rejectApplicationWorkflow } from "@/actions/workflows";
+import { sendPublicCredentials } from "@/actions/programs";
 import StatusBadge from "@/components/admin/StatusBadge";
 import type { WorkflowStatus } from "@/types/cms";
 
@@ -103,24 +103,11 @@ export default function ApplicationReview({ detail }: DetailProps) {
     if (!ok) return;
 
     setSaving(true);
-    const result = await updateWorkflowStatus(record.id, { status: "resolved" as WorkflowStatus });
-    if (result.error) { setSaving(false); toast(result.error, "error"); return; }
-
-    const emailResult = await sendApplicationStatusEmail({
-      email: record.submitterEmail,
-      firstName: record.submitterName || "there",
-      programTitle,
-      status: "accepted",
-      note: details.cohortTitle ? `You have been accepted into the ${details.cohortTitle} cohort.` : undefined,
-    });
+    const result = await acceptApplicationWorkflow(record.id);
     setSaving(false);
-
+    if (result.error) { toast(result.error, "error"); return; }
     setCurrentStatus("resolved");
-    if (emailResult.error) {
-      toast("Status updated but email failed: " + emailResult.error, "error");
-    } else {
-      toast("Application accepted — email sent", "success");
-    }
+    toast("Application accepted — email sent", "success");
   }
 
   async function handleReject() {
@@ -131,24 +118,11 @@ export default function ApplicationReview({ detail }: DetailProps) {
     if (!ok) return;
 
     setSaving(true);
-    const result = await updateWorkflowStatus(record.id, { status: "closed" as WorkflowStatus });
-    if (result.error) { setSaving(false); toast(result.error, "error"); return; }
-
-    const emailResult = await sendApplicationStatusEmail({
-      email: record.submitterEmail,
-      firstName: record.submitterName || "there",
-      programTitle,
-      status: "rejected",
-      note: " Not selected this time — try next cohort.",
-    });
+    const result = await rejectApplicationWorkflow(record.id);
     setSaving(false);
-
+    if (result.error) { toast(result.error, "error"); return; }
     setCurrentStatus("closed");
-    if (emailResult.error) {
-      toast("Status updated but email failed: " + emailResult.error, "error");
-    } else {
-      toast("Application rejected — email sent", "success");
-    }
+    toast("Application rejected — email sent", "success");
   }
 
   async function handleRequestInfo() {
@@ -179,6 +153,17 @@ export default function ApplicationReview({ detail }: DetailProps) {
     if (result.error) { toast(result.error, "error"); return; }
     setReply("");
     toast("Reply sent to " + record.submitterEmail, "success");
+  }
+
+  const [sendingLogin, setSendingLogin] = useState(false);
+  async function handleSendLogin() {
+    if (!person?.person?.id) { toast("No person record found", "error"); return; }
+    setSendingLogin(true);
+    const programId = details.programId || undefined;
+    const result = await sendPublicCredentials({ personId: person.person.id, programId });
+    setSendingLogin(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    toast("Portal login sent to " + record.submitterEmail, "success");
   }
 
   return (
@@ -307,6 +292,15 @@ export default function ApplicationReview({ detail }: DetailProps) {
               className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-all disabled:opacity-50"
             >
               {saving ? "Saving…" : "Close"}
+            </button>
+          )}
+          {currentStatus === "resolved" && record.kind === "program" && (
+            <button
+              onClick={handleSendLogin}
+              disabled={sendingLogin}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
+            >
+              {sendingLogin ? "Sending…" : "Send Student Portal Login"}
             </button>
           )}
         </div>
