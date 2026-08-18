@@ -50,41 +50,11 @@ function resolveIcon(name: string | null) {
 }
 
 const ACCENT_MAP: Record<string, { gradient: string; ring: string; bg: string; badge: string; solid: string }> = {
-  emerald: {
-    gradient: "from-emerald-600 via-emerald-500 to-teal-500",
-    ring: "ring-emerald-500/20",
-    bg: "bg-emerald-500/10",
-    badge: "bg-emerald-500 text-white",
-    solid: "bg-emerald-600",
-  },
-  amber: {
-    gradient: "from-amber-600 via-amber-500 to-orange-500",
-    ring: "ring-amber-500/20",
-    bg: "bg-amber-500/10",
-    badge: "bg-amber-500 text-white",
-    solid: "bg-amber-600",
-  },
-  indigo: {
-    gradient: "from-indigo-600 via-indigo-500 to-violet-500",
-    ring: "ring-indigo-500/20",
-    bg: "bg-indigo-500/10",
-    badge: "bg-indigo-500 text-white",
-    solid: "bg-indigo-600",
-  },
-  rose: {
-    gradient: "from-rose-600 via-rose-500 to-pink-500",
-    ring: "ring-rose-500/20",
-    bg: "bg-rose-500/10",
-    badge: "bg-rose-500 text-white",
-    solid: "bg-rose-600",
-  },
-  blue: {
-    gradient: "from-blue-600 via-blue-500 to-cyan-500",
-    ring: "ring-blue-500/20",
-    bg: "bg-blue-500/10",
-    badge: "bg-blue-500 text-white",
-    solid: "bg-blue-600",
-  },
+  emerald: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
+  amber: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
+  indigo: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
+  rose: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
+  blue: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
 };
 
 const DONATE_AMOUNTS = ["5000", "10000", "25000", "50000", "custom"];
@@ -258,10 +228,8 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
   return (
     <main className="min-h-screen bg-background">
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className={`absolute inset-0 bg-gradient-to-br ${accent.gradient} opacity-[0.07]`} />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-white/5 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-white/5 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+      <section className="relative overflow-hidden bg-background border-b border-border/40">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
         <div className="relative max-w-6xl mx-auto px-6 pt-28 md:pt-36 pb-16 md:pb-24">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -276,12 +244,12 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
 
           <div className="flex flex-col md:flex-row items-start gap-8 md:gap-12">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className={`p-6 rounded-2xl ${accent.bg} ring-1 ${accent.ring} shrink-0`}
+              className={`p-6 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}
             >
-              <HeroIcon size={40} className={`text-${page.accent_color}-600`} />
+              <HeroIcon size={40} className="text-background" />
             </motion.div>
 
             <div className="flex-1">
@@ -318,7 +286,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
 
       {/* HERO DESCRIPTION */}
       {page.hero_description && (
-        <section className="border-y border-border/50 bg-muted/20">
+        <section className="border-b border-border/40 bg-background">
           <div className="max-w-6xl mx-auto px-6 py-10 md:py-14">
             <motion.p
               initial={{ opacity: 0, y: 16 }}
@@ -364,11 +332,11 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                   <motion.div
                     key={i}
                     variants={item}
-                    className="group relative bg-card border border-border rounded-2xl p-7 md:p-8 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
+                    className="group relative bg-background border border-border/60 rounded-none p-7 md:p-8 hover:border-secondary transition-all duration-300"
                   >
                     <div className="flex items-start gap-5">
-                      <div className={`p-3 rounded-xl ${accent.bg} ring-1 ${accent.ring} shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-                        <SIcon size={20} className={`text-${page.accent_color}-600`} />
+                      <div className={`p-3 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}>
+                        <SIcon size={20} className="text-background" />
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-display text-lg font-bold text-secondary mb-2 tracking-tight">
@@ -393,9 +361,9 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className={`relative overflow-hidden rounded-2xl border border-border bg-card p-8 md:p-12`}
+              className="relative overflow-hidden rounded-none border border-border/60 bg-background p-8 md:p-12"
             >
-              <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl ${accent.gradient} opacity-[0.04] rounded-full blur-3xl -translate-y-1/3 translate-x-1/3`} />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
               <div className="relative">
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3 block">
                   At a Glance
@@ -411,9 +379,9 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.05 }}
-                      className="flex items-start gap-3 bg-muted/30 rounded-xl px-5 py-4 border border-border/50"
+                      className="flex items-start gap-3 bg-background rounded-none px-5 py-4 border border-border/40"
                     >
-                      <CheckCircle2 size={16} className={`text-${page.accent_color}-600 mt-0.5 shrink-0`} />
+                      <CheckCircle2 size={16} className="text-secondary mt-0.5 shrink-0" />
                       <span className="text-sm font-medium text-secondary leading-snug">{benefit}</span>
                     </motion.div>
                   ))}
@@ -474,7 +442,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="bg-card border border-border rounded-2xl p-6 md:p-10 shadow-lg shadow-black/[0.03]"
+                className="bg-background border border-border/60 rounded-none p-6 md:p-10"
               >
                 {submitted ? (
                   <div className="text-center py-12">
@@ -482,9 +450,9 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                      className={`w-20 h-20 rounded-full ${accent.bg} flex items-center justify-center mx-auto mb-6 ring-4 ${accent.ring}`}
+                      className={`w-20 h-20 rounded-none ${accent.bg} flex items-center justify-center mx-auto mb-6 ring-1 ${accent.ring}`}
                     >
-                      <CheckCircle2 size={36} className={`text-${page.accent_color}-600`} />
+                      <CheckCircle2 size={36} className="text-background" />
                     </motion.div>
                     <h3 className="font-display text-2xl font-bold text-secondary mb-3">
                       {isDonate ? "Thank You!" : "Application Sent!"}
@@ -675,7 +643,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/15`}
+                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-none text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-60`}
                     >
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />

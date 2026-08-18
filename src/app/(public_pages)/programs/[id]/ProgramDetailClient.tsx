@@ -91,6 +91,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
     status: (p as any).status || "draft",
     applicationsOpen: (p as any).applications_open ?? (p as any).applicationsOpen ?? false,
     isPaid: (p as any).is_paid ?? (p as any).isPaid ?? false,
+    paymentTiming: (p as any).payment_timing ?? (p as any).paymentTiming ?? "immediate",
     price: Number((p as any).price || 0),
     duration: (p as any).duration || "",
     effort: (p as any).effort || "",
@@ -164,7 +165,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
       },
     };
 
-    if (program.isPaid) {
+    if (program.isPaid && program.paymentTiming === "immediate") {
       const order = await createProgramOrder(base);
       if (order.error) {
         setFormError(order.error);
@@ -544,11 +545,13 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                {/* RSVP Form */}
                <div className="bg-card border border-border rounded-xl p-6 md:p-10 lg:p-12 text-center md:text-left">
                      <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
-                     <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">
-                       {program.isPaid
-                         ? `Pay ₦${(program.price || 0).toLocaleString()} to reserve your place in the next cohort.`
-                         : "Join the next cohort of ambassadors gathering in Jos."}
-                     </p>
+                      <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">
+                        {program.isPaid
+                          ? program.paymentTiming === "after_acceptance"
+                            ? `Apply now — you'll pay ₦${(program.price || 0).toLocaleString()} only if accepted.`
+                            : `Pay ₦${(program.price || 0).toLocaleString()} to reserve your place in the next cohort.`
+                          : "Join the next cohort of ambassadors gathering in Jos."}
+                      </p>
 
                    {!program.applicationsOpen ? (
                      <StatusBanner
@@ -661,11 +664,17 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                         {formError && (
                           <p className="text-xs font-bold text-red-500 px-2">{formError}</p>
                         )}
-                        <button disabled={isPending} className="w-full py-4 bg-primary text-card rounded-lg font-bold hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3 mt-4 disabled:opacity-70">
+                          <button disabled={isPending} className="w-full py-4 bg-primary text-card rounded-lg font-bold hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3 mt-4 disabled:opacity-70">
                            {isPending ? (
                              <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
                            ) : (
-                             <>{program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"} <Send size={18} /></>
+                             <>{
+                               program.isPaid
+                                 ? program.paymentTiming === "immediate"
+                                   ? `Pay ₦${(program.price || 0).toLocaleString()} & Register`
+                                   : "Apply to Program"
+                                 : "Apply to Program"
+                             } <Send size={18} /></>
                            )}
                           </button>
                        </form>)}

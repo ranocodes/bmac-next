@@ -27,35 +27,35 @@ const ways: Way[] = [
     title: "Join BMAC",
     desc: "Become a member and access workshops, mentorship, and a vibrant community of young leaders.",
     icon: <Users size={24} />,
-    color: "bg-emerald-50 text-emerald-600",
+    color: "bg-secondary text-background",
   },
   {
     id: "volunteer",
     title: "Volunteer",
     desc: "Share your skills as a facilitator, event coordinator, or mentor for our members.",
     icon: <HeartHandshake size={24} />,
-    color: "bg-amber-50 text-amber-600",
+    color: "bg-secondary text-background",
   },
   {
     id: "school",
     title: "School Chapter",
     desc: "Bring the BMAC movement to your school or university to empower your fellow students.",
     icon: <School size={24} />,
-    color: "bg-indigo-50 text-indigo-600",
+    color: "bg-secondary text-background",
   },
   {
     id: "donate",
     title: "Donate",
     desc: "Support our mission financially to fund workshops and community outreach programs.",
     icon: <Banknote size={24} />,
-    color: "bg-rose-50 text-rose-600",
+    color: "bg-secondary text-background",
   },
   {
     id: "partner",
     title: "Partner With Us",
     desc: "Organizations can partner with us to amplify youth empowerment in Plateau State.",
     icon: <Handshake size={24} />,
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-secondary text-background",
   },
 ];
 
@@ -71,20 +71,20 @@ export default function GetInvolved() {
 
   return (
     <main className="bg-background">
-      <section className="pt-24 md:pt-32 pb-10 md:pb-16">
+      <section className="pt-24 md:pt-32 pb-10 md:pb-16 border-b border-border/40">
         <div className="max-w-7xl mx-auto px-6 w-full text-center md:text-left">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
             <span className="text-[11px] font-bold uppercase tracking-widest text-primary mb-4 block">
               Movement of Minds
             </span>
-            <h1 className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-tight">
-              Empower <span className="text-primary">The Future</span>.
+            <h1 className="font-display text-4xl md:text-6xl font-extrabold text-secondary tracking-tight leading-tight">
+              Empower <span className="text-primary/90">The Future</span>.
             </h1>
-            <p className="mt-4 text-muted-foreground text-base md:text-lg max-w-xl leading-relaxed">
+            <p className="mt-6 text-muted-foreground text-base md:text-lg max-w-xl leading-relaxed">
               Choose how you want to make a difference. Every path leads to impact.
             </p>
           </motion.div>
@@ -95,28 +95,30 @@ export default function GetInvolved() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {visibleWays.map((way, i) => (
-              <Link key={way.id} href={`/get-involved/${way.id}`} className="block">
+              <Link key={way.id} href={`/get-involved/${way.id}`} className="block group">
                 <BentoCard
                   delay={i * 0.1}
-                  className="flex flex-col h-full bg-card border border-border rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group"
+                  className="flex flex-col h-full bg-background border border-border/60 rounded-none hover:border-secondary transition-colors duration-300 relative overflow-hidden"
                 >
-                  <div className="flex flex-col h-full p-1">
-                    <div className={`w-12 h-12 rounded-xl ${way.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/20 transition-colors duration-500" />
+                  
+                  <div className="flex flex-col h-full p-6 md:p-8 relative z-10">
+                    <div className={`w-12 h-12 rounded-none ${way.color} flex items-center justify-center mb-8 group-hover:scale-95 transition-transform duration-300 shadow-sm`}>
                       {way.icon}
                     </div>
-                    <h3 className="font-display text-xl font-bold text-secondary mb-3 tracking-tight">
+                    <h3 className="font-display text-2xl font-bold text-secondary mb-3 tracking-tight">
                       {way.title}
                     </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-8 flex-grow">
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-10 flex-grow pr-4">
                       {way.desc}
                     </p>
 
-                    <div className="flex items-center justify-between mt-auto pt-6 border-t border-border/50">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    <div className="flex items-center justify-between mt-auto pt-6 border-t border-border/40">
+                      <span className="text-xs font-bold uppercase tracking-widest text-secondary group-hover:text-primary transition-colors">
                         Learn More
                       </span>
-                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-card transition-all duration-300 group-hover:translate-x-1">
-                        <ArrowRight size={16} />
+                      <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-secondary group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:translate-x-2">
+                        <ArrowRight size={14} />
                       </div>
                     </div>
                   </div>

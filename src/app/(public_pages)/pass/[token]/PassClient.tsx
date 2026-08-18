@@ -96,73 +96,105 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
   const inactive = ticket.status !== "confirmed";
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen bg-secondary/5 flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
+      {/* Decorative ambient background */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
+      
+      <div className="w-full max-w-sm relative z-10">
         <Link href="/events" className="inline-flex items-center gap-2 text-secondary/60 hover:text-primary text-xs font-bold uppercase tracking-widest mb-6 transition-colors">
           <ArrowLeft size={14} /> Back to Events
         </Link>
 
-        <div ref={passRef} className="bg-white border border-border rounded-xl">
-          <div className="px-6 pt-6 pb-5 border-b border-border/60 flex items-start justify-between gap-4">
+        <div ref={passRef} className="relative rounded-3xl bg-background/60 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden">
+          {/* Card header */}
+          <div className="px-6 pt-8 pb-6 bg-secondary/5 border-b border-border/40 flex items-start justify-between gap-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">Digital Pass</p>
-              <h1 className="font-display text-2xl font-bold tracking-tight text-secondary">{ticket.event_title}</h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">BMAC Digital Pass</p>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-secondary leading-tight">{ticket.event_title}</h1>
             </div>
-            <StatusPill ticket={ticket} />
+            <div className="shrink-0 mt-1">
+              <StatusPill ticket={ticket} />
+            </div>
           </div>
 
-          <div className="px-6 py-5 space-y-3 text-sm">
-            <div className="flex items-center gap-3">
-              <Calendar size={15} className="text-muted-foreground shrink-0" />
-              <span className="text-secondary">{formatDate(ticket.event_date)}</span>
+          {/* Card body details */}
+          <div className="px-6 py-6 space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-secondary/5 flex items-center justify-center shrink-0">
+                <Calendar size={18} className="text-secondary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Date</p>
+                <p className="font-semibold text-secondary text-sm">{formatDate(ticket.event_date)}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <MapPin size={15} className="text-muted-foreground shrink-0" />
-              <span className="text-secondary">{ticket.event_venue || "—"}</span>
+            
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-secondary/5 flex items-center justify-center shrink-0">
+                <MapPin size={18} className="text-secondary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Venue</p>
+                <p className="font-semibold text-secondary text-sm">{ticket.event_venue || "TBA"}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 pt-1">
-              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                <User size={16} className="text-muted-foreground" />
+
+            <div className="flex items-center gap-4 pt-1">
+              <div className="w-10 h-10 rounded-full bg-secondary/5 flex items-center justify-center shrink-0">
+                <User size={18} className="text-secondary" />
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Attendee</p>
-                <p className="font-semibold text-secondary">{ticket.payer_name || ticket.payer_email || "—"}</p>
+                <p className="font-semibold text-secondary text-sm">{ticket.payer_name || ticket.payer_email || "Guest"}</p>
               </div>
             </div>
           </div>
 
-          <div className="px-6 pb-6">
-            <div className="rounded-xl border border-border bg-background/50 p-5 flex flex-col items-center">
+          {/* Separator line with side cutouts */}
+          <div className="relative h-6 flex items-center">
+            <div className="absolute left-[-12px] w-6 h-6 rounded-full bg-secondary/5 border-r border-border/40" />
+            <div className="w-full border-t-[2px] border-dashed border-border/60 mx-4" />
+            <div className="absolute right-[-12px] w-6 h-6 rounded-full bg-secondary/5 border-l border-border/40" />
+          </div>
+
+          {/* QR Code Section */}
+          <div className="px-6 pb-8 pt-4 flex flex-col items-center">
+            <div className="p-3 bg-white rounded-2xl shadow-sm border border-border/40 mb-4">
               {inactive ? (
-                <div className="flex flex-col items-center gap-3 py-6 text-center">
+                <div className="flex flex-col items-center justify-center gap-3 w-[200px] h-[200px] text-center">
                   <AlertTriangle className="w-10 h-10 text-amber-500" />
-                  <p className="text-sm font-bold text-secondary">This pass is not active. Contact the event organizers.</p>
+                  <p className="text-sm font-bold text-secondary">Pass not active.</p>
                 </div>
               ) : qrDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={qrDataUrl} alt="Entry QR code" width={200} height={200} className="rounded-xl bg-white p-3 border border-border" />
+                <img src={qrDataUrl} alt="Entry QR code" width={200} height={200} className="rounded-xl" />
               ) : (
-                <div className="w-48 h-48 rounded-xl bg-white flex items-center justify-center">
-                  <div className="w-8 h-8 border-2 border-border border-t-muted-foreground rounded-full animate-spin" />
+                <div className="w-[200px] h-[200px] flex items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin" />
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="px-6 py-4 border-t border-border/60 flex items-center justify-between text-xs font-bold text-muted-foreground">
-            <span className="flex items-center gap-1.5 uppercase tracking-wider">
-              <Ticket size={13} /> {ticket.reference}
-            </span>
-            <span>×{ticket.quantity}</span>
+            
+            <div className="flex items-center justify-between w-full px-2">
+              <div className="flex flex-col items-center">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Ticket ID</p>
+                <p className="text-xs font-mono font-semibold text-secondary">{ticket.reference}</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Admit</p>
+                <p className="text-xs font-semibold text-secondary">{ticket.quantity}</p>
+              </div>
+            </div>
           </div>
         </div>
 
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-secondary text-background px-5 py-4 text-xs font-bold uppercase tracking-widest transition-transform active:scale-[0.98] disabled:opacity-50 shadow-xl shadow-secondary/20"
         >
-          <Download size={14} /> {downloading ? "Preparing…" : "Download pass"}
+          <Download size={16} /> {downloading ? "Preparing…" : "Add to Device / Save Image"}
         </button>
         {downloadError && <p className="mt-2 text-center text-red-500 text-xs font-bold">{downloadError}</p>}
 
