@@ -78,6 +78,7 @@ export default function ImagePicker({ value, onChange, previewShape = "rounded" 
         className={`w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm transition-colors hover:border-primary/50 ${
           value ? "text-secondary" : "text-muted-foreground/40"
         }`}
+        aria-haspopup="dialog" aria-expanded={false}
       >
         {value ? (
           <div className={`w-8 h-8 shrink-0 overflow-hidden bg-muted border border-border/30 ${previewShape === "round" ? "rounded-full" : "rounded-md"}`}>

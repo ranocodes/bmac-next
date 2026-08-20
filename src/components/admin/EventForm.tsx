@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, CheckCircle, AlertCircle, ChevronDown, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, AlertCircle, Plus } from "lucide-react";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import ImagePicker from "@/components/ui/ImagePicker";
 import CategorySelect from "@/components/ui/CategorySelect";
-import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
-import { getFormDefinition, upsertFormDefinition } from "@/actions/forms";
-import type { FormQuestion } from "@/types/cms";
 
 export default function EventForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
@@ -49,32 +46,11 @@ export default function EventForm({ initialData }: { initialData?: any }) {
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
   const [policies, setPolicies] = useState(initialData?.policies || "");
-  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
-  const [formLoaded, setFormLoaded] = useState(false);
-  const [formSaving, setFormSaving] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (isEdit && params?.id && !formLoaded) {
-      getFormDefinition("event", params.id as string).then((def) => {
-        if (def) setFormQuestions(def.questions);
-        setFormLoaded(true);
-      });
-    }
-  }, [isEdit, params?.id, formLoaded]);
-
-  async function handleSaveForm() {
-    if (!params?.id) return;
-    setFormSaving(true);
-    const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
-    await upsertFormDefinition("event", params.id as string, sorted);
-    setFormSaving(false);
-    toast("Form saved", "success");
-  }
 
   async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
@@ -662,18 +638,6 @@ export default function EventForm({ initialData }: { initialData?: any }) {
               <p className="font-medium">{saveError ? "Save failed" : "Required fields missing"}</p>
               <p className="text-destructive/80 mt-0.5">{error}</p>
             </div>
-          </div>
-        )}
-
-        {isEdit && (
-          <div className="bg-card border border-border rounded-xl p-5">
-            <FormEditor
-              questions={formQuestions}
-              onChange={setFormQuestions}
-              onSave={handleSaveForm}
-              saving={formSaving}
-              label="Event Registration Form"
-            />
           </div>
         )}
       </form>

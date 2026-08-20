@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -16,6 +16,7 @@ import { createTicketOrder, verifyTicketPayment } from "@/actions/tickets";
 import { loadPaystack } from "@/lib/paystack";
 import { buildIcs, downloadIcs } from "@/lib/ics";
 import type { EventPass } from "@/types/cms";
+import StatusBanner from "@/components/admin/StatusBanner";
 
 function formatDisplayDate(raw: string | undefined): string {
   if (!raw) return "";
@@ -60,6 +61,16 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   const [passInfo, setPassInfo] = useState<{ passUrl: string; reference: string } | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState("");
   const [showStickyCta, setShowStickyCta] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackFiredRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowStickyCta(window.scrollY > 480);
@@ -98,6 +109,11 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
   const policies = (event as any).policies || "";
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const publishedTestimonials = initialTestimonials.filter((t: any) => t.status === "published");
+  const registrationClosed = !event || event.status !== "published" || event.allowPublicRegistration === false;
+  const deadlinePassed = event?.registrationDeadline ? (() => {
+    const d = new Date(event.registrationDeadline!);
+    return !isNaN(d.getTime()) && d.getTime() < Date.now();
+  })() : false;
 
   const handleAddToCalendar = () => {
     if (!event) return;
@@ -176,25 +192,36 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
           ]
         },
         callback: function(response: any) {
-          console.log("Payment successful. Reference: " + response.reference);
+          /* payment confirmed */
+          callbackFiredRef.current = true;
           setIsPending(true);
           setFormError("");
           const poll = setInterval(async () => {
-            const res = await verifyTicketPayment(order.reference || "");
-            if (res.status === "confirmed" && res.passUrl) {
-              clearInterval(poll);
-              setPassInfo({ passUrl: res.passUrl, reference: order.reference || "" });
-              setIsPending(false);
-              setIsReserved(true);
+            try {
+              const res = await verifyTicketPayment(order.reference || "");
+              if (res.status === "confirmed" && res.passUrl) {
+                clearInterval(poll);
+                pollRef.current = null;
+                if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                setPassInfo({ passUrl: res.passUrl, reference: order.reference || "" });
+                setIsPending(false);
+                setIsReserved(true);
+              }
+            } catch (err) {
+              console.error("Poll verification error:", err);
             }
           }, 3000);
-          setTimeout(() => {
+          pollRef.current = poll;
+          const timeout = setTimeout(() => {
             clearInterval(poll);
+            pollRef.current = null;
             setIsPending(false);
             setFormError("Payment received — verification is taking longer than usual. We'll confirm your pass by email shortly.");
           }, 60000);
+          timeoutRef.current = timeout;
         },
         onClose: function() {
+          if (callbackFiredRef.current) return;
           setIsPending(false);
           setFormError("Payment not confirmed yet — we're verifying your payment. Check back shortly.");
         }
@@ -262,7 +289,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
           <div className="mt-8 md:mt-12 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-4 mb-6 flex-wrap">
               <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest">
-                {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : "Registration Open"}
+                {event.isPaid ? `Ticket: ₦${(event.price || 0).toLocaleString()}` : event.allowPublicRegistration !== false ? "Registration Open" : "Registration Closed"}
               </span>
               <div className="flex items-center gap-2 text-muted-foreground text-xs font-bold uppercase tracking-widest">
                 <Calendar size={14} className="text-primary" /> {formatDisplayDate(event.date)}
@@ -335,7 +362,16 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
       </section>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <ShareButtons title={event.title} url={shareUrl} />
+        <div className="flex items-center flex-wrap gap-2">
+          <ShareButtons title={event.title} url={shareUrl} />
+          <button
+            type="button"
+            onClick={handleAddToCalendar}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors"
+          >
+            <CalendarPlus size={14} /> Add to Calendar
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -423,6 +459,13 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
           <aside id="register" className="lg:col-span-5 scroll-mt-28">
             <div className="lg:sticky lg:top-32">
                {!isReserved ? (
+                  (registrationClosed || deadlinePassed) ? (
+                    <StatusBanner
+                      title={deadlinePassed ? "Registration Deadline Passed" : "Registration Closed"}
+                      description={deadlinePassed ? "The registration deadline for this event has passed." : "Registration for this event is currently closed."}
+                      variant="closed"
+                    />
+                  ) : (
                   <motion.div className="bg-card border border-border rounded-xl p-6 md:p-10">
                       <div className="text-center md:text-left mb-6 md:mb-10">
                         <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-3 tracking-tight">Secure Your Pass</h3>
@@ -493,6 +536,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
                           {event.policies ? <> See our <a href="#good-to-know" className="underline underline-offset-2 hover:text-primary transition-colors">policy</a> for cancellations.</> : null}
                         </p>
                    </motion.div>
+                  )
                ) : (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}

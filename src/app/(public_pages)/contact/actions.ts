@@ -1,11 +1,8 @@
 "use server";
 
 import { logActivity } from "@/actions/activity-logs";
-import { findOrCreatePerson, upsertPersonRecord } from "@/actions/people";
-import { createWorkflowRecord } from "@/lib/workflows";
 import { getSuperAdminEmails } from "@/lib/notifications";
 import { sendContactAdminAlertEmail, sendContactAutoreplyEmail } from "@/lib/email";
-import { recordConsent } from "@/lib/consent";
 
 export async function sendContactMessage(
   prev: { success?: boolean; error?: string } | null,
@@ -43,41 +40,6 @@ export async function sendContactMessage(
     );
 
     logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` });
-
-    try {
-      const person = await findOrCreatePerson({ firstName: name, email, phone });
-      if (person) {
-        await recordConsent(
-          person.id,
-          { privacy: true, marketing: marketing === "on", contact: true },
-          "contact-form"
-        );
-        await upsertPersonRecord(person.id, "contact", {
-          status: "received",
-          meta: {
-            message: message.slice(0, 500),
-            consent: { privacy: true, marketing: marketing === "on" },
-          },
-        });
-        await createWorkflowRecord({
-          kind: "contact",
-          refId: person.id,
-          title: `Contact: ${name}`,
-          summary: message.slice(0, 300),
-          priority: "normal",
-          submitterName: name,
-          submitterEmail: email,
-          source: "contact-form",
-          details: {
-            phone: phone || "",
-            message: message.slice(0, 500),
-            consent: { privacy: true, marketing: marketing === "on" },
-          },
-        });
-      }
-    } catch (err) {
-      console.error("Contact persistence error:", err);
-    }
 
     return { success: true };
   } catch (err) {

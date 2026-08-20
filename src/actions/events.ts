@@ -435,3 +435,19 @@ export async function createTicketNotification(eventId: string, reference: strin
     link: "/admin/events",
   });
 }
+
+export async function verifyEventPayment(ticketId: string): Promise<{ error?: string }> {
+  const admin = await requirePermission("manage_events");
+  const rows = await db.query<EventTicketRow>(
+    `UPDATE public.event_tickets SET status = 'confirmed', updated_at = now() WHERE id = $1 RETURNING *`,
+    [ticketId]
+  );
+  if (!rows.length) return { error: "Ticket not found" };
+  
+  logActivity(admin.email, "verify_payment", "event_tickets", {
+    resourceId: ticketId,
+    details: `Manual payment verification for ticket ${rows[0].reference}`,
+  });
+  
+  return {};
+}

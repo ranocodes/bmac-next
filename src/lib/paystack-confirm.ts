@@ -31,30 +31,50 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
     "SELECT id FROM public.paystack_payments WHERE reference = $1",
     [reference]
   );
-  if (existing.length > 0) return "already_processed";
+  const isRetry = existing.length > 0;
+  if (isRetry) {
+    const isEventTicket = metadata?.source_type === "event_ticket";
+    if (isEventTicket) {
+      const ticketRows = await db.query<{ id: string; status: string }>(
+        `SELECT id, status FROM public.event_tickets
+         WHERE id = $1 OR reference = $2
+         ORDER BY (id = $1) DESC LIMIT 1`,
+        [metadata?.ticket_id || "", metadata?.reference || reference]
+      );
+      if (ticketRows[0] && ticketRows[0].status !== "confirmed") {
+        // Payment record exists but ticket not confirmed — retry confirmation
+      } else {
+        return "already_processed";
+      }
+    } else {
+      return "already_processed";
+    }
+  }
 
-  const paymentId = `pay-${crypto.randomUUID()}`;
-  await db.create("paystack_payments", {
-    id: paymentId,
-    reference,
-    source_type: metadata?.source_type || "unknown",
-    source_id: metadata?.source_id || "",
-    amount,
-    currency: currency || "NGN",
-    payer_email: customer?.email || "",
-    payer_name: metadata?.payer_name || customer?.email || "",
-    status: "completed",
-    metadata: { ...metadata, verified_at: new Date().toISOString() },
-  });
+  const paymentId = isRetry ? `pay-${crypto.randomUUID()}` : `pay-${crypto.randomUUID()}`;
+  if (!isRetry) {
+    await db.create("paystack_payments", {
+      id: paymentId,
+      reference,
+      source_type: metadata?.source_type || "unknown",
+      source_id: metadata?.source_id || "",
+      amount,
+      currency: currency || "NGN",
+      payer_email: customer?.email || "",
+      payer_name: metadata?.payer_name || customer?.email || "",
+      status: "completed",
+      metadata: { ...metadata, verified_at: new Date().toISOString() },
+    });
 
-  await db.create("activity_logs", {
-    id: `log-pay-${crypto.randomUUID()}`,
-    user: "system",
-    action: "payment_verified",
-    resource: "paystack_payments",
-    resource_id: paymentId,
-    details: `Payment ${reference} verified: ${currency || "NGN"}${amount} from ${customer?.email}`,
-  });
+    await db.create("activity_logs", {
+      id: `log-pay-${crypto.randomUUID()}`,
+      user: "system",
+      action: "payment_verified",
+      resource: "paystack_payments",
+      resource_id: paymentId,
+      details: `Payment ${reference} verified: ${currency || "NGN"}${amount} from ${customer?.email}`,
+    });
+  }
 
   const isEventTicket = metadata?.source_type === "event_ticket";
   if (isEventTicket) {
@@ -99,11 +119,13 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
         resource_id: ticket.id,
         details: `Ticket ${ticket.reference} confirmed after payment verification`,
       });
-      const eventRows = await db.query<{ title: string }>(
-        "SELECT title FROM public.events WHERE id = $1",
+      const eventRows = await db.query<{ title: string; date: string; venue: string }>(
+        "SELECT title, date, venue FROM public.events WHERE id = $1",
         [ticket.event_id]
       );
       const eventTitle = eventRows[0]?.title || "Event";
+      const eventDate = eventRows[0]?.date || "";
+      const eventLocation = eventRows[0]?.venue || "";
       const passUrl = ticket.qr_token
         ? `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || ""}/pass/${ticket.qr_token}`
         : "";
@@ -115,6 +137,8 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
         email: ticket.payer_email || customer?.email || "",
         firstName: ticket.payer_name?.split(" ")[0] || "",
         eventName: eventTitle,
+        eventDate,
+        eventLocation,
         quantity: ticket.quantity,
         amountLabel,
         passUrl,

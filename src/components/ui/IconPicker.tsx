@@ -78,6 +78,7 @@ export default function IconPicker({ value, onChange }: IconPickerProps) {
         className={`w-full flex items-center gap-3 px-3 py-2.5 min-h-[44px] bg-background border rounded-lg text-sm transition-colors ${
           isOpen ? "border-primary/50 ring-1 ring-primary/20" : "border-input"
         } ${value ? "text-secondary" : "text-muted-foreground/40"}`}
+        aria-haspopup="listbox" aria-expanded={isOpen}
       >
         {SelectedIcon && (
           <span className="w-5 h-5 flex items-center justify-center text-primary shrink-0">

@@ -113,7 +113,7 @@ export default function TeamTable({ initialData = [] }: { initialData?: any[] })
                         <div className="flex items-center gap-3">
                           {m.img && (
                             <div className="w-9 h-9 rounded-full overflow-hidden bg-muted shrink-0">
-                              <img src={m.img} alt="" loading="lazy" className="w-full h-full object-cover" />
+                              <img src={m.img} alt={m.name || "Team member"} loading="lazy" className="w-full h-full object-cover" />
                             </div>
                           )}
                           <div>

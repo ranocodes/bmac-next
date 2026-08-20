@@ -50,7 +50,7 @@ export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative w-full max-w-md bg-card rounded-bento p-8 shadow-2xl z-10"
           >
-            <button className="absolute top-6 right-6 p-2 rounded-full hover:bg-muted transition-colors" onClick={onClose}>
+            <button className="absolute top-6 right-6 p-2 rounded-full hover:bg-muted transition-colors" onClick={onClose} aria-label="Close">
               <X size={20} className="text-muted-foreground" />
             </button>
 

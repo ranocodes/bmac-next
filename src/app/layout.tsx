@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import TrackView from "@/components/TrackView";
+import SchemaOrg from "@/components/SchemaOrg";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -48,22 +49,7 @@ export default function RootLayout({
         className={`${plusJakartaSans.variable} ${outfit.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "EducationalOrganization",
-              name: "Brilliant Minds Ambassadors Club",
-              url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-              description:
-                "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
-              email: "hello@bmacjos.org",
-              telephone: "+2348034567891",
-              address: { "@type": "PostalAddress", addressLocality: "Jos", addressCountry: "NG" },
-            }),
-          }}
-        />
+        <SchemaOrg />
         {children}
         <TrackView />
       </body>

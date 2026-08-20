@@ -9,6 +9,9 @@ import {
   sendRegistrationConfirmedEmail,
   sendApplicationStatusEmail as libSendApplicationStatusEmail,
   sendEventReminderEmail as libSendEventReminderEmail,
+  sendPublicCredentialsEmail as libSendPublicCredentialsEmail,
+  sendPublicWelcomeEmail as libSendPublicWelcomeEmail,
+  sendPaymentRequiredEmail as libSendPaymentRequiredEmail,
 } from "@/lib/email";
 
 export type WorkflowKind =
@@ -34,6 +37,7 @@ export async function sendWorkflowEmail(
     action?: string;
     eventTitle?: string;
     eventDate?: string;
+    eventLocation?: string;
     passUrl?: string;
     reference?: string;
     amountLabel?: string;
@@ -73,6 +77,16 @@ export async function sendWorkflowEmail(
           });
           return { sent: !sent.error, error: sent.error };
         }
+        if (opts.action === "rejected") {
+          const sent = await libSendApplicationStatusEmail({
+            email,
+            firstName,
+            kindLabel: opts.programTitle || "",
+            status: "rejected",
+            note: " Not selected this time — try next cohort.",
+          });
+          return { sent: !sent.error, error: sent.error };
+        }
         const sent = await libSendApplicationStatusEmail({
           email,
           firstName,
@@ -104,6 +118,8 @@ export async function sendWorkflowEmail(
           email,
           firstName,
           eventName: opts.eventTitle || "",
+          eventDate: opts.eventDate || "",
+          eventLocation: opts.eventLocation || "",
           quantity: 1,
           amountLabel: opts.amountLabel || "",
           passUrl: opts.passUrl || "",
@@ -126,6 +142,7 @@ export async function sendApplicationStatusEmail(input: {
   programTitle: string;
   status: "received" | "accepted" | "waitlisted" | "rejected" | "withdrawn";
   cohortTitle?: string;
+  note?: string;
 }): Promise<{ sent: boolean; error?: string }> {
   if (!input.email) return { sent: false, error: "No email provided" };
 
@@ -135,6 +152,7 @@ export async function sendApplicationStatusEmail(input: {
       firstName: input.firstName,
       kindLabel: input.programTitle,
       status: input.status,
+      note: input.note || "",
     });
     return { sent: !sent.error, error: sent.error };
   } catch (err) {
@@ -163,6 +181,78 @@ export async function sendEventReminderEmail(input: {
     return { sent: !sent.error, error: sent.error };
   } catch (err) {
     console.error("sendEventReminderEmail error:", err);
+    return { sent: false, error: "Email dispatch failed" };
+  }
+}
+
+export async function sendPublicCredentialsEmail(input: {
+  email: string;
+  firstName?: string;
+  password: string;
+  loginUrl: string;
+  driveLink?: string;
+}): Promise<{ sent: boolean; error?: string }> {
+  if (!input.email) return { sent: false, error: "No email provided" };
+
+  try {
+    const sent = await libSendPublicCredentialsEmail({
+      email: input.email,
+      firstName: input.firstName || "",
+      password: input.password,
+      loginUrl: input.loginUrl,
+      driveLink: input.driveLink,
+    });
+    return { sent: !sent.error, error: sent.error };
+  } catch (err) {
+    console.error("sendPublicCredentialsEmail error:", err);
+    return { sent: false, error: "Email dispatch failed" };
+  }
+}
+
+export async function sendPublicWelcomeEmail(input: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  loginUrl: string;
+}): Promise<{ sent: boolean; error?: string }> {
+  if (!input.email) return { sent: false, error: "No email provided" };
+
+  try {
+    const sent = await libSendPublicWelcomeEmail({
+      email: input.email,
+      firstName: input.firstName || "",
+      programTitle: input.programTitle,
+      loginUrl: input.loginUrl,
+    });
+    return { sent: !sent.error, error: sent.error };
+  } catch (err) {
+    console.error("sendPublicWelcomeEmail error:", err);
+    return { sent: false, error: "Email dispatch failed" };
+  }
+}
+
+export async function sendPaymentRequiredEmail(input: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  amountLabel: string;
+  reference: string;
+  paymentUrl: string;
+}): Promise<{ sent: boolean; error?: string }> {
+  if (!input.email) return { sent: false, error: "No email provided" };
+
+  try {
+    const sent = await libSendPaymentRequiredEmail({
+      email: input.email,
+      firstName: input.firstName || "",
+      programTitle: input.programTitle,
+      amountLabel: input.amountLabel,
+      reference: input.reference,
+      paymentUrl: input.paymentUrl,
+    });
+    return { sent: !sent.error, error: sent.error };
+  } catch (err) {
+    console.error("sendPaymentRequiredEmail error:", err);
     return { sent: false, error: "Email dispatch failed" };
   }
 }

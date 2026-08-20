@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EventsPage() {
   const events = (await db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" })).filter(
-    (e: any) => e.status === "published"
+    (e: any) => e.status === "published" && e.allow_public_registration !== false
   );
   return (
     <main suppressHydrationWarning className="bg-background">

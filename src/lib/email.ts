@@ -9,7 +9,7 @@ function absolutizeUrl(path: string): string {
   return base ? `${base}${path.startsWith("/") ? path : `/${path}`}` : path;
 }
 
-async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
+export async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
   try {
     const res = await fetch(`${SERVICE_URL}/send`, {
       method: "POST",
@@ -247,6 +247,8 @@ export async function sendTicketReceiptEmail(opts: {
   email: string;
   firstName?: string;
   eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
   quantity?: number;
   amountLabel?: string;
   passUrl?: string;
@@ -257,6 +259,8 @@ export async function sendTicketReceiptEmail(opts: {
     email: opts.email,
     firstName: opts.firstName || "",
     eventName: opts.eventName,
+    eventDate: opts.eventDate || "",
+    eventLocation: opts.eventLocation || "",
     quantity: opts.quantity || 0,
     amountLabel: opts.amountLabel || "",
     passUrl: absolutizeUrl(opts.passUrl || ""),
@@ -269,6 +273,7 @@ export async function sendApplicationStatusEmail(opts: {
   firstName?: string;
   kindLabel?: string;
   status?: string;
+  note?: string;
 }): Promise<{ error?: string }> {
   return sendRequest({
     type: "application-status",
@@ -276,6 +281,7 @@ export async function sendApplicationStatusEmail(opts: {
     firstName: opts.firstName || "",
     kindLabel: opts.kindLabel || "",
     status: opts.status || "",
+    note: opts.note || "",
   });
 }
 
@@ -314,5 +320,67 @@ export async function sendNewsletterBroadcastEmail(opts: {
     body: opts.body,
     bodyHtml: opts.bodyHtml || "",
     unsubscribeUrl: absolutizeUrl(opts.unsubscribeUrl || ""),
+  });
+}
+
+export async function sendPublicCredentialsEmail(opts: {
+  email: string;
+  firstName?: string;
+  password: string;
+  loginUrl: string;
+  driveLink?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "public-credentials",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    password: opts.password,
+    loginUrl: absolutizeUrl(opts.loginUrl),
+    driveLink: opts.driveLink || "",
+  });
+}
+
+export async function sendPublicWelcomeEmail(opts: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  loginUrl: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "public-welcome",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    programTitle: opts.programTitle,
+    loginUrl: absolutizeUrl(opts.loginUrl),
+  });
+}
+
+export async function sendPublicPasswordResetEmail(opts: {
+  email: string;
+  resetLink: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "public-password-reset",
+    email: opts.email,
+    resetLink: absolutizeUrl(opts.resetLink),
+  });
+}
+
+export async function sendPaymentRequiredEmail(opts: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  amountLabel: string;
+  reference: string;
+  paymentUrl: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "payment-required",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    programTitle: opts.programTitle,
+    amountLabel: opts.amountLabel,
+    reference: opts.reference,
+    paymentLink: absolutizeUrl(opts.paymentUrl),
   });
 }

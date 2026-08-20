@@ -113,7 +113,7 @@ export default function TestimonialTable({ initialData = [] }: { initialData?: a
                         <div className="flex items-center gap-3">
                           {t.src && (
                             <div className="w-9 h-9 rounded-full overflow-hidden bg-muted shrink-0">
-                              <img src={t.src} alt="" loading="lazy" className="w-full h-full object-cover" />
+                              <img src={t.src} alt={t.name || "Testimonial"} loading="lazy" className="w-full h-full object-cover" />
                             </div>
                           )}
                           <div>

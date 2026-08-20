@@ -47,6 +47,88 @@ export async function getWorkflowQueueCounts(): Promise<{
   return { byStatus, open };
 }
 
+export async function getInboxStats(): Promise<{
+  total: number;
+  open: number;
+  byKind: Record<string, number>;
+  byStatus: Record<string, number>;
+}> {
+  await requirePermission("manage_workflows");
+  const all = await listWorkflowRecords({ limit: 1000 });
+  const byKind: Record<string, number> = {};
+  const byStatus: Record<string, number> = {};
+  let open = 0;
+  for (const r of all) {
+    byKind[r.kind] = (byKind[r.kind] || 0) + 1;
+    byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+    if (r.status === "open") open++;
+  }
+  return { total: all.length, open, byKind, byStatus };
+}
+
+export async function getInboxStatsByStream(): Promise<{
+  applications: number;
+  donations: number;
+  inquiries: number;
+  events: number;
+  other: number;
+  total: number;
+}> {
+  await requirePermission("manage_workflows");
+  const rows = await db.query<{ stream: string; open_count: string }>(`
+    SELECT
+      CASE
+        WHEN kind IN ('program', 'volunteer', 'member', 'school-chapter', 'partner') THEN 'applications'
+        WHEN kind = 'donation' THEN 'donations'
+        WHEN kind = 'contact' THEN 'inquiries'
+        WHEN kind IN ('event_registration', 'ticket') THEN 'events'
+        ELSE 'other'
+      END as stream,
+      COUNT(*) FILTER (WHERE status IN ('open', 'in_progress')) as open_count
+    FROM workflow_records
+    GROUP BY stream
+  `);
+  const counts = { applications: 0, donations: 0, inquiries: 0, events: 0, other: 0, total: 0 };
+  for (const r of rows) {
+    const key = r.stream as keyof typeof counts;
+    if (key in counts) {
+      counts[key] = Number(r.open_count ?? 0);
+      counts.total += Number(r.open_count ?? 0);
+    }
+  }
+  return counts;
+}
+
+const APPLICATION_KINDS = ["program", "member", "volunteer"] as const;
+
+export async function listApplicationWorkflows(
+  filters: WorkflowFilters = {}
+): Promise<WorkflowRecord[]> {
+  await requirePermission("manage_workflows");
+  const all = await listWorkflowRecords({ limit: filters.limit || 500 });
+  return all.filter(r => (APPLICATION_KINDS as readonly string[]).includes(r.kind));
+}
+
+export async function getApplicationInboxStats(): Promise<{
+  total: number;
+  open: number;
+  byKind: Record<string, number>;
+  byStatus: Record<string, number>;
+}> {
+  await requirePermission("manage_workflows");
+  const all = await listWorkflowRecords({ limit: 1000 });
+  const apps = all.filter(r => (APPLICATION_KINDS as readonly string[]).includes(r.kind));
+  const byKind: Record<string, number> = {};
+  const byStatus: Record<string, number> = {};
+  let open = 0;
+  for (const r of apps) {
+    byKind[r.kind] = (byKind[r.kind] || 0) + 1;
+    byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+    if (r.status === "open") open++;
+  }
+  return { total: apps.length, open, byKind, byStatus };
+}
+
 export async function getWorkflowDetail(
   id: string
 ): Promise<{
@@ -62,26 +144,42 @@ export async function getWorkflowDetail(
     records: { id: string; kind: string; status: string; createdAt: string }[];
     isAdmin: boolean;
   } | null;
+  answers: Record<string, unknown> | null;
 } | null> {
   await requirePermission("manage_workflows");
   const record = await getWorkflow(id);
   if (!record) return null;
+
+  let personId = record.refId;
+
+  // For program workflows, refId is an application id — resolve person from program_applications
+  if (record.kind === "program" && record.refId && record.refId.startsWith("app-")) {
+    try {
+      const appRows = await db.query<{ person_id: string }>(
+        "SELECT person_id FROM public.program_applications WHERE id = $1",
+        [record.refId]
+      );
+      if (appRows.length) personId = appRows[0].person_id;
+    } catch (err) {
+      console.error("getWorkflowDetail program application lookup error:", err);
+    }
+  }
 
   let person: {
     person: { id: string; firstName: string; lastName: string; email: string; phone: string };
     records: { id: string; kind: string; status: string; createdAt: string }[];
     isAdmin: boolean;
   } | null = null;
-  if (record.refId) {
+  if (personId) {
     try {
       const pRows = await db.query<{
         id: string; first_name: string; last_name: string; email: string; phone: string;
-      }>("SELECT id, first_name, last_name, email, phone FROM public.people WHERE id = $1", [record.refId]);
+      }>("SELECT id, first_name, last_name, email, phone FROM public.people WHERE id = $1", [personId]);
       if (pRows.length) {
         const p = pRows[0];
         const recRows = await db.query<{
           id: string; kind: string; status: string; created_at: string;
-        }>("SELECT id, kind, status, created_at FROM public.person_records WHERE person_id = $1 ORDER BY created_at DESC", [record.refId]);
+        }>("SELECT id, kind, status, created_at FROM public.person_records WHERE person_id = $1 ORDER BY created_at DESC", [personId]);
         const adminRows = await db.query<{ id: string }>(
           "SELECT id FROM public.admin_users WHERE LOWER(email) = LOWER($1)",
           [p.email]
@@ -103,7 +201,39 @@ export async function getWorkflowDetail(
     }
   }
 
-  return { record, person };
+  // Load form submission answers
+  let answers: Record<string, unknown> | null = null;
+  const formSubmissionId = record.details?.formSubmissionId;
+  if (formSubmissionId) {
+    try {
+      const subRows = await db.query<{ answers: unknown }>(
+        "SELECT answers FROM public.form_submissions WHERE id = $1",
+        [formSubmissionId]
+      );
+      if (subRows.length && subRows[0].answers) {
+        answers = typeof subRows[0].answers === "string" ? JSON.parse(subRows[0].answers as string) : subRows[0].answers as Record<string, unknown>;
+      }
+    } catch (err) {
+      console.error("getWorkflowDetail form submission lookup error:", err);
+    }
+  }
+
+  // Fallback: find latest form submission by person
+  if (!answers && personId) {
+    try {
+      const subRows = await db.query<{ answers: unknown }>(
+        "SELECT answers FROM public.form_submissions WHERE person_id = $1 ORDER BY created_at DESC LIMIT 1",
+        [personId]
+      );
+      if (subRows.length && subRows[0].answers) {
+        answers = typeof subRows[0].answers === "string" ? JSON.parse(subRows[0].answers as string) : subRows[0].answers as Record<string, unknown>;
+      }
+    } catch (err) {
+      console.error("getWorkflowDetail fallback form submission lookup error:", err);
+    }
+  }
+
+  return { record, person, answers };
 }
 
 export async function updateWorkflowStatus(
@@ -236,4 +366,151 @@ export async function replyToSubmission(
     details: `Replied to ${record.submitterEmail}: ${body.slice(0, 100)}`,
   });
   return { success: true, repliedAt };
+}
+
+const APPLICATION_KINDS_SET = new Set(["program", "member", "volunteer"]);
+
+export async function acceptApplicationWorkflow(
+  workflowId: string
+): Promise<{ error?: string; record?: WorkflowRecord }> {
+  const admin = await requirePermission("manage_workflows");
+  const record = await getWorkflow(workflowId);
+  if (!record) return { error: "Submission not found" };
+  if (!APPLICATION_KINDS_SET.has(record.kind)) return { error: "Not an application workflow" };
+
+  const at = new Date().toISOString();
+  const history = Array.isArray(record.details?.history) ? record.details.history : [];
+  history.push({ type: "status", by: admin.email, at, note: "Application accepted" });
+
+  // Update workflow to resolved
+  const updated = await updateWorkflow(workflowId, {
+    status: "resolved",
+    details: { ...record.details, history },
+  });
+  if (!updated) return { error: "Failed to update workflow" };
+
+  // For program applications, update the application record
+  if (record.kind === "program" && record.refId?.startsWith("app-")) {
+    try {
+      const { updateApplicationStatus } = await import("./programs");
+      await updateApplicationStatus({
+        applicationId: record.refId,
+        status: "accepted",
+        adminEmail: admin.email,
+      });
+    } catch (err) {
+      console.error("acceptApplicationWorkflow program update error:", err);
+    }
+  }
+
+  // For member/volunteer applications, update the person record status
+  if (record.kind === "member" || record.kind === "volunteer") {
+    try {
+      const personId = record.refId;
+      if (personId) {
+        await db.query(
+          "UPDATE public.person_records SET status = 'accepted' WHERE person_id = $1 AND kind = $2 AND status IN ('pending', 'open')",
+          [personId, record.kind]
+        );
+        // Ensure the role is set
+        const roleMap: Record<string, string> = { member: "member", volunteer: "volunteer" };
+        const targetRole = roleMap[record.kind];
+        if (targetRole) {
+          await db.query(
+            "UPDATE public.people SET roles = CASE WHEN $2 = ANY(SELECT unnest(string_to_array(roles, ','))) THEN roles ELSE CASE WHEN roles = '' THEN $2 ELSE roles || ',' || $2 END END WHERE id = $1",
+            [personId, targetRole]
+          );
+        }
+      }
+    } catch (err) {
+      console.error("acceptApplicationWorkflow person update error:", err);
+    }
+  }
+
+  // Send acceptance email
+  if (record.submitterEmail) {
+    const firstName = record.submitterName?.split(" ")[0] || "";
+    await sendApplicationStatusEmail({
+      email: record.submitterEmail,
+      firstName,
+      kindLabel: record.kind,
+      status: "accepted",
+      note: record.details?.cohortTitle
+        ? `You have been accepted into the ${record.details.cohortTitle} cohort.`
+        : undefined,
+    }).catch(err => console.error("acceptance email error:", err));
+  }
+
+  await logActivity(admin.email, "workflow_update", "workflow_records", {
+    resourceId: workflowId,
+    details: `Accepted application ${workflowId} (${record.kind})`,
+  });
+  return { record: updated };
+}
+
+export async function rejectApplicationWorkflow(
+  workflowId: string
+): Promise<{ error?: string; record?: WorkflowRecord }> {
+  const admin = await requirePermission("manage_workflows");
+  const record = await getWorkflow(workflowId);
+  if (!record) return { error: "Submission not found" };
+  if (!APPLICATION_KINDS_SET.has(record.kind)) return { error: "Not an application workflow" };
+
+  const at = new Date().toISOString();
+  const history = Array.isArray(record.details?.history) ? record.details.history : [];
+  history.push({ type: "status", by: admin.email, at, note: "Application rejected" });
+
+  // Update workflow to closed
+  const updated = await updateWorkflow(workflowId, {
+    status: "closed",
+    details: { ...record.details, history },
+  });
+  if (!updated) return { error: "Failed to update workflow" };
+
+  // For program applications, update the application record
+  if (record.kind === "program" && record.refId?.startsWith("app-")) {
+    try {
+      const { updateApplicationStatus } = await import("./programs");
+      await updateApplicationStatus({
+        applicationId: record.refId,
+        status: "rejected",
+        adminEmail: admin.email,
+      });
+    } catch (err) {
+      console.error("rejectApplicationWorkflow program update error:", err);
+    }
+  }
+
+  // For member/volunteer applications, update the person record status
+  if (record.kind === "member" || record.kind === "volunteer") {
+    try {
+      const personId = record.refId;
+      if (personId) {
+        await db.query(
+          "UPDATE public.person_records SET status = 'rejected' WHERE person_id = $1 AND kind = $2 AND status IN ('pending', 'open')",
+          [personId, record.kind]
+        );
+      }
+    } catch (err) {
+      console.error("rejectApplicationWorkflow person update error:", err);
+    }
+  }
+
+  // Send rejection email
+  if (record.submitterEmail) {
+    const firstName = record.submitterName?.split(" ")[0] || "";
+    await sendApplicationStatusEmail({
+      email: record.submitterEmail,
+      firstName,
+      kindLabel: record.kind,
+      status: "rejected",
+      note: "You are welcome to reapply for a future cohort.",
+    }).catch(err => console.error("rejection email error:", err));
+  }
+
+  await logActivity(admin.email, "workflow_update", "workflow_records", {
+    resourceId: workflowId,
+    details: `Rejected application ${workflowId} (${record.kind})`,
+  });
+  return { record: updated };
 }

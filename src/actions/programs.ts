@@ -11,10 +11,12 @@ import {
 import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification } from "@/lib/notifications";
 import { recordEvent } from "@/lib/analytics/record";
-import { sendWorkflowEmail } from "@/actions/emails";
+import { sendWorkflowEmail, sendPublicCredentialsEmail, sendApplicationStatusEmail, sendPaymentRequiredEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
+import { scheduleWelcomeSequence } from "@/actions/email-sequences";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
 import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
+import { submitForm } from "@/actions/forms";
 import type {
   Program,
   ProgramApplication,
@@ -36,6 +38,7 @@ export async function submitApplication(input: {
   dateOfBirth?: string;
   motivation: string;
   consent: boolean;
+  answers?: Record<string, unknown>;
 }): Promise<{ applicationId?: string; error?: string }> {
   if (!input.consent) {
     return { error: "Consent is required" };
@@ -52,7 +55,7 @@ export async function submitApplication(input: {
     if (!program || program.status !== "published") {
       return { error: "Program not available for applications" };
     }
-    if (!program.applicationsOpen) {
+    if (!(program as any).applications_open && !program.applicationsOpen) {
       return { error: "Applications are not open for this program" };
     }
     if (input.dateOfBirth) {
@@ -87,6 +90,10 @@ export async function submitApplication(input: {
     await ensurePersonRoles(person.id, ["applicant"]);
 
     const applicationId = genId("app");
+    const reference = genProgramReference();
+    const isPaidImmediate = (program as any).is_paid || program.isPaid;
+    const paymentTiming = (program as any).payment_timing || (program as any).paymentTiming || "immediate";
+
     await db.create("program_applications", {
       id: applicationId,
       program_id: input.programId,
@@ -95,13 +102,14 @@ export async function submitApplication(input: {
       motivation: input.motivation,
       date_of_birth: input.dateOfBirth || null,
       consent: input.consent,
+      payment_reference: reference,
     });
 
     await upsertPersonRecord(person.id, "program", {
       refId: input.programId,
       refTitle: program.title,
       status: "pending",
-      meta: { applicationId },
+      meta: { applicationId, reference },
     });
 
     await createWorkflowRecord({
@@ -110,17 +118,33 @@ export async function submitApplication(input: {
       title: `Application for ${program.title}`,
       summary: `${input.firstName} ${input.lastName} applied to ${program.title}`,
       status: "open",
-      priority: "normal",
+      priority: isPaidImmediate && paymentTiming === "after_acceptance" ? "normal" : "normal",
       assigneeEmail: "",
       submitterName: `${input.firstName} ${input.lastName}`,
       submitterEmail: input.email,
       source: "program_application",
-      details: { programId: input.programId, motivation: input.motivation },
+      details: { programId: input.programId, motivation: input.motivation, reference, paymentTiming, formSubmissionId: "" },
+      outcome: isPaidImmediate && paymentTiming === "after_acceptance" ? "Payment required after acceptance" : undefined,
     });
+
+    let formSubmissionId = "";
+    try {
+      const submitted = await submitForm("program", input.programId, input.answers || {
+        name: `${input.firstName} ${input.lastName}`.trim(),
+        email: input.email,
+        phone: input.phone || "",
+        motivation: input.motivation,
+        consent: input.consent,
+      }, person.id);
+      if (submitted?.id) formSubmissionId = submitted.id;
+    } catch (err) {
+      console.error("submitApplication submitForm error:", err);
+    }
 
     await sendWorkflowEmail("program", input.email, `${input.firstName} ${input.lastName}`, {
       programTitle: program.title,
       applicationId,
+      reference,
     });
 
     await createAdminNotification({
@@ -133,7 +157,7 @@ export async function submitApplication(input: {
     await recordEvent({
       name: "program_applied",
       path: "/",
-      properties: { programId: input.programId, applicationId, paid: false },
+      properties: { programId: input.programId, applicationId, paid: false, paymentTiming },
     });
 
     return { applicationId };
@@ -166,6 +190,7 @@ export async function createProgramOrder(input: {
   dateOfBirth?: string;
   motivation: string;
   consent: boolean;
+  answers?: Record<string, unknown>;
 }): Promise<{ error?: string; reference?: string; amountKobo?: number; applicationId?: string }> {
   if (!input.consent) {
     return { error: "Consent is required" };
@@ -182,10 +207,10 @@ export async function createProgramOrder(input: {
     if (!program || program.status !== "published") {
       return { error: "Program not available for applications" };
     }
-    if (!program.applicationsOpen) {
+    if (!(program as any).applications_open && !program.applicationsOpen) {
       return { error: "Applications are not open for this program" };
     }
-    if (!program.isPaid) {
+    if (!(program as any).is_paid && !program.isPaid) {
       return { error: "This program is free — use the apply form." };
     }
     if (input.dateOfBirth) {
@@ -250,9 +275,21 @@ export async function createProgramOrder(input: {
       submitterName: `${input.firstName} ${input.lastName}`,
       submitterEmail: input.email,
       source: "program_application",
-      details: { programId: input.programId, motivation: input.motivation, reference },
+      details: { programId: input.programId, motivation: input.motivation, reference, formSubmissionId: "" },
       outcome: "Awaiting payment verification",
     });
+
+    try {
+      await submitForm("program", input.programId, input.answers || {
+        name: `${input.firstName} ${input.lastName}`.trim(),
+        email: input.email,
+        phone: input.phone || "",
+        motivation: input.motivation,
+        consent: input.consent,
+      }, person.id);
+    } catch (err) {
+      console.error("createProgramOrder submitForm error:", err);
+    }
 
     return {
       reference,
@@ -275,29 +312,59 @@ export interface ApplicationLookupResult {
 }
 
 export async function lookupApplicationStatus(input: {
-  email: string;
-  applicationId: string;
-}): Promise<{ error?: string; result?: ApplicationLookupResult }> {
-  const cleanEmail = (input.email || "").trim().toLowerCase();
-  const cleanRef = (input.applicationId || "").trim();
-  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-    return { error: "Please enter a valid email address." };
-  }
-  if (cleanRef.length > 80) {
-    return { error: "Application reference looks invalid." };
-  }
-  if (!/^app-/i.test(cleanRef)) {
-    return { error: "Application references start with “app-” (e.g. app-abc123)." };
+  query: string;
+} ): Promise<{ error?: string; result?: ApplicationLookupResult; results?: ApplicationLookupResult[] }> {
+  const raw = (input.query || "").trim();
+  if (!raw) {
+    return { error: "Please enter your email or application reference." };
   }
 
-  const guard = await assertSafe("application-status", cleanEmail, await getClientIp());
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+  const isRef = /^app-/i.test(raw);
+
+  if (!isEmail && !isRef) {
+    return { error: "Please enter a valid email address or application reference (starts with app-)." };
+  }
+
+  const guard = await assertSafe("application-status", raw, await getClientIp());
   if (guard.error) return { error: guard.error };
 
   try {
-    await recordSubmission("application-status", cleanEmail, await getClientIp());
+    await recordSubmission("application-status", raw, await getClientIp());
+
+    if (isRef) {
+      const rows = await db.query<any>(
+        `SELECT pa.id, pa.status, pa.program_id, pa.created_at,
+                pr.title AS program_title,
+                c.title AS cohort_title
+         FROM public.program_applications pa
+         JOIN public.people p ON p.id = pa.person_id
+         JOIN public.programs pr ON pr.id = pa.program_id
+         LEFT JOIN public.participants pt ON pt.person_id = p.id AND pt.status != 'dropped'
+         LEFT JOIN public.cohorts c ON c.id = pt.cohort_id AND c.program_id = pa.program_id
+         WHERE LOWER(pa.id) = LOWER($1)
+         LIMIT 1`,
+        [raw]
+      );
+      const row = rows[0];
+      if (!row) {
+        return { error: "No application found with that reference." };
+      }
+      return {
+        result: {
+          applicationId: row.id,
+          status: row.status,
+          programId: row.program_id,
+          programTitle: row.program_title || "",
+          cohortTitle: row.cohort_title || undefined,
+          appliedAt: row.created_at,
+        },
+      };
+    }
+
+    const cleanEmail = raw.toLowerCase();
     const rows = await db.query<any>(
       `SELECT pa.id, pa.status, pa.program_id, pa.created_at,
-              LOWER(COALESCE(p.email, '')) AS email,
               pr.title AS program_title,
               c.title AS cohort_title
        FROM public.program_applications pa
@@ -305,24 +372,22 @@ export async function lookupApplicationStatus(input: {
        JOIN public.programs pr ON pr.id = pa.program_id
        LEFT JOIN public.participants pt ON pt.person_id = p.id AND pt.status != 'dropped'
        LEFT JOIN public.cohorts c ON c.id = pt.cohort_id AND c.program_id = pa.program_id
-       WHERE pa.id = $1 AND LOWER(COALESCE(p.email, '')) = LOWER($2)
-       LIMIT 1`,
-      [cleanRef, cleanEmail]
+       WHERE LOWER(COALESCE(p.email, '')) = $1
+       ORDER BY pa.created_at DESC`,
+      [cleanEmail]
     );
-    const row = rows[0];
-    if (!row) {
-      return { error: "No application matches that reference and email. Double-check both and try again." };
+    if (!rows.length) {
+      return { error: "No applications found for that email address." };
     }
-    return {
-      result: {
-        applicationId: row.id,
-        status: row.status,
-        programId: row.program_id,
-        programTitle: row.program_title || "",
-        cohortTitle: row.cohort_title || undefined,
-        appliedAt: row.created_at,
-      },
-    };
+    const results: ApplicationLookupResult[] = rows.map((row: any) => ({
+      applicationId: row.id,
+      status: row.status,
+      programId: row.program_id,
+      programTitle: row.program_title || "",
+      cohortTitle: row.cohort_title || undefined,
+      appliedAt: row.created_at,
+    }));
+    return { results };
   } catch (err) {
     console.error("lookupApplicationStatus error:", err);
     return { error: "Something went wrong. Try again." };
@@ -392,11 +457,52 @@ export async function updateApplicationStatus(input: {
       last_name: string;
     };
     if (person) {
-      await sendWorkflowEmail("application-status", person.email, `${person.first_name} ${person.last_name}`, {
-        applicationId: input.applicationId,
-        status: input.status,
-        programTitle: app.program_id,
-      });
+      const program = await db.getById("programs", app.program_id) as { title?: string; price?: number; slug?: string; is_paid?: boolean; isPaid?: boolean; payment_timing?: string; paymentTiming?: string } | null;
+      const programTitle = program?.title || app.program_id;
+
+      if (input.status === "rejected") {
+        await sendApplicationStatusEmail({
+          email: person.email,
+          firstName: person.first_name,
+          programTitle,
+          status: "rejected",
+          note: " Not selected this time — try next cohort.",
+        });
+      } else if (input.status === "accepted") {
+        const isPaid = (program as any)?.is_paid || program?.isPaid;
+        const payTiming = (program as any)?.payment_timing || program?.paymentTiming || "immediate";
+
+        if (isPaid && payTiming === "after_acceptance") {
+          const price = Number(program?.price || 0);
+          const appRef = (app as any).payment_reference || input.applicationId;
+          const paymentUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://brilliantmindsfoundation.org"}/apply/${app.program_id}/pay?ref=${appRef}`;
+          await sendPaymentRequiredEmail({
+            email: person.email,
+            firstName: person.first_name,
+            programTitle,
+            amountLabel: `₦${price.toLocaleString()}`,
+            reference: appRef,
+            paymentUrl,
+          });
+        } else {
+          await sendWorkflowEmail("program", person.email, `${person.first_name} ${person.last_name}`, {
+            applicationId: input.applicationId,
+            status: input.status,
+            programTitle,
+            action: "accepted",
+          });
+        }
+
+        await scheduleWelcomeSequence(person.id, person.email, person.first_name).catch((err) => {
+          console.error("Welcome sequence scheduling failed:", err);
+        });
+      } else {
+        await sendWorkflowEmail("application-status", person.email, `${person.first_name} ${person.last_name}`, {
+          applicationId: input.applicationId,
+          status: input.status,
+          programTitle,
+        });
+      }
     }
 
     await createAdminNotification({
@@ -506,9 +612,12 @@ export async function addParticipantToCohort(input: {
       program_id: string;
     };
     if (person && cohortInfo) {
+      const program = await db.getById("programs", cohortInfo.program_id) as { title?: string } | null;
+      const programTitle = program?.title || cohortInfo.program_id;
+
       await sendWorkflowEmail("program", person.email, `${person.first_name} ${person.last_name}`, {
         cohortTitle: cohortInfo.title,
-        programTitle: cohortInfo.program_id,
+        programTitle,
         action: "accepted",
       });
 
@@ -604,7 +713,17 @@ export async function getProgramDetail(programId: string): Promise<{
   participants: any[];
 } | null> {
   try {
-    const program = await db.getById("programs", programId);
+    let program = await db.getById("programs", programId);
+    if (!program) {
+      const slugRows = await db.query<any>(
+        `SELECT id FROM public.programs WHERE LOWER(slug) = LOWER($1) LIMIT 1`,
+        [programId]
+      );
+      if (slugRows.length > 0) {
+        programId = slugRows[0].id;
+        program = await db.getById("programs", programId);
+      }
+    }
     if (!program) return null;
 
     const applications = await db.query<any>(
@@ -771,5 +890,86 @@ export async function getCohortAttendanceSummary(cohortId: string): Promise<
   } catch (err) {
     console.error("getCohortAttendanceSummary error:", err);
     return [];
+  }
+}
+
+export async function sendPublicCredentials(input: {
+  personId: string;
+  programId?: string;
+}): Promise<{ success: boolean; error?: string; password?: string }> {
+  try {
+    await requireAdmin();
+
+    const person = await db.getById("people", input.personId) as {
+      id: string;
+      email: string;
+      first_name: string;
+      last_name: string;
+    } | null;
+    if (!person) return { success: false, error: "Person not found" };
+
+    let driveLink: string | undefined;
+    let contextLabel = "BMAC";
+
+    if (input.programId) {
+      const program = await db.getById("programs", input.programId) as {
+        id: string;
+        title: string;
+        settings?: { googleDriveLink?: string };
+      } | null;
+      driveLink = program?.settings?.googleDriveLink || undefined;
+      contextLabel = program?.title || input.programId;
+    } else {
+      const record = await db.query<{ ref_title: string }>(
+        `SELECT ref_title FROM public.person_records WHERE person_id = $1 AND status = 'active' ORDER BY created_at DESC LIMIT 1`,
+        [input.personId]
+      );
+      if (record.length) contextLabel = record[0].ref_title;
+    }
+
+    const { hashPassword, generateRandomPassword } = await import("@/lib/auth/public-auth");
+    const rawPassword = generateRandomPassword();
+    const passwordHash = await hashPassword(rawPassword);
+
+    const existing = await db.query<{ id: string }>(
+      `SELECT id FROM public.public_users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [person.email]
+    );
+
+    if (existing.length > 0) {
+      await db.update("public_users", existing[0].id, {
+        password_hash: passwordHash,
+        must_change_password: true,
+        auth_status: "active",
+      });
+    } else {
+      await db.create("public_users", {
+        id: `pu-${crypto.randomUUID()}`,
+        email: person.email,
+        password_hash: passwordHash,
+        must_change_password: true,
+        auth_status: "active",
+      });
+    }
+
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`;
+
+    await sendPublicCredentialsEmail({
+      email: person.email,
+      firstName: person.first_name,
+      password: rawPassword,
+      loginUrl,
+      driveLink,
+    });
+
+    await logActivity("system", "credentials_sent", "public_users", {
+      resourceId: person.id,
+      details: `Credentials sent to ${person.email} for ${contextLabel}`,
+    });
+
+    return { success: true, password: rawPassword };
+  } catch (err) {
+    console.error("sendPublicCredentials error:", err);
+    return { success: false, error: "Failed to send credentials" };
   }
 }

@@ -1,35 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   FileText,
   ClipboardList,
   Pencil,
-  X,
   Trash2,
   Loader2,
 } from "lucide-react";
 import {
   getFormDefinition,
-  upsertFormDefinition,
+  getFormDefinitionOrDefault,
   deleteFormDefinition,
   getFormSubmissions,
 } from "@/actions/forms";
-import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
-import type { FormQuestion, FormDefinition } from "@/types/cms";
+import StatusBadge from "@/components/admin/StatusBadge";
+import type { FormDefinition } from "@/types/cms";
 
 const FORM_TYPES = [
-  { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
   { entityType: "partner", label: "Partner Application", desc: "Form for partnership inquiries" },
-  { entityType: "donation", label: "Donation Form", desc: "Custom fields for donations" },
-  { entityType: "contact", label: "Contact Form", desc: "Fields for the contact page" },
-  { entityType: "newsletter", label: "Newsletter Signup", desc: "Extra fields for newsletter" },
+  { entityType: "volunteer", label: "Volunteer Application", desc: "Form for volunteer sign-ups" },
   { entityType: "member", label: "Membership Application", desc: "Form for joining BMAC" },
 ];
 
 interface FormCard {
   entityType: string;
+  entityId?: string;
+  label: string;
+  desc: string;
   definition: FormDefinition | null;
   submissionCount: number;
   loading: boolean;
@@ -37,66 +37,42 @@ interface FormCard {
 
 export default function FormsManager() {
   const [cards, setCards] = useState<FormCard[]>(
-    FORM_TYPES.map(ft => ({ entityType: ft.entityType, definition: null, submissionCount: 0, loading: true }))
+    FORM_TYPES.map(ft => ({
+      entityType: ft.entityType,
+      label: ft.label,
+      desc: ft.desc,
+      definition: null,
+      submissionCount: 0,
+      loading: true,
+    }))
   );
-  const [editingType, setEditingType] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
-  const [saving, setSaving] = useState(false);
   const { toast, confirm } = useToast();
 
   useEffect(() => {
     FORM_TYPES.forEach(ft => {
       Promise.all([
         getFormDefinition(ft.entityType),
+        getFormDefinitionOrDefault(ft.entityType),
         getFormSubmissions(ft.entityType),
-      ]).then(([def, subs]) => {
+      ]).then(([def, defaultDef, subs]) => {
         setCards(prev => prev.map(c =>
           c.entityType === ft.entityType
-            ? { ...c, definition: def, submissionCount: subs.length, loading: false }
+            ? { ...c, definition: def ?? defaultDef, submissionCount: subs.length, loading: false }
             : c
         ));
       });
     });
   }, []);
 
-  function startEditing(entityType: string) {
-    const card = cards.find(c => c.entityType === entityType);
-    setQuestions(card?.definition?.questions ? [...card.definition.questions.map(q => ({ ...q }))] : []);
-    setEditingType(entityType);
-  }
-
-  function cancelEditing() {
-    setEditingType(null);
-    setQuestions([]);
-  }
-
-  async function handleSave() {
-    if (!editingType) return;
-    setSaving(true);
-    const sorted = questions.map((q, i) => ({ ...q, order: i }));
-    const def = await upsertFormDefinition(editingType, null, sorted);
-    const subs = await getFormSubmissions(editingType);
-    setCards(prev => prev.map(c =>
-      c.entityType === editingType
-        ? { ...c, definition: def, submissionCount: subs.length }
-        : c
-    ));
-    setEditingType(null);
-    setQuestions([]);
-    setSaving(false);
-    toast("Form saved", "success");
-  }
-
-  async function handleDelete(entityType: string) {
+  async function handleDelete(entityType: string, entityId?: string) {
     const ok = await confirm("Delete this form definition? This cannot be undone.", { confirmText: "Delete" });
     if (!ok) return;
-    await deleteFormDefinition(entityType);
+    await deleteFormDefinition(entityType, entityId);
     setCards(prev => prev.map(c =>
-      c.entityType === entityType
+      c.entityType === entityType && c.entityId === entityId
         ? { ...c, definition: null, submissionCount: 0 }
         : c
     ));
-    if (editingType === entityType) cancelEditing();
     toast("Form deleted", "success");
   }
 
@@ -113,29 +89,22 @@ export default function FormsManager() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FORM_TYPES.map(ft => {
-          const card = cards.find(c => c.entityType === ft.entityType)!;
-          const isEditing = editingType === ft.entityType;
+        {cards.map((card) => {
           const hasForm = !!card.definition;
+          const editHref = `/admin/forms/${card.entityType}`;
 
           return (
-            <div key={ft.entityType} className={`bg-card rounded-xl border transition-colors ${isEditing ? "border-primary/30" : "border-border"}`}>
+            <div key={`${card.entityType}-${card.entityId ?? "standalone"}`} className="bg-card rounded-xl border border-border">
               <div className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="min-w-0">
-                    <h3 className="font-display text-sm font-bold text-secondary">{ft.label}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{ft.desc}</p>
+                    <h3 className="font-display text-sm font-bold text-secondary">{card.label}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
                   </div>
                   {card.loading ? (
                     <Loader2 size={16} className="text-muted-foreground/40 animate-spin shrink-0 mt-0.5" />
-                  ) : hasForm ? (
-                    <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 uppercase tracking-wider">
-                      Active
-                    </span>
                   ) : (
-                    <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground uppercase tracking-wider">
-                      None
-                    </span>
+                    <StatusBadge status={hasForm ? "active" : "inactive"} />
                   )}
                 </div>
 
@@ -151,17 +120,16 @@ export default function FormsManager() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => isEditing ? cancelEditing() : startEditing(ft.entityType)}
-                    disabled={editingType !== null && !isEditing}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border border-border bg-card text-secondary hover:bg-muted/40 disabled:opacity-40 transition-colors"
+                  <Link
+                    href={editHref}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium border border-border bg-card text-secondary hover:bg-muted/40 transition-colors"
                   >
-                    {isEditing ? <><X size={13} /> Cancel</> : <><Pencil size={13} /> Edit</>}
-                  </button>
+                    <Pencil size={13} /> Edit
+                  </Link>
                   {hasForm && (
                     <button
-                      onClick={() => handleDelete(ft.entityType)}
-                      disabled={editingType !== null}
+                      onClick={() => handleDelete(card.entityType, card.entityId)}
+                      disabled={false}
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
                     >
                       <Trash2 size={13} /> Delete
@@ -169,17 +137,6 @@ export default function FormsManager() {
                   )}
                 </div>
               </div>
-
-              {isEditing && (
-                <div className="border-t border-border/50 p-5">
-                  <FormEditor
-                    questions={questions}
-                    onChange={setQuestions}
-                    onSave={handleSave}
-                    saving={saving}
-                  />
-                </div>
-              )}
             </div>
           );
         })}

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, CheckCircle2, TicketCheck, Wallet, Download, Bell, RefreshCcw, Calendar, MapPin, Clock3, XCircle } from "lucide-react";
-import { getEventAdminDetail, exportEventRegistrants, setEventCheckedIn, setCapacityUsedOverride, sendEventReminders } from "@/actions/events";
+import { ArrowLeft, Users, CheckCircle2, TicketCheck, Wallet, Download, Bell, RefreshCcw, Calendar, MapPin, Clock3, XCircle, ListOrdered, Trash2 } from "lucide-react";
+import { getEventAdminDetail, exportEventRegistrants, setEventCheckedIn, setCapacityUsedOverride, sendEventReminders, verifyEventPayment } from "@/actions/events";
+import { listWaitlist, promoteFromWaitlist, removeFromWaitlist, type WaitlistEntry } from "@/actions/waitlist";
+import PaymentVerificationModal from "./PaymentVerificationModal";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
 import type { EventAdminDetail } from "@/actions/events";
@@ -15,8 +17,12 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   const [capacityInput, setCapacityInput] = useState<string>(String(initialData.event.capacity_used));
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"registrants" | "waitlist">("registrants");
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
+  const [waitlistLoaded, setWaitlistLoaded] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 25;
+  const [verifyingPaymentFor, setVerifyingPaymentFor] = useState<any | null>(null);
   const { toast, confirm } = useToast();
   const admin = useAdmin();
   const canExport = admin?.permissions?.includes("export_data");
@@ -91,7 +97,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   }
 
   async function handleSendReminders() {
-    const ok = await confirm("Send event reminder emails to all confirmed attendees?");
+    const ok = await confirm("Send event reminder emails to all confirmed attendees?", { confirmText: "Send", variant: "default" });
     if (!ok) return;
     setBusy(true);
     const res = await sendEventReminders(eventId);
@@ -101,6 +107,61 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
     } else {
       toast(`Sent ${res.sent} reminders`);
     }
+  }
+
+  async function loadWaitlist() {
+    const entries = await listWaitlist(eventId);
+    setWaitlist(entries);
+    setWaitlistLoaded(true);
+  }
+
+  async function switchTab(tab: "registrants" | "waitlist") {
+    setActiveTab(tab);
+    if (tab === "waitlist" && !waitlistLoaded) {
+      await loadWaitlist();
+    }
+  }
+
+  async function handlePromote(entry: WaitlistEntry) {
+    const ok = await confirm(`Promote ${entry.name} from waitlist?`);
+    if (!ok) return;
+    setBusy(true);
+    const res = await promoteFromWaitlist(eventId, 1);
+    setBusy(false);
+    if (res.error) {
+      toast(res.error, "error");
+    } else if (res.promoted === 0) {
+      toast("No capacity available or promotion failed", "error");
+    } else {
+      toast(`${entry.name} promoted to registration`);
+      await loadWaitlist();
+      await refresh();
+    }
+  }
+
+  async function handleRemoveFromWaitlist(entry: WaitlistEntry) {
+    const ok = await confirm(`Remove ${entry.name} from waitlist?`);
+    if (!ok) return;
+    setBusy(true);
+    const res = await removeFromWaitlist(entry.id);
+    setBusy(false);
+    if (res.error) {
+      toast(res.error, "error");
+    } else {
+      toast(`${entry.name} removed from waitlist`);
+      await loadWaitlist();
+    }
+  }
+
+  async function handleVerifyPayment(ticketId: string) {
+    const res = await verifyEventPayment(ticketId);
+    if (res.error) {
+      toast(res.error, "error");
+      return;
+    }
+    toast("Payment verified");
+    setVerifyingPaymentFor(null);
+    await refresh();
   }
 
   const pct = event.capacity > 0 ? Math.min(100, Math.round((event.capacity_used / event.capacity) * 100)) : 0;
@@ -213,30 +274,49 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border/50 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold text-secondary">Registrants</h2>
-          <span className="text-xs text-muted-foreground">{filtered.length} shown of {registrants.length} total</span>
-        </div>
-        <div className="px-6 py-3 border-b border-border/50 flex flex-wrap items-center gap-3">
-          <div className="flex-1 min-w-[200px] max-w-sm">
-            <input
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search name, email, reference…"
-              className="w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => switchTab("registrants")}
+              className={`text-sm font-semibold transition-colors ${activeTab === "registrants" ? "text-primary" : "text-muted-foreground hover:text-secondary"}`}
+            >
+              Registrants
+            </button>
+            <button
+              onClick={() => switchTab("waitlist")}
+              className={`text-sm font-semibold transition-colors ${activeTab === "waitlist" ? "text-primary" : "text-muted-foreground hover:text-secondary"}`}
+            >
+              Waitlist ({waitlist.filter(w => w.status === "waiting").length})
+            </button>
           </div>
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card p-1">
-            {["all", "confirmed", "pending", "cancelled"].map(s => (
-              <button
-                key={s}
-                onClick={() => { setStatusFilter(s); setPage(1); }}
-                className={`h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              >
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
+          <span className="text-xs text-muted-foreground">
+            {activeTab === "registrants"
+              ? `${filtered.length} shown of ${registrants.length} total`
+              : `${waitlist.filter(w => w.status === "waiting").length} on waitlist`}
+          </span>
         </div>
+        {activeTab === "registrants" && (
+          <>
+          <div className="px-6 py-3 border-b border-border/50 flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-[200px] max-w-sm">
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search name, email, reference…"
+                className="w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+            </div>
+            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card p-1">
+              {["all", "confirmed", "pending", "cancelled"].map(s => (
+                <button
+                  key={s}
+                  onClick={() => { setStatusFilter(s); setPage(1); }}
+                  className={`h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                >
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Users size={40} className="text-muted-foreground/20 mb-3" />
@@ -267,9 +347,18 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                     </td>
                     <td className="px-5 py-4 text-muted-foreground font-mono text-xs hidden sm:table-cell">{r.reference}</td>
                     <td className="px-5 py-4 hidden md:table-cell">
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        r.status === "confirmed" ? "bg-green-50 text-green-700" : r.status === "pending" ? "bg-amber-50 text-amber-700" : "bg-muted text-muted-foreground"
-                      }`}>{r.status}</span>
+                      {r.status === "pending" ? (
+                        <button
+                          onClick={() => setVerifyingPaymentFor(r)}
+                          className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                        >
+                          {r.status}
+                        </button>
+                      ) : (
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          r.status === "confirmed" ? "bg-green-50 text-green-700" : "bg-muted text-muted-foreground"
+                        }`}>{r.status}</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.quantity}</td>
                     <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">{r.amount ? `${currency}${(Number(r.amount) * r.quantity / 100).toLocaleString("en-NG")}` : "—"}</td>
@@ -311,7 +400,87 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
             )}
           </div>
         )}
+          </>
+        )}
+
+        {activeTab === "waitlist" && (
+          <div className="overflow-x-auto">
+            {waitlist.filter(w => w.status === "waiting").length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <ListOrdered size={40} className="text-muted-foreground/20 mb-3" />
+                <p className="text-sm font-medium text-secondary">No one on the waitlist</p>
+                <p className="text-xs text-muted-foreground mt-1">Waitlisted registrations will appear here.</p>
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">#</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Name</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">Email</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Joined</th>
+                    <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Status</th>
+                    <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-40">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {waitlist.map((w, i) => (
+                    <tr key={w.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-5 py-4 text-muted-foreground text-xs font-mono">{i + 1}</td>
+                      <td className="px-5 py-4">
+                        <p className="font-medium text-secondary">{w.name}</p>
+                        <p className="text-xs text-muted-foreground sm:hidden">{w.email}</p>
+                      </td>
+                      <td className="px-5 py-4 hidden sm:table-cell text-xs text-muted-foreground">{w.email}</td>
+                      <td className="px-5 py-4 hidden md:table-cell text-xs text-muted-foreground">
+                        {w.createdAt ? new Date(w.createdAt).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          w.status === "waiting" ? "bg-amber-50 text-amber-700" : "bg-green-50 text-green-700"
+                        }`}>{w.status}</span>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {w.status === "waiting" && (
+                            <>
+                              <button
+                                onClick={() => handlePromote(w)}
+                                disabled={busy}
+                                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                              >
+                                <CheckCircle2 size={13} /> Promote
+                              </button>
+                              <button
+                                onClick={() => handleRemoveFromWaitlist(w)}
+                                disabled={busy}
+                                className="p-2 rounded-lg text-destructive hover:bg-destructive/10 disabled:opacity-40 transition-colors"
+                                title="Remove from waitlist"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          )}
+                          {w.status === "promoted" && (
+                            <span className="text-xs text-green-600 font-medium">Promoted</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
+      {verifyingPaymentFor && (
+        <PaymentVerificationModal
+          attendee={verifyingPaymentFor}
+          onConfirm={handleVerifyPayment}
+          onClose={() => setVerifyingPaymentFor(null)}
+        />
+      )}
     </div>
   );
 }

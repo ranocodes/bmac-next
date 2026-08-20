@@ -4,41 +4,79 @@ import { db } from "@/lib/db";
 import { countOpenWorkflows } from "@/lib/workflows";
 
 export async function getDashboardStats() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
   const [
-    newsCount, eventsCount, programsCount, galleryCount,
-    teamCount, testimonialsCount, workflowOpenCount,
-    news, events, gallery, team, testimonials,
+    totalMembers,
+    activePrograms,
+    pendingApps,
+    revenueThisMonth,
+    openInquiries,
+    eventsThisMonth,
+    news, events,
     logs,
+    revenueByMonth,
+    memberGrowth,
   ] = await Promise.all([
-    db.count("news_articles").catch(() => 0),
-    db.count("events").catch(() => 0),
+    db.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM public.people
+       WHERE roles @> '["member"]'::jsonb OR roles @> '["volunteer"]'::jsonb`
+    ).catch(() => [{ count: "0" }]),
     db.count("programs").catch(() => 0),
-    db.count("gallery_items").catch(() => 0),
-    db.count("team_members").catch(() => 0),
-    db.count("testimonials").catch(() => 0),
     countOpenWorkflows(),
+    db.query<{ total: string }>(
+      `SELECT COALESCE(SUM((pr.meta->>'amount')::numeric), 0)::text AS total
+       FROM public.person_records pr
+       WHERE pr.kind = 'donation' AND pr.status = 'completed'
+         AND pr.created_at >= $1`,
+      [startOfMonth]
+    ).catch(() => [{ total: "0" }]),
+    db.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM public.workflow_records WHERE status = 'open'`
+    ).catch(() => [{ count: "0" }]),
+    db.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM public.events
+       WHERE status = 'published' AND date >= $1`,
+      [startOfMonth]
+    ).catch(() => [{ count: "0" }]),
     db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
     db.getAll<any>("events", { orderBy: "date", orderDir: "DESC", limit: 4 }).catch(() => []),
-    db.getAll<any>("gallery_items", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
-    db.getAll<any>("team_members", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
-    db.getAll<any>("testimonials", { orderBy: "created_at", orderDir: "DESC", limit: 4 }).catch(() => []),
     db.query<any>("SELECT * FROM public.activity_logs ORDER BY timestamp DESC LIMIT 15").catch(() => []),
+    db.query<{ month: string; total: string }>(
+      `SELECT TO_CHAR(pr.created_at, 'YYYY-MM') AS month,
+              COALESCE(SUM((pr.meta->>'amount')::numeric), 0)::text AS total
+       FROM public.person_records pr
+       WHERE pr.kind = 'donation' AND pr.status = 'completed'
+         AND pr.created_at >= NOW() - INTERVAL '6 months'
+       GROUP BY month ORDER BY month ASC`
+    ).catch(() => []),
+    db.query<{ month: string; count: string }>(
+      `SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(*)::text AS count
+       FROM public.people
+       WHERE created_at >= NOW() - INTERVAL '6 months'
+       GROUP BY month ORDER BY month ASC`
+    ).catch(() => []),
   ]);
+
+  const revenueMonths = revenueByMonth.map((r: any) => ({ month: r.month, value: Number(r.total) }));
+  const memberMonths = memberGrowth.map((r: any) => ({ month: r.month, value: Number(r.count) }));
 
   return {
     counts: {
-      news: newsCount,
-      events: eventsCount,
-      programs: programsCount,
-      gallery: galleryCount,
-      team: teamCount,
-      testimonials: testimonialsCount,
-      workflowOpen: workflowOpenCount,
+      totalMembers: Number(totalMembers[0]?.count ?? 0),
+      activePrograms: activePrograms,
+      pendingApps: pendingApps,
+      revenueThisMonth: Number(revenueThisMonth[0]?.total ?? 0),
+      openInquiries: Number(openInquiries[0]?.count ?? 0),
+      eventsThisMonth: Number(eventsThisMonth[0]?.count ?? 0),
     },
     recentNews: news,
     recentEvents: events.slice().sort((a: any, b: any) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime()),
     recentActivity: logs,
     todayCount: logs.filter((l: any) => new Date(l.created_at || l.timestamp).getTime() > Date.now() - 86400000).length,
+    revenueByMonth: revenueMonths,
+    memberGrowth: memberMonths,
   };
 }
 

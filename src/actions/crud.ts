@@ -6,6 +6,12 @@ import { logActivity } from "./activity-logs";
 
 export async function createItem(table: string, data: Record<string, unknown>) {
   const admin = await requireAdmin();
+  if (table === "events" && data.status === "published" && data.allow_public_registration === undefined) {
+    data.allow_public_registration = true;
+  }
+  if (table === "programs" && data.status === "published" && data.applications_open === undefined) {
+    data.applications_open = true;
+  }
   const result = await db.create(table, data);
   const title = (data.title || data.name || result?.id || "item") as string;
   await logActivity(admin.email, "create", table, {
@@ -17,6 +23,12 @@ export async function createItem(table: string, data: Record<string, unknown>) {
 
 export async function updateItem(table: string, id: string, data: Record<string, unknown>) {
   const admin = await requireAdmin();
+  if (table === "events" && data.status === "published" && data.allow_public_registration === undefined) {
+    data.allow_public_registration = true;
+  }
+  if (table === "programs" && data.status === "published" && data.applications_open === undefined) {
+    data.applications_open = true;
+  }
   const result = await db.update(table, id, data);
   const title = (data.title || data.name || id) as string;
   await logActivity(admin.email, "update", table, {

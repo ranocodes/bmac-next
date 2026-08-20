@@ -5,12 +5,35 @@ import { Heart, CreditCard } from "lucide-react";
 import DonationsTable from "./DonationsTable";
 import PaymentsTable from "./PaymentsTable";
 
+interface DonationRecord {
+  id: string;
+  personId: string;
+  name: string;
+  email: string;
+  amount: number;
+  status: string;
+  reference: string;
+  createdAt: string;
+}
+
+interface PaymentRecord {
+  id: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payer_name?: string;
+  payer_email?: string;
+  created_at: string;
+  [key: string]: unknown;
+}
+
 export default function DonationsTabs({
   donations,
   payments,
 }: {
-  donations: any[];
-  payments: any[];
+  donations: DonationRecord[];
+  payments: PaymentRecord[];
 }) {
   const [tab, setTab] = useState<"donations" | "payments">("donations");
 

@@ -146,6 +146,7 @@ export default function MarkdownEditor({ value, onChange, placeholder }: Markdow
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:text-secondary hover:bg-muted"
             }`}
+            aria-label={showPreview ? "Hide preview" : "Show preview"}
           >
             {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>

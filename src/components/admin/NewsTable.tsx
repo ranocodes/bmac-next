@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
 import type { NewsArticle } from "@/types/cms";
 
-export default function NewsTable({ initialData }: { initialData: any[] }) {
+export default function NewsTable({ initialData }: { initialData: NewsArticle[] }) {
   const [articles, setArticles] = useState<NewsArticle[]>([...initialData].reverse());
   const [search, setSearch] = useState("");
   const { toast, confirm } = useToast();
@@ -78,7 +78,8 @@ export default function NewsTable({ initialData }: { initialData: any[] }) {
                     <Pencil size={14} />
                   </Link>
                   <button onClick={() => handleDelete(a.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                    aria-label="Delete article">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -117,7 +118,8 @@ export default function NewsTable({ initialData }: { initialData: any[] }) {
                             <Pencil size={14} />
                           </Link>
                           <button onClick={() => handleDelete(a.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                            aria-label="Delete article">
                             <Trash2 size={14} />
                           </button>
                         </div>

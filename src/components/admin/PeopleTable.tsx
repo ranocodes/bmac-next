@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Users, Search, Download, Plus, ChevronRight } from "lucide-react";
 import { exportPeople, createPerson } from "@/actions/people";
 import { useToast } from "@/components/ui/Toast";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { PersonRow, PersonRole } from "@/types/cms";
 
 function nameOf(p: PersonRow): string {
@@ -148,15 +149,19 @@ export default function PeopleTable({ initialData, canExport }: { initialData: P
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
-          <Users size={44} className="text-muted-foreground/20 mb-4" />
-          <p className="text-sm font-medium text-secondary">
-            {search ? "No people match your search" : "No people yet"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {search ? "Try a different term" : "Profiles appear here after a form submission, registration, or donation"}
-          </p>
-        </div>
+        search ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-xl border border-border">
+            <Users size={44} className="text-muted-foreground/20 mb-4" />
+            <p className="text-sm font-medium text-secondary">No people match your search</p>
+            <p className="text-xs text-muted-foreground mt-1">Try a different term</p>
+          </div>
+        ) : (
+          <EmptyState
+            icon={Users}
+            title="No people yet"
+            description="Profiles appear here after a form submission, registration, or donation"
+          />
+        )
       ) : (
         <>
           <div className="lg:hidden space-y-2">

@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2, ArrowLeft } from "lucide-react";
+import { Inbox as InboxIcon, Search, Send, MessageSquareReply, Clock, Mail, User, Phone, CalendarDays, Trash2, ArrowLeft, FileText, Banknote, MessageCircle, Calendar, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import StatusBadge from "@/components/admin/StatusBadge";
 import { replyToSubmission, updateWorkflowStatus, deleteWorkflow } from "@/actions/workflows";
 import type { WorkflowStatus, WorkflowPriority } from "@/types/cms";
 
@@ -32,6 +33,28 @@ const kindMeta: Record<string, { label: string; color: string }> = {
   event_registration: { label: "Event Registration", color: "text-rose-700 bg-rose-50" },
   ticket: { label: "Ticket", color: "text-cyan-700 bg-cyan-50" },
 };
+
+const STREAMS = [
+  { key: "all", label: "All Applications", icon: InboxIcon },
+  { key: "applications", label: "All Applications", icon: FileText, kinds: ["program", "volunteer", "member"] },
+  { key: "program", label: "Cohort", icon: FileText, kinds: ["program"] },
+  { key: "volunteer", label: "Volunteer", icon: FileText, kinds: ["volunteer"] },
+  { key: "member", label: "Membership", icon: FileText, kinds: ["member"] },
+] as const;
+
+const EMPTY_MESSAGES: Record<string, { message: string; sub?: string }> = {
+  all: { message: "No applications yet" },
+  applications: { message: "No pending applications", sub: "Applications from programs, volunteering, and membership will appear here." },
+  program: { message: "No cohort applications", sub: "Program and cohort applications will appear here." },
+  volunteer: { message: "No volunteer applications", sub: "Volunteer applications will appear here." },
+  member: { message: "No membership applications", sub: "Membership applications will appear here." },
+};
+
+type SortOption = "newest" | "priority";
+
+const SORT_OPTIONS: { key: SortOption; label: string }[] = [
+  { key: "newest", label: "Newest first" },
+];
 
 const statusMeta: Record<string, { label: string; color: string }> = {
   open: { label: "Open", color: "text-amber-700 bg-amber-50" },
@@ -77,12 +100,15 @@ function timeAgo(iso?: string): string {
   return days === 1 ? "yesterday" : `${days}d ago`;
 }
 
-export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
+export default function Inbox({ initialData = [], stats }: { initialData?: any[]; stats?: { total: number; open: number; byKind: Record<string, number>; byStatus: Record<string, number> } }) {
   const [items, setItems] = useState<WorkflowItem[]>(() => initialData.map(normalize));
   const [selectedId, setSelectedId] = useState<string | null>(() => (initialData.length ? normalize(initialData[0]).id : null));
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [search, setSearch] = useState("");
   const [filterKind, setFilterKind] = useState<string>("all");
+  const [activeStream, setActiveStream] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [sortOpen, setSortOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -93,49 +119,35 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
   const selected = useMemo(() => items.find(i => i.id === selectedId) || null, [items, selectedId]);
 
   const filtered = useMemo(() => {
-    return items.filter(i => {
+    const streamDef = STREAMS.find(s => s.key === activeStream);
+    let result = items.filter(i => {
+      if (streamDef && "kinds" in streamDef && !(streamDef as any).kinds.includes(i.kind)) return false;
       if (filterKind !== "all" && i.kind !== filterKind) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (i.title + " " + i.summary + " " + i.submitterName + " " + i.submitterEmail).toLowerCase().includes(q);
     });
-  }, [items, search, filterKind]);
+    result = [...result].sort((a, b) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return result;
+  }, [items, search, filterKind, activeStream, sortBy]);
 
   const unreadCount = items.filter(i => i.status === "open").length;
 
-  async function handleReply() {
-    if (!selected || !reply.trim()) return;
-    setSending(true);
-    const result = await replyToSubmission(selected.id, { body: reply.trim() });
-    setSending(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    const history = Array.isArray(selected.details.history) ? selected.details.history : [];
-    const entry = { type: "reply", by: "admin", at: result.repliedAt || new Date().toISOString(), note: reply.trim() };
-    setItems(prev => prev.map(i => i.id === selected.id ? {
-      ...i,
-      lastContactedAt: result.repliedAt || i.lastContactedAt,
-      details: { ...i.details, history: [...history, entry] },
-    } : i));
-    setReply("");
-    toast("Reply sent to " + selected.submitterEmail, "success");
-  }
+  const streamOpenCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of STREAMS) {
+      if (s.key === "all") {
+        counts[s.key] = items.filter(i => i.status === "open").length;
+      } else if ("kinds" in s) {
+        counts[s.key] = items.filter(i => i.status === "open" && (s as any).kinds.includes(i.kind)).length;
+      }
+    }
+    return counts;
+  }, [items]);
 
-  const [statusDraft, setStatusDraft] = useState<Record<string, string>>({});
-  const [priorityDraft, setPriorityDraft] = useState<Record<string, string>>({});
 
-  async function handleSaveStatus() {
-    if (!selected) return;
-    setSaving(true);
-    const status = (statusDraft[selected.id] ?? selected.status) as WorkflowStatus;
-    const priority = (priorityDraft[selected.id] ?? selected.priority) as WorkflowPriority;
-    const result = await updateWorkflowStatus(selected.id, { status, priority });
-    setSaving(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    setItems(prev => prev.map(i => i.id === selected.id ? { ...i, status: status as string, priority: priority as string } : i));
-    setStatusDraft(p => { const c = { ...p }; delete c[selected.id]; return c; });
-    setPriorityDraft(p => { const c = { ...p }; delete c[selected.id]; return c; });
-    toast("Status updated", "success");
-  }
 
   async function handleDelete() {
     if (!selected) return;
@@ -179,6 +191,25 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search submissions..."
               className="w-full h-10 pl-9 pr-4 rounded-lg border border-border bg-card text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
           </div>
+          <div className="flex gap-1.5">
+            {STREAMS.map(s => {
+              const Icon = s.icon;
+              return (
+                <button key={s.key} onClick={() => { setActiveStream(s.key); setFilterKind("all"); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    activeStream === s.key ? "bg-primary/10 text-primary border-primary/20" : "bg-card border-border text-secondary hover:border-primary/40"
+                  }`}>
+                  <Icon size={13} />
+                  {s.label}
+                  {streamOpenCounts[s.key] > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                      {streamOpenCounts[s.key]}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {[{ k: "all", label: "All" }, ...Object.entries(kindMeta).map(([k, m]) => ({ k, label: m.label }))].map(f => (
               <button key={f.k} onClick={() => setFilterKind(f.k)}
@@ -189,11 +220,49 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
               </button>
             ))}
           </div>
+          <div className="relative">
+            <button onClick={() => setSortOpen(p => !p)}
+              className="flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-card text-xs font-medium text-muted-foreground hover:text-secondary hover:border-primary/40 transition-all">
+              <Clock size={12} />
+              {SORT_OPTIONS.find(o => o.key === sortBy)?.label}
+              <ChevronDown size={12} className={`transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+            </button>
+            {sortOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 w-48 bg-card border border-border rounded-xl shadow-lg py-1.5">
+                {SORT_OPTIONS.map(o => (
+                  <button key={o.key} onClick={() => { setSortBy(o.key); setSortOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                      sortBy === o.key ? "text-primary bg-primary/5" : "text-secondary hover:bg-muted"
+                    }`}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="bg-card rounded-xl border border-border overflow-hidden">
             {filtered.length === 0 ? (
               <div className="text-center py-16">
-                <InboxIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">{search || filterKind !== "all" ? "No submissions match" : "No submissions yet"}</p>
+                {(() => {
+                  const streamDef = STREAMS.find(s => s.key === activeStream);
+                  const StreamIcon = streamDef?.icon ?? InboxIcon;
+                  const emptyInfo = EMPTY_MESSAGES[activeStream] || EMPTY_MESSAGES.all;
+                  if (search || filterKind !== "all") {
+                    return (
+                      <>
+                        <InboxIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">No submissions match</p>
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <StreamIcon size={36} className="text-muted-foreground/20 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground font-medium">{emptyInfo.message}</p>
+                      {emptyInfo.sub && <p className="text-xs text-muted-foreground/60 mt-1 max-w-[240px] mx-auto">{emptyInfo.sub}</p>}
+                    </>
+                  );
+                })()}
               </div>
             ) : filtered.map(item => {
               const km = kindMeta[item.kind] || kindMeta.contact;
@@ -203,8 +272,7 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                 <button key={item.id} onClick={() => { setSelectedId(item.id); setMobileView("detail"); }}
                   className={`w-full text-left px-4 py-4 border-b border-border/50 last:border-0 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${km.color}`}>{km.label}</span>
-                    <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${sm.color}`}>{sm.label}</span>
+                    <StatusBadge status={item.kind} />
                   </div>
                   <p className="mt-2 text-sm font-medium text-secondary line-clamp-1">{item.title || "Untitled"}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{item.summary}</p>
@@ -232,15 +300,7 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                     className="lg:hidden inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-colors">
                     <ArrowLeft size={15} /> All
                   </button>
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${(kindMeta[selected.kind] || kindMeta.contact).color}`}>
-                    {(kindMeta[selected.kind] || kindMeta.contact).label}
-                  </span>
-                  <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${(statusMeta[selected.status] || statusMeta.open).color}`}>
-                    {selected.status.replace("_", " ")}
-                  </span>
-                  <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider bg-muted text-muted-foreground">
-                    {selected.priority}
-                  </span>
+                  <StatusBadge status={selected.kind} />
                 </div>
                 <h2 className="mt-4 font-display text-xl font-bold text-secondary">{selected.title}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{selected.summary}</p>
@@ -257,93 +317,11 @@ export default function Inbox({ initialData = [] }: { initialData?: any[] }) {
                   <p className="flex items-center gap-2 text-secondary"><CalendarDays size={14} className="text-muted-foreground" /> Submitted {new Date(selected.createdAt).toLocaleString()}</p>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-end gap-3 border-t border-border/60 pt-5">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Status</label>
-                    <select
-                      value={statusDraft[selected.id] ?? selected.status}
-                      onChange={e => setStatusDraft(p => ({ ...p, [selected.id]: e.target.value }))}
-                      className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    >
-                      {["open", "in_progress", "resolved", "closed"].map(s => (
-                        <option key={s} value={s}>{s.replace("_", " ")}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1.5">Priority</label>
-                    <select
-                      value={priorityDraft[selected.id] ?? selected.priority}
-                      onChange={e => setPriorityDraft(p => ({ ...p, [selected.id]: e.target.value }))}
-                      className="h-10 px-3 rounded-lg border border-border bg-background text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    >
-                      {["low", "normal", "high", "urgent"].map(pr => (
-                        <option key={pr} value={pr}>{pr}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <button onClick={handleSaveStatus} disabled={saving}
-                    className="h-10 px-4 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
-                    {saving ? "Saving…" : "Save Status"}
-                  </button>
-                  <button onClick={handleDelete} disabled={deleting}
-                    className={`ml-auto inline-flex items-center gap-2 h-10 px-4 rounded-lg text-sm font-semibold border transition-all disabled:opacity-50 ${
-                      confirmDelete ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-destructive hover:bg-destructive/5"
-                    }`}>
-                    <Trash2 size={15} />
-                    {deleting ? "Deleting…" : confirmDelete ? "Confirm delete?" : "Delete"}
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-5 lg:p-6 border-b border-border/60">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Message</h3>
-                <p className="text-sm text-secondary whitespace-pre-wrap leading-relaxed">
-                  {selected.details.message || selected.details.notes || selected.summary || "—"}
-                </p>
-                {selected.details.formLink && (
-                  <p className="mt-2 text-xs text-muted-foreground">Form link: <span className="font-mono text-primary break-all">{selected.details.formLink}</span></p>
-                )}
-              </div>
-
-              <div className="p-5 lg:p-6 border-b border-border/60">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">History</h3>
-                {Array.isArray(selected.details.history) && selected.details.history.length > 0 ? (
-                  <div className="space-y-3">
-                    {selected.details.history.map((h: any, idx: number) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${h.type === "reply" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                          <MessageSquareReply size={13} />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">
-                            {h.type === "reply" ? "Replied" : "Note"} · {h.by || "admin"} · {h.at ? new Date(h.at).toLocaleString() : ""}
-                          </p>
-                          <p className="mt-0.5 text-sm text-secondary">{h.note}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No replies yet.</p>
-                )}
-              </div>
-
-              <div className="p-5 lg:p-6">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Reply by email</h3>
-                <textarea
-                  value={reply}
-                  onChange={e => setReply(e.target.value)}
-                  rows={4}
-                  placeholder={`Reply to ${selected.submitterEmail || "submitter"}…`}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                />
-                <div className="mt-3 flex justify-end">
-                  <button onClick={handleReply} disabled={sending || !reply.trim() || !selected.submitterEmail}
-                    className="flex items-center gap-2 h-11 px-5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-primary transition-all disabled:opacity-50">
-                    <Send size={15} />
-                    {sending ? "Sending…" : "Send Reply"}
-                  </button>
+                <div className="mt-6">
+                  <a href={`/admin/inbox/${selected.id}`}
+                    className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-secondary text-secondary-foreground text-sm font-bold hover:bg-primary transition-all">
+                    Review Application →
+                  </a>
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import AboutClient from "./AboutClient";
+import LiveImpactStats from "@/components/LiveImpactStats";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,11 @@ export default async function AboutPage() {
   return (
     <main suppressHydrationWarning className="bg-background">
       <AboutClient initialTeam={team || []} initialStats={stats || []} initialStory={story} />
+      <section className="py-20 bg-secondary">
+        <div className="max-w-7xl mx-auto px-6">
+          <LiveImpactStats />
+        </div>
+      </section>
     </main>
   );
 }
