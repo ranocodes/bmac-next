@@ -69,8 +69,18 @@ export const db = {
 
   async update<T extends Record<string, any>>(table: string, id: string, updates: Partial<T>): Promise<T | null> {
     const sql = getSql();
-    const keys = Object.keys(updates);
-    const values = Object.values(updates).map(v => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
+    const filtered: [string, unknown][] = Object.entries(updates).filter(
+      ([, v]) => v !== undefined
+    );
+    if (filtered.length === 0) {
+      const rows: any[] = await sql.query(
+        `UPDATE public.${table} SET updated_at = now() WHERE id = $1 RETURNING *`,
+        [id]
+      ) as any;
+      return rows.length > 0 ? (rows[0] as unknown as T) : null;
+    }
+    const keys = filtered.map(([k]) => k);
+    const values = filtered.map(([, v]) => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
     const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
     const rows: any[] = await sql.query(
       `UPDATE public.${table} SET ${setClause}, updated_at = now() WHERE id = $${keys.length + 1} RETURNING *`,

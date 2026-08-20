@@ -135,66 +135,72 @@ function toRegistrant(r: {
 }
 
 export async function getEventAdminDetail(eventId: string): Promise<EventAdminDetail | null> {
-  await requirePermission("manage_events");
-  const event = await eventById(eventId);
-  if (!event) return null;
-  const [counts, registrants] = await Promise.all([
-    db.query<{ status: string; count: string }>(
-      "SELECT status, COUNT(*)::int AS count FROM public.event_tickets WHERE event_id = $1 GROUP BY status",
-      [eventId]
-    ),
-    db.query<Record<string, unknown> & {
-      ticket_id: string;
-      reference: string;
-      payer_name: string;
-      payer_email: string;
-      quantity: number;
-      amount: number;
-      currency: string;
-      status: string;
-      checked_in: boolean;
-      checked_in_at: string | null;
-      created_at: string;
-      person_id: string;
-      first_name: string;
-      last_name: string;
-      phone: string;
-    }>(REGISTRANT_SQL, [eventId]),
-  ]);
-  const byStatus: Record<string, number> = {};
-  for (const c of counts) byStatus[c.status] = Number(c.count ?? 0);
-  const confirmed = byStatus["confirmed"] || 0;
-  const checkedIn = registrants.filter((r) => Boolean(r.checked_in)).length;
-  const revenue = registrants
-    .filter((r) => r.status === "confirmed")
-    .reduce((sum, r) => sum + Number(r.amount) * Number(r.quantity), 0);
-  return {
-    event: {
-      id: event.id,
-      title: event.title,
-      date: event.date,
-      venue: event.venue,
-      time: event.time,
-      category: event.category,
-      is_paid: Boolean(event.is_paid),
-      price: Number(event.price),
-      capacity: Number(event.capacity),
-      capacity_used: Number(event.capacity_used),
-      registration_deadline: event.registration_deadline,
-      max_per_person: Number(event.max_per_person),
-      allow_public_registration: Boolean(event.allow_public_registration),
-      reminders_enabled: Boolean(event.reminders_enabled),
-      status: event.status,
-      registrations: registrants.length,
-      confirmed,
-      pending: byStatus["pending"] || 0,
-      cancelled: byStatus["cancelled"] || 0,
-      checkedIn,
-      attendanceRate: confirmed ? Math.round((checkedIn / confirmed) * 100) : 0,
-      revenue,
-    },
-    registrants: registrants.map(toRegistrant),
-  };
+  try {
+    await requirePermission("manage_events");
+    const event = await eventById(eventId);
+    if (!event) return null;
+    const [counts, registrants] = await Promise.all([
+      db.query<{ status: string; count: string }>(
+        "SELECT status, COUNT(*)::int AS count FROM public.event_tickets WHERE event_id = $1 GROUP BY status",
+        [eventId]
+      ).catch(() => [] as { status: string; count: string }[]),
+      db.query<Record<string, unknown> & {
+        ticket_id: string;
+        reference: string;
+        payer_name: string;
+        payer_email: string;
+        quantity: number;
+        amount: number;
+        currency: string;
+        status: string;
+        checked_in: boolean;
+        checked_in_at: string | null;
+        created_at: string;
+        person_id: string;
+        first_name: string;
+        last_name: string;
+        phone: string;
+      }>(REGISTRANT_SQL, [eventId]).catch(() => []),
+    ]);
+    const regRows = registrants as unknown as Parameters<typeof toRegistrant>[0][];
+    const byStatus: Record<string, number> = {};
+    for (const c of counts) byStatus[c.status] = Number(c.count ?? 0);
+    const confirmed = byStatus["confirmed"] || 0;
+    const checkedIn = regRows.filter((r) => Boolean(r.checked_in)).length;
+    const revenue = regRows
+      .filter((r) => r.status === "confirmed")
+      .reduce((sum, r) => sum + Number(r.amount) * Number(r.quantity), 0);
+    return {
+      event: {
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        venue: event.venue,
+        time: event.time,
+        category: event.category,
+        is_paid: Boolean(event.is_paid),
+        price: Number(event.price),
+        capacity: Number(event.capacity),
+        capacity_used: Number(event.capacity_used),
+        registration_deadline: event.registration_deadline,
+        max_per_person: Number(event.max_per_person),
+        allow_public_registration: Boolean(event.allow_public_registration),
+        reminders_enabled: Boolean(event.reminders_enabled),
+        status: event.status,
+        registrations: registrants.length,
+        confirmed,
+        pending: byStatus["pending"] || 0,
+        cancelled: byStatus["cancelled"] || 0,
+        checkedIn,
+        attendanceRate: confirmed ? Math.round((checkedIn / confirmed) * 100) : 0,
+        revenue,
+      },
+      registrants: regRows.map(toRegistrant),
+    };
+  } catch (err) {
+    console.error("getEventAdminDetail error:", err);
+    return null;
+  }
 }
 
 export async function listRegistrants(eventId: string): Promise<EventRegistrant[]> {

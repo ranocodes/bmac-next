@@ -4,7 +4,12 @@ import { getSuperAdminSession, ALL_PERMISSIONS } from "@/lib/auth/super-admin";
 export const dynamic = "force-dynamic";
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const session = await getSuperAdminSession();
+  let session = null;
+  try {
+    session = await getSuperAdminSession();
+  } catch (e) {
+    console.error("admin layout session error:", e);
+  }
 
   if (!session) return <>{children}</>;
 

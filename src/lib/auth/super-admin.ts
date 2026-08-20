@@ -65,20 +65,20 @@ export async function setSuperAdminSession(email: string, firstName: string = ""
 }
 
 export async function getSuperAdminSession(): Promise<SuperAdminSession | null> {
-  const cookie = await cookies();
-  const raw = cookie.get(COOKIE_NAME)?.value;
-  if (!raw) return null;
-
-  const dot = raw.lastIndexOf(".");
-  if (dot === -1) return null;
-
-  const payloadB64 = raw.slice(0, dot);
-  const sig = raw.slice(dot + 1);
-
-  const valid = await hmacVerify(payloadB64, sig, getSecret());
-  if (!valid) return null;
-
   try {
+    const cookie = await cookies();
+    const raw = cookie.get(COOKIE_NAME)?.value;
+    if (!raw) return null;
+
+    const dot = raw.lastIndexOf(".");
+    if (dot === -1) return null;
+
+    const payloadB64 = raw.slice(0, dot);
+    const sig = raw.slice(dot + 1);
+
+    const valid = await hmacVerify(payloadB64, sig, getSecret());
+    if (!valid) return null;
+
     const payload = JSON.parse(Buffer.from(payloadB64, "base64").toString("utf-8"));
     if (payload.role !== "super_admin" && payload.role !== "moderator" && payload.role !== "administrator") return null;
     const session = payload as SuperAdminSession;
@@ -87,7 +87,10 @@ export async function getSuperAdminSession(): Promise<SuperAdminSession | null> 
       return null;
     }
     return session;
-  } catch { return null; }
+  } catch (e) {
+    console.error("getSuperAdminSession error:", e);
+    return null;
+  }
 }
 
 export async function clearSuperAdminSession() {

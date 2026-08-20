@@ -6,9 +6,14 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function EventAdminDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  await requirePage("manage_events");
-  const { id } = await params;
-  const data = await getEventAdminDetail(id);
-  if (!data) notFound();
-  return <EventAdminDetailClient initialData={data} eventId={id} />;
+  try {
+    await requirePage("manage_events");
+    const { id } = await params;
+    const data = await getEventAdminDetail(id);
+    if (!data) notFound();
+    return <EventAdminDetailClient initialData={data} eventId={id} />;
+  } catch (e) {
+    console.error("EventAdminDetailPage error:", e);
+    notFound();
+  }
 }
