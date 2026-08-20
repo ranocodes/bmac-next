@@ -9,8 +9,6 @@ export default async function AdminDashboard() {
       initialCounts={stats.counts}
       recentNews={stats.recentNews}
       recentEvents={stats.recentEvents}
-      recentActivity={stats.recentActivity}
-      todayCount={stats.todayCount}
       revenueByMonth={stats.revenueByMonth}
       memberGrowth={stats.memberGrowth}
     />

@@ -74,13 +74,28 @@ export default function ApplicationReview({ detail }: DetailProps) {
 
   async function handleReject() {
     const ok = await confirm(
+      `Reject this application? Choose whether to send a rejection email.`,
+      { confirmText: "Reject without email", cancelText: "Cancel" }
+    );
+    if (!ok) return;
+
+    setSaving(true);
+    const result = await rejectApplicationWorkflow(record.id, { sendEmail: false });
+    setSaving(false);
+    if (result.error) { toast(result.error, "error"); return; }
+    setCurrentStatus("closed");
+    toast("Application rejected", "success");
+  }
+
+  async function handleRejectWithEmail() {
+    const ok = await confirm(
       `Reject this application and send a rejection email to ${record.submitterEmail || "the applicant"}?`,
       { confirmText: "Reject & Send Email" }
     );
     if (!ok) return;
 
     setSaving(true);
-    const result = await rejectApplicationWorkflow(record.id);
+    const result = await rejectApplicationWorkflow(record.id, { sendEmail: true });
     setSaving(false);
     if (result.error) { toast(result.error, "error"); return; }
     setCurrentStatus("closed");
@@ -179,7 +194,7 @@ export default function ApplicationReview({ detail }: DetailProps) {
             Application rejected
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleAccept}
               disabled={saving}
@@ -190,9 +205,16 @@ export default function ApplicationReview({ detail }: DetailProps) {
             <button
               onClick={handleReject}
               disabled={saving}
-              className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90 transition-all disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-all disabled:opacity-50"
             >
               <XCircle size={18} /> {saving ? "Saving…" : "Reject"}
+            </button>
+            <button
+              onClick={handleRejectWithEmail}
+              disabled={saving}
+              className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90 transition-all disabled:opacity-50"
+            >
+              <XCircle size={18} /> {saving ? "Saving…" : "Reject & Email"}
             </button>
           </div>
         )}

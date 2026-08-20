@@ -20,8 +20,16 @@ export async function getDashboardStats() {
     memberGrowth,
   ] = await Promise.all([
     db.query<{ count: string }>(
-      `SELECT COUNT(*) AS count FROM public.people
-       WHERE roles @> '["member"]'::jsonb OR roles @> '["volunteer"]'::jsonb`
+      `SELECT COUNT(*) AS count FROM (
+        SELECT DISTINCT p.id FROM public.people p
+        INNER JOIN public.person_records pr ON pr.person_id = p.id
+        WHERE pr.status = 'accepted' AND pr.kind IN ('member', 'volunteer')
+        UNION
+        SELECT DISTINCT p.id FROM public.people p
+        INNER JOIN public.participants pt ON pt.person_id = p.id
+        INNER JOIN public.cohorts c ON c.id = pt.cohort_id
+        WHERE pt.status IN ('accepted', 'enrolled', 'completed')
+      ) AS members`
     ).catch(() => [{ count: "0" }]),
     db.count("programs").catch(() => 0),
     countOpenWorkflows(),

@@ -324,12 +324,14 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
             <p className="text-xs text-muted-foreground mt-1">Registrations will appear here once people sign up.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Desktop table */}
+          <div className="overflow-x-auto hidden sm:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">Attendee</th>
-                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">Reference</th>
+                  <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Reference</th>
                   <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Status</th>
                   <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden lg:table-cell">Qty</th>
                   <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden lg:table-cell">Amount</th>
@@ -345,7 +347,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                         <p className="text-xs text-muted-foreground mt-0.5">{r.payerEmail}</p>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs hidden sm:table-cell">{r.reference}</td>
+                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs hidden md:table-cell">{r.reference}</td>
                     <td className="px-5 py-4 hidden md:table-cell">
                       {r.status === "pending" ? (
                         <button
@@ -377,30 +379,68 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                 ))}
               </tbody>
             </table>
-            {pageCount > 1 && (
-              <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Page {safePage} of {pageCount}</span>
-                <div className="flex items-center gap-2">
+          </div>
+          {/* Mobile cards */}
+          <div className="sm:hidden divide-y divide-border/50">
+            {pageRows.map(r => (
+              <div key={r.ticketId} className="px-5 py-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-secondary truncate">{r.payerName || "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{r.payerEmail}</p>
+                    <p className="text-[11px] text-muted-foreground/60 font-mono mt-0.5">{r.reference}</p>
+                  </div>
                   <button
-                    onClick={() => setPage(safePage - 1)}
-                    disabled={safePage <= 1}
-                    className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+                    onClick={() => toggleCheckIn(r.ticketId, r.checkedIn, r.payerName || "attendee")}
+                    disabled={busy || r.status !== "confirmed"}
+                    className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 ${
+                      r.checkedIn ? "bg-green-50 text-green-700 hover:bg-green-100" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                    }`}
                   >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setPage(safePage + 1)}
-                    disabled={safePage >= pageCount}
-                    className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
-                  >
-                    Next
+                    <TicketCheck size={13} /> {r.checkedIn ? "Checked in" : "Check in"}
                   </button>
                 </div>
+                <div className="flex items-center gap-3 text-xs">
+                  {r.status === "pending" ? (
+                    <button
+                      onClick={() => setVerifyingPaymentFor(r)}
+                      className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                    >
+                      {r.status}
+                    </button>
+                  ) : (
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      r.status === "confirmed" ? "bg-green-50 text-green-700" : "bg-muted text-muted-foreground"
+                    }`}>{r.status}</span>
+                  )}
+                  <span className="text-muted-foreground">Qty: {r.quantity}</span>
+                  {r.amount ? <span className="text-muted-foreground">{currency}{(Number(r.amount) * r.quantity / 100).toLocaleString("en-NG")}</span> : null}
+                </div>
               </div>
-            )}
+            ))}
           </div>
-        )}
           </>
+        )}
+        {activeTab === "registrants" && pageCount > 1 && (
+          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Page {safePage} of {pageCount}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(safePage - 1)}
+                disabled={safePage <= 1}
+                className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setPage(safePage + 1)}
+                disabled={safePage >= pageCount}
+                className="h-8 px-3 rounded-lg border border-border bg-card text-xs font-semibold text-secondary hover:bg-muted transition-colors disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
 
         {activeTab === "waitlist" && (

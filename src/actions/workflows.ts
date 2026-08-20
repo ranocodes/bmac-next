@@ -449,16 +449,19 @@ export async function acceptApplicationWorkflow(
 }
 
 export async function rejectApplicationWorkflow(
-  workflowId: string
+  workflowId: string,
+  opts?: { sendEmail?: boolean }
 ): Promise<{ error?: string; record?: WorkflowRecord }> {
   const admin = await requirePermission("manage_workflows");
   const record = await getWorkflow(workflowId);
   if (!record) return { error: "Submission not found" };
   if (!APPLICATION_KINDS_SET.has(record.kind)) return { error: "Not an application workflow" };
 
+  const sendEmail = opts?.sendEmail !== false; // default true
+
   const at = new Date().toISOString();
   const history = Array.isArray(record.details?.history) ? record.details.history : [];
-  history.push({ type: "status", by: admin.email, at, note: "Application rejected" });
+  history.push({ type: "status", by: admin.email, at, note: sendEmail ? "Application rejected (email sent)" : "Application rejected (no email)" });
 
   // Update workflow to closed
   const updated = await updateWorkflow(workflowId, {
@@ -497,7 +500,7 @@ export async function rejectApplicationWorkflow(
   }
 
   // Send rejection email
-  if (record.submitterEmail) {
+  if (sendEmail && record.submitterEmail) {
     const firstName = record.submitterName?.split(" ")[0] || "";
     await sendApplicationStatusEmail({
       email: record.submitterEmail,

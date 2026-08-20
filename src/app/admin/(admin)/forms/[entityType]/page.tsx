@@ -55,10 +55,15 @@ export default function FormEditPage() {
 
   async function handleSave() {
     setSaving(true);
-    const sorted = questions.map((q, i) => ({ ...q, order: i }));
-    await upsertFormDefinition(entityType, programId ?? null, sorted);
-    setSaving(false);
-    toast("Form saved", "success");
+    try {
+      const sorted = questions.map((q, i) => ({ ...q, order: i }));
+      await upsertFormDefinition(entityType, programId ?? null, sorted);
+      toast("Form saved", "success");
+    } catch (e: any) {
+      toast(e?.message || "Failed to save form", "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {

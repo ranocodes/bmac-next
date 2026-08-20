@@ -110,10 +110,15 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   async function handleSaveForm() {
     if (!params?.id) return;
     setFormSaving(true);
-    const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
-    await upsertFormDefinition("program", params.id as string, sorted);
-    setFormSaving(false);
-    toast("Form saved", "success");
+    try {
+      const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
+      await upsertFormDefinition("program", params.id as string, sorted);
+      toast("Form saved", "success");
+    } catch (e: any) {
+      toast(e?.message || "Failed to save form", "error");
+    } finally {
+      setFormSaving(false);
+    }
   }
 
   async function handleSubmit(publishStatus: "draft" | "published") {
