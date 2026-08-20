@@ -14,9 +14,6 @@ import {
   Clock3,
   ChevronUp,
   ChevronDown,
-  KeyRound,
-  Send,
-  X,
 } from "lucide-react";
 import {
   getProgramDetail,
@@ -27,7 +24,6 @@ import {
   setParticipantOutcome,
   getCohortAttendanceSummary,
   recordAttendance,
-  sendPublicCredentials,
 } from "@/actions/programs";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
@@ -69,8 +65,6 @@ export default function ProgramAdminDetail({
   const [attendanceDate, setAttendanceDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<any[]>([]);
-  const [credentials, setCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
-  const [sendingCredentials, setSendingCredentials] = useState<string>("");
   const { toast, confirm } = useToast();
   const admin = useAdmin();
   const adminEmail = admin?.email || "";
@@ -187,44 +181,6 @@ export default function ProgramAdminDetail({
     }
   }
 
-  async function handleSendCredentials(personId: string, email: string, name: string) {
-    const ok = await confirm(`Send login credentials to ${email}?`);
-    if (!ok) return;
-    setSendingCredentials(personId);
-    const res = await sendPublicCredentials({ personId, programId });
-    setSendingCredentials("");
-    if (res.error) {
-      toast(res.error, "error");
-    } else {
-      setCredentials({ email, password: res.password || "", warning: undefined });
-      toast(`Credentials sent to ${name}`);
-    }
-  }
-
-  async function handleBulkSendCredentials() {
-    const acceptedApps = (data.applications || []).filter((a: any) => a.status === "accepted");
-    if (acceptedApps.length === 0) {
-      toast("No accepted applicants to send credentials to", "error");
-      return;
-    }
-    const ok = await confirm(`Send login credentials to all ${acceptedApps.length} accepted applicants?`);
-    if (!ok) return;
-    setSendingCredentials("bulk");
-    let sent = 0;
-    let failed = 0;
-    for (const app of acceptedApps) {
-      const res = await sendPublicCredentials({ personId: app.person_id, programId });
-      if (res.error) failed++;
-      else sent++;
-    }
-    setSendingCredentials("");
-    if (failed > 0) {
-      toast(`Sent ${sent}, failed ${failed}`, sent > 0 ? undefined : "error");
-    } else {
-      toast(`Credentials sent to ${sent} applicants`);
-    }
-  }
-
   const tabs: { key: Tab; label: string; icon: any }[] = [
     { key: "applications", label: "Applications", icon: ClipboardCheck },
     { key: "cohorts", label: "Cohorts & Participants", icon: Users },
@@ -265,29 +221,6 @@ export default function ProgramAdminDetail({
         ))}
       </div>
 
-      {credentials && (
-        <div className="p-6 rounded-xl bg-primary/5 border border-primary/20">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="flex items-center gap-2 text-sm font-semibold text-secondary">
-                <KeyRound size={16} className="text-primary" />
-                Credentials sent to {credentials.email}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Password: <span className="font-mono font-bold text-secondary select-all">{credentials.password}</span>
-              </p>
-              {credentials.warning && (
-                <p className="mt-1 text-xs text-destructive">Email failed — share the password manually.</p>
-              )}
-            </div>
-            <button onClick={() => setCredentials(null)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all shrink-0">
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
       {tab === "applications" && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -301,15 +234,6 @@ export default function ProgramAdminDetail({
                 <option key={s} value={s}>{s.replace(/_/g, " ")}</option>
               ))}
             </select>
-            {accepted.length > 0 && (
-              <button
-                onClick={handleBulkSendCredentials}
-                disabled={sendingCredentials === "bulk"}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 disabled:opacity-50 transition-colors"
-              >
-                <Send size={15} /> {sendingCredentials === "bulk" ? "Sending…" : `Send All Credentials (${accepted.length})`}
-              </button>
-            )}
             <div className="relative max-w-md ml-auto">
               <select
                 value={selectedCohort}
@@ -388,16 +312,6 @@ export default function ProgramAdminDetail({
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
                               >
                                 <Plus size={13} /> Add to cohort
-                              </button>
-                            )}
-                            {a.status === "accepted" && (
-                              <button
-                                disabled={sendingCredentials === a.person_id}
-                                onClick={() => handleSendCredentials(a.person_id, a.email, `${a.first_name} ${a.last_name}`)}
-                                title="Send login credentials"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
-                              >
-                                <Send size={13} /> {sendingCredentials === a.person_id ? "Sending…" : "Send Login"}
                               </button>
                             )}
                           </div>

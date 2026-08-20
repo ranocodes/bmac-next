@@ -439,6 +439,17 @@ export async function acceptApplicationWorkflow(
         ? `You have been accepted into the ${record.details.cohortTitle} cohort.`
         : undefined,
     }).catch(err => console.error("acceptance email error:", err));
+
+    // Send WhatsApp group invite for member/volunteer acceptances
+    if (record.kind === "member" || record.kind === "volunteer") {
+      const { sendWhatsAppInviteEmail } = await import("@/lib/email");
+      await sendWhatsAppInviteEmail({
+        email: record.submitterEmail,
+        firstName,
+        programTitle: String(record.details?.programTitle || "Brilliant Minds Academic & Career Foundation"),
+        whatsappLink: "https://chat.whatsapp.com/PLACEHOLDER",
+      }).catch(err => console.error("whatsapp invite email error:", err));
+    }
   }
 
   await logActivity(admin.email, "workflow_update", "workflow_records", {

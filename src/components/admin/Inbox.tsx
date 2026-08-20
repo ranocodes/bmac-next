@@ -108,6 +108,7 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
   const [filterKind, setFilterKind] = useState<string>("all");
   const [activeStream, setActiveStream] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [showProcessed, setShowProcessed] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
@@ -121,6 +122,7 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
   const filtered = useMemo(() => {
     const streamDef = STREAMS.find(s => s.key === activeStream);
     let result = items.filter(i => {
+      if (!showProcessed && (i.status === "resolved" || i.status === "closed")) return false;
       if (streamDef && "kinds" in streamDef && !(streamDef as any).kinds.includes(i.kind)) return false;
       if (filterKind !== "all" && i.kind !== filterKind) return false;
       if (!search.trim()) return true;
@@ -219,6 +221,12 @@ export default function Inbox({ initialData = [], stats }: { initialData?: any[]
                 {f.label}
               </button>
             ))}
+            <button onClick={() => setShowProcessed(p => !p)}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                showProcessed ? "bg-amber-50 text-amber-700 border-amber-200" : "border-border text-muted-foreground hover:text-secondary hover:border-primary/40"
+              }`}>
+              {showProcessed ? "Hide processed" : "Show processed"}
+            </button>
           </div>
           <div className="relative">
             <button onClick={() => setSortOpen(p => !p)}

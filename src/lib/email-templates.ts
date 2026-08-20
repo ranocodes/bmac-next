@@ -30,7 +30,8 @@ export type EmailTemplateKey =
   | "renewal-reminder-1"
   | "re-engagement-30"
   | "re-engagement-60"
-  | "payment-required";
+  | "payment-required"
+  | "whatsapp-invite";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   credentials: "Admin credentials",
@@ -59,6 +60,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "re-engagement-30": "We miss you — 30 days",
   "re-engagement-60": "We miss you — 60 days",
   "payment-required": "Payment required after acceptance",
+  "whatsapp-invite": "WhatsApp group invitation",
 };
 
 const shell = (heading: string, message: string, cta?: { label: string; url: string }, footer?: string) => `<!DOCTYPE html>
@@ -560,6 +562,26 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "If you have questions, reply to this email.",
     ].join("\n"),
   },
+  "whatsapp-invite": {
+    subject: "You're accepted! Join our WhatsApp group — {{programTitle}}",
+    html: shell(
+      "Welcome aboard, {{firstName}}!",
+      "Congratulations! Your application for <strong>{{programTitle}}</strong> has been accepted. Join our WhatsApp group to connect with fellow participants, get updates, and stay in the loop.",
+      { label: "Join WhatsApp Group", url: "{{whatsappLink}}" },
+      "If the link doesn't work, copy and paste this URL: {{whatsappLink}}"
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "Congratulations! Your application for {{programTitle}} has been accepted.",
+      "",
+      "Join our WhatsApp group to connect with fellow participants:",
+      "",
+      "{{whatsappLink}}",
+      "",
+      "We're excited to have you!",
+    ].join("\n"),
+  },
 };
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
@@ -588,4 +610,5 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "renewal-reminder-1",
   "re-engagement-30",
   "re-engagement-60",
+  "whatsapp-invite",
 ];

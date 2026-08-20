@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, User, Mail, CalendarDays, Phone, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { acceptApplicationWorkflow, rejectApplicationWorkflow } from "@/actions/workflows";
-import { sendPublicCredentials } from "@/actions/programs";
 import StatusBadge from "@/components/admin/StatusBadge";
 
 interface DetailProps {
@@ -100,17 +99,6 @@ export default function ApplicationReview({ detail }: DetailProps) {
     if (result.error) { toast(result.error, "error"); return; }
     setCurrentStatus("closed");
     toast("Application rejected — email sent", "success");
-  }
-
-  const [sendingLogin, setSendingLogin] = useState(false);
-  async function handleSendLogin() {
-    if (!person?.person?.id) { toast("No person record found", "error"); return; }
-    setSendingLogin(true);
-    const programId = details.programId || undefined;
-    const result = await sendPublicCredentials({ personId: person.person.id, programId });
-    setSendingLogin(false);
-    if (result.error) { toast(result.error, "error"); return; }
-    toast("Portal login sent to " + record.submitterEmail, "success");
   }
 
   const renderAnswer = (value: unknown) => {
@@ -215,18 +203,6 @@ export default function ApplicationReview({ detail }: DetailProps) {
               className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold hover:bg-destructive/90 transition-all disabled:opacity-50"
             >
               <XCircle size={18} /> {saving ? "Saving…" : "Reject & Email"}
-            </button>
-          </div>
-        )}
-        
-        {currentStatus === "resolved" && record.kind === "program" && (
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <button
-              onClick={handleSendLogin}
-              disabled={sendingLogin}
-              className="w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all disabled:opacity-50"
-            >
-              {sendingLogin ? "Sending…" : "Send Student Portal Login"}
             </button>
           </div>
         )}

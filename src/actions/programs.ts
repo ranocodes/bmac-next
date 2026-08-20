@@ -13,7 +13,6 @@ import { createAdminNotification } from "@/lib/notifications";
 import { recordEvent } from "@/lib/analytics/record";
 import { sendWorkflowEmail, sendPublicCredentialsEmail, sendApplicationStatusEmail, sendPaymentRequiredEmail } from "@/actions/emails";
 import { logActivity } from "@/actions/activity-logs";
-import { scheduleWelcomeSequence } from "@/actions/email-sequences";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
 import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
 import { submitForm } from "@/actions/forms";
@@ -492,10 +491,6 @@ export async function updateApplicationStatus(input: {
             action: "accepted",
           });
         }
-
-        await scheduleWelcomeSequence(person.id, person.email, person.first_name).catch((err) => {
-          console.error("Welcome sequence scheduling failed:", err);
-        });
       } else {
         await sendWorkflowEmail("application-status", person.email, `${person.first_name} ${person.last_name}`, {
           applicationId: input.applicationId,
@@ -714,16 +709,6 @@ export async function getProgramDetail(programId: string): Promise<{
 } | null> {
   try {
     let program = await db.getById("programs", programId);
-    if (!program) {
-      const slugRows = await db.query<any>(
-        `SELECT id FROM public.programs WHERE LOWER(slug) = LOWER($1) LIMIT 1`,
-        [programId]
-      );
-      if (slugRows.length > 0) {
-        programId = slugRows[0].id;
-        program = await db.getById("programs", programId);
-      }
-    }
     if (!program) return null;
 
     const applications = await db.query<any>(

@@ -384,3 +384,18 @@ export async function sendPaymentRequiredEmail(opts: {
     paymentLink: absolutizeUrl(opts.paymentUrl),
   });
 }
+
+export async function sendWhatsAppInviteEmail(opts: {
+  email: string;
+  firstName?: string;
+  programTitle: string;
+  whatsappLink: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "whatsapp-invite",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    programTitle: opts.programTitle,
+    whatsappLink: opts.whatsappLink,
+  });
+}
