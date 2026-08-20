@@ -1,15 +1,4 @@
 import { neon } from "@neondatabase/serverless";
-import dns from "node:dns";
-
-// force IPv4 for neon HTTP fetch (IPv6 unreachable on this machine)
-const __orig = dns.lookup.bind(dns);
-dns.lookup = ((hostname: string, options: any, callback?: any) => {
-  if (typeof options === "function") {
-    callback = options;
-    (options as any) = {};
-  }
-  return __orig(hostname, { ...options, family: 4 }, callback);
-}) as typeof dns.lookup;
 
 let _sql: ReturnType<typeof neon> | null = null;
 function getSql() {
