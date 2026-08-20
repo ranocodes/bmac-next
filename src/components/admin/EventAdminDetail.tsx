@@ -443,6 +443,9 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
           </div>
         )}
 
+          </>
+        )}
+
         {activeTab === "waitlist" && (
           <div className="overflow-x-auto">
             {waitlist.filter(w => w.status === "waiting").length === 0 ? (
