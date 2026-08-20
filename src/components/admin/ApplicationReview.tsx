@@ -75,7 +75,7 @@ export default function ApplicationReview({ detail }: DetailProps) {
   async function handleReject() {
     const ok = await confirm(
       `Reject this application? Choose whether to send a rejection email.`,
-      { confirmText: "Reject without email", cancelText: "Cancel" }
+      { confirmText: "Reject without email", variant: "destructive" }
     );
     if (!ok) return;
 

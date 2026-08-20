@@ -92,8 +92,8 @@ export const db = {
 
   async remove(table: string, id: string): Promise<boolean> {
     const sql = getSql();
-    const result = await sql.query(`DELETE FROM public.${table} WHERE id = $1`, [id]);
-    return (result as any).rowCount > 0;
+    const rows: any[] = await sql.query(`DELETE FROM public.${table} WHERE id = $1 RETURNING id`, [id]) as any;
+    return rows.length > 0;
   },
 
   async exists(table: string): Promise<boolean> {
