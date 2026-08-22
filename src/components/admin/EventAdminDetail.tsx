@@ -218,14 +218,14 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         {stats.map(s => (
-          <div key={s.label} className="bg-card rounded-xl border border-border p-5">
+          <div key={s.label} className="bg-card rounded-xl border border-border p-5 min-w-0">
             <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
               <s.icon size={18} />
             </div>
-            <p className="text-2xl font-bold text-secondary">{s.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+            <p className="text-lg md:text-xl xl:text-2xl font-bold text-secondary truncate" title={s.value}>{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-1 truncate" title={s.label}>{s.label}</p>
           </div>
         ))}
       </div>
