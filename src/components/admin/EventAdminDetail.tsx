@@ -166,7 +166,15 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
 
   const pct = event.capacity > 0 ? Math.min(100, Math.round((event.capacity_used / event.capacity) * 100)) : 0;
   const currency = "₦";
-  const revenueLabel = `${currency}${event.revenue.toLocaleString("en-NG")}`;
+  const compactNum = (n: number): string => {
+    const safe = Number(n) || 0;
+    if (safe >= 1_000_000_000) return (safe / 1_000_000_000).toFixed(1).replace(/\.0$/, "") + "B";
+    if (safe >= 1_000_000) return (safe / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+    if (safe >= 1_000) return (safe / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+    return safe.toLocaleString("en-NG");
+  };
+  const revenueLabel = `${currency}${compactNum(event.revenue)}`;
+  const revenueFull = `${currency}${event.revenue.toLocaleString("en-NG")}`;
 
   const filtered = registrants.filter(r => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
@@ -179,13 +187,13 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const stats = [
-    { label: "Total registrations", value: String(event.registrations), icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Confirmed", value: String(event.confirmed), icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
-    { label: "Checked in", value: String(event.checkedIn), icon: TicketCheck, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { label: "Attendance rate", value: `${event.attendanceRate}%`, icon: TicketCheck, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-    { label: "Revenue", value: revenueLabel, icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Pending", value: String(event.pending), icon: Clock3, color: "text-orange-500", bg: "bg-orange-500/10" },
-    { label: "Cancelled", value: String(event.cancelled), icon: XCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { label: "Total registrations", value: compactNum(event.registrations), full: `${event.registrations.toLocaleString("en-NG")} registrations`, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Confirmed", value: compactNum(event.confirmed), full: `${event.confirmed.toLocaleString("en-NG")} confirmed`, icon: CheckCircle2, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Checked in", value: compactNum(event.checkedIn), full: `${event.checkedIn.toLocaleString("en-NG")} checked in`, icon: TicketCheck, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { label: "Attendance rate", value: `${event.attendanceRate}%`, full: `${event.attendanceRate}% attendance rate`, icon: TicketCheck, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+    { label: "Revenue", value: revenueLabel, full: revenueFull, icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Pending", value: compactNum(event.pending), full: `${event.pending.toLocaleString("en-NG")} pending`, icon: Clock3, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { label: "Cancelled", value: compactNum(event.cancelled), full: `${event.cancelled.toLocaleString("en-NG")} cancelled`, icon: XCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
   ];
 
   return (
@@ -224,7 +232,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
             <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
               <s.icon size={18} />
             </div>
-            <p className="text-lg md:text-xl xl:text-2xl font-bold text-secondary truncate" title={s.value}>{s.value}</p>
+            <p className="text-lg md:text-xl xl:text-2xl font-bold text-secondary truncate" title={s.full}>{s.value}</p>
             <p className="text-xs text-muted-foreground mt-1 truncate" title={s.label}>{s.label}</p>
           </div>
         ))}
