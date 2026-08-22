@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getInvolvementPage } from "@/actions/involvement-pages";
+import { getGoogleForms } from "@/actions/settings";
 import InvolvementDetailClient from "./InvolvementDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,10 @@ const ENTITY_MAP: Record<string, string> = {
 
 export default async function InvolvementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const page = await getInvolvementPage(id);
+  const [page, googleForms] = await Promise.all([
+    getInvolvementPage(id),
+    getGoogleForms(),
+  ]);
   if (!page) notFound();
 
   const entityType = ENTITY_MAP[id] || null;
@@ -23,6 +27,7 @@ export default async function InvolvementPage({ params }: { params: Promise<{ id
       page={page}
       slug={id}
       entityType={entityType}
+      googleForms={googleForms}
     />
   );
 }

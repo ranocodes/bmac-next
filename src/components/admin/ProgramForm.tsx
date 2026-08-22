@@ -45,6 +45,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   );
   const [isPaid, setIsPaid] = useState(initialData?.is_paid ?? initialData?.isPaid ?? false);
   const [paymentTiming, setPaymentTiming] = useState<"immediate" | "after_acceptance">(initialData?.payment_timing ?? initialData?.paymentTiming ?? "immediate");
+  const [googleFormUrl, setGoogleFormUrl] = useState(initialData?.google_form_url ?? initialData?.googleFormUrl ?? "");
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
   const [duration, setDuration] = useState(initialData?.duration || "");
   const [effort, setEffort] = useState(initialData?.effort || "");
@@ -148,6 +149,7 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
       applications_open: applicationsOpen,
       is_paid: isPaid,
       payment_timing: isPaid ? paymentTiming : "immediate",
+      google_form_url: googleFormUrl || "",
       price: isPaid ? Math.max(0, Number(price) || 0) : 0,
       details: [detailDuration, detailSchedule, detailEligibility, ...detailOther].join(" | "),
       skills,
@@ -994,7 +996,17 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               </button>
             </div>
             <div>
-              <label className="block text-sm font-medium text-secondary/80 mb-1.5">Pricing</label>
+              <label className="block text-sm font-medium text-secondary/80 mb-1.5">Application Form URL</label>
+              <input
+                type="url"
+                value={googleFormUrl}
+                onChange={(e) => setGoogleFormUrl(e.target.value)}
+                placeholder="https://forms.google.com/..."
+                className="w-full px-3 py-2.5 min-h-[44px] bg-background border border-border rounded-lg text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
+              />
+              <p className="text-[10px] text-muted-foreground/60 mt-1">Paste a Google Form URL. The "Apply" button on the public page will redirect here.</p>
+            </div>
+            <div>
               <button
                 type="button"
                 onClick={() => setIsPaid(!isPaid)}

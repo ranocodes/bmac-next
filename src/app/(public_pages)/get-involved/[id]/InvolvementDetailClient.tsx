@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -28,15 +28,12 @@ import {
   FileText,
   Banknote,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import ConsentCheckbox from "@/components/ConsentCheckbox";
-import { getFormDefinitionOrDefault } from "@/actions/forms";
-import { applyAsPerson } from "@/actions/people";
 import { loadPaystack } from "@/lib/paystack";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import type { InvolvementPage, InvolvementSection } from "@/actions/involvement-pages";
-import type { FormDefinition, FormQuestion } from "@/types/cms";
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Calendar, Zap, Users, Heart, Clock, Shield, Award, TrendingUp,
@@ -63,19 +60,16 @@ interface Props {
   page: InvolvementPage;
   slug: string;
   entityType: string | null;
+  googleForms?: Record<string, string>;
 }
 
-function InvolvementDetailInner({ page, slug, entityType }: Props) {
+function InvolvementDetailInner({ page, slug, googleForms }: Props) {
   const accent = ACCENT_MAP[page.accent_color || "emerald"] || ACCENT_MAP.emerald;
   const HeroIcon = resolveIcon(page.icon);
   const { toast } = useToast();
 
-  const [formDef, setFormDef] = useState<FormDefinition | null>(null);
-  const [loadingForm, setLoadingForm] = useState(!!entityType);
   const [donateName, setDonateName] = useState("");
   const [donateEmail, setDonateEmail] = useState("");
-  const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, unknown>>({});
-  const [consent, setConsent] = useState({ privacy: false, marketing: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
@@ -84,85 +78,17 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
   const [customAmount, setCustomAmount] = useState("");
 
   const isDonate = slug === "donate";
+  const googleFormUrl = googleForms?.[slug] || "";
 
-  useEffect(() => {
-    if (!entityType) return;
-    getFormDefinitionOrDefault(entityType).then(def => {
-      setFormDef(def);
-      setLoadingForm(false);
-    });
-  }, [entityType]);
-
-  const dynamicQuestions = useMemo(() => {
-    if (!formDef) return [];
-    return formDef.questions
-      .filter(q => q.label && q.label.trim() !== "")
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [formDef]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError("");
-    setIsSubmitting(true);
-
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (isDonate) {
-      await handleDonate();
+      handleDonate();
       return;
     }
-
-    const answers: Record<string, unknown> = { ...dynamicAnswers };
-
-    if (formDef) {
-      const requiredMissing = formDef.questions.filter(q => q.required && q.label && !answers[q.id]);
-      if (requiredMissing.length) {
-        setFormError(`Please fill in: ${requiredMissing.map(q => q.label).join(", ")}`);
-        setIsSubmitting(false);
-        return;
-      }
+    if (googleFormUrl) {
+      window.open(googleFormUrl, "_blank", "noopener,noreferrer");
     }
-
-    const name = String(answers.name || "");
-    const email = String(answers.email || "");
-    const phone = String(answers.phone || "");
-
-    if (!name || !email) {
-      setFormError("Please fill in your name and email.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const kindMap: Record<string, "member" | "volunteer" | "partner" | "program"> = {
-      join: "member",
-      volunteer: "volunteer",
-      partner: "partner",
-      school: "school-chapter" as any,
-    };
-
-    try {
-      const res = await applyAsPerson({
-        kind: (kindMap[slug] || "member") as any,
-        name,
-        email,
-        phone,
-        notes: String(answers.motivation || answers.notes || ""),
-        privacy: consent.privacy,
-        marketing: consent.marketing,
-        answers,
-      });
-      if (res.error) {
-        setFormError(res.error);
-        setIsSubmitting(false);
-        return;
-      }
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Something went wrong.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    setIsSubmitting(false);
-    setSubmitted(true);
-    toast("Application sent!", "success");
   };
 
   const handleDonate = async () => {
@@ -470,7 +396,7 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                       Back to Get Involved
                     </Link>
                   </div>
-                ) : (
+                ) : isDonate ? (
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Honeypot */}
                     <div className="absolute left-[-9999px]" aria-hidden="true">
@@ -478,167 +404,66 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                       <input type="text" id="company_website" name="company_website" tabIndex={-1} autoComplete="off" />
                     </div>
 
-                    {/* DONATE: optional name/email + amount */}
-                    {isDonate && (
-                      <>
-                        <div className="space-y-1.5">
-                          <label className="block text-sm font-semibold text-secondary">Your Name <span className="text-muted-foreground font-normal">(optional)</span></label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Amina Yusuf"
-                            value={donateName}
-                            onChange={(e) => setDonateName(e.target.value)}
-                            className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="block text-sm font-semibold text-secondary">Email Address <span className="text-muted-foreground font-normal">(optional — for receipt)</span></label>
-                          <input
-                            type="email"
-                            placeholder="you@example.com"
-                            value={donateEmail}
-                            onChange={(e) => setDonateEmail(e.target.value)}
-                            className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                          />
-                        </div>
-                        <div className="space-y-3 pt-2">
-                          <label className="block text-sm font-semibold text-secondary">Donation Amount</label>
-                          <div className="flex flex-wrap gap-2">
-                            {DONATE_AMOUNTS.map((amt) => (
-                              <button
-                                key={amt}
-                                type="button"
-                                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                                  donateAmount === amt
-                                    ? `${accent.solid} border-transparent text-white shadow-md`
-                                    : "bg-background border-border text-secondary hover:border-primary/40"
-                                }`}
-                                onClick={() => setDonateAmount(amt)}
-                              >
-                                {amt === "custom" ? "Custom" : `\u20A6${parseInt(amt).toLocaleString()}`}
-                              </button>
-                            ))}
-                          </div>
-                          {donateAmount === "custom" && (
-                            <input
-                              type="number"
-                              placeholder="Enter amount (\u20A6)"
-                              className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                              value={customAmount}
-                              onChange={(e) => setCustomAmount(e.target.value)}
-                            />
-                          )}
-                          <Link
-                            href="/donor-lookup"
-                            className="block text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors pt-1"
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-semibold text-secondary">Your Name <span className="text-muted-foreground font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Amina Yusuf"
+                        value={donateName}
+                        onChange={(e) => setDonateName(e.target.value)}
+                        className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-sm font-semibold text-secondary">Email Address <span className="text-muted-foreground font-normal">(optional — for receipt)</span></label>
+                      <input
+                        type="email"
+                        placeholder="you@example.com"
+                        value={donateEmail}
+                        onChange={(e) => setDonateEmail(e.target.value)}
+                        className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-3 pt-2">
+                      <label className="block text-sm font-semibold text-secondary">Donation Amount</label>
+                      <div className="flex flex-wrap gap-2">
+                        {DONATE_AMOUNTS.map((amt) => (
+                          <button
+                            key={amt}
+                            type="button"
+                            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                              donateAmount === amt
+                                ? `${accent.solid} border-transparent text-white shadow-md`
+                                : "bg-background border-border text-secondary hover:border-primary/40"
+                            }`}
+                            onClick={() => setDonateAmount(amt)}
                           >
-                            Already donated? Look up your donations &amp; receipts →
-                          </Link>
-                        </div>
-                      </>
-                    )}
-
-                    {/* APPLICATIONS: dynamic questions from form definition only */}
-                    {loadingForm && entityType && (
-                      <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground">
-                        <Loader2 size={16} className="animate-spin" />
-                        Loading form...
-                      </div>
-                    )}
-
-                    {!loadingForm && dynamicQuestions.length > 0 && (
-                      <div className="space-y-4">
-                        {dynamicQuestions.map((q: FormQuestion) => (
-                          <div key={q.id} className="space-y-1.5">
-                            <label className="block text-sm font-semibold text-secondary">
-                              {q.label} {q.required && <span className="text-destructive">*</span>}
-                            </label>
-                            {q.type === "textarea" ? (
-                              <textarea
-                                placeholder={q.placeholder || ""}
-                                value={(dynamicAnswers[q.id] as string) || ""}
-                                onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                                rows={3}
-                                className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
-                              />
-                            ) : q.type === "select" ? (
-                              <select
-                                value={(dynamicAnswers[q.id] as string) || ""}
-                                onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                                className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                              >
-                                <option value="">Select...</option>
-                                {(q.options || []).map((opt: string) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                              </select>
-                            ) : q.type === "radio" ? (
-                              <div className="flex flex-wrap gap-3">
-                                {(q.options || []).map((opt: string) => (
-                                  <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
-                                    <input
-                                      type="radio"
-                                      name={`q-${q.id}`}
-                                      value={opt}
-                                      checked={dynamicAnswers[q.id] === opt}
-                                      onChange={() => setDynamicAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                                      className="accent-primary"
-                                    />
-                                    {opt}
-                                  </label>
-                                ))}
-                              </div>
-                            ) : q.type === "checkbox" ? (
-                              <div className="flex flex-wrap gap-3">
-                                {(q.options || []).map((opt: string) => {
-                                  const checked = Array.isArray(dynamicAnswers[q.id]) && (dynamicAnswers[q.id] as string[]).includes(opt);
-                                  return (
-                                    <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() => {
-                                          setDynamicAnswers(prev => {
-                                            const current = Array.isArray(prev[q.id]) ? [...(prev[q.id] as string[])] : [];
-                                            return {
-                                              ...prev,
-                                              [q.id]: checked ? current.filter(v => v !== opt) : [...current, opt],
-                                            };
-                                          });
-                                        }}
-                                        className="accent-primary"
-                                      />
-                                      {opt}
-                                    </label>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <input
-                                type={q.type === "number" ? "number" : q.type === "date" ? "date" : q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
-                                placeholder={q.placeholder || ""}
-                                value={(dynamicAnswers[q.id] as string) || ""}
-                                onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                                className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                              />
-                            )}
-                          </div>
+                            {amt === "custom" ? "Custom" : `\u20A6${parseInt(amt).toLocaleString()}`}
+                          </button>
                         ))}
                       </div>
-                    )}
+                      {donateAmount === "custom" && (
+                        <input
+                          type="number"
+                          placeholder="Enter amount (\u20A6)"
+                          className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                          value={customAmount}
+                          onChange={(e) => setCustomAmount(e.target.value)}
+                        />
+                      )}
+                      <Link
+                        href="/donor-lookup"
+                        className="block text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors pt-1"
+                      >
+                        Already donated? Look up your donations &amp; receipts →
+                      </Link>
+                    </div>
 
                     {formError && (
                       <div className="px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs font-semibold text-destructive">
                         {formError}
                       </div>
                     )}
-
-                    <ConsentCheckbox
-                      privacy={consent.privacy}
-                      marketing={consent.marketing}
-                      onChange={setConsent}
-                      consentId={`inv-${slug}`}
-                    />
 
                     <button
                       type="submit"
@@ -649,12 +474,26 @@ function InvolvementDetailInner({ page, slug, entityType }: Props) {
                         <Loader2 size={18} className="animate-spin" />
                       ) : (
                         <>
-                          {isDonate ? "Donate Now" : "Submit Application"}
+                          Donate Now
                           <ArrowRight size={16} />
                         </>
                       )}
                     </button>
                   </form>
+                ) : googleFormUrl ? (
+                  <div className="space-y-5">
+                    <button
+                      onClick={() => window.open(googleFormUrl, "_blank", "noopener,noreferrer")}
+                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-none text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3`}
+                    >
+                      Apply Now
+                      <ExternalLink size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    Application form is being set up. Please check back soon.
+                  </div>
                 )}
               </motion.div>
             </div>

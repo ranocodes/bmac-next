@@ -81,6 +81,9 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingAll, setSavingAll] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [googleForms, setGoogleForms] = useState<{ join: string; volunteer: string; school: string; partner: string }>(
+    (initialData?.google_forms as any) || { join: "", volunteer: "", school: "", partner: "" }
+  );
   const { toast } = useToast();
 
   const [templates, setTemplates] = useState<Record<string, EmailTemplate>>(DEFAULT_EMAIL_TEMPLATES);
@@ -118,6 +121,7 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         copyright,
         about_story: aboutStory,
         contact_info: contactInfo,
+        google_forms: googleForms,
       });
       await saveEmailTemplates(templates);
       setIsDirty(false);
@@ -307,6 +311,26 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           <div key={key}>
             <label className="block text-sm font-medium text-secondary/80 mb-1.5">{label}</label>
             <input type="text" value={(contactInfo as Record<string, string>)[key]} onChange={e => { setContactInfo(s => ({ ...s, [key]: e.target.value })); setIsDirty(true); }} placeholder={placeholder}
+              className={inputCls()} />
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
+        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
+          <FileText size={16} className="text-primary" />
+          <h2 className="font-display text-base font-bold text-secondary">Google Form Links</h2>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-1">External Google Form URLs for each application type. Leave blank to hide the apply button.</p>
+        {([
+          ["join", "Join (Member)", "https://forms.google.com/..."],
+          ["volunteer", "Volunteer", "https://forms.google.com/..."],
+          ["school", "School Chapter", "https://forms.google.com/..."],
+          ["partner", "Partner", "https://forms.google.com/..."],
+        ] as const).map(([key, label, placeholder]) => (
+          <div key={key}>
+            <label className="block text-sm font-medium text-secondary/80 mb-1.5">{label}</label>
+            <input type="url" value={(googleForms as Record<string, string>)[key]} onChange={e => { setGoogleForms(s => ({ ...s, [key]: e.target.value })); setIsDirty(true); }} placeholder={placeholder}
               className={inputCls()} />
           </div>
         ))}

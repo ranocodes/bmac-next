@@ -89,6 +89,15 @@ export async function resetEmailTemplate(key: string): Promise<{ error?: string 
   return {};
 }
 
+export async function getGoogleForms(): Promise<Record<string, string>> {
+  try {
+    const rows = await db.getAll<{ google_forms?: Record<string, string> }>("site_settings").catch(() => []);
+    return rows.length > 0 ? (rows[0].google_forms as Record<string, string>) || {} : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function updateAdminProfile(email: string, firstName: string) {
   await requireAdmin();
   const session = await getSuperAdminSession();

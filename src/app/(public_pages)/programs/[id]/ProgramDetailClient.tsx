@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { CheckCircle2, Users, Clock, Send, MapPin, CheckCircle, ArrowLeft, Sparkles, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { BentoCard } from "@/components/ui/BentoCard";
@@ -13,10 +13,7 @@ import ShareButtons from "@/components/ui/ShareButtons";
 import type { Program } from "@/types/cms";
 import { cn } from "@/lib/utils";
 import { getIcon } from "@/lib/iconMapper";
-import { submitApplication, createProgramOrder, verifyProgramPayment } from "@/actions/programs";
-import { loadPaystack } from "@/lib/paystack";
-import { getFormDefinitionOrDefault } from "@/actions/forms";
-import type { ProgramInstructor, FormQuestion } from "@/types/cms";
+import type { ProgramInstructor } from "@/types/cms";
 import StatusBanner from "@/components/admin/StatusBanner";
 
 function useInView(ref: React.RefObject<HTMLElement | null>, threshold = 0.15) {
@@ -108,24 +105,6 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   }));
   const [program] = useState<Program | null>(all.find(p => p.id === id && p.status === "published") || null);
   const [otherPathways] = useState<Program[]>(all.filter(p => p.id !== id && p.status === "published").slice(0, 3));
-  const [submitted, setSubmitted] = useState(false);
-  const [applicationId, setApplicationId] = useState("");
-  const [isPending, setIsPending] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", motivation: "" });
-  const [consent, setConsent] = useState(false);
-  const [formDefQuestions, setFormDefQuestions] = useState<FormQuestion[]>([]);
-  const [formDefLoaded, setFormDefLoaded] = useState(false);
-  const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, unknown>>({});
-
-  useEffect(() => {
-    if (program?.id) {
-      getFormDefinitionOrDefault("program", program.id).then(def => {
-        setFormDefQuestions(def.questions.map(q => ({ ...q, order: q.order ?? 0 })).sort((a, b) => a.order - b.order));
-        setFormDefLoaded(true);
-      });
-    }
-  }, [program?.id]);
 
   const curriculum = (program as any)?.curriculum || [];
   const audienceFor = (program as any)?.audienceFor || [];
@@ -137,113 +116,11 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   const instructors = ((program as any)?.instructors || []) as { name: string; bio: string; photo?: string; role?: string }[];
   const refundPolicy = (program as any)?.refundPolicy || "";
   const testimonials = (program as any)?.testimonials || [];
+  const googleFormUrl = (program as any)?.google_form_url || (program as any)?.googleFormUrl || "";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!program) return;
-    setIsPending(true);
-    setFormError("");
-
-    const nameParts = formData.name.trim().split(/\s+/);
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || firstName;
-    const base = {
-      programId: program.id,
-      firstName,
-      lastName,
-      email: formData.email,
-      phone: formData.phone || undefined,
-      motivation: formData.motivation,
-      consent,
-      answers: {
-        ...dynamicAnswers,
-        name: formData.name.trim(),
-        email: formData.email,
-        phone: formData.phone || "",
-        motivation: formData.motivation,
-        consent,
-      },
-    };
-
-    if (program.isPaid && program.paymentTiming === "immediate") {
-      const order = await createProgramOrder(base);
-      if (order.error) {
-        setFormError(order.error);
-        setIsPending(false);
-        return;
-      }
-      try {
-        const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-        if (!paystackKey) {
-          setFormError("Payments are not configured yet. Please try again later.");
-          setIsPending(false);
-          return;
-        }
-        const PaystackPop = await loadPaystack();
-        const handler = PaystackPop.setup({
-          key: paystackKey,
-          email: formData.email,
-          amount: order.amountKobo || (program.price || 0) * 100,
-          currency: "NGN",
-          ref: order.reference,
-          metadata: {
-            source_type: "program",
-            source_id: program.id,
-            application_id: order.applicationId,
-            reference: order.reference,
-            payer_name: formData.name,
-            custom_fields: [
-              {
-                display_name: "Program Title",
-                variable_name: "program_title",
-                value: program.title,
-              },
-              {
-                display_name: "Applicant Name",
-                variable_name: "applicant_name",
-                value: formData.name,
-              },
-            ],
-          },
-          callback: function(response: any) {
-              /* payment confirmed */
-            setIsPending(true);
-            setFormError("");
-            const poll = setInterval(async () => {
-              const res = await verifyProgramPayment(order.reference || "");
-              if (res.status === "completed") {
-                clearInterval(poll);
-                setApplicationId(res.applicationId || "");
-                setIsPending(false);
-                setSubmitted(true);
-              }
-            }, 3000);
-            setTimeout(() => {
-              clearInterval(poll);
-              setIsPending(false);
-              setFormError("Payment received — verification is taking longer than usual. We'll confirm your application by email shortly.");
-            }, 60000);
-          },
-          onClose: function() {
-            setIsPending(false);
-            setFormError("Payment not confirmed yet — we're verifying your payment. Check back shortly.");
-          },
-        });
-        handler.openIframe();
-      } catch (err) {
-        setFormError(err instanceof Error ? err.message : "Payment could not start. Please try again.");
-        setIsPending(false);
-      }
-    } else {
-      const res = await submitApplication(base);
-      if (res.error) {
-        setFormError(res.error);
-        setIsPending(false);
-        return;
-      }
-      setApplicationId(res.applicationId || "");
-      setIsPending(false);
-      setSubmitted(true);
+  const handleSubmit = () => {
+    if (googleFormUrl) {
+      window.open(googleFormUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -553,131 +430,27 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                           : "Join the next cohort of ambassadors gathering in Jos."}
                       </p>
 
-                   {!program.applicationsOpen ? (
-                     <StatusBanner
-                       title="Applications Closed"
-                       description="This program is not currently accepting applications. Check back soon."
-                       variant="closed"
-                     />
-                   ) : submitted ? (
-                      <div className="text-center py-8">
-                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle size={28} className="text-emerald-600" />
-                        </div>
-                        <p className="font-display text-lg font-bold text-secondary mb-1">{program.isPaid ? "Payment Received!" : "Application Sent!"}</p>
-                        <p className="text-xs text-muted-foreground">We'll reach out within 48 hours.</p>
-                        {applicationId && (
-                          <p className="text-[10px] font-mono text-muted-foreground/60 mt-3">Ref: {applicationId}</p>
-                        )}
-                        <Link href="/application-status" className="inline-flex items-center gap-2 text-primary font-bold text-sm mt-4 hover:gap-3 transition-all">
-                          Check your application status <ArrowLeft size={15} className="rotate-180" />
-                        </Link>
-                      </div>
-                    ) : (
-                      <form className="space-y-5 md:space-y-6" onSubmit={handleSubmit}>
-                         {/* Core fields */}
-                         <div className="space-y-2 text-left group">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Full Name</label>
-                            <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Ambassador Name" className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
-                         </div>
-                         <div className="space-y-2 text-left group">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Email Address</label>
-                            <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="email@bmacjos.org" className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" required />
-                         </div>
-                         <div className="space-y-2 text-left group">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Phone (Optional)</label>
-                            <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} placeholder="+234..." className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40" />
-                         </div>
-
-                         {/* Dynamic questions from form editor */}
-                         {formDefQuestions.filter(q => !["name","email","phone","motivation","consent"].includes(q.id)).map(q => (
-                           <div key={q.id} className="space-y-2 text-left group">
-                             <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">
-                               {q.label} {q.required && <span className="text-destructive">*</span>}
-                             </label>
-                             {q.type === "textarea" ? (
-                               <textarea
-                                 rows={3}
-                                 placeholder={q.placeholder || ""}
-                                 value={(dynamicAnswers[q.id] as string) || ""}
-                                 onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                                 required={q.required}
-                                 className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 resize-none"
-                               />
-                             ) : q.type === "select" ? (
-                               <select
-                                 value={(dynamicAnswers[q.id] as string) || ""}
-                                 onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                                 required={q.required}
-                                 className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300"
-                               >
-                                 <option value="">Select...</option>
-                                 {(q.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                               </select>
-                             ) : q.type === "radio" ? (
-                               <div className="flex flex-wrap gap-3">
-                                 {(q.options || []).map(opt => (
-                                   <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
-                                     <input type="radio" name={`q-${q.id}`} value={opt} checked={dynamicAnswers[q.id] === opt} onChange={() => setDynamicAnswers(prev => ({ ...prev, [q.id]: opt }))} className="accent-primary" />
-                                     {opt}
-                                   </label>
-                                 ))}
-                               </div>
-                             ) : q.type === "checkbox" ? (
-                               <div className="flex flex-wrap gap-3">
-                                 {(q.options || []).map(opt => {
-                                   const checked = Array.isArray(dynamicAnswers[q.id]) && (dynamicAnswers[q.id] as string[]).includes(opt);
-                                   return (
-                                     <label key={opt} className="inline-flex items-center gap-2 text-sm text-secondary cursor-pointer">
-                                       <input type="checkbox" checked={checked} onChange={() => {
-                                         setDynamicAnswers(prev => {
-                                           const current = Array.isArray(prev[q.id]) ? [...(prev[q.id] as string[])] : [];
-                                           return { ...prev, [q.id]: checked ? current.filter(v => v !== opt) : [...current, opt] };
-                                         });
-                                       }} className="accent-primary" />
-                                       {opt}
-                                     </label>
-                                   );
-                                 })}
-                               </div>
-                             ) : (
-                               <input
-                                 type={q.type === "number" ? "number" : q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
-                                 placeholder={q.placeholder || ""}
-                                 value={(dynamicAnswers[q.id] as string) || ""}
-                                 onChange={(e) => setDynamicAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                                 required={q.required}
-                                 className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40"
-                               />
-                             )}
-                           </div>
-                         ))}
-
-                         <div className="space-y-2 text-left group">
-                            <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors duration-300">Why Do You Want to Join?</label>
-                            <textarea value={formData.motivation} onChange={(e) => setFormData({...formData, motivation: e.target.value})} rows={3} placeholder="Tell us a little about yourself and why this program matters to you..." className="w-full px-5 py-4 bg-background border border-border/60 rounded-lg text-sm focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all duration-300 placeholder:text-muted-foreground/40 resize-none" required />
-                         </div>
-                         <label className="flex items-start gap-3 text-left cursor-pointer">
-                            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 w-4 h-4 accent-primary" required />
-                            <span className="text-xs text-muted-foreground leading-relaxed">I consent to BMAC contacting me about this application and storing my details in line with our privacy policy.</span>
-                         </label>
-                        {formError && (
-                          <p className="text-xs font-bold text-red-500 px-2">{formError}</p>
-                        )}
-                          <button disabled={isPending} className="w-full py-4 bg-primary text-card rounded-lg font-bold hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3 mt-4 disabled:opacity-70">
-                           {isPending ? (
-                             <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
-                           ) : (
-                             <>{
-                               program.isPaid
-                                 ? program.paymentTiming === "immediate"
-                                   ? `Pay ₦${(program.price || 0).toLocaleString()} & Register`
-                                   : "Apply to Program"
-                                 : "Apply to Program"
-                             } <Send size={18} /></>
-                           )}
-                          </button>
-                       </form>)}
+               {!program.applicationsOpen ? (
+                 <StatusBanner
+                   title="Applications Closed"
+                   description="This program is not currently accepting applications. Check back soon."
+                   variant="closed"
+                 />
+               ) : googleFormUrl ? (
+                 <button
+                   onClick={handleSubmit}
+                   className="w-full py-4 bg-primary text-card rounded-lg font-bold hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3"
+                 >
+                   {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Apply` : "Apply to Program"}
+                   <ExternalLink size={18} />
+                 </button>
+               ) : (
+                 <StatusBanner
+                   title="Form Not Available"
+                   description="The application form is being set up. Please check back soon or contact us for more information."
+                   variant="closed"
+                 />
+               )}
                   </div>
              </div>
            </aside>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Newspaper, Calendar, BookOpen, Users,
   ArrowRight, Plus, TrendingUp, RefreshCw,
-  LayoutDashboard, DollarSign, Inbox,
+  LayoutDashboard, DollarSign,
 } from "lucide-react";
 import { useAdmin } from "@/lib/auth/admin-context";
 
@@ -93,7 +93,6 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
   const statCards = [
     { label: "Members", value: counts.totalMembers, icon: Users, color: "text-blue-500", href: "/admin/people?role=member" },
     { label: "Programs", value: counts.activePrograms, icon: BookOpen, color: "text-emerald-500", href: "/admin/programs" },
-    { label: "Inbox", value: counts.pendingApps, icon: Inbox, color: "text-amber-500", href: "/admin/inbox" },
     { label: "Revenue", value: counts.revenueThisMonth, icon: DollarSign, color: "text-emerald-600", format: "currency" as const },
     { label: "Events", value: counts.eventsThisMonth, icon: Calendar, color: "text-purple-500", href: "/admin/events" },
   ];

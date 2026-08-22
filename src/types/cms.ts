@@ -242,6 +242,7 @@ export interface SiteSettings {
   copyright: string;
   about_story?: AboutStory;
   contact_info?: ContactInfo;
+  google_forms?: Record<string, string>;
 }
 
 export interface Category {
