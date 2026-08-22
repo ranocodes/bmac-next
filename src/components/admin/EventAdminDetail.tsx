@@ -195,7 +195,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
           <Link href="/admin/events" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-secondary transition-colors mb-2">
             <ArrowLeft size={14} /> Events
           </Link>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-secondary">{event.title}</h1>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-secondary break-words">{event.title}</h1>
           <p className="text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="inline-flex items-center gap-1.5"><Calendar size={13} /> {event.date || "—"}</span>
             <span className="inline-flex items-center gap-1.5"><MapPin size={13} /> {event.venue || "—"}</span>
@@ -203,15 +203,15 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
             <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${event.status === "published" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>{event.status}</span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href={`/admin/events/${eventId}/edit`} className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Link href={`/admin/events/${eventId}/edit`} className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors">
             Edit
           </Link>
-          <button onClick={handleSendReminders} disabled={busy} className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
+          <button onClick={handleSendReminders} disabled={busy} className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50">
             <Bell size={15} /> Send Reminders
           </button>
           {canExport && (
-            <button onClick={handleExport} disabled={exporting} className="flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
+            <button onClick={handleExport} disabled={exporting} className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50">
               <Download size={15} /> {exporting ? "Exporting…" : "Export CSV"}
             </button>
           )}
@@ -243,8 +243,8 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
           <div className="h-3 rounded-full bg-muted overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
           </div>
-          <div className="flex items-center gap-3 mt-5">
-            <div className="flex-1 max-w-[180px]">
+          <div className="flex flex-wrap items-center gap-3 mt-5">
+            <div className="flex-1 min-w-[120px] max-w-[180px]">
               <input
                 type="number"
                 min={0}
@@ -263,11 +263,11 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
         <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="font-semibold text-secondary mb-4">Registration</h2>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between"><dt className="text-muted-foreground">Deadline</dt><dd className="font-semibold text-secondary">{event.registration_deadline || "None"}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted-foreground">Max per person</dt><dd className="font-semibold text-secondary">{event.max_per_person}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted-foreground">Public registration</dt><dd className="font-semibold text-secondary">{event.allow_public_registration ? "Open" : "Closed"}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted-foreground">Reminders</dt><dd className="font-semibold text-secondary">{event.reminders_enabled ? "On" : "Off"}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted-foreground">Pricing</dt><dd className="font-semibold text-secondary">{event.is_paid ? `${currency}${Number(event.price).toLocaleString("en-NG")}` : "Free"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted-foreground shrink-0">Deadline</dt><dd className="font-semibold text-secondary text-right">{event.registration_deadline || "None"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted-foreground shrink-0">Max per person</dt><dd className="font-semibold text-secondary">{event.max_per_person}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted-foreground shrink-0">Public registration</dt><dd className="font-semibold text-secondary">{event.allow_public_registration ? "Open" : "Closed"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted-foreground shrink-0">Reminders</dt><dd className="font-semibold text-secondary">{event.reminders_enabled ? "On" : "Off"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted-foreground shrink-0">Pricing</dt><dd className="font-semibold text-secondary whitespace-nowrap">{event.is_paid ? `${currency}${Number(event.price).toLocaleString("en-NG")}` : "Free"}</dd></div>
           </dl>
         </div>
       </div>
@@ -305,12 +305,12 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                 className="w-full h-10 px-3 rounded-lg border border-border bg-card text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
-            <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card p-1">
+            <div className="flex items-center flex-wrap gap-1.5 rounded-lg border border-border bg-card p-1">
               {["all", "confirmed", "pending", "cancelled"].map(s => (
                 <button
                   key={s}
                   onClick={() => { setStatusFilter(s); setPage(1); }}
-                  className={`h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                  className={`h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold transition-colors ${statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
                 >
                   {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
@@ -455,7 +455,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
                 <p className="text-xs text-muted-foreground mt-1">Waitlisted registrations will appear here.</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[560px]">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5">#</th>
