@@ -28,6 +28,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_NG",
   },
+  verification: {
+    google: "kfU6o5wMl6_RpXxigL9GOw77MrjAKSfL8QzOA_NfZgs",
+  },
 };
 
 export const viewport: Viewport = {
