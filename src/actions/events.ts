@@ -449,11 +449,26 @@ export async function verifyEventPayment(ticketId: string): Promise<{ error?: st
     [ticketId]
   );
   if (!rows.length) return { error: "Ticket not found" };
-  
+
+  const ticket = rows[0];
+  const event = await eventById(ticket.event_id);
+
   logActivity(admin.email, "verify_payment", "event_tickets", {
     resourceId: ticketId,
-    details: `Manual payment verification for ticket ${rows[0].reference}`,
+    details: `Manual payment verification for ticket ${ticket.reference}`,
   });
-  
+
+  if (ticket.payer_email && event) {
+    const passUrl = ticket.qr_token ? passUrlFor(ticket.qr_token) : "";
+    await sendRegistrationConfirmedEmail({
+      email: ticket.payer_email,
+      firstName: ticket.payer_name?.split(" ")[0] || "",
+      eventName: event.title,
+      eventDate: event.date,
+      eventLocation: event.venue,
+      passUrl,
+    }).catch((err) => console.error("verifyEventPayment email error:", err));
+  }
+
   return {};
 }

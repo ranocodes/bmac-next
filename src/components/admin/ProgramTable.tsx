@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BookOpen, Plus, Pencil, Trash2, Search, Settings } from "lucide-react";
+import { BookOpen, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
 import { useAdmin } from "@/lib/auth/admin-context";
@@ -90,10 +90,6 @@ export default function ProgramTable({ initialData }: { initialData: any[] }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Link href={`/admin/programs/${p.id}`} title="Manage program"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all">
-                    <Settings size={14} />
-                  </Link>
                   <Link href={`/admin/programs/${p.id}/edit`}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                     <Pencil size={14} />
@@ -154,10 +150,6 @@ export default function ProgramTable({ initialData }: { initialData: any[] }) {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/admin/programs/${p.id}`} title="Manage program"
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all">
-                            <Settings size={14} />
-                          </Link>
                           <Link href={`/admin/programs/${p.id}/edit`}
                             className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                             <Pencil size={14} />

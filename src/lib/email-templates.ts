@@ -31,7 +31,8 @@ export type EmailTemplateKey =
   | "re-engagement-30"
   | "re-engagement-60"
   | "payment-required"
-  | "whatsapp-invite";
+  | "whatsapp-invite"
+  | "payment-verified";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   credentials: "Admin credentials",
@@ -61,6 +62,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "re-engagement-60": "We miss you — 60 days",
   "payment-required": "Payment required after acceptance",
   "whatsapp-invite": "WhatsApp group invitation",
+  "payment-verified": "Payment verified — event pass",
 };
 
 const shell = (heading: string, message: string, cta?: { label: string; url: string }, footer?: string) => `<!DOCTYPE html>
@@ -582,6 +584,28 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "We're excited to have you!",
     ].join("\n"),
   },
+  "payment-verified": {
+    subject: "Your payment is confirmed — {{eventName}}",
+    html: shell(
+      "Payment confirmed",
+      "Hi <strong>{{firstName}}</strong>, we're sorry for the delay — your payment for <strong>{{eventName}}</strong> has been verified. Below is your event pass.",
+      { label: "View Your Pass", url: "{{passUrl}}" },
+      "Event date: {{eventDate}} · Location: {{eventLocation}} · Reference: {{reference}}. We apologise for the inconvenience."
+    ),
+    text: [
+      "Hi {{firstName}},",
+      "",
+      "We're sorry for the delay — your payment for {{eventName}} has been verified.",
+      "",
+      "Event date: {{eventDate}}",
+      "Location: {{eventLocation}}",
+      "Reference: {{reference}}",
+      "",
+      "View your pass: {{passUrl}}",
+      "",
+      "We apologise for the inconvenience.",
+    ].join("\n"),
+  },
 };
 
 export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
@@ -611,4 +635,5 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "re-engagement-30",
   "re-engagement-60",
   "whatsapp-invite",
+  "payment-verified",
 ];

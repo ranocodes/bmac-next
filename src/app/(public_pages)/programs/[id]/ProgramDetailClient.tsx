@@ -79,6 +79,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
   const all = initialPrograms.map(p => ({
     ...p,
     desc: (p as any).desc || (p as any).description || "",
+    longDesc: (p as any).longDesc || (p as any).long_desc || "",
     img: (p as any).img || (p as any).img_url || "",
     icon: (p as any).icon || (p as any).icon_name || "",
     color: (p as any).color || (p as any).color_class || "",
@@ -120,7 +121,8 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
 
   const handleSubmit = () => {
     if (googleFormUrl) {
-      window.open(googleFormUrl, "_blank", "noopener,noreferrer");
+      const url = /^https?:\/\//.test(googleFormUrl) ? googleFormUrl : `https://${googleFormUrl}`;
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -152,9 +154,6 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                     Official BMAC Program
-                  </span>
-                  <span className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest bg-primary/10 text-primary">
-                    {program.isPaid ? `₦${(program.price || 0).toLocaleString()}` : "Free"}
                   </span>
                 </div>
 
@@ -420,14 +419,10 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                </div>
 
                {/* RSVP Form */}
-               <div className="bg-card border border-border rounded-xl p-6 md:p-10 lg:p-12 text-center md:text-left">
+               <div className="bg-card border border-border rounded-xl p-6 md:p-8 text-center md:text-left">
                      <h3 className="font-display text-xl md:text-2xl font-bold text-secondary mb-2">Secure Your Spot</h3>
-                      <p className="text-muted-foreground text-xs md:text-sm mb-8 leading-relaxed">
-                        {program.isPaid
-                          ? program.paymentTiming === "after_acceptance"
-                            ? `Apply now — you'll pay ₦${(program.price || 0).toLocaleString()} only if accepted.`
-                            : `Pay ₦${(program.price || 0).toLocaleString()} to reserve your place in the next cohort.`
-                          : "Join the next cohort of ambassadors gathering in Jos."}
+                      <p className="text-muted-foreground text-xs md:text-sm mb-6 leading-relaxed">
+                        Join the next cohort of ambassadors gathering in Jos.
                       </p>
 
                {!program.applicationsOpen ? (
@@ -439,17 +434,16 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                ) : googleFormUrl ? (
                  <button
                    onClick={handleSubmit}
-                   className="w-full py-4 bg-primary text-card rounded-lg font-bold hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3"
+                   className="w-full py-4 bg-primary text-card rounded-xl font-bold hover:bg-primary/90 transition-all duration-300 flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98]"
                  >
-                   {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Apply` : "Apply to Program"}
-                   <ExternalLink size={18} />
+                   Apply to Program
+                   <ExternalLink size={16} />
                  </button>
                ) : (
-                 <StatusBanner
-                   title="Form Not Available"
-                   description="The application form is being set up. Please check back soon or contact us for more information."
-                   variant="closed"
-                 />
+                 <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
+                   <p className="text-sm font-medium text-secondary mb-1">Applications opening soon</p>
+                   <p className="text-xs text-muted-foreground">Check back later or contact us for more information.</p>
+                 </div>
                )}
                   </div>
              </div>

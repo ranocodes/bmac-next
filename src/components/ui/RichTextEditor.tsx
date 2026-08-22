@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import Link from "@tiptap/extension-link";
+import LinkExt from "@tiptap/extension-link";
 import {
   Bold, Italic, Heading2, Link as LinkIcon, List, ListOrdered,
   Eye, Code, ChevronDown, FileText, Undo, Redo,
@@ -51,20 +51,25 @@ export default function RichTextEditor({
   const [mode, setMode] = useState<"visual" | "source">("visual");
   const [showPlaceholderDropdown, setShowPlaceholderDropdown] = useState(false);
   const [sourceHtml, setSourceHtml] = useState(value);
+  const [tick, setTick] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const sourceRef = useRef<HTMLTextAreaElement>(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2, 3] } }),
       Placeholder.configure({ placeholder: "Write your email content..." }),
-      Link.configure({
+      LinkExt.configure({
         openOnClick: false,
         HTMLAttributes: { style: "color:#f59e0b;text-decoration:underline" },
       }),
     ],
     content: value || "",
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor: e }) => {
-      onChange(e.getHTML());
+      const html = e.getHTML();
+      onChange(html);
+      setTick(t => t + 1);
     },
   }, []);
 
@@ -77,27 +82,34 @@ export default function RichTextEditor({
     }
   }, [value]);
 
+  const switchMode = useCallback((next: "visual" | "source") => {
+    if (next === "source" && editor) {
+      setSourceHtml(editor.getHTML());
+    }
+    setMode(next);
+  }, [editor]);
+
   const handleSourceChange = useCallback((v: string) => {
     setSourceHtml(v);
     onChange(v);
+    setTick(t => t + 1);
   }, [onChange]);
 
   const insertPlaceholder = useCallback((ph: string) => {
     if (mode === "visual" && editor) {
       editor.chain().focus().insertContent(ph).run();
-    } else {
-      const textarea = document.querySelector<HTMLTextAreaElement>("[data-richtext-source]");
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const newVal = sourceHtml.substring(0, start) + ph + sourceHtml.substring(end);
-        setSourceHtml(newVal);
-        onChange(newVal);
-        setTimeout(() => {
-          textarea.focus();
-          textarea.setSelectionRange(start + ph.length, start + ph.length);
-        }, 0);
-      }
+    } else if (sourceRef.current) {
+      const textarea = sourceRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newVal = sourceHtml.substring(0, start) + ph + sourceHtml.substring(end);
+      setSourceHtml(newVal);
+      onChange(newVal);
+      setTick(t => t + 1);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + ph.length, start + ph.length);
+      }, 0);
     }
     setShowPlaceholderDropdown(false);
   }, [mode, editor, sourceHtml, onChange]);
@@ -112,12 +124,9 @@ export default function RichTextEditor({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const previewHtml = useMemo(() => {
-    if (mode === "visual") {
-      return editor?.getHTML() || "";
-    }
-    return sourceHtml;
-  }, [mode, editor, sourceHtml]);
+  const previewHtml = mode === "visual"
+    ? (editor?.getHTML() || "")
+    : sourceHtml;
 
   function ToolbarBtn({
     active,
@@ -150,7 +159,7 @@ export default function RichTextEditor({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => setMode("visual")}
+            onClick={() => switchMode("visual")}
             className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-medium rounded-lg transition-all duration-200 ${
               mode === "visual"
                 ? "bg-primary/10 text-primary"
@@ -162,7 +171,7 @@ export default function RichTextEditor({
           </button>
           <button
             type="button"
-            onClick={() => setMode("source")}
+            onClick={() => switchMode("source")}
             className={`flex items-center gap-1.5 px-3 py-1.5 min-h-[32px] text-xs font-medium rounded-lg transition-all duration-200 ${
               mode === "source"
                 ? "bg-primary/10 text-primary"
@@ -246,6 +255,7 @@ export default function RichTextEditor({
             </div>
           ) : (
             <textarea
+              ref={sourceRef}
               data-richtext-source
               value={sourceHtml}
               onChange={e => handleSourceChange(e.target.value)}
@@ -260,6 +270,7 @@ export default function RichTextEditor({
             <span className="text-xs font-medium text-muted-foreground">Preview</span>
           </div>
           <iframe
+            key={tick}
             srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:#333">${previewHtml}</body></html>`}
             className="w-full min-h-[380px] border-0"
             title="Email preview"

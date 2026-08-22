@@ -80,15 +80,20 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
   const isDonate = slug === "donate";
   const googleFormUrl = googleForms?.[slug] || "";
 
+  const openForm = () => {
+    if (googleFormUrl) {
+      const url = /^https?:\/\//.test(googleFormUrl) ? googleFormUrl : `https://${googleFormUrl}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isDonate) {
       handleDonate();
       return;
     }
-    if (googleFormUrl) {
-      window.open(googleFormUrl, "_blank", "noopener,noreferrer");
-    }
+    openForm();
   };
 
   const handleDonate = async () => {
@@ -483,16 +488,17 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                 ) : googleFormUrl ? (
                   <div className="space-y-5">
                     <button
-                      onClick={() => window.open(googleFormUrl, "_blank", "noopener,noreferrer")}
-                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-none text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3`}
+                      onClick={openForm}
+                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98]`}
                     >
                       Apply Now
                       <ExternalLink size={16} />
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-sm text-muted-foreground">
-                    Application form is being set up. Please check back soon.
+                  <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
+                    <p className="text-sm font-medium text-secondary mb-1">Applications opening soon</p>
+                    <p className="text-xs text-muted-foreground">Check back later or contact us for more information.</p>
                   </div>
                 )}
               </motion.div>

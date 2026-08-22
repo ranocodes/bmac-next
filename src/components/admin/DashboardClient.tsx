@@ -35,7 +35,6 @@ const quickActions = [
   { label: "Article", href: "/admin/news/new", icon: Newspaper, color: "text-blue-500" },
   { label: "Event", href: "/admin/events/new", icon: Calendar, color: "text-amber-500" },
   { label: "Program", href: "/admin/programs/new", icon: BookOpen, color: "text-emerald-500" },
-  { label: "Member", href: "/admin/people/new", icon: Users, color: "text-purple-500" },
 ];
 
 function MiniBarChart({ data, color }: { data: ChartPoint[]; color: string }) {
@@ -91,7 +90,6 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
   }
 
   const statCards = [
-    { label: "Members", value: counts.totalMembers, icon: Users, color: "text-blue-500", href: "/admin/people?role=member" },
     { label: "Programs", value: counts.activePrograms, icon: BookOpen, color: "text-emerald-500", href: "/admin/programs" },
     { label: "Revenue", value: counts.revenueThisMonth, icon: DollarSign, color: "text-emerald-600", format: "currency" as const },
     { label: "Events", value: counts.eventsThisMonth, icon: Calendar, color: "text-purple-500", href: "/admin/events" },
