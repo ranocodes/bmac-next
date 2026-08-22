@@ -51,9 +51,10 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "People", icon: Users,
+    label: "Audience", icon: Users,
     children: [
       { label: "Partners", href: "/admin/partners", icon: Handshake, permission: "manage_partners" },
+      { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
       { label: "Admins", href: "/admin/admins", icon: UserCog, permission: "manage_users" },
     ],
   },
@@ -61,15 +62,14 @@ const navGroups: NavGroup[] = [
     label: "Operations", icon: Inbox,
     children: [
       { label: "Check-In", href: "/admin/checkin", icon: QrCode, permission: "check_in_attendees" },
+      { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
       { label: "Analytics", href: "/admin/analytics", icon: BarChart3, permission: "view_analytics" },
       { label: "Stats", href: "/admin/stats", icon: BarChart3, permission: "manage_stats" },
-      { label: "Donations & Payments", href: "/admin/donations", icon: Heart, permission: "manage_payments" },
     ],
   },
   {
     label: "System", icon: Shield,
     children: [
-      { label: "Newsletter", href: "/admin/newsletter", icon: Mail, permission: "manage_newsletter" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },
