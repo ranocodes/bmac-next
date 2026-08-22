@@ -6,7 +6,7 @@ import { logActivity } from "./activity-logs";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./people";
 import { createWorkflowRecord } from "@/lib/workflows";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
-import { sendRegistrationConfirmedEmail, sendEventReminderEmail, sendRegistrationAlertEmail, sendCheckInAlertEmail } from "@/lib/email";
+import { sendRegistrationConfirmedEmail, sendEventReminderEmail, sendRegistrationAlertEmail, sendCheckInAlertEmail, sendPaymentVerifiedEmail } from "@/lib/email";
 import { recordEvent } from "@/lib/analytics/record";
 import {
   createTicket,
@@ -460,13 +460,14 @@ export async function verifyEventPayment(ticketId: string): Promise<{ error?: st
 
   if (ticket.payer_email && event) {
     const passUrl = ticket.qr_token ? passUrlFor(ticket.qr_token) : "";
-    await sendRegistrationConfirmedEmail({
+    await sendPaymentVerifiedEmail({
       email: ticket.payer_email,
       firstName: ticket.payer_name?.split(" ")[0] || "",
       eventName: event.title,
       eventDate: event.date,
       eventLocation: event.venue,
       passUrl,
+      reference: ticket.reference,
     }).catch((err) => console.error("verifyEventPayment email error:", err));
   }
 

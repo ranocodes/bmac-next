@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, Plus, Pencil, Trash2, Search, ExternalLink } from "lucide-react";
+import { Calendar, Plus, Pencil, Trash2, Search, Users } from "lucide-react";
 import { deleteItem } from "@/actions/crud";
 import { useToast } from "@/components/ui/Toast";
 import type { EventPass } from "@/types/cms";
@@ -85,6 +85,11 @@ export default function EventTable({ initialData }: { initialData: EventPass[] }
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <Link href={`/admin/events/${e.id}`}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all"
+                    aria-label="Manage registrations" title="Manage registrations">
+                    <Users size={14} />
+                  </Link>
                   <Link href={`/admin/events/${e.id}/edit`}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                     <Pencil size={14} />
@@ -108,7 +113,7 @@ export default function EventTable({ initialData }: { initialData: EventPass[] }
                     <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden sm:table-cell">Category</th>
                     <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden md:table-cell">Date</th>
                     <th className="text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 hidden lg:table-cell">Price</th>
-                    <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-24">Actions</th>
+                    <th className="text-right text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-5 py-3.5 w-32">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -131,6 +136,11 @@ export default function EventTable({ initialData }: { initialData: EventPass[] }
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Link href={`/admin/events/${e.id}`}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all"
+                            aria-label="Manage registrations" title="Manage registrations">
+                            <Users size={14} />
+                          </Link>
                           <Link href={`/admin/events/${e.id}/edit`}
                             className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
                             <Pencil size={14} />

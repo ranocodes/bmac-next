@@ -304,6 +304,27 @@ export async function sendEventReminderEmail(opts: {
   });
 }
 
+export async function sendPaymentVerifiedEmail(opts: {
+  email: string;
+  firstName?: string;
+  eventName: string;
+  eventDate?: string;
+  eventLocation?: string;
+  passUrl?: string;
+  reference?: string;
+}): Promise<{ error?: string }> {
+  return sendRequest({
+    type: "payment-verified",
+    email: opts.email,
+    firstName: opts.firstName || "",
+    eventName: opts.eventName,
+    eventDate: opts.eventDate || "",
+    eventLocation: opts.eventLocation || "",
+    passUrl: absolutizeUrl(opts.passUrl || ""),
+    reference: opts.reference || "",
+  });
+}
+
 export async function sendNewsletterBroadcastEmail(opts: {
   email: string;
   firstName?: string;

@@ -159,7 +159,7 @@ export default function EventAdminDetailClient({ initialData, eventId }: { initi
       toast(res.error, "error");
       return;
     }
-    toast("Payment verified");
+    toast("Payment confirmed — pass email sent to attendee");
     setVerifyingPaymentFor(null);
     await refresh();
   }
