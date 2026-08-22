@@ -95,7 +95,6 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
     { label: "Programs", value: counts.activePrograms, icon: BookOpen, color: "text-emerald-500", href: "/admin/programs" },
     { label: "Inbox", value: counts.pendingApps, icon: Inbox, color: "text-amber-500", href: "/admin/inbox" },
     { label: "Revenue", value: counts.revenueThisMonth, icon: DollarSign, color: "text-emerald-600", format: "currency" as const },
-    { label: "Inquiries", value: counts.openInquiries, icon: TrendingUp, color: "text-orange-500", href: "/admin/workflow" },
     { label: "Events", value: counts.eventsThisMonth, icon: Calendar, color: "text-purple-500", href: "/admin/events" },
   ];
 

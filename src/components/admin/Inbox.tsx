@@ -164,10 +164,10 @@ export default function Inbox({ initialData = [] }: { initialData?: any[]; stats
           </div>
 
           {/* Stream tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-1.5">
             {STREAMS.map(s => (
               <button key={s.key} onClick={() => setActiveStream(s.key)}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                   activeStream === s.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground hover:text-secondary hover:border-primary/40"
                 }`}>
                 {s.label}
@@ -229,7 +229,7 @@ export default function Inbox({ initialData = [] }: { initialData?: any[]; stats
               <p className="text-sm text-muted-foreground">Select a submission to review</p>
             </div>
           ) : (
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="bg-card rounded-xl border border-border">
               {/* Detail header */}
               <div className="px-6 py-5 border-b border-border/60">
                 <div className="flex items-center gap-2 mb-4">
