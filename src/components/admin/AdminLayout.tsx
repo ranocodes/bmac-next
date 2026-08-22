@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Newspaper, Calendar, BookOpen, Image, Users, Star,
   BarChart3, Settings, LogOut, Menu, ChevronRight,
   ChevronDown, Shield, Handshake, ClipboardList, PanelLeftClose, PanelLeftOpen,
-  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, type LucideIcon,
+  UserCog, ShieldOff, Inbox, QrCode, Heart, Mail, ScrollText, type LucideIcon,
 } from "lucide-react";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AdminProvider } from "@/lib/auth/admin-context";
@@ -70,6 +70,7 @@ const navGroups: NavGroup[] = [
   {
     label: "System", icon: Shield,
     children: [
+      { label: "Logs", href: "/admin/logs", icon: ScrollText, permission: "manage_logs" },
       { label: "Settings", href: "/admin/settings", icon: Settings, permission: "access_settings" },
     ],
   },

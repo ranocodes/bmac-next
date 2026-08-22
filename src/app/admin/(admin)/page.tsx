@@ -10,7 +10,6 @@ export default async function AdminDashboard() {
       recentNews={stats.recentNews}
       recentEvents={stats.recentEvents}
       revenueByMonth={stats.revenueByMonth}
-      memberGrowth={stats.memberGrowth}
     />
   );
 }

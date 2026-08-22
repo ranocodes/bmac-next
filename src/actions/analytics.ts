@@ -17,7 +17,6 @@ export async function getDashboardStats() {
     news, events,
     logs,
     revenueByMonth,
-    memberGrowth,
   ] = await Promise.all([
     db.query<{ count: string }>(
       `SELECT COUNT(*) AS count FROM (
@@ -59,16 +58,9 @@ export async function getDashboardStats() {
          AND pr.created_at >= NOW() - INTERVAL '6 months'
        GROUP BY month ORDER BY month ASC`
     ).catch(() => []),
-    db.query<{ month: string; count: string }>(
-      `SELECT TO_CHAR(created_at, 'YYYY-MM') AS month, COUNT(*)::text AS count
-       FROM public.people
-       WHERE created_at >= NOW() - INTERVAL '6 months'
-       GROUP BY month ORDER BY month ASC`
-    ).catch(() => []),
   ]);
 
   const revenueMonths = revenueByMonth.map((r: any) => ({ month: r.month, value: Number(r.total) }));
-  const memberMonths = memberGrowth.map((r: any) => ({ month: r.month, value: Number(r.count) }));
 
   return {
     counts: {
@@ -84,7 +76,6 @@ export async function getDashboardStats() {
     recentActivity: logs,
     todayCount: logs.filter((l: any) => new Date(l.created_at || l.timestamp).getTime() > Date.now() - 86400000).length,
     revenueByMonth: revenueMonths,
-    memberGrowth: memberMonths,
   };
 }
 

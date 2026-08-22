@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Newspaper, Calendar, BookOpen, Users,
+  Newspaper, Calendar, BookOpen,
   ArrowRight, Plus, TrendingUp, RefreshCw,
   LayoutDashboard, DollarSign,
 } from "lucide-react";
@@ -28,7 +28,6 @@ interface DashboardProps {
   recentNews: any[];
   recentEvents: any[];
   revenueByMonth: ChartPoint[];
-  memberGrowth: ChartPoint[];
 }
 
 const quickActions = [
@@ -66,7 +65,7 @@ function MonthLabels({ data }: { data: ChartPoint[] }) {
   );
 }
 
-export default function DashboardClient({ initialCounts, recentNews, recentEvents, revenueByMonth, memberGrowth }: DashboardProps) {
+export default function DashboardClient({ initialCounts, recentNews, recentEvents, revenueByMonth }: DashboardProps) {
   const user = useAdmin();
   const [greeting, setGreeting] = useState("Good day");
   const [counts, setCounts] = useState(initialCounts);
@@ -138,28 +137,14 @@ export default function DashboardClient({ initialCounts, recentNews, recentEvent
       </div>
 
       {/* Charts row */}
-      {(revenueByMonth.length > 0 || memberGrowth.length > 0) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {revenueByMonth.length > 0 && (
-            <div className="bg-card rounded-xl border border-border p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp size={13} className="text-emerald-500" />
-                <h3 className="text-xs font-semibold text-secondary">Revenue Trend</h3>
-              </div>
-              <MiniBarChart data={revenueByMonth} color="bg-emerald-500" />
-              <MonthLabels data={revenueByMonth} />
-            </div>
-          )}
-          {memberGrowth.length > 0 && (
-            <div className="bg-card rounded-xl border border-border p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Users size={13} className="text-blue-500" />
-                <h3 className="text-xs font-semibold text-secondary">Member Growth</h3>
-              </div>
-              <MiniBarChart data={memberGrowth} color="bg-blue-500" />
-              <MonthLabels data={memberGrowth} />
-            </div>
-          )}
+      {revenueByMonth.length > 0 && (
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={13} className="text-emerald-500" />
+            <h3 className="text-xs font-semibold text-secondary">Revenue Trend</h3>
+          </div>
+          <MiniBarChart data={revenueByMonth} color="bg-emerald-500" />
+          <MonthLabels data={revenueByMonth} />
         </div>
       )}
 
