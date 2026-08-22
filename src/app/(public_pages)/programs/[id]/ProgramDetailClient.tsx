@@ -190,10 +190,16 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                   )}
                 </div>
 
-                <div className="mt-8 md:mt-10 lg:hidden">
-                  <a href="#register" className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary text-card rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
+                <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                  <a href="#register" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
                     {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"}
+                    <ExternalLink size={15} />
                   </a>
+                  {googleFormUrl && program.applicationsOpen && (
+                    <a href="#curriculum" className="inline-flex items-center gap-2 px-7 py-3.5 border border-border rounded-xl text-sm font-bold text-secondary hover:bg-muted transition-colors">
+                      See Curriculum
+                    </a>
+                  )}
                 </div>
               </motion.div>
             </div>
@@ -229,7 +235,7 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
 
             {/* Curriculum as progression */}
             {curriculum.length > 0 && (
-              <div>
+              <div id="curriculum">
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-2 md:mb-4 tracking-tight">What You&rsquo;ll Learn</h3>
                 <p className="text-muted-foreground text-sm md:text-base mb-6 md:mb-8">Each module ends with a skill you can actually use.</p>
                 <div className="space-y-3 md:space-y-4">
@@ -250,6 +256,16 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                 </div>
               </div>
             )}
+
+            {/* Mid-page CTA */}
+            <div className="hidden lg:block rounded-xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center">
+              <p className="font-display text-lg font-bold text-secondary mb-2">Ready to get started?</p>
+              <p className="text-sm text-muted-foreground mb-5">Join the next cohort and build real skills.</p>
+              <a href="#register" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
+                {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"}
+                <ExternalLink size={15} />
+              </a>
+            </div>
 
             {/* Skills */}
             {program.skills?.length ? (
@@ -302,6 +318,18 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                 </div>
               </div>
             )}
+
+            {/* Second CTA — before instructors */}
+            <div className="hidden lg:block rounded-xl border border-border bg-card p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div>
+                <p className="font-display text-lg font-bold text-secondary mb-1">This program fits {program.duration || "your schedule"}</p>
+                <p className="text-sm text-muted-foreground">{program.effort || "Start building skills today."}</p>
+              </div>
+              <a href="#register" className="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
+                Apply Now
+                <ExternalLink size={15} />
+              </a>
+            </div>
 
             {/* Instructors */}
             {instructors.length > 0 ? (

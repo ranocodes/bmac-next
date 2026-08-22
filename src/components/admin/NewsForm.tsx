@@ -45,20 +45,25 @@ export default function NewsForm({ initialData }: { initialData?: any }) {
 
     setSaving(true);
 
-    const payload = {
-      title, date, category, desc, content,
-      img: img || "/images/placeholder.jpg",
-      featured,
-      status: publishStatus,
-    };
-    if (isEdit && params?.id) {
-      await updateItem("news_articles", params.id as string, payload);
-    } else {
-      await createItem("news_articles", payload);
+    try {
+      const payload = {
+        title, date, category, description: desc, content,
+        img: img || "/images/placeholder.jpg",
+        featured,
+        status: publishStatus,
+      };
+      if (isEdit && params?.id) {
+        await updateItem("news_articles", params.id as string, payload);
+      } else {
+        await createItem("news_articles", payload);
+      }
+      toast(isEdit ? "Article updated" : "Article created", "success");
+      router.push("/admin/news");
+    } catch (e: any) {
+      setError(e?.message || "Save failed");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    toast(isEdit ? "Article updated" : "Article created", "success");
-    router.push("/admin/news");
   }
 
   return (

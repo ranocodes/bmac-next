@@ -162,7 +162,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
       <section className="relative overflow-hidden bg-background border-b border-border/40">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 md:pt-36 pb-10 md:pb-24">
+        <div className="relative max-w-7xl mx-auto px-6 pt-20 md:pt-36 pb-10 md:pb-24">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Link
               href="/get-involved"
@@ -178,7 +178,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className={`p-4 md:p-6 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}
+              className={`p-4 md:p-6 rounded-lg ${accent.bg} ring-1 ${accent.ring} shrink-0`}
             >
               <HeroIcon size={32} className="text-background md:w-10 md:h-10" />
             </motion.div>
@@ -196,7 +196,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-secondary tracking-tight leading-[1.1]"
+                className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-[1.1]"
               >
                 {page.title}
               </motion.h1>
@@ -218,7 +218,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
       {/* HERO DESCRIPTION */}
       {page.hero_description && (
         <section className="border-b border-border/40 bg-background">
-          <div className="max-w-6xl mx-auto px-6 py-10 md:py-14">
+          <div className="max-w-7xl mx-auto px-6 py-10 md:py-14">
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -232,7 +232,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
         </section>
       )}
 
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         {/* SECTIONS GRID */}
         {page.sections.length > 0 && (
           <section className="py-10 md:py-24">
@@ -263,10 +263,10 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                   <motion.div
                     key={i}
                     variants={item}
-                    className="group relative bg-background border border-border/60 rounded-none p-5 md:p-8 hover:border-secondary transition-all duration-300"
+                    className="group relative bg-background border border-border/60 rounded-xl p-5 md:p-8 hover:border-secondary transition-all duration-300"
                   >
                     <div className="flex items-start gap-5">
-                      <div className={`p-3 rounded-none ${accent.bg} ring-1 ${accent.ring} shrink-0`}>
+                      <div className={`p-3 rounded-lg ${accent.bg} ring-1 ${accent.ring} shrink-0`}>
                         <SIcon size={20} className="text-background" />
                       </div>
                       <div className="min-w-0">
@@ -292,7 +292,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-none border border-border/60 bg-background p-5 md:p-12"
+              className="relative overflow-hidden rounded-xl border border-border/60 bg-background p-5 md:p-12"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
               <div className="relative">
@@ -310,7 +310,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.05 }}
-                      className="flex items-start gap-3 bg-background rounded-none px-5 py-4 border border-border/40"
+                      className="flex items-start gap-3 bg-background rounded-xl px-5 py-4 border border-border/40"
                     >
                       <CheckCircle2 size={16} className="text-secondary mt-0.5 shrink-0" />
                       <span className="text-sm font-medium text-secondary leading-snug">{benefit}</span>
@@ -325,7 +325,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
 
       {/* FORM SECTION */}
       <section className="border-t border-border/50 bg-muted/10">
-        <div className="max-w-6xl mx-auto px-6 py-10 md:py-24">
+        <div className="max-w-7xl mx-auto px-6 py-10 md:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-16">
             {/* FORM HEADER */}
             <div className="lg:col-span-2">
@@ -373,7 +373,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="bg-background border border-border/60 rounded-none p-5 md:p-10"
+                className="bg-background border border-border/60 rounded-xl p-5 md:p-10"
               >
                 {submitted ? (
                   <div className="text-center py-12">
@@ -381,7 +381,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                      className={`w-20 h-20 rounded-none ${accent.bg} flex items-center justify-center mx-auto mb-6 ring-1 ${accent.ring}`}
+                      className={`w-20 h-20 rounded-full ${accent.bg} flex items-center justify-center mx-auto mb-6 ring-1 ${accent.ring}`}
                     >
                       <CheckCircle2 size={36} className="text-background" />
                     </motion.div>
@@ -473,7 +473,7 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-none text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-60`}
+                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-sm hover:shadow-md active:scale-[0.98]`}
                     >
                       {isSubmitting ? (
                         <Loader2 size={18} className="animate-spin" />

@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle, ChevronUp, ChevronDown, FileText } from "lucide-react";
+import { ArrowLeft, Save, Check, CheckCircle2, Plus, X, Calendar, Timer, Users, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
 import MarkdownEditor from "@/components/ui/MarkdownEditor";
 import IconPicker from "@/components/ui/IconPicker";
 import ImagePicker from "@/components/ui/ImagePicker";
-import FormEditor from "@/components/admin/FormEditor";
 import { useToast } from "@/components/ui/Toast";
 import { createItem, updateItem } from "@/actions/crud";
-import { getFormDefinitionOrDefault, upsertFormDefinition } from "@/actions/forms";
 import type { ProgramInstructor } from "@/types/cms";
-import type { FormQuestion } from "@/types/cms";
 
 const COLOR_OPTIONS = [
   { name: "Emerald", class: "text-emerald-400" },
@@ -92,32 +89,6 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqQ, setFaqQ] = useState("");
   const [faqA, setFaqA] = useState("");
-  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
-  const [formLoaded, setFormLoaded] = useState(false);
-  const [formSaving, setFormSaving] = useState(false);
-
-  useEffect(() => {
-    if (isEdit && params?.id && !formLoaded) {
-      getFormDefinitionOrDefault("program", params.id as string).then((def) => {
-        setFormQuestions(def.questions.map(q => ({ ...q })));
-        setFormLoaded(true);
-      });
-    }
-  }, [isEdit, params?.id, formLoaded]);
-
-  async function handleSaveForm() {
-    if (!params?.id) return;
-    setFormSaving(true);
-    try {
-      const sorted = formQuestions.map((q, i) => ({ ...q, order: i }));
-      await upsertFormDefinition("program", params.id as string, sorted);
-      toast("Form saved", "success");
-    } catch (e: any) {
-      toast(e?.message || "Failed to save form", "error");
-    } finally {
-      setFormSaving(false);
-    }
-  }
 
   async function handleSubmit(publishStatus: "draft" | "published") {
     setError("");
@@ -1016,18 +987,6 @@ export default function ProgramForm({ initialData }: { initialData?: any }) {
               <p className="font-medium">{saveError ? "Save failed" : "Required fields missing"}</p>
               <p className="text-destructive/80 mt-0.5">{error}</p>
             </div>
-          </div>
-        )}
-
-        {isEdit && (
-          <div className="bg-card border border-border rounded-xl p-5">
-            <FormEditor
-              questions={formQuestions}
-              onChange={setFormQuestions}
-              onSave={handleSaveForm}
-              saving={formSaving}
-              label="Application Form"
-            />
           </div>
         )}
       </form>
