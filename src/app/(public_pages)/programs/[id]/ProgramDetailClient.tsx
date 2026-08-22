@@ -126,6 +126,14 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
     }
   };
 
+  const handleApplyCta = () => {
+    if (program?.applicationsOpen && googleFormUrl) {
+      handleSubmit();
+    } else {
+      document.getElementById("register")?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   if (!program) {
     notFound();
   }
@@ -191,10 +199,10 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                 </div>
 
                 <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                  <a href="#register" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
+                  <button onClick={handleApplyCta} className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
                     {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"}
                     <ExternalLink size={15} />
-                  </a>
+                  </button>
                   {googleFormUrl && program.applicationsOpen && (
                     <a href="#curriculum" className="inline-flex items-center gap-2 px-7 py-3.5 border border-border rounded-xl text-sm font-bold text-secondary hover:bg-muted transition-colors">
                       See Curriculum
@@ -261,10 +269,10 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
             <div className="hidden lg:block rounded-xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 p-8 text-center">
               <p className="font-display text-lg font-bold text-secondary mb-2">Ready to get started?</p>
               <p className="text-sm text-muted-foreground mb-5">Join the next cohort and build real skills.</p>
-              <a href="#register" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
+              <button onClick={handleApplyCta} className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
                 {program.isPaid ? `Pay ₦${(program.price || 0).toLocaleString()} & Register` : "Apply to Program"}
                 <ExternalLink size={15} />
-              </a>
+              </button>
             </div>
 
             {/* Skills */}
@@ -325,10 +333,10 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
                 <p className="font-display text-lg font-bold text-secondary mb-1">This program fits {program.duration || "your schedule"}</p>
                 <p className="text-sm text-muted-foreground">{program.effort || "Start building skills today."}</p>
               </div>
-              <a href="#register" className="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
+              <button onClick={handleApplyCta} className="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-primary text-card rounded-xl text-sm font-bold hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]">
                 Apply Now
                 <ExternalLink size={15} />
-              </a>
+              </button>
             </div>
 
             {/* Instructors */}
