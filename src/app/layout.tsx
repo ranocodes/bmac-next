@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import TrackView from "@/components/TrackView";
 import SchemaOrg from "@/components/SchemaOrg";
+import { SITE_URL, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -16,17 +17,30 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "BMAC Jos — Brilliant Minds Ambassadors Club",
-    template: "%s",
+    default: SITE_NAME,
+    template: "%s — BMAC Jos",
   },
-  description:
-    "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
+  description: SITE_TAGLINE,
+  applicationName: "BMAC Jos",
+  authors: [{ name: "Brilliant Minds Academic & Career Foundation" }],
   openGraph: {
     siteName: "BMAC Jos",
     type: "website",
     locale: "en_NG",
+    url: SITE_URL,
+    title: SITE_NAME,
+    description: SITE_TAGLINE,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_TAGLINE,
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
   verification: {
     google: "kfU6o5wMl6_RpXxigL9GOw77MrjAKSfL8QzOA_NfZgs",

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site";
 
 export default async function SchemaOrg() {
   const rows = await db.query<{ contact_info?: { email?: string; phone?: string } }>(
@@ -14,7 +15,7 @@ export default async function SchemaOrg() {
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
           name: "Brilliant Minds Ambassadors Club",
-          url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+          url: SITE_URL,
           description:
             "Empowering young minds in Jos through public speaking, literary arts, mentorship, and digital literacy programs.",
           email: contact.email || undefined,

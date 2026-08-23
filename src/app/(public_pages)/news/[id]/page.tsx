@@ -2,10 +2,11 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import NewsDetailClient from "./NewsDetailClient";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
-const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/+$/, "");
+const baseUrl = SITE_URL;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -18,11 +19,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const description = (article.desc || article.description || "").slice(0, 160);
   const image = article.img_url || article.img || "";
   return {
-    title: `${title} — BMAC Jos`,
+    title: `${title}`,
     description,
     alternates: { canonical: `/news/${id}` },
     openGraph: {
-      title: `${title} — BMAC Jos`,
+      title: `${title}`,
       description,
       type: "article",
       url: `${baseUrl}/news/${id}`,

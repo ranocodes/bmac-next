@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 const baseUrl = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://bmac-next.vercel.app"
+  SITE_URL
 ).replace(/\/+$/, "");
 
 export default function robots(): MetadataRoute.Robots {

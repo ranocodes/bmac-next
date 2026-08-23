@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import Contact from "./ContactClient";
+
+export const metadata: Metadata = {
+  title: 'Contact Us',
+  description: 'Get in touch with BMAC Jos. Visit our hub on Nalado Street, Jos, or reach us by email, phone or WhatsApp.',
+  alternates: { canonical: "contact" },
+};
+
 
 export const dynamic = "force-dynamic";
 

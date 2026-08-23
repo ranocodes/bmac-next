@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import EventsClient from "./EventsClient";
+
+export const metadata: Metadata = {
+  title: 'Events',
+  description: 'Upcoming workshops, competitions and community events from Brilliant Minds Ambassadors Club in Jos, Nigeria.',
+  alternates: { canonical: "events" },
+};
+
 
 export const dynamic = "force-dynamic";
 
