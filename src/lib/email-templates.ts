@@ -9,7 +9,6 @@ export type EmailTemplateKey =
   | "password-reset"
   | "admin-deleted"
   | "admin-delete-attempt"
-  | "google-forms-link"
   | "application-received"
   | "donation-thanks"
   | "donation-alert"
@@ -22,14 +21,6 @@ export type EmailTemplateKey =
   | "event-reminder"
   | "public-credentials"
   | "public-welcome"
-  | "welcome-step-1"
-  | "welcome-step-2"
-  | "welcome-step-3"
-  | "renewal-reminder-30"
-  | "renewal-reminder-7"
-  | "renewal-reminder-1"
-  | "re-engagement-30"
-  | "re-engagement-60"
   | "payment-required"
   | "whatsapp-invite"
   | "payment-verified";
@@ -39,7 +30,6 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "password-reset": "Password reset",
   "admin-deleted": "Admin account deleted",
   "admin-delete-attempt": "Self-deletion blocked",
-  "google-forms-link": "Application form link",
   "application-received": "Application received",
   "donation-thanks": "Donation thank-you",
   "donation-alert": "Donation alert (admins)",
@@ -52,14 +42,6 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "event-reminder": "Event reminder",
   "public-credentials": "Public account credentials",
   "public-welcome": "Welcome to BMAC program",
-  "welcome-step-1": "Welcome — Day 0",
-  "welcome-step-2": "Getting started — Day 3",
-  "welcome-step-3": "Your journey continues — Day 7",
-  "renewal-reminder-30": "Membership renews in 30 days",
-  "renewal-reminder-7": "Membership renews in 7 days",
-  "renewal-reminder-1": "Membership renews tomorrow",
-  "re-engagement-30": "We miss you — 30 days",
-  "re-engagement-60": "We miss you — 60 days",
   "payment-required": "Payment required after acceptance",
   "whatsapp-invite": "WhatsApp group invitation",
   "payment-verified": "Payment verified — event pass",
@@ -185,24 +167,6 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       { label: "Go to Admin Panel", url: "{{loginLink}}" }
     ),
     text: "Super admin {{actor}} attempted to delete their own account. The action was blocked.\n\nSign in at: {{loginLink}}",
-  },
-  "google-forms-link": {
-    subject: "Your BMAC application — next step",
-    html: shell(
-      "Welcome, {{firstName}}!",
-      "Your <strong>{{kindLabel}}</strong> application has been received. Please complete the next step by filling out this short form — it helps us understand you better and keeps your application on track.",
-      { label: "Continue Application", url: "{{formLink}}" },
-      "Your application link is unique to you. If you did not apply, you can ignore this email."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Your {{kindLabel}} application has been received. Please complete the next step by filling out this short form:",
-      "",
-      "{{formLink}}",
-      "",
-      "This link is unique to you. If you did not apply, you can ignore this email.",
-    ].join("\n"),
   },
   "application-received": {
     subject: "We received your {{kindLabel}} application — BMAC",
@@ -411,137 +375,6 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "If you have questions, reply to this email.",
     ].join("\n"),
   },
-  "welcome-step-1": {
-    subject: "Welcome to BMAC, {{firstName}}!",
-    html: shell(
-      "Welcome to BMAC!",
-      "Hi <strong>{{firstName}}</strong>, thank you for joining the Brilliant Minds Ambassadors Club! We're excited to have you. Here's what to do first:",
-      { label: "Sign In to Your Account", url: "{{loginUrl}}" },
-      "You'll be prompted to change your password on first login."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Thank you for joining BMAC! We're excited to have you.",
-      "",
-      "Sign in at: {{loginUrl}}",
-      "You'll be prompted to change your password on first login.",
-    ].join("\n"),
-  },
-  "welcome-step-2": {
-    subject: "Getting started at BMAC",
-    html: shell(
-      "Getting started at BMAC",
-      "Hi <strong>{{firstName}}</strong>, now that you've joined BMAC, here are some tips to get the most out of your experience:",
-      undefined,
-      "Check your dashboard regularly for updates on programs, events, and volunteer opportunities."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Now that you've joined BMAC, here are some tips:",
-      "",
-      "- Check your dashboard for programs and events",
-      "- Complete your profile for a personalized experience",
-      "- Look out for volunteer opportunities",
-    ].join("\n"),
-  },
-  "welcome-step-3": {
-    subject: "Your BMAC journey continues",
-    html: shell(
-      "Your BMAC journey continues",
-      "Hi <strong>{{firstName}}</strong>, you've been with BMAC for a week now! We hope you're settling in. Explore our upcoming events and programs to make the most of your membership.",
-      { label: "Explore Programs", url: "{{loginUrl}}" },
-      "Questions? Reply to this email — we're here to help."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "You've been with BMAC for a week now! Explore our upcoming events and programs.",
-      "",
-      "Sign in at: {{loginUrl}}",
-      "Questions? Reply to this email.",
-    ].join("\n"),
-  },
-  "renewal-reminder-30": {
-    subject: "Your BMAC membership renews in 30 days",
-    html: shell(
-      "Membership renewal",
-      "Hi <strong>{{firstName}}</strong>, your BMAC membership renews on <strong>{{renewalDate}}</strong>. Make sure your profile and payment details are up to date.",
-      undefined,
-      "If you have questions about renewal, reply to this email."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Your BMAC membership renews on {{renewalDate}}.",
-      "Make sure your profile and payment details are up to date.",
-      "",
-      "Questions? Reply to this email.",
-    ].join("\n"),
-  },
-  "renewal-reminder-7": {
-    subject: "BMAC membership renews in 7 days",
-    html: shell(
-      "Renewal in 7 days",
-      "Hi <strong>{{firstName}}</strong>, your BMAC membership renews in <strong>7 days</strong> on {{renewalDate}}. Please ensure your details are current.",
-      undefined,
-      "Contact us if you need to make changes before renewal."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Your BMAC membership renews in 7 days on {{renewalDate}}.",
-      "Please ensure your details are current.",
-    ].join("\n"),
-  },
-  "renewal-reminder-1": {
-    subject: "BMAC membership renews tomorrow",
-    html: shell(
-      "Renewal tomorrow",
-      "Hi <strong>{{firstName}}</strong>, your BMAC membership renews <strong>tomorrow</strong> on {{renewalDate}}. No action needed if your details are up to date.",
-      undefined,
-      "Reply to this email if you have any questions."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Your BMAC membership renews tomorrow on {{renewalDate}}.",
-      "No action needed if your details are up to date.",
-    ].join("\n"),
-  },
-  "re-engagement-30": {
-    subject: "We miss you at BMAC, {{firstName}}!",
-    html: shell(
-      "We miss you!",
-      "Hi <strong>{{firstName}}</strong>, it's been a while since you logged in to BMAC. We'd love to see you back! There are exciting programs and events happening.",
-      { label: "Sign Back In", url: "{{loginUrl}}" },
-      "If you no longer wish to receive these emails, you can unsubscribe from your account settings."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "It's been a while since you logged in to BMAC. We'd love to see you back!",
-      "",
-      "Sign in at: {{loginUrl}}",
-    ].join("\n"),
-  },
-  "re-engagement-60": {
-    subject: "Still thinking about BMAC?",
-    html: shell(
-      "We're still here",
-      "Hi <strong>{{firstName}}</strong>, we haven't seen you in a while. BMAC is always growing — new programs, new opportunities, and new people. We'd love to welcome you back.",
-      { label: "Return to BMAC", url: "{{loginUrl}}" },
-      "If you no longer wish to receive these emails, you can unsubscribe from your account settings."
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "We haven't seen you in a while. BMAC is always growing.",
-      "",
-      "Sign in at: {{loginUrl}}",
-    ].join("\n"),
-  },
   "payment-required": {
     subject: "Complete your payment for {{programTitle}} — BMAC",
     html: shell(
@@ -613,7 +446,6 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "password-reset",
   "admin-deleted",
   "admin-delete-attempt",
-  "google-forms-link",
   "application-received",
   "donation-thanks",
   "donation-alert",
@@ -626,14 +458,7 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "event-reminder",
   "public-credentials",
   "public-welcome",
-  "welcome-step-1",
-  "welcome-step-2",
-  "welcome-step-3",
-  "renewal-reminder-30",
-  "renewal-reminder-7",
-  "renewal-reminder-1",
-  "re-engagement-30",
-  "re-engagement-60",
+  "payment-required",
   "whatsapp-invite",
   "payment-verified",
 ];

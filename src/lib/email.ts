@@ -30,10 +30,6 @@ export async function sendRequest(body: Record<string, unknown>): Promise<{ erro
   }
 }
 
-export async function sendPasswordResetEmail(email: string, resetLink: string): Promise<{ error?: string }> {
-  return sendRequest({ type: "password-reset", email, resetLink });
-}
-
 export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string, reason?: string): Promise<{ error?: string }> {
   return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy, reason: reason || "" });
 }
