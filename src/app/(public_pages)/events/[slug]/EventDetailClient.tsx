@@ -41,6 +41,8 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
     desc: e.desc || (e as any).description || "",
     features: (e as any).features || [],
     isPaid: (e as any).is_paid ?? (e as any).isPaid ?? false,
+    allowPublicRegistration: (e as any).allow_public_registration ?? (e as any).allowPublicRegistration ?? true,
+    registrationDeadline: (e as any).registration_deadline || (e as any).registrationDeadline || "",
     price: Number((e as any).price || 0),
     img: (e as any).img || "",
     agenda: (e as any).agenda || [],
@@ -669,7 +671,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
         </section>
       )}
 
-      {!isReserved && showStickyCta && (
+      {!isReserved && showStickyCta && !registrationClosed && !deadlinePassed && (
         <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden bg-card/95 backdrop-blur border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <a
             href="#register"
