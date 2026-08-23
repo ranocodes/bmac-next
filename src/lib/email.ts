@@ -1,12 +1,12 @@
 "use server";
 
+import { absoluteUrl } from "@/lib/site";
+
 const SERVICE_URL = (process.env.EMAIL_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
 const API_KEY = process.env.EMAIL_SERVICE_API_KEY || "";
 
 function absolutizeUrl(path: string): string {
-  if (!path || /^https?:\/\//.test(path)) return path;
-  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
-  return base ? `${base}${path.startsWith("/") ? path : `/${path}`}` : path;
+  return absoluteUrl(path);
 }
 
 export async function sendRequest(body: Record<string, unknown>): Promise<{ error?: string }> {
