@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { findOrCreatePerson } from "@/lib/people";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
 import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";

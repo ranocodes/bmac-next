@@ -3,7 +3,7 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
 
 export interface PendingDonation {

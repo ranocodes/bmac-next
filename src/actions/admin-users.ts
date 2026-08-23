@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { getSuperAdminSession, setSuperAdminSession, ALL_PERMISSIONS } from "@/lib/auth/super-admin";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { sendAdminDeletedNotification, sendAdminDeleteAttemptAlert } from "@/lib/email";
 import type { AdminRole, Permission } from "@/types/cms";
 
