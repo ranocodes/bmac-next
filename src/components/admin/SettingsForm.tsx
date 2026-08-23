@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, X, Save, RotateCcw, User, Globe, FileText, Settings, BookOpen, Phone, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import CategoriesManager from "@/components/admin/CategoriesManager";
 import {
   saveSiteSettings,
   updateAdminProfile,
@@ -335,6 +336,8 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
           </div>
         ))}
       </div>
+
+      <CategoriesManager />
 
       <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
