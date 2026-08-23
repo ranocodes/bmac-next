@@ -501,7 +501,7 @@ export async function flushScheduledBroadcasts(): Promise<{
     while (!done) {
       const result = await performChunk({
         subject: row.subject,
-        bodyMd: row.body_html,
+        bodyMd: row.body_md,
         bodyHtml: row.body_html || markdownToHtml(row.body_md),
         offset,
         limit: CHUNK_SIZE,

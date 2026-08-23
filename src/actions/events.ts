@@ -134,8 +134,8 @@ function toRegistrant(r: {
 }
 
 export async function getEventAdminDetail(eventId: string): Promise<EventAdminDetail | null> {
+  await requirePermission("manage_events");
   try {
-    await requirePermission("manage_events");
     const event = await eventById(eventId);
     if (!event) return null;
     const [counts, registrants] = await Promise.all([
