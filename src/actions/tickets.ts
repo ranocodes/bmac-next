@@ -1,8 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./people";
-import { createWorkflowRecord, resolveWorkflow } from "@/lib/workflows";
+import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
 import { createTicket, reserveCapacity, releaseCapacity, getTicketById } from "@/lib/tickets";
 import type { EventTicketRow } from "@/lib/tickets";
 import { promoteFromWaitlist } from "@/actions/waitlist";
@@ -88,18 +87,6 @@ export async function createTicketOrder(opts: {
       await releaseCapacity(opts.eventId, quantity);
       return { error: "Something went wrong. Try again." };
     }
-    await createWorkflowRecord({
-      kind: "ticket",
-      refId: ticket.id,
-      title: `Paid ticket order: ${event.title}`,
-      summary: `${opts.name} ordered ${quantity} pass${quantity > 1 ? "es" : ""} for ${event.title}`,
-      status: "open",
-      submitterName: opts.name,
-      submitterEmail: opts.email,
-      source: "event",
-      details: { eventId: opts.eventId, reference: ticket.reference, quantity },
-      outcome: "Awaiting payment verification",
-    });
     return {
       reference: ticket.reference,
       amountKobo,
@@ -146,10 +133,5 @@ export async function cancelTicket(ticketId: string): Promise<{ error?: string }
   );
   await releaseCapacity(ticket.event_id, ticket.quantity);
   await promoteFromWaitlist(ticket.event_id, ticket.quantity);
-  const wf = await db.query<{ id: string }>(
-    "SELECT id FROM public.workflow_records WHERE kind = 'ticket' AND ref_id = $1 LIMIT 1",
-    [ticketId]
-  );
-  if (wf.length) await resolveWorkflow(wf[0].id, "Ticket order cancelled");
   return {};
 }

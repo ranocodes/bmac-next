@@ -14,7 +14,8 @@ vi.mock("@/lib/db", () => ({
   db: { query: (...args: unknown[]) => mockQuery(...args) },
 }));
 
-import { findOrCreatePerson, ensurePersonRoles, getPeople, getPerson, exportPeople } from "@/actions/people";
+import { findOrCreatePerson, ensurePersonRoles } from "@/lib/people";
+import { getPeople, getPerson, exportPeople } from "@/actions/people";
 
 const caller = { email: "boss@x.com", firstName: "Boss", role: "super_admin", permissions: ["manage_users"] };
 

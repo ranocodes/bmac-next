@@ -12,9 +12,7 @@ import { useAdmin } from "@/lib/auth/admin-context";
 interface DashboardCounts {
   totalMembers: number;
   activePrograms: number;
-  pendingApps: number;
   revenueThisMonth: number;
-  openInquiries: number;
   eventsThisMonth: number;
 }
 

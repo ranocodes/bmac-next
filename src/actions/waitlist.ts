@@ -2,9 +2,8 @@
 
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/actions/people";
+import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
 import { createTicket, reserveCapacity, passUrlFor } from "@/lib/tickets";
-import { createWorkflowRecord } from "@/lib/workflows";
 import { sendRegistrationConfirmedEmail, sendRegistrationAlertEmail } from "@/lib/email";
 import { createAdminNotification, emailSuperAdmins } from "@/lib/notifications";
 
@@ -98,18 +97,6 @@ export async function promoteFromWaitlist(eventId: string, n = 1): Promise<{ pro
         refId: eventId,
         refTitle: title,
         status: "confirmed",
-      });
-      await createWorkflowRecord({
-        kind: "event_registration",
-        refId: ticket.id,
-        title: `Waitlist promotion: ${title}`,
-        summary: `${wl.name} promoted from waitlist for ${title}`,
-        status: "resolved",
-        submitterName: wl.name,
-        submitterEmail: wl.email,
-        source: "event",
-        details: { eventId, reference: ticket.reference, free: true, waitlist: true },
-        outcome: "Promoted from waitlist, pass issued",
       });
       await db.query(
         `UPDATE public.event_waitlist

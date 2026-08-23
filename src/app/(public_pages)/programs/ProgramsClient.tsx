@@ -105,11 +105,6 @@ export default function ProgramsClient({ initialPrograms }: ProgramsClientProps)
           <button onClick={() => setIsModalOpen(true)} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-8 h-12 font-bold hover:bg-primary/90 transition-colors">
             Join the Next Cohort <ArrowRight size={18} />
           </button>
-          <p className="mt-4">
-            <Link href="/application-status" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
-              Already applied? Check your application status
-            </Link>
-          </p>
         </div>
       </section>
       

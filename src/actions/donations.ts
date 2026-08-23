@@ -2,7 +2,7 @@
 
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./people";
+import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
 import { logActivity } from "./activity-logs";
 import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
 

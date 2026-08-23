@@ -95,7 +95,6 @@ const routePermissions: Record<string, Permission> = {
   "/admin/partners": "manage_partners",
   "/admin/stats": "manage_stats",
   "/admin/logs": "manage_logs",
-  "/admin/payments": "manage_payments",
   "/admin/admins": "manage_users",
   "/admin/settings": "access_settings",
   "/admin/checkin": "check_in_attendees",

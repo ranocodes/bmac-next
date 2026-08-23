@@ -69,12 +69,6 @@ export async function createAdminAction(
     logActivity(createdByEmail, "admin_create", "auth", { details: `Created ${opts.email} as ${opts.role}` });
     const { createAdminNotification, emailSuperAdmins } = await import("@/lib/notifications");
     const { sendAdminCreatedAlertEmail } = await import("@/lib/email");
-    await createAdminNotification({
-      title: "New admin created",
-      message: `${opts.email} was created as ${opts.role} by ${createdByEmail}.`,
-      type: "admin",
-      link: "/admin/admins",
-    });
     await emailSuperAdmins(adminEmail =>
       sendAdminCreatedAlertEmail({
         email: adminEmail,

@@ -96,7 +96,7 @@ describe("AdminLayout", () => {
   });
 
   it("payments route without manage_payments renders Access Denied", () => {
-    mockUsePathname.mockReturnValue("/admin/payments");
+    mockUsePathname.mockReturnValue("/admin/donations");
     render(
       <AdminLayout
         user={{ email: "editor@test.com", firstName: "Editor", role: "moderator", permissions: ["manage_events"] }}

@@ -1,7 +1,6 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { countOpenWorkflows } from "@/lib/workflows";
 
 export async function getDashboardStats() {
   const now = new Date();
@@ -10,9 +9,7 @@ export async function getDashboardStats() {
   const [
     totalMembers,
     activePrograms,
-    pendingApps,
     revenueThisMonth,
-    openInquiries,
     eventsThisMonth,
     news, events,
     logs,
@@ -31,7 +28,6 @@ export async function getDashboardStats() {
       ) AS members`
     ).catch(() => [{ count: "0" }]),
     db.count("programs").catch(() => 0),
-    countOpenWorkflows(),
     db.query<{ total: string }>(
       `SELECT COALESCE(SUM((pr.meta->>'amount')::numeric), 0)::text AS total
        FROM public.person_records pr
@@ -39,9 +35,6 @@ export async function getDashboardStats() {
          AND pr.created_at >= $1`,
       [startOfMonth]
     ).catch(() => [{ total: "0" }]),
-    db.query<{ count: string }>(
-      `SELECT COUNT(*) AS count FROM public.workflow_records WHERE status = 'open'`
-    ).catch(() => [{ count: "0" }]),
     db.query<{ count: string }>(
       `SELECT COUNT(*) AS count FROM public.events
        WHERE status = 'published' AND date >= $1`,
@@ -66,9 +59,7 @@ export async function getDashboardStats() {
     counts: {
       totalMembers: Number(totalMembers[0]?.count ?? 0),
       activePrograms: activePrograms,
-      pendingApps: pendingApps,
       revenueThisMonth: Number(revenueThisMonth[0]?.total ?? 0),
-      openInquiries: Number(openInquiries[0]?.count ?? 0),
       eventsThisMonth: Number(eventsThisMonth[0]?.count ?? 0),
     },
     recentNews: news,
@@ -83,7 +74,6 @@ export async function getTableCounts() {
   const tables = ["news_articles", "events", "programs", "gallery_items", "team_members", "testimonials"];
   const results = await Promise.all(tables.map(t => db.count(t).catch(() => 0)));
   const counts = Object.fromEntries(tables.map((t, i) => [t, results[i]]));
-  counts.workflowOpen = await countOpenWorkflows();
   return counts;
 }
 
@@ -251,7 +241,6 @@ export async function getOperationalAnalytics() {
     donationRow,
     donationStats,
     programStats,
-    workflowStats,
   ] = await Promise.all([
     db.query<{ status: string; count: string }>(
       "SELECT status, COUNT(*) AS count FROM public.event_tickets GROUP BY status"
@@ -270,9 +259,6 @@ export async function getOperationalAnalytics() {
     db.query<{ count: string }>(
       "SELECT COUNT(*) AS count FROM public.program_applications"
     ).catch(() => [{ count: "0" }]),
-    db.query<{ kind: string; count: string }>(
-      "SELECT kind, COUNT(*) AS count FROM public.workflow_records GROUP BY kind"
-    ).catch(() => []),
   ]);
 
   const checkedIn = await db.query<{ count: string }>(
@@ -313,6 +299,5 @@ export async function getOperationalAnalytics() {
       participants: Number(participants[0]?.count ?? 0),
       applicationsByStatus: Object.fromEntries(applicationsByStatus.map(r => [r.status, Number(r.count)])),
     },
-    workflows: Object.fromEntries(workflowStats.map(r => [r.kind, Number(r.count)])),
   };
 }

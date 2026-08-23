@@ -3,8 +3,7 @@
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
 import { logActivity } from "./activity-logs";
-import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "./people";
-import { createWorkflowRecord } from "@/lib/workflows";
+import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
 import { sendRegistrationConfirmedEmail, sendEventReminderEmail, sendRegistrationAlertEmail, sendCheckInAlertEmail, sendPaymentVerifiedEmail } from "@/lib/email";
 import { recordEvent } from "@/lib/analytics/record";
@@ -334,18 +333,6 @@ export async function registerForEvent(opts: {
       await releaseCapacity(opts.eventId, 1);
       return { error: "Something went wrong. Try again." };
     }
-    await createWorkflowRecord({
-      kind: "event_registration",
-      refId: ticket.id,
-      title: `Event registration: ${event.title}`,
-      summary: `${opts.name} registered for ${event.title}`,
-      status: "resolved",
-      submitterName: opts.name,
-      submitterEmail: opts.email,
-      source: "event",
-      details: { eventId: opts.eventId, reference: ticket.reference, free: true },
-      outcome: "Free registration confirmed, pass issued",
-    });
     const passUrl = passUrlFor(ticket.qr_token);
     await sendRegistrationConfirmedEmail({
       email: opts.email,
@@ -414,12 +401,6 @@ export async function checkInAttendee(input: {
         : `Already checked in ${result.attendeeName} (second scan)`,
     });
     if (result.checkedIn) {
-      await createAdminNotification({
-        title: "Attendee checked in",
-        message: `${result.attendeeName} checked in for ${result.eventTitle || "event"}.`,
-        type: "checkin",
-        link: "/admin/checkin",
-      });
       await emailSuperAdmins(adminEmail =>
         sendCheckInAlertEmail({
           email: adminEmail,
@@ -430,16 +411,6 @@ export async function checkInAttendee(input: {
     }
   }
   return { result };
-}
-
-export async function createTicketNotification(eventId: string, reference: string) {
-  const event = await eventById(eventId);
-  await createAdminNotification({
-    title: "Paid ticket confirmed",
-    message: `${reference} confirmed for ${event?.title || "event"}`,
-    type: "ticket",
-    link: "/admin/events",
-  });
 }
 
 export async function verifyEventPayment(ticketId: string): Promise<{ error?: string }> {

@@ -22,7 +22,6 @@ export type EmailTemplateKey =
   | "public-credentials"
   | "public-welcome"
   | "payment-required"
-  | "whatsapp-invite"
   | "payment-verified";
 
 export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
@@ -43,7 +42,6 @@ export const EMAIL_TEMPLATE_LABELS: Record<EmailTemplateKey, string> = {
   "public-credentials": "Public account credentials",
   "public-welcome": "Welcome to BMAC program",
   "payment-required": "Payment required after acceptance",
-  "whatsapp-invite": "WhatsApp group invitation",
   "payment-verified": "Payment verified — event pass",
 };
 
@@ -397,26 +395,6 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateKey, EmailTemplate> = 
       "If you have questions, reply to this email.",
     ].join("\n"),
   },
-  "whatsapp-invite": {
-    subject: "You're accepted! Join our WhatsApp group — {{programTitle}}",
-    html: shell(
-      "Welcome aboard, {{firstName}}!",
-      "Congratulations! Your application for <strong>{{programTitle}}</strong> has been accepted. Join our WhatsApp group to connect with fellow participants, get updates, and stay in the loop.",
-      { label: "Join WhatsApp Group", url: "{{whatsappLink}}" },
-      "If the link doesn't work, copy and paste this URL: {{whatsappLink}}"
-    ),
-    text: [
-      "Hi {{firstName}},",
-      "",
-      "Congratulations! Your application for {{programTitle}} has been accepted.",
-      "",
-      "Join our WhatsApp group to connect with fellow participants:",
-      "",
-      "{{whatsappLink}}",
-      "",
-      "We're excited to have you!",
-    ].join("\n"),
-  },
   "payment-verified": {
     subject: "Your payment is confirmed — {{eventName}}",
     html: shell(
@@ -459,6 +437,5 @@ export const EMAIL_TEMPLATE_KEYS: EmailTemplateKey[] = [
   "public-credentials",
   "public-welcome",
   "payment-required",
-  "whatsapp-invite",
   "payment-verified",
 ];
