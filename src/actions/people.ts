@@ -3,11 +3,10 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { sendApplicationReceivedEmail } from "@/lib/email";
 import { recordConsent } from "@/lib/consent";
 import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
-import { submitForm } from "@/actions/forms";
 import {
   findOrCreatePerson,
   ensurePersonRoles,

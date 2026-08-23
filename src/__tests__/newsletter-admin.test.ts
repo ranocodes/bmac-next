@@ -13,7 +13,7 @@ vi.mock("@/lib/auth/server", () => ({
   requirePermission: async () => ({ email: "admin@x.com", firstName: "A", role: "admin", permissions: [] }),
 }));
 
-vi.mock("@/actions/activity-logs", () => ({
+vi.mock("@/lib/activity-log", () => ({
   logActivity: async () => {},
 }));
 
@@ -31,8 +31,8 @@ import {
   saveNewsletterTemplate,
   deleteNewsletterTemplate,
   scheduleNewsletterBroadcast,
-  flushScheduledBroadcasts,
 } from "@/actions/newsletter-admin";
+import { flushScheduledBroadcasts } from "@/lib/newsletter-broadcast";
 
 function setupChunkQueries({ total, rows }: { total: string; rows: unknown[] }) {
   mockQuery.mockImplementation(async (sql: string) => {

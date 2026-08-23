@@ -6,6 +6,7 @@ import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib
 import { createTicket, reserveCapacity, passUrlFor } from "@/lib/tickets";
 import { sendRegistrationConfirmedEmail, sendRegistrationAlertEmail } from "@/lib/email";
 import { createAdminNotification, emailSuperAdmins } from "@/lib/notifications";
+import { requirePermission } from "@/lib/auth/server";
 
 export interface WaitlistEntry {
   id: string;
@@ -56,6 +57,7 @@ export async function joinWaitlist(opts: {
 }
 
 export async function promoteFromWaitlist(eventId: string, n = 1): Promise<{ promoted: number; error?: string }> {
+  await requirePermission("manage_events");
   const next = await db.query<WaitlistEntry>(
     `SELECT id, event_id AS "eventId", person_id AS "personId", name, email, phone, status, created_at AS "createdAt", promoted_at AS "promotedAt"
      FROM public.event_waitlist
@@ -136,6 +138,7 @@ export async function promoteFromWaitlist(eventId: string, n = 1): Promise<{ pro
 }
 
 export async function removeFromWaitlist(id: string): Promise<{ success: boolean; error?: string }> {
+  await requirePermission("manage_events");
   const rows = await db.query<{ id: string }>(
     `DELETE FROM public.event_waitlist WHERE id = $1 AND status = 'waiting' RETURNING id`,
     [id]
@@ -145,6 +148,7 @@ export async function removeFromWaitlist(id: string): Promise<{ success: boolean
 }
 
 export async function listWaitlist(eventId: string): Promise<WaitlistEntry[]> {
+  await requirePermission("manage_events");
   const rows = await db.query<WaitlistEntry>(
     `SELECT id, event_id AS "eventId", person_id AS "personId", name, email, phone, status, created_at AS "createdAt", promoted_at AS "promotedAt"
      FROM public.event_waitlist

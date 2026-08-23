@@ -11,7 +11,7 @@ vi.mock("@/lib/auth/server", () => ({
 vi.mock("@/lib/auth/client", () => ({
   updateAdmin: (...args: unknown[]) => mockUpdateAdmin(...args),
 }));
-vi.mock("@/actions/activity-logs", () => ({
+vi.mock("@/lib/activity-log", () => ({
   logActivity: (...args: unknown[]) => mockLog(...args),
 }));
 vi.mock("@/lib/db", () => ({

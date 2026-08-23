@@ -1,8 +1,11 @@
 "use server";
 
+import { requirePermission } from "@/lib/auth/server";
+
 import { db } from "@/lib/db";
 
 export async function getDashboardStats() {
+  await requirePermission("view_analytics");
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
@@ -71,6 +74,7 @@ export async function getDashboardStats() {
 }
 
 export async function getTableCounts() {
+  await requirePermission("view_analytics");
   const tables = ["news_articles", "events", "programs", "gallery_items", "team_members", "testimonials"];
   const results = await Promise.all(tables.map(t => db.count(t).catch(() => 0)));
   const counts = Object.fromEntries(tables.map((t, i) => [t, results[i]]));
@@ -78,6 +82,7 @@ export async function getTableCounts() {
 }
 
 export async function getActivitySummary() {
+  await requirePermission("view_analytics");
   const [topUsers, topActions] = await Promise.all([
     db.query<{ user: string; count: string }>(
       `SELECT "user", COUNT(*) AS count FROM public.activity_logs GROUP BY "user" ORDER BY count DESC LIMIT 5`
@@ -94,6 +99,7 @@ export async function getActivitySummary() {
 }
 
 export async function getVisitorStats() {
+  await requirePermission("view_analytics");
   const [totalViews, uniqueVisitors, topPages, recentViews] = await Promise.all([
     db.query<{ count: string }>("SELECT COUNT(*) AS count FROM public.page_views").catch(() => [{ count: "0" }]),
     db.query<{ count: string }>("SELECT COUNT(DISTINCT session_id) AS count FROM public.page_views").catch(() => [{ count: "0" }]),
@@ -110,6 +116,7 @@ export async function getVisitorStats() {
 }
 
 export async function getDailyViewsSeries(rangeDays = 30) {
+  await requirePermission("view_analytics");
   const rows = await db.query<{ view_date: string; views: string; visitors: string }>(
     `SELECT view_date, COUNT(*) AS views, COUNT(DISTINCT session_id) AS visitors
      FROM public.page_views
@@ -121,6 +128,7 @@ export async function getDailyViewsSeries(rangeDays = 30) {
 }
 
 export async function getTrafficOverview(rangeDays = 30) {
+  await requirePermission("view_analytics");
   const [totalRow, uniqueRow, todayRow, avgRow] = await Promise.all([
     db.query<{ count: string }>(
       `SELECT COUNT(*) AS count FROM public.page_views
@@ -152,6 +160,7 @@ export async function getTrafficOverview(rangeDays = 30) {
 }
 
 export async function getTopPages(rangeDays = 30, limit = 10) {
+  await requirePermission("view_analytics");
   const rows = await db.query<{ path: string; count: string }>(
     `SELECT path, COUNT(*) AS count FROM public.page_views
      WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')
@@ -162,6 +171,7 @@ export async function getTopPages(rangeDays = 30, limit = 10) {
 }
 
 export async function getReferrers(rangeDays = 30, limit = 10) {
+  await requirePermission("view_analytics");
   const rows = await db.query<{ referrer: string; count: string }>(
     `SELECT referrer, COUNT(*) AS count FROM public.page_views
      WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day')
@@ -180,6 +190,7 @@ export async function getReferrers(rangeDays = 30, limit = 10) {
 }
 
 export async function getDeviceBreakdown(rangeDays = 30) {
+  await requirePermission("view_analytics");
   const rows = await db.query<{ type: string; count: string }>(
     `SELECT device_type AS type, COUNT(*) AS count FROM public.page_views
      WHERE view_date >= CURRENT_DATE - ($1::int * INTERVAL '1 day') AND device_type != ''
@@ -190,6 +201,7 @@ export async function getDeviceBreakdown(rangeDays = 30) {
 }
 
 export async function getConversionFunnels(rangeDays = 30) {
+  await requirePermission("view_analytics");
   const [events, totalRow] = await Promise.all([
     db.query<{ name: string; count: string }>(
       `SELECT name, COUNT(*) AS count FROM public.analytics_events
@@ -228,6 +240,7 @@ function referrerHost(referrer: string): string {
 }
 
 export async function getActivityBreakdown() {
+  await requirePermission("view_analytics");
   const rows = await db.query<{ action: string; count: string }>(
     "SELECT action, COUNT(*) AS count FROM public.activity_logs GROUP BY action ORDER BY count DESC"
   ).catch(() => []);
@@ -235,6 +248,7 @@ export async function getActivityBreakdown() {
 }
 
 export async function getOperationalAnalytics() {
+  await requirePermission("view_analytics");
   const [
     ticketStats,
     revenueRow,

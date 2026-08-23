@@ -12,6 +12,10 @@ vi.mock("next/headers", () => ({
   cookies: () => ({ get: () => undefined }),
 }));
 
+vi.mock("@/lib/auth/server", () => ({
+  requirePermission: vi.fn().mockResolvedValue({ email: "admin@bmac.test" }),
+}));
+
 import {
   getTrafficOverview,
   getDailyViewsSeries,
