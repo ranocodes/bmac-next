@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
-import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail, sendTicketAlertEmail } from "@/lib/email";
-import { sendWorkflowEmail } from "@/actions/emails";
+import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail, sendTicketAlertEmail, sendApplicationStatusEmail } from "@/lib/email";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
+import { verifyExpectedAmount } from "@/lib/payments-verify";
 import { recordEvent } from "@/lib/analytics/record";
 
 export interface PaystackMetadata {
@@ -86,9 +86,10 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
       payer_name: string;
       payer_email: string;
       quantity: number;
+      amount: number;
       status: string;
     }>(
-      `SELECT id, event_id, reference, qr_token, payer_name, payer_email, quantity, status
+      `SELECT id, event_id, reference, qr_token, payer_name, payer_email, quantity, amount, status
        FROM public.event_tickets
        WHERE id = $1 OR reference = $2
        ORDER BY (id = $1) DESC
@@ -98,6 +99,17 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
     const ticket = ticketRows[0];
     if (!ticket || ticket.status === "confirmed") {
       return "already_processed";
+    }
+    const expectedTotalKobo = Number(ticket.amount || 0) * Math.max(1, ticket.quantity);
+    if (!verifyExpectedAmount(Number(amount || 0), expectedTotalKobo)) {
+      await createAdminNotification({
+        title: "Ticket amount mismatch",
+        message: `Webhook ${reference} reports ${currency || "NGN"}${amount}, ticket ${ticket.reference} expects ${(expectedTotalKobo / 100).toLocaleString("en-NG")} for ${ticket.quantity} × unit. Ticket NOT confirmed; manual review needed.`,
+        type: "ticket",
+        link: "/admin/events",
+      });
+      console.error(`ticket amount mismatch for ${reference}: webhook ${amount} vs expected ${expectedTotalKobo}`);
+      return "mismatch";
     }
     const confirmed = await db.query<{ id: string }>(
       `UPDATE public.event_tickets
@@ -193,6 +205,21 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
     if (!app) {
       return "already_processed";
     }
+    const programPriceRows = await db.query<{ price: number | null }>(
+      "SELECT price FROM public.programs WHERE id = $1",
+      [app.program_id]
+    );
+    const expectedProgramKobo = Number(programPriceRows[0]?.price || 0) * 100;
+    if (expectedProgramKobo > 0 && !verifyExpectedAmount(Number(amount || 0), expectedProgramKobo)) {
+      await createAdminNotification({
+        title: "Program amount mismatch",
+        message: `Webhook ${reference} reports ${currency || "NGN"}${amount}, program expects ${(expectedProgramKobo / 100).toLocaleString("en-NG")}. Application NOT marked paid; manual review needed.`,
+        type: "program",
+        link: `/admin/programs/${app.program_id}`,
+      });
+      console.error(`program amount mismatch for ${reference}: webhook ${amount} vs expected ${expectedProgramKobo}`);
+      return "mismatch";
+    }
     await db.query(
       `UPDATE public.workflow_records
           SET status = 'resolved', outcome = 'Payment verified, application received', resolved_at = now(), updated_at = now()
@@ -210,12 +237,12 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
     );
     const programTitle = programRows[0]?.title || "Program";
     if (person?.email) {
-      await sendWorkflowEmail(
-        "program",
-        person.email,
-        `${person.first_name || ""} ${person.last_name || ""}`.trim(),
-        { programTitle, applicationId: app.id, status: "received" }
-      ).catch(err => console.error("program-receipt email error:", err));
+      await sendApplicationStatusEmail({
+        email: person.email,
+        firstName: `${person.first_name || ""} ${person.last_name || ""}`.trim(),
+        kindLabel: programTitle,
+        status: "received",
+      }).catch(err => console.error("program-receipt email error:", err));
     }
     await createAdminNotification({
       title: "Paid program application",
