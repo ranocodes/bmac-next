@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getInvolvementPage } from "@/actions/involvement-pages";
 import { getGoogleForms } from "@/actions/settings";
+import { editorial } from "../editorial-font";
 import InvolvementDetailClient from "./InvolvementDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -23,11 +24,13 @@ export default async function InvolvementPage({ params }: { params: Promise<{ id
   const entityType = ENTITY_MAP[id] || null;
 
   return (
-    <InvolvementDetailClient
-      page={page}
-      slug={id}
-      entityType={entityType}
-      googleForms={googleForms}
-    />
+    <div className={editorial.variable}>
+      <InvolvementDetailClient
+        page={page}
+        slug={id}
+        entityType={entityType}
+        googleForms={googleForms}
+      />
+    </div>
   );
 }

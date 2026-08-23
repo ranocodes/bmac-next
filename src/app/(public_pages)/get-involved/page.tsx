@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { editorial } from "./editorial-font";
 import GetInvolvedClient from "./GetInvolvedClient";
 
 export const metadata: Metadata = {
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function GetInvolvedPage() {
-  return <GetInvolvedClient />;
+  return (
+    <div className={editorial.variable}>
+      <GetInvolvedClient />
+    </div>
+  );
 }

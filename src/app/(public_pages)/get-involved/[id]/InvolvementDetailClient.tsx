@@ -46,12 +46,12 @@ function resolveIcon(name: string | null) {
   return ICON_MAP[name] || Zap;
 }
 
-const ACCENT_MAP: Record<string, { gradient: string; ring: string; bg: string; badge: string; solid: string }> = {
-  emerald: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
-  amber: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
-  indigo: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
-  rose: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
-  blue: { gradient: "from-zinc-900 to-zinc-700", ring: "ring-zinc-800", bg: "bg-zinc-900", badge: "bg-zinc-900 text-white", solid: "bg-zinc-900 text-white" },
+const CHIP_MAP: Record<string, string> = {
+  emerald: "bg-[#DCEBDD] text-[#1a4d2e]",
+  amber: "bg-[#FBF3DA] text-[#713f12]",
+  indigo: "bg-[#EDE9FE] text-[#4c1d95]",
+  rose: "bg-[#FDEBEC] text-[#7f1d1d]",
+  blue: "bg-[#E1EFFA] text-[#0c4a6e]",
 };
 
 const DONATE_AMOUNTS = ["5000", "10000", "25000", "50000", "custom"];
@@ -63,8 +63,15 @@ interface Props {
   googleForms?: Record<string, string>;
 }
 
+const fadeUp = {
+  initial: { opacity: 0, y: 16 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.5 },
+};
+
 function InvolvementDetailInner({ page, slug, googleForms }: Props) {
-  const accent = ACCENT_MAP[page.accent_color || "emerald"] || ACCENT_MAP.emerald;
+  const chip = CHIP_MAP[page.accent_color || "emerald"] || CHIP_MAP.emerald;
   const HeroIcon = resolveIcon(page.icon);
   const { toast } = useToast();
 
@@ -153,356 +160,311 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
     }
   };
 
-  const container = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
-  const item = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } } };
+  const inputClass =
+    "w-full px-4 py-3 bg-background border border-border rounded-md text-sm text-secondary placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all";
 
   return (
     <main className="min-h-screen bg-background">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-background border-b border-border/40">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-
-        <div className="relative max-w-7xl mx-auto px-6 pt-20 md:pt-36 pb-10 md:pb-24">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <section className="px-6 pt-28 md:pt-40 pb-12 md:pb-20 border-b border-border">
+        <div className="max-w-4xl mx-auto">
+          <motion.div {...fadeUp} transition={{ duration: 0.4 }}>
             <Link
               href="/get-involved"
-              className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-secondary transition-colors mb-8 group"
+              className="group inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
               Back to Get Involved
             </Link>
           </motion.div>
 
-          <div className="flex flex-col md:flex-row items-start gap-6 md:gap-12">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className={`p-4 md:p-6 rounded-lg ${accent.bg} ring-1 ${accent.ring} shrink-0`}
-            >
-              <HeroIcon size={32} className="text-background md:w-10 md:h-10" />
-            </motion.div>
-
-            <div className="flex-1">
-              <motion.span
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3 block"
-              >
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-12 md:mt-20"
+          >
+            <div className="flex items-center gap-3">
+              <span className={`flex h-7 w-7 items-center justify-center rounded-md ${chip}`}>
+                <HeroIcon size={14} strokeWidth={1.75} />
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Get Involved
-              </motion.span>
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="font-display text-3xl md:text-5xl font-bold text-secondary tracking-tight leading-[1.1]"
-              >
-                {page.title}
-              </motion.h1>
-              {page.subtitle && (
-                <motion.p
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-4 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed"
-                >
-                  {page.subtitle}
-                </motion.p>
-              )}
+              </span>
             </div>
-          </div>
-        </div>
-      </section>
+            <h1 className="font-editorial mt-6 text-4xl sm:text-5xl md:text-6xl font-medium text-secondary leading-[1.05] tracking-tight">
+              {page.title}
+            </h1>
+            {page.subtitle && (
+              <p className="mt-6 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
+                {page.subtitle}
+              </p>
+            )}
+          </motion.div>
 
-      {/* HERO DESCRIPTION */}
-      {page.hero_description && (
-        <section className="border-b border-border/40 bg-background">
-          <div className="max-w-7xl mx-auto px-6 py-10 md:py-14">
+          {page.hero_description && (
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl"
+              {...fadeUp}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-10 md:mt-14 max-w-2xl text-sm md:text-base text-secondary/80 leading-relaxed"
             >
               {page.hero_description}
             </motion.p>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-6">
-        {/* SECTIONS GRID */}
-        {page.sections.length > 0 && (
-          <section className="py-10 md:py-24">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-12"
-            >
-              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3 block">
-                What You Get
-              </span>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary tracking-tight">
+      {/* SECTIONS — hairline bento */}
+      {page.sections.length > 0 && (
+        <section className="px-6 py-16 md:py-24">
+          <div className="max-w-4xl mx-auto">
+            <motion.div {...fadeUp}>
+              <h2 className="font-editorial text-2xl md:text-4xl font-medium text-secondary tracking-tight leading-tight">
                 Everything you need to know
               </h2>
             </motion.div>
 
             <motion.div
-              variants={container}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-80px" }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-5"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-2 gap-px bg-border border border-border"
             >
               {page.sections.map((section: InvolvementSection, i: number) => {
                 const SIcon = resolveIcon(section.icon);
                 return (
-                  <motion.div
-                    key={i}
-                    variants={item}
-                    className="group relative bg-background border border-border/60 rounded-xl p-5 md:p-8 hover:border-secondary transition-all duration-300"
-                  >
-                    <div className="flex items-start gap-5">
-                      <div className={`p-3 rounded-lg ${accent.bg} ring-1 ${accent.ring} shrink-0`}>
-                        <SIcon size={20} className="text-background" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-display text-lg font-bold text-secondary mb-2 tracking-tight">
-                          {section.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {section.content}
-                        </p>
-                      </div>
+                  <div key={i} className="bg-background p-6 md:p-8 hover:bg-muted/50 transition-colors duration-300">
+                    <div className="flex items-start justify-between gap-4">
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${chip}`}>
+                        <SIcon size={14} strokeWidth={1.75} />
+                      </span>
+                      <span className="text-xs font-medium text-muted-foreground tabular-nums pt-1.5">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
                     </div>
-                  </motion.div>
+                    <h3 className="font-editorial mt-6 text-lg md:text-xl font-medium text-secondary tracking-tight">
+                      {section.title}
+                    </h3>
+                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                      {section.content}
+                    </p>
+                  </div>
                 );
               })}
             </motion.div>
-          </section>
-        )}
+          </div>
+        </section>
+      )}
 
-        {/* BENEFITS */}
-        {page.benefits.length > 0 && (
-          <section className="pb-10 md:pb-24">
+      {/* BENEFITS — numbered rows */}
+      {page.benefits.length > 0 && (
+        <section className="px-6 pb-16 md:pb-24">
+          <div className="max-w-4xl mx-auto">
+            <motion.div {...fadeUp}>
+              <h2 className="font-editorial text-2xl md:text-4xl font-medium text-secondary tracking-tight leading-tight">
+                At a glance
+              </h2>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mt-10 md:mt-14 border-t border-border"
+            >
+              {page.benefits.map((benefit: string, i: number) => (
+                <div
+                  key={i}
+                  className="flex items-baseline gap-5 md:gap-8 border-b border-border py-4 md:py-5"
+                >
+                  <span className="w-7 shrink-0 text-xs font-medium text-muted-foreground tabular-nums">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm md:text-base font-medium text-secondary leading-snug">
+                    {benefit}
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* FORM SECTION */}
+      <section className="border-t border-border bg-muted/30 px-6 py-16 md:py-24">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+          {/* HEADER */}
+          <div className="lg:col-span-5">
+            <motion.div {...fadeUp} className="lg:sticky lg:top-28">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Ready?
+              </span>
+              <h2 className="font-editorial mt-4 text-2xl md:text-4xl font-medium text-secondary tracking-tight leading-tight">
+                {isDonate ? "Make your donation" : "Submit your application"}
+              </h2>
+              <p className="mt-4 text-sm text-muted-foreground leading-relaxed max-w-sm">
+                {isDonate
+                  ? "Choose an amount below. All donations are tax-deductible and go directly toward empowering young leaders."
+                  : "Fill out the form and we'll review your application within 48 hours. We're excited to have you on board."}
+              </p>
+
+              {!isDonate && (
+                <div className="mt-8 space-y-0 border-t border-border hidden sm:block">
+                  {[
+                    "Submit your application",
+                    "Review within 48 hours",
+                    "Welcome to the community",
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-baseline gap-4 border-b border-border py-3">
+                      <span className="w-5 text-xs font-medium text-muted-foreground tabular-nums">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* FORM CARD */}
+          <div className="lg:col-span-7">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-xl border border-border/60 bg-background p-5 md:p-12"
+              transition={{ duration: 0.5 }}
+              className="bg-background border border-border p-6 md:p-10"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
-              <div className="relative">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3 block">
-                  At a Glance
-                </span>
-                <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary tracking-tight mb-8">
-                  Key Benefits
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {page.benefits.map((benefit: string, i: number) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 12 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.05 }}
-                      className="flex items-start gap-3 bg-background rounded-xl px-5 py-4 border border-border/40"
-                    >
-                      <CheckCircle2 size={16} className="text-secondary mt-0.5 shrink-0" />
-                      <span className="text-sm font-medium text-secondary leading-snug">{benefit}</span>
-                    </motion.div>
-                  ))}
+              {submitted ? (
+                <div className="text-center py-10">
+                  <motion.span
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#DCEBDD] text-[#1a4d2e]"
+                  >
+                    <CheckCircle2 size={22} strokeWidth={1.75} />
+                  </motion.span>
+                  <h3 className="font-editorial mt-6 text-2xl font-medium text-secondary tracking-tight">
+                    {isDonate ? "Thank you!" : "Application sent"}
+                  </h3>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                    {isDonate
+                      ? "Your generosity fuels the future. We'll send you a receipt and impact report."
+                      : "We've received your application and will get back to you within 48 hours."}
+                  </p>
+                  <Link
+                    href="/get-involved"
+                    className="mt-8 inline-flex items-center gap-2 rounded-md bg-secondary px-6 py-3 text-sm font-semibold text-secondary-foreground hover:bg-primary transition-colors"
+                  >
+                    <ArrowLeft size={15} />
+                    Back to Get Involved
+                  </Link>
                 </div>
-              </div>
-            </motion.div>
-          </section>
-        )}
-      </div>
-
-      {/* FORM SECTION */}
-      <section className="border-t border-border/50 bg-muted/10">
-        <div className="max-w-7xl mx-auto px-6 py-10 md:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-16">
-            {/* FORM HEADER */}
-            <div className="lg:col-span-2">
-              <motion.div
-                initial={{ opacity: 0, x: -16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="lg:sticky lg:top-28"
-              >
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3 block">
-                  Ready?
-                </span>
-                <h2 className="font-display text-2xl md:text-3xl font-bold text-secondary tracking-tight mb-4">
-                  {isDonate ? "Make Your Donation" : "Submit Your Application"}
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-                  {isDonate
-                    ? "Choose an amount below. All donations are tax-deductible and go directly toward empowering young leaders."
-                    : "Fill out the form and we'll review your application within 48 hours. We're excited to have you on board."}
-                </p>
-
-                {page.benefits.length > 0 && !isDonate && (
-                  <div className="space-y-3">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">What happens next</p>
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <div className={`w-6 h-6 rounded-full ${accent.badge} flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5`}>1</div>
-                      <span>Submit your application</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <div className={`w-6 h-6 rounded-full ${accent.badge} flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5`}>2</div>
-                      <span>Review within 48 hours</span>
-                    </div>
-                    <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                      <div className={`w-6 h-6 rounded-full ${accent.badge} flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5`}>3</div>
-                      <span>Welcome to the community</span>
-                    </div>
+              ) : isDonate ? (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Honeypot */}
+                  <div className="absolute left-[-9999px]" aria-hidden="true">
+                    <label htmlFor="company_website">Website</label>
+                    <input type="text" id="company_website" name="company_website" tabIndex={-1} autoComplete="off" />
                   </div>
-                )}
-              </motion.div>
-            </div>
 
-            {/* FORM CARD */}
-            <div className="lg:col-span-3">
-              <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="bg-background border border-border/60 rounded-xl p-5 md:p-10"
-              >
-                {submitted ? (
-                  <div className="text-center py-12">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                      className={`w-20 h-20 rounded-full ${accent.bg} flex items-center justify-center mx-auto mb-6 ring-1 ${accent.ring}`}
-                    >
-                      <CheckCircle2 size={36} className="text-background" />
-                    </motion.div>
-                    <h3 className="font-display text-2xl font-bold text-secondary mb-3">
-                      {isDonate ? "Thank You!" : "Application Sent!"}
-                    </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto mb-8">
-                      {isDonate
-                        ? "Your generosity fuels the future. We'll send you a receipt and impact report."
-                        : "We've received your application and will get back to you within 48 hours."}
-                    </p>
-                    <Link
-                      href="/get-involved"
-                      className={`inline-flex items-center gap-2 px-6 py-3 ${accent.solid} text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity`}
-                    >
-                      <ArrowLeft size={16} />
-                      Back to Get Involved
-                    </Link>
+                  <div className="space-y-2">
+                    <label htmlFor="donor-name" className="block text-sm font-semibold text-secondary">Your Name <span className="font-normal text-muted-foreground">(optional)</span></label>
+                    <input
+                      id="donor-name"
+                      type="text"
+                      placeholder="e.g. Amina Yusuf"
+                      value={donateName}
+                      onChange={(e) => setDonateName(e.target.value)}
+                      className={inputClass}
+                    />
                   </div>
-                ) : isDonate ? (
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Honeypot */}
-                    <div className="absolute left-[-9999px]" aria-hidden="true">
-                      <label htmlFor="company_website">Website</label>
-                      <input type="text" id="company_website" name="company_website" tabIndex={-1} autoComplete="off" />
+                  <div className="space-y-2">
+                    <label htmlFor="donor-email" className="block text-sm font-semibold text-secondary">Email Address <span className="font-normal text-muted-foreground">(optional — for receipt)</span></label>
+                    <input
+                      id="donor-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={donateEmail}
+                      onChange={(e) => setDonateEmail(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <fieldset className="space-y-3 pt-1">
+                    <legend className="text-sm font-semibold text-secondary mb-3">Donation Amount</legend>
+                    <div className="flex flex-wrap gap-px bg-border border border-border w-fit max-w-full">
+                      {DONATE_AMOUNTS.map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          aria-pressed={donateAmount === amt}
+                          className={`px-5 py-2.5 text-xs font-semibold transition-colors ${
+                            donateAmount === amt
+                              ? "bg-secondary text-secondary-foreground"
+                              : "bg-background text-secondary hover:bg-muted/60"
+                          }`}
+                          onClick={() => setDonateAmount(amt)}
+                        >
+                          {amt === "custom" ? "Custom" : `\u20A6${parseInt(amt).toLocaleString()}`}
+                        </button>
+                      ))}
                     </div>
-
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-semibold text-secondary">Your Name <span className="text-muted-foreground font-normal">(optional)</span></label>
+                    {donateAmount === "custom" && (
                       <input
-                        type="text"
-                        placeholder="e.g. Amina Yusuf"
-                        value={donateName}
-                        onChange={(e) => setDonateName(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                        type="number"
+                        placeholder="Enter amount (\u20A6)"
+                        className={inputClass}
+                        value={customAmount}
+                        onChange={(e) => setCustomAmount(e.target.value)}
                       />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-sm font-semibold text-secondary">Email Address <span className="text-muted-foreground font-normal">(optional — for receipt)</span></label>
-                      <input
-                        type="email"
-                        placeholder="you@example.com"
-                        value={donateEmail}
-                        onChange={(e) => setDonateEmail(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                      />
-                    </div>
-                    <div className="space-y-3 pt-2">
-                      <label className="block text-sm font-semibold text-secondary">Donation Amount</label>
-                      <div className="flex flex-wrap gap-2">
-                        {DONATE_AMOUNTS.map((amt) => (
-                          <button
-                            key={amt}
-                            type="button"
-                            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                              donateAmount === amt
-                                ? `${accent.solid} border-transparent text-white shadow-md`
-                                : "bg-background border-border text-secondary hover:border-primary/40"
-                            }`}
-                            onClick={() => setDonateAmount(amt)}
-                          >
-                            {amt === "custom" ? "Custom" : `\u20A6${parseInt(amt).toLocaleString()}`}
-                          </button>
-                        ))}
-                      </div>
-                      {donateAmount === "custom" && (
-                        <input
-                          type="number"
-                          placeholder="Enter amount (\u20A6)"
-                          className="w-full px-4 py-3.5 bg-background border border-border/60 rounded-xl text-sm text-secondary placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                          value={customAmount}
-                          onChange={(e) => setCustomAmount(e.target.value)}
-                        />
-                      )}
-                      <Link
-                        href="/donor-lookup"
-                        className="block text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors pt-1"
-                      >
-                        Already donated? Look up your donations &amp; receipts →
-                      </Link>
-                    </div>
-
-                    {formError && (
-                      <div className="px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs font-semibold text-destructive">
-                        {formError}
-                      </div>
                     )}
+                    <Link
+                      href="/donor-lookup"
+                      className="block pt-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Already donated? Look up your donations &amp; receipts →
+                    </Link>
+                  </fieldset>
 
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 disabled:opacity-60 shadow-sm hover:shadow-md active:scale-[0.98]`}
-                    >
-                      {isSubmitting ? (
-                        <Loader2 size={18} className="animate-spin" />
-                      ) : (
-                        <>
-                          Donate Now
-                          <ArrowRight size={16} />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                ) : googleFormUrl ? (
-                  <div className="space-y-5">
-                    <button
-                      onClick={openForm}
-                      className={`w-full py-4 ${accent.solid} text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md active:scale-[0.98]`}
-                    >
-                      Apply Now
-                      <ExternalLink size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center">
-                    <p className="text-sm font-medium text-secondary mb-1">Applications opening soon</p>
-                    <p className="text-xs text-muted-foreground">Check back later or contact us for more information.</p>
-                  </div>
-                )}
-              </motion.div>
-            </div>
+                  {formError && (
+                    <div className="px-4 py-3 rounded-md bg-destructive/10 border border-destructive/20 text-xs font-semibold text-destructive">
+                      {formError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full flex items-center justify-center gap-2.5 rounded-md bg-secondary py-3.5 text-sm font-semibold text-secondary-foreground hover:bg-primary transition-colors disabled:opacity-60 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <>
+                        Donate Now
+                        <ArrowRight size={15} />
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : googleFormUrl ? (
+                <button
+                  onClick={openForm}
+                  className="w-full flex items-center justify-center gap-2.5 rounded-md bg-secondary py-3.5 text-sm font-semibold text-secondary-foreground hover:bg-primary transition-colors cursor-pointer"
+                >
+                  Apply Now
+                  <ExternalLink size={15} />
+                </button>
+              ) : (
+                <div className="border border-dashed border-border p-6 text-center">
+                  <p className="text-sm font-semibold text-secondary">Applications opening soon</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Check back later or contact us for more information.</p>
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
       </section>
