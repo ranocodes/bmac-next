@@ -7,12 +7,12 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
+    value: "camera=(self), microphone=(), geolocation=()",
   },
   {
     key: "Content-Security-Policy-Report-Only",
     value:
-      "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://js.paystack.co; frame-src https://checkout.paystack.com; img-src 'self' data: https:; object-src 'none'; base-uri 'self'",
+      "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://js.paystack.co; frame-src https://checkout.paystack.com https://www.google.com https://maps.google.com; img-src 'self' data: https:; object-src 'none'; base-uri 'self'",
   },
 ];
 
