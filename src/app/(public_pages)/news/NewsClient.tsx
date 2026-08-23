@@ -78,7 +78,7 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
                 {/* Featured Article */}
                 {news.filter(n => n.featured).map(feat => (
                   <FadeIn key={feat.id}>
-                    <Link href={`/news/${feat.id}`} className="group block">
+                    <Link href={`/news/${feat.slug || feat.id}`} className="group block">
                        <div className="relative h-64 md:h-96 rounded-xl border border-border overflow-hidden mb-6">
                           <Image src={feat.img} alt={feat.title} fill className="object-cover" />
                           <div className="absolute top-4 left-4 bg-card px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest text-primary">
@@ -111,7 +111,7 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
                    {news.filter(n => !n.featured).map((item, i) => (
                      <FadeIn key={item.id} delay={i * 0.05}>
-                        <Link href={`/news/${item.id}`} className="group h-full flex flex-col">
+                        <Link href={`/news/${item.slug || item.id}`} className="group h-full flex flex-col">
                            <div className="relative aspect-video rounded-xl border border-border overflow-hidden mb-5">
                               <Image src={item.img} alt={item.title} fill className="object-cover" />
                            </div>
@@ -155,7 +155,7 @@ export default function NewsClient({ initialNews, initialEvents }: NewsClientPro
 
                    <div className="space-y-5">
                        {events.slice(0, 2).map((event, i) => (
-                         <Link href={`/events/${event.id}`} key={event.id} className="block group">
+                         <Link href={`/events/${event.slug || event.id}`} key={event.id} className="block group">
                            <div className="flex gap-4 items-center">
                               <div className={cn(
                                 "min-w-[42px] h-[42px] flex flex-col items-center justify-center rounded-lg transition-colors",

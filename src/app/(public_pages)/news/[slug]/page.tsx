@@ -8,40 +8,41 @@ export const dynamic = "force-dynamic";
 
 const baseUrl = SITE_URL;
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   const [news] = await Promise.all([
     db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC" }),
   ]);
-  const article = (news || []).find((n: any) => n.status === "published" && n.id === id);
+  const article = (news || []).find((n: any) => n.status === "published" && (n.slug === slug || n.id === slug));
   if (!article) return {};
   const title = article.title;
   const description = (article.desc || article.description || "").slice(0, 160);
   const image = article.img_url || article.img || "";
+  const path = `/news/${article.slug || article.id}`;
   return {
     title: `${title}`,
     description,
-    alternates: { canonical: `/news/${id}` },
+    alternates: { canonical: path },
     openGraph: {
       title: `${title}`,
       description,
       type: "article",
-      url: `${baseUrl}/news/${id}`,
+      url: `${baseUrl}${path}`,
       publishedTime: article.created_at || undefined,
       images: image ? [{ url: image }] : undefined,
     },
   };
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const [news, events] = await Promise.all([
     db.getAll<any>("news_articles", { orderBy: "created_at", orderDir: "DESC" }),
     db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" }),
   ]);
   const publishedNews = (news || []).filter((n: any) => n.status === "published");
-  if (!publishedNews.some((n: any) => n.id === id)) notFound();
-  const article = publishedNews.find((n: any) => n.id === id);
+  if (!publishedNews.some((n: any) => n.slug === slug || n.id === slug)) notFound();
+  const article = publishedNews.find((n: any) => n.slug === slug || n.id === slug);
   const jsonLd = article
     ? {
         "@context": "https://schema.org",
@@ -62,7 +63,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ id: s
         />
       )}
       <NewsDetailClient
-        id={id}
+        id={slug}
         initialNews={publishedNews}
         initialEvents={(events || []).filter((e: any) => e.status === "published")}
       />

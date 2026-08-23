@@ -8,40 +8,42 @@ export const dynamic = "force-dynamic";
 
 const baseUrl = SITE_URL;
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
-  const events = (await db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" })).filter(
+async function publishedEvents() {
+  return (await db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" })).filter(
     (e: any) => e.status === "published"
   );
-  const event = events.find((e: any) => e.id === id);
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const event = (await publishedEvents()).find((e: any) => e.slug === slug || e.id === slug);
   if (!event) return {};
   const title = event.title;
   const description = (event.desc || event.description || "").slice(0, 160);
   const image = event.img || event.image || "";
+  const path = `/events/${event.slug || event.id}`;
   return {
     title: `${title}`,
     description,
-    alternates: { canonical: `/events/${id}` },
+    alternates: { canonical: path },
     openGraph: {
       title: `${title}`,
       description,
       type: "article",
-      url: `${baseUrl}/events/${id}`,
+      url: `${baseUrl}${path}`,
       images: image ? [{ url: image }] : undefined,
     },
   };
 }
 
-export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const events = (await db.getAll<any>("events", { orderBy: "created_at", orderDir: "DESC" })).filter(
-    (e: any) => e.status === "published"
-  );
-  if (!events.some((e: any) => e.id === id)) notFound();
+export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const events = await publishedEvents();
+  if (!events.some((e: any) => e.slug === slug || e.id === slug)) notFound();
   const testimonials = (await db.getAll<any>("testimonials", { orderBy: "created_at", orderDir: "DESC" })).filter(
     (t: any) => t.status === "published"
   );
-  const event = events.find((e: any) => e.id === id);
+  const event = events.find((e: any) => e.slug === slug || e.id === slug);
   const jsonLd = event
     ? {
         "@context": "https://schema.org",
@@ -68,7 +70,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <EventDetailClient id={id} initialEvents={events || []} initialTestimonials={testimonials || []} />
+      <EventDetailClient id={slug} initialEvents={events || []} initialTestimonials={testimonials || []} />
     </>
   );
 }

@@ -49,7 +49,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
     faqs: (e as any).faqs || [],
     policies: (e as any).policies || "",
   }));
-  const found = all.find(e => e.id === id) || null;
+  const found = all.find(e => e.slug === id || e.id === id) || null;
   const [event] = useState<EventPass | null>(found);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [isReserved, setIsReserved] = useState(false);
@@ -639,7 +639,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
               {relatedEvents.map((e, i) => (
                 <FadeIn key={e.id} delay={i * 0.1}>
                   <Link
-                    href={`/events/${e.id}`}
+                    href={`/events/${event.slug || event.id}`}
                     className="group block h-full rounded-xl border border-border bg-card p-6 hover:border-primary/40 transition-colors"
                   >
                     {e.img ? (

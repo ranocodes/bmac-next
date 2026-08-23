@@ -183,7 +183,7 @@ export default function EventsClient({ initialEvents }: EventsClientProps) {
             const status = getEventStatus(event);
             return (
             <FadeIn key={event.id} delay={i * 0.05} className="h-full">
-              <Link href={`/events/${event.id}`} className="group block h-full rounded-xl border border-border bg-card overflow-hidden transition-colors hover:border-primary/40">
+              <Link href={`/events/${event.slug || event.id}`} className="group block h-full rounded-xl border border-border bg-card overflow-hidden transition-colors hover:border-primary/40">
                 <div className="relative aspect-[16/9] overflow-hidden">
                   {event.img ? (
                     <Image
