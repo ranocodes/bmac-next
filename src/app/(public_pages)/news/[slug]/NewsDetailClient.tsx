@@ -157,6 +157,13 @@ export default function NewsDetailClient({ id, initialNews, initialEvents, artic
                 {articleContent}
           </article>
 
+          {/* Contextual Links */}
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/programs" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors">Explore our programs <ArrowRight size={13} /></Link>
+            <Link href="/events" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors">Upcoming events <ArrowRight size={13} /></Link>
+            {article.category && <Link href="/news" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors">More {article.category.toLowerCase()} stories <ArrowRight size={13} /></Link>}
+          </div>
+
           {/* Engagement Footer */}
           <div className="mt-12 md:mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center gap-4">

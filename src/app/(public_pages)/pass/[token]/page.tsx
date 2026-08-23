@@ -1,7 +1,13 @@
 import { db } from "@/lib/db";
+import type { Metadata } from "next";
 import PassClient from "./PassClient";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Event Pass",
+  robots: { index: false, follow: false },
+};
 
 interface PassRow {
   id: string;
