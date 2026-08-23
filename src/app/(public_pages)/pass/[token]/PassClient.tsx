@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { toPng } from "html-to-image";
 import { ArrowLeft, CheckCircle2, AlertTriangle, Download } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface PassTicket {
   id: string;
@@ -152,9 +153,7 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={qrDataUrl} alt="Entry QR code" width={132} height={132} className="rounded-lg" />
               ) : (
-                <div className="w-[132px] h-[132px] flex items-center justify-center">
-                  <div className="w-7 h-7 border-2 border-border border-t-primary rounded-full animate-spin" />
-                </div>
+                <Skeleton className="w-[132px] h-[132px] rounded-lg" aria-label="Generating QR code" />
               )}
             </div>
             <p className="mt-3 font-mono text-[11px] font-semibold tracking-widest text-secondary/70">{ticket.reference}</p>

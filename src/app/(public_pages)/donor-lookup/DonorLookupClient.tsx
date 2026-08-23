@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, FileText, Loader2, Mail, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { lookupDonations } from "@/actions/donor-lookup";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type Donation = {
   reference: string;
@@ -78,6 +79,21 @@ export default function DonorLookup() {
               {loading ? <><Loader2 size={18} className="animate-spin" /> Searching...</> : <><Search size={18} /> Find My Donations</>}
             </button>
           </form>
+
+          {loading && (
+            <div className="mt-6 space-y-3" aria-busy="true" aria-label="Searching donations">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card rounded-xl border border-border p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-2.5">
+                    <Skeleton className="h-6 w-32 rounded-md" />
+                    <Skeleton className="h-3.5 w-52 rounded-md" />
+                    <Skeleton className="h-2.5 w-40 rounded-md" />
+                  </div>
+                  <Skeleton className="h-9 w-28 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          )}
 
           <AnimatePresence>
             {donations && (

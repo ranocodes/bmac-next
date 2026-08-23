@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Shield, UserPlus, AlertCircle, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { registerFirstAdminAction } from "@/actions/admin-auth";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function SetupForm() {
   const [firstName, setFirstName] = useState("");
@@ -100,11 +101,9 @@ export default function SetupForm() {
               <span>{error}</span>
             </div>
           )}
-          <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><Shield size={16} /> Create Super Admin</>}
-          </button>
+          <SubmitButton pending={loading} className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+            <Shield size={16} /> Create Super Admin
+          </SubmitButton>
         </form>
 
         <p className="mt-6 text-xs text-muted-foreground">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { requestPasswordReset } from "@/actions/admin-auth";
 import Link from "next/link";
 import { Shield, AlertCircle, CheckCircle } from "lucide-react";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -73,11 +74,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
-          <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : "Send reset link"}
-          </button>
+          <SubmitButton pending={loading}>Send reset link</SubmitButton>
         </form>
 
         <p className="mt-6 text-xs text-muted-foreground">

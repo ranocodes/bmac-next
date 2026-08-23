@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Calendar, MapPin, Send, Clock, CheckCircle2, X, CalendarPlus } from "lucide-react";
+import { Calendar, MapPin, Send, Clock, CheckCircle2, X, CalendarPlus, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
-import ReactMarkdown from "react-markdown";
 import ConsentCheckbox from "@/components/ConsentCheckbox";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import ShareButtons from "@/components/ui/ShareButtons";
@@ -32,9 +31,10 @@ interface EventDetailClientProps {
   id: string;
   initialEvents: any[];
   initialTestimonials?: any[];
+  visionContent?: React.ReactNode;
 }
 
-export default function EventDetailClient({ id, initialEvents, initialTestimonials = [] }: EventDetailClientProps) {
+export default function EventDetailClient({ id, initialEvents, initialTestimonials = [], visionContent = null }: EventDetailClientProps) {
   const all = initialEvents.map(e => ({
     ...e,
     date: (e as any).event_date || e.date || "",
@@ -390,7 +390,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
             <div>
               <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-10 tracking-tight">The Vision</h3>
               <div className="prose prose-slate lg:prose-xl max-w-none text-secondary/90 text-lg md:text-xl leading-[1.8]">
-                <ReactMarkdown>{event.longDesc}</ReactMarkdown>
+                {visionContent}
               </div>
             </div>
 
@@ -532,7 +532,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
                             className="w-full py-4 bg-primary text-card rounded-lg font-bold text-sm md:text-base hover:bg-primary/90 transition-colors duration-300 flex items-center justify-center gap-3 mt-5 md:mt-8 disabled:opacity-70"
                           >
                               {isPending ? (
-                                <div className="w-5 h-5 border-2 border-card border-t-transparent rounded-full animate-spin" />
+                                <><Loader2 size={18} className="animate-spin" /> Securing your pass...</>
                               ) : (
                                 <>{event.isPaid ? `Purchase Pass (₦${(event.price || 0).toLocaleString()})` : "Request Official Pass"} <Send size={18} /></>
                               )}

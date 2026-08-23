@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import ReactMarkdown from "react-markdown";
 import EventDetailClient from "./EventDetailClient";
 import { SITE_URL } from "@/lib/site";
 
@@ -70,7 +71,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <EventDetailClient id={slug} initialEvents={events || []} initialTestimonials={testimonials || []} />
+      <EventDetailClient
+        id={slug}
+        initialEvents={events || []}
+        initialTestimonials={testimonials || []}
+        visionContent={<ReactMarkdown>{event?.long_desc || event?.longDesc || ""}</ReactMarkdown>}
+      />
     </>
   );
 }

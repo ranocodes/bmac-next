@@ -8,7 +8,6 @@ import { Calendar, Bookmark, Send, CheckCircle2, Loader2, AlertCircle, ArrowRigh
 import FadeIn from "@/components/FadeIn";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import ShareButtons from "@/components/ui/ShareButtons";
-import ReactMarkdown from "react-markdown";
 import { subscribeToNewsletter } from "@/actions/newsletter";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
@@ -33,6 +32,7 @@ interface NewsDetailClientProps {
   id: string;
   initialNews: any[];
   initialEvents: any[];
+  articleContent?: React.ReactNode;
 }
 
 function normalizeNews(raw: any[]): NewsArticle[] {
@@ -52,7 +52,7 @@ function normalizeEvents(raw: any[]): EventPass[] {
   }));
 }
 
-export default function NewsDetailClient({ id, initialNews, initialEvents }: NewsDetailClientProps) {
+export default function NewsDetailClient({ id, initialNews, initialEvents, articleContent = null }: NewsDetailClientProps) {
   const allNews = normalizeNews(initialNews);
   const found = allNews.find(a => a.slug === id || a.id === id) || null;
   const [article] = useState<NewsArticle | null>(found);
@@ -154,7 +154,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
       <section className="px-4 md:px-6 pb-16 md:pb-24">
         <div className="max-w-2xl mx-auto">
           <article className="prose prose-slate prose-lg max-w-none text-secondary/90">
-            <ReactMarkdown>{article.content}</ReactMarkdown>
+                {articleContent}
           </article>
 
           {/* Engagement Footer */}

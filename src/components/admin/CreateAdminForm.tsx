@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Send, AlertCircle, CheckCircle, Mail, UserPlus, Eye, EyeOff, Shield, ShieldCheck, RefreshCw } from "lucide-react";
 import { createAdminAction, sendCredentialsAction } from "@/actions/admin-auth";
 import { useToast } from "@/components/ui/Toast";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import type { Permission } from "@/types/cms";
 import { PERMISSION_LABELS } from "@/lib/auth/permissions";
 
@@ -120,11 +121,9 @@ export default function CreateAdminForm({ email }: Props) {
               <span>{created.warning}</span>
             </div>
           )}
-          <button onClick={resendCredentials} disabled={sending}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {sending ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><RefreshCw size={16} /> Email Credentials</>}
-          </button>
+          <SubmitButton type="button" onClick={resendCredentials} pending={sending} className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+            <RefreshCw size={16} /> Email Credentials
+          </SubmitButton>
           <Link href="/admin/admins" className="mt-3 block w-full h-10 flex items-center justify-center rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-secondary hover:bg-muted transition-all">
             Back to Admins
           </Link>
@@ -202,11 +201,9 @@ export default function CreateAdminForm({ email }: Props) {
             </div>
           )}
 
-          <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><Send size={16} /> Create Admin</>}
-          </button>
+          <SubmitButton pending={loading} className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+            <Send size={16} /> Create Admin
+          </SubmitButton>
         </form>
       )}
     </div>
