@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const COOKIE_NAME = "bmac_admin_session";
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 function base64Decode(b64: string): string {
   const bin = atob(b64);
@@ -37,6 +38,10 @@ async function verifyCookie(request: NextRequest): Promise<boolean> {
 
   try {
     const payload = JSON.parse(base64Decode(payloadB64));
+    if (
+      typeof payload.createdAt !== "number" ||
+      Date.now() - payload.createdAt > SESSION_TTL_MS
+    ) return false;
     return payload.role === "super_admin" || payload.role === "moderator";
   } catch {
     return false;
