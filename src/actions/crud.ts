@@ -2,7 +2,19 @@
 
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/server";
+import { slugify } from "@/lib/slug";
 import { logActivity } from "./activity-logs";
+
+async function uniqueSlug(table: string, title: string, excludeId: string | null): Promise<string> {
+  const base = slugify(title);
+  let candidate = base;
+  for (let i = 2; ; i++) {
+    const dup = await db.query("SELECT id FROM public." + table + " WHERE slug = $1", [candidate]);
+    if (dup.length === 0 || (excludeId && dup.every((r) => (r as { id: string }).id === excludeId))) break;
+    candidate = `${base}-${i}`;
+  }
+  return candidate;
+}
 
 export async function createItem(table: string, data: Record<string, unknown>) {
   const admin = await requireAdmin();
@@ -11,6 +23,9 @@ export async function createItem(table: string, data: Record<string, unknown>) {
   }
   if (table === "programs" && data.status === "published" && data.applications_open === undefined) {
     data.applications_open = true;
+  }
+  if ((table === "news_articles" || table === "events") && !data.slug) {
+    data.slug = await uniqueSlug(table, String(data.title || ""), null);
   }
   const result = await db.create(table, data);
   const title = (data.title || data.name || result?.id || "item") as string;

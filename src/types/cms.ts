@@ -87,6 +87,7 @@ export interface Donation {
 
 export interface EventPass {
   id: string;
+  slug?: string;
   date: string;
   title: string;
   venue: string;
@@ -143,6 +144,7 @@ export interface ConsentRecord {
 
 export interface NewsArticle {
   id: string;
+  slug?: string;
   date: string;
   title: string;
   desc: string;

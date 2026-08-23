@@ -22,14 +22,14 @@ const staticRoutes = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [events, programs, news] = await Promise.all([
-    db.query<{ id: string; updated_at: string | null; created_at: string; status: string }>(
-      'SELECT id, updated_at, created_at, status FROM public.events'
+    db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
+      'SELECT id, slug, updated_at, created_at, status FROM public.events'
     ),
-    db.query<{ id: string; updated_at: string | null; created_at: string; status: string }>(
+    db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
       "SELECT id, updated_at, created_at, status FROM public.programs WHERE status = 'published'"
     ),
-    db.query<{ id: string; updated_at: string | null; created_at: string; status: string }>(
-      'SELECT id, updated_at, created_at, status FROM public.news_articles'
+    db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
+      'SELECT id, slug, updated_at, created_at, status FROM public.news_articles'
     ),
   ]);
 
@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: r.priority,
     })),
     ...publishedEvents.map((e) => ({
-      url: `${SITE}/events/${e.id}`,
+      url: `${SITE}/events/${e.slug || e.id}`,
       lastModified: new Date(e.updated_at || e.created_at),
       changeFrequency: "monthly" as const,
       priority: 0.7,
@@ -57,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     })),
     ...publishedNews.map((n) => ({
-      url: `${SITE}/news/${n.id}`,
+      url: `${SITE}/news/${n.slug || n.id}`,
       lastModified: new Date(n.updated_at || n.created_at),
       changeFrequency: "monthly" as const,
       priority: 0.6,
