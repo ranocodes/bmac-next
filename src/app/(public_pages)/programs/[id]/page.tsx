@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import ProgramDetailClient from "./ProgramDetailClient";
 import { SITE_URL } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const baseUrl = SITE_URL;
 

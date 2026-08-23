@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin, requirePermission } from "@/lib/auth/server";
 import { getSuperAdminSession, setSuperAdminSession } from "@/lib/auth/super-admin";
@@ -24,10 +25,14 @@ export async function getSiteSettings() {
 export async function saveSiteSettings(data: Record<string, unknown>) {
   await requirePermission("access_settings");
   const existing = await db.getAll<SiteSettingsRow>("site_settings").catch(() => []);
+  let result;
   if (existing.length > 0) {
-    return db.update("site_settings", existing[0].id, data);
+    result = await db.update("site_settings", existing[0].id, data);
+  } else {
+    result = await db.create("site_settings", { id: `settings-${Date.now()}`, ...data });
   }
-  return db.create("site_settings", { id: `settings-${Date.now()}`, ...data });
+  revalidateTag("site-settings", "max");
+  return result;
 }
 
 export async function getEmailTemplates(): Promise<Record<string, EmailTemplate>> {

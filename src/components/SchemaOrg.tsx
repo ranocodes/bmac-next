@@ -1,11 +1,9 @@
-import { db } from "@/lib/db";
+import { getPublicSiteSettings } from "@/lib/site-settings";
 import { SITE_URL } from "@/lib/site";
 
 export default async function SchemaOrg() {
-  const rows = await db.query<{ contact_info?: { email?: string; phone?: string } }>(
-    "SELECT contact_info FROM public.site_settings LIMIT 1"
-  );
-  const contact = rows?.[0]?.contact_info || {};
+  const settings = await getPublicSiteSettings();
+  const contact = (settings?.contact_info as { email?: string; phone?: string } | undefined) || {};
 
   return (
     <script

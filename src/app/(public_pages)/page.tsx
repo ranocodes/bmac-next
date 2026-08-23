@@ -2,14 +2,14 @@ import { db } from "@/lib/db";
 import HomeClient from "../HomeClient";
 import DonationProgress from "@/components/ui/DonationProgress";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [allPrograms, allTestimonials, allStats, allPartners] = await Promise.all([
-    db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" }),
-    db.getAll<any>("testimonials", { orderBy: "created_at", orderDir: "DESC" }),
-    db.getAll<any>("impact_stats", { orderBy: "created_at", orderDir: "DESC" }),
-    db.getAll<any>("partners", { orderBy: "created_at", orderDir: "DESC" }),
+    db.getAll<any>("programs", { orderBy: "created_at", orderDir: "DESC" }).catch(() => []),
+    db.getAll<any>("testimonials", { orderBy: "created_at", orderDir: "DESC" }).catch(() => []),
+    db.getAll<any>("impact_stats", { orderBy: "created_at", orderDir: "DESC" }).catch(() => []),
+    db.getAll<any>("partners", { orderBy: "created_at", orderDir: "DESC" }).catch(() => []),
   ]);
   const programs = (allPrograms || []).filter((p: any) => p.status === "published");
   const testimonials = (allTestimonials || []).filter((t: any) => t.status === "published");

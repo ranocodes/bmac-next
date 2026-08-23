@@ -1,9 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/server";
 import { slugify } from "@/lib/slug";
 import { logActivity } from "@/lib/activity-log";
+
+function refreshPublicCache() {
+  try {
+    revalidatePath("/", "layout");
+  } catch {}
+}
 
 async function uniqueSlug(table: string, title: string, excludeId: string | null): Promise<string> {
   const base = slugify(title);
@@ -28,6 +35,7 @@ export async function createItem(table: string, data: Record<string, unknown>) {
     data.slug = await uniqueSlug(table, String(data.title || ""), null);
   }
   const result = await db.create(table, data);
+  refreshPublicCache();
   const title = (data.title || data.name || result?.id || "item") as string;
   void logActivity(admin.email, "create", table, {
     resourceId: result?.id as string,
@@ -45,6 +53,7 @@ export async function updateItem(table: string, id: string, data: Record<string,
     data.applications_open = true;
   }
   const result = await db.update(table, id, data);
+  refreshPublicCache();
   const title = (data.title || data.name || id) as string;
   void logActivity(admin.email, "update", table, {
     resourceId: id,
@@ -56,6 +65,7 @@ export async function updateItem(table: string, id: string, data: Record<string,
 export async function deleteItem(table: string, id: string) {
   const admin = await requireAdmin();
   const result = await db.remove(table, id);
+  refreshPublicCache();
   void logActivity(admin.email, "delete", table, {
     resourceId: id,
     details: `Deleted ${table.slice(0, -1)} #${id.slice(0, 12)}`,

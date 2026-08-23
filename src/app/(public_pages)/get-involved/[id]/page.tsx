@@ -4,7 +4,7 @@ import { getGoogleForms } from "@/actions/settings";
 import { editorial } from "../editorial-font";
 import InvolvementDetailClient from "./InvolvementDetailClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const ENTITY_MAP: Record<string, string> = {
   join: "member",

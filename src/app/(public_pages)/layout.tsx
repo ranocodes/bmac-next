@@ -1,13 +1,15 @@
-import { db } from "@/lib/db";
+import { Suspense } from "react";
 import PublicLayout from "@/components/layouts/PublicLayout";
 import CookieNotice from "@/components/CookieNotice";
+import { getPublicSiteSettings } from "@/lib/site-settings";
 
-export const dynamic = "force-dynamic";
+interface ChromeProps {
+  children: React.ReactNode;
+  settings: Record<string, any> | null;
+}
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
-  const settings = await db.query<any>("SELECT * FROM public.site_settings LIMIT 1");
-  const s = settings?.[0] || null;
-
+function SiteChrome({ children, settings }: ChromeProps) {
+  const s = settings;
   return (
     <PublicLayout
       logoText={s?.logo_text || undefined}
@@ -19,5 +21,18 @@ export default async function Layout({ children }: { children: React.ReactNode }
       {children}
       <CookieNotice />
     </PublicLayout>
+  );
+}
+
+async function SiteChromeData({ children }: { children: React.ReactNode }) {
+  const settings = await getPublicSiteSettings();
+  return <SiteChrome settings={settings}>{children}</SiteChrome>;
+}
+
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<SiteChrome settings={null}>{children}</SiteChrome>}>
+      <SiteChromeData>{children}</SiteChromeData>
+    </Suspense>
   );
 }

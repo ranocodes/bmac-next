@@ -10,13 +10,13 @@ export const metadata: Metadata = {
 };
 
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function AboutPage() {
   const [team, stats, settings] = await Promise.all([
-    db.getAll<any>("team_members", { orderBy: "created_at", orderDir: "DESC" }),
-    db.getAll<any>("impact_stats", { orderBy: "created_at", orderDir: "DESC" }),
-    db.query<any>("SELECT about_story FROM public.site_settings LIMIT 1"),
+    db.getAll<any>("team_members", { orderBy: "created_at", orderDir: "DESC" }).catch(() => []),
+    db.getAll<any>("impact_stats", { orderBy: "created_at", orderDir: "DESC" }).catch(() => []),
+    db.query<any>("SELECT about_story FROM public.site_settings LIMIT 1").catch(() => []),
   ]);
   const story = settings?.[0]?.about_story || null;
   return (

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 
 interface LiveStat {
@@ -6,15 +7,16 @@ interface LiveStat {
   icon: string;
 }
 
-export default async function LiveImpactStats({ className = "" }: { className?: string }) {
-  const rows = await db.query<{
-    total_people: string;
-    volunteers: string;
-    members: string;
-    programs: string;
-    events: string;
-    team: string;
-  }>(`
+const getImpactCounts = unstable_cache(
+  async () =>
+    db.query<{
+      total_people: string;
+      volunteers: string;
+      members: string;
+      programs: string;
+      events: string;
+      team: string;
+    }>(`
     SELECT
       (SELECT COUNT(*) FROM public.people) as total_people,
       (SELECT COUNT(*) FROM public.people WHERE roles @> '["volunteer"]'::jsonb) as volunteers,
@@ -22,9 +24,15 @@ export default async function LiveImpactStats({ className = "" }: { className?: 
       (SELECT COUNT(*) FROM public.programs WHERE status = 'published') as programs,
       (SELECT COUNT(*) FROM public.events WHERE status = 'published') as events,
       (SELECT COUNT(*) FROM public.team_members WHERE status = 'published') as team
-  `);
+  `).catch(() => [] as { total_people: string; volunteers: string; members: string; programs: string; events: string; team: string }[]),
+  ["impact-counts-v1"],
+  { revalidate: 300, tags: ["impact-stats"] }
+);
 
-  const r = rows[0];
+export default async function LiveImpactStats({ className = "" }: { className?: string }) {
+  const rows = await getImpactCounts();
+
+  const r = rows[0] || { total_people: "0", volunteers: "0", members: "0", programs: "0", events: "0", team: "0" };
   const stats: LiveStat[] = [
     { num: r.total_people || "0", label: "People Reached", icon: "Users" },
     { num: r.programs || "0", label: "Programs Running", icon: "BookOpen" },
