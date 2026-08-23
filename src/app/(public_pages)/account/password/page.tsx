@@ -1,9 +1,15 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { getPublicSession } from "@/lib/auth/public-auth";
 import { db } from "@/lib/db";
 import PasswordChangeForm from "./PasswordChangeForm";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Change Password",
+  robots: { index: false, follow: false },
+};
 
 export default async function PasswordPage() {
   const session = await getPublicSession();

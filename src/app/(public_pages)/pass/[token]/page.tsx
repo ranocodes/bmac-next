@@ -1,7 +1,15 @@
 import { db } from "@/lib/db";
+import { absoluteUrl } from "@/lib/site";
+import type { Metadata } from "next";
+import { editorial } from "../../get-involved/editorial-font";
 import PassClient from "./PassClient";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Event Pass",
+  robots: { index: false, follow: false },
+};
 
 interface PassRow {
   id: string;
@@ -37,8 +45,7 @@ export default async function PassPage({ params }: { params: Promise<{ token: st
   let qrDataUrl: string | null = null;
   if (ticket && ticket.status === "confirmed") {
     try {
-      const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "";
-      const passUrl = `${base}/pass/${token}`;
+      const passUrl = absoluteUrl(`/pass/${token}`);
       const QRCode = (await import("qrcode")).default;
       qrDataUrl = await QRCode.toDataURL(passUrl);
     } catch (err) {
@@ -46,5 +53,9 @@ export default async function PassPage({ params }: { params: Promise<{ token: st
     }
   }
 
-  return <PassClient ticket={ticket} qrDataUrl={qrDataUrl} />;
+  return (
+    <div className={`${editorial.variable} min-h-screen bg-[#F7F6F3]`}>
+      <PassClient ticket={ticket} qrDataUrl={qrDataUrl} />
+    </div>
+  );
 }

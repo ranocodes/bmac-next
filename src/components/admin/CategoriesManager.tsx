@@ -33,6 +33,7 @@ export default function CategoriesManager() {
     try {
       const res = await createCategory(newName);
       if (!res.success) { setError(res.error || "Failed."); return; }
+      setItems(prev => [{ id: `temp-${Date.now()}`, name: newName.trim(), usage: 0 }, ...prev]);
       setNewName("");
       setAdding(false);
       refresh();
@@ -49,6 +50,7 @@ export default function CategoriesManager() {
     try {
       const res = await renameCategory(editingId, editValue);
       if (!res.success) { setError(res.error || "Failed."); return; }
+      setItems(prev => prev.map(c => (c.id === editingId ? { ...c, name: editValue } : c)));
       setEditingId(null);
       refresh();
     } finally {
@@ -63,6 +65,8 @@ export default function CategoriesManager() {
     try {
       const res = await deleteCategory(confirmDelete.id, reassignTo.trim() ? reassignTo : undefined);
       if (!res.success) { setError(res.error || "Failed."); return; }
+      const removedId = confirmDelete.id;
+      setItems(prev => prev.filter(c => c.id !== removedId));
       setConfirmDelete(null);
       setReassignTo("");
       refresh();

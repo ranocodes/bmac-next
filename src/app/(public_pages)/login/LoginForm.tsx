@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
 import { loginPublicUser } from "@/actions/public-auth";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -71,11 +72,9 @@ export default function LoginForm() {
           <div className="flex items-center justify-end">
             <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">Forgot password?</Link>
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : <><LogIn size={16} /> Sign In</>}
-          </button>
+          <SubmitButton pending={loading}>
+            <LogIn size={16} /> Sign In
+          </SubmitButton>
         </form>
       </div>
     </div>

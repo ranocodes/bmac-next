@@ -8,7 +8,6 @@ import { Calendar, Bookmark, Send, CheckCircle2, Loader2, AlertCircle, ArrowRigh
 import FadeIn from "@/components/FadeIn";
 import Breadcrumbs from "@/components/ui/Breadcrumbs";
 import ShareButtons from "@/components/ui/ShareButtons";
-import ReactMarkdown from "react-markdown";
 import { subscribeToNewsletter } from "@/actions/newsletter";
 import type { NewsArticle, EventPass } from "@/types/cms";
 
@@ -33,6 +32,7 @@ interface NewsDetailClientProps {
   id: string;
   initialNews: any[];
   initialEvents: any[];
+  articleContent?: React.ReactNode;
 }
 
 function normalizeNews(raw: any[]): NewsArticle[] {
@@ -52,7 +52,7 @@ function normalizeEvents(raw: any[]): EventPass[] {
   }));
 }
 
-export default function NewsDetailClient({ id, initialNews, initialEvents }: NewsDetailClientProps) {
+export default function NewsDetailClient({ id, initialNews, initialEvents, articleContent = null }: NewsDetailClientProps) {
   const allNews = normalizeNews(initialNews);
   const found = allNews.find(a => a.slug === id || a.id === id) || null;
   const [article] = useState<NewsArticle | null>(found);
@@ -154,8 +154,15 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
       <section className="px-4 md:px-6 pb-16 md:pb-24">
         <div className="max-w-2xl mx-auto">
           <article className="prose prose-slate prose-lg max-w-none text-secondary/90">
-            <ReactMarkdown>{article.content}</ReactMarkdown>
+                {articleContent}
           </article>
+
+          {/* Contextual Links */}
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href="/programs" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors">Explore our programs <ArrowRight size={13} /></Link>
+            <Link href="/events" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors">Upcoming events <ArrowRight size={13} /></Link>
+            {article.category && <Link href="/news" className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-bold text-secondary hover:border-primary/40 hover:text-primary transition-colors">More {article.category.toLowerCase()} stories <ArrowRight size={13} /></Link>}
+          </div>
 
           {/* Engagement Footer */}
           <div className="mt-12 md:mt-16 pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6">

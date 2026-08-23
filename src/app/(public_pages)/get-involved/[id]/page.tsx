@@ -1,10 +1,26 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getInvolvementPage } from "@/actions/involvement-pages";
 import { getGoogleForms } from "@/actions/settings";
 import { editorial } from "../editorial-font";
 import InvolvementDetailClient from "./InvolvementDetailClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
+
+const TITLES: Record<string, string> = {
+  join: "Become a Member",
+  volunteer: "Volunteer With Us",
+  school: "School Chapters",
+  partner: "Partner With Us",
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return {
+    title: TITLES[id] || "Get Involved",
+    alternates: { canonical: `/get-involved/${id}` },
+  };
+}
 
 const ENTITY_MAP: Record<string, string> = {
   join: "member",

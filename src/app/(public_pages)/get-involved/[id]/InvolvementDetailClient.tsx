@@ -441,7 +441,10 @@ function InvolvementDetailInner({ page, slug, googleForms }: Props) {
                     className="w-full flex items-center justify-center gap-2.5 rounded-md bg-secondary py-3.5 text-sm font-semibold text-secondary-foreground hover:bg-primary transition-colors disabled:opacity-60 cursor-pointer"
                   >
                     {isSubmitting ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Redirecting to secure payment...
+                      </>
                     ) : (
                       <>
                         Donate Now

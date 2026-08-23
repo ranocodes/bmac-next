@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { toPng } from "html-to-image";
 import { ArrowLeft, CheckCircle2, AlertTriangle, Download } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface PassTicket {
   id: string;
@@ -38,21 +39,21 @@ function StatusPill({ ticket }: { ticket: PassTicket }) {
   const inactive = ticket.status !== "confirmed";
   if (inactive) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#FBF3E4] text-[#8A6116] border border-[#EFE0C2] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
         <AlertTriangle size={10} /> {ticket.status}
       </span>
     );
   }
   if (ticket.checked_in) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#EDF5EC] text-[#3E6B44] border border-[#D8E7D7] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
         <CheckCircle2 size={10} /> Checked In
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-      <span className="w-1 h-1 rounded-full bg-emerald-500" /> Active
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF1F6] text-[#1F6C9F] border border-[#D5E3EE] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+      <span className="h-1 w-1 rounded-full bg-[#1F6C9F]" /> Active
     </span>
   );
 }
@@ -61,7 +62,7 @@ function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-secondary break-words leading-snug" title={value}>{value}</p>
+      <p className="mt-0.5 break-words text-sm font-semibold leading-snug text-secondary" title={value}>{value}</p>
     </div>
   );
 }
@@ -93,10 +94,14 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="text-center max-w-md">
-          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-          <h1 className="font-display text-2xl font-extrabold mb-2">Pass Not Found</h1>
-          <p className="text-secondary/70 mb-6">This pass link is invalid or has been revoked.</p>
-          <Link href="/events" className="text-primary font-bold underline">Back to Events</Link>
+          <AlertTriangle className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl text-secondary mb-2" style={{ fontFamily: "var(--font-editorial), Georgia, serif" }}>
+            Pass Not Found
+          </h1>
+          <p className="text-muted-foreground mb-6">This pass link is invalid or has been revoked.</p>
+          <Link href="/events" className="inline-block rounded-md bg-secondary px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-background">
+            Back to Events
+          </Link>
         </div>
       </div>
     );
@@ -105,78 +110,75 @@ export default function PassClient({ ticket, qrDataUrl }: PassClientProps) {
   const inactive = ticket.status !== "confirmed";
 
   return (
-    <main className="min-h-screen bg-secondary/5 flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-      {/* Decorative ambient background */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
-      
-      <div className="w-full max-w-[360px] relative z-10">
-        <Link href="/events" className="inline-flex items-center gap-2 text-secondary/60 hover:text-primary text-xs font-bold uppercase tracking-widest mb-5 transition-colors">
-          <ArrowLeft size={14} /> Back to Events
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-10 md:p-8">
+      <div className="w-full max-w-[380px]">
+        <Link href="/events" className="mb-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground hover:text-secondary transition-colors">
+          <ArrowLeft size={13} /> Back to Events
         </Link>
 
-        <div ref={passRef} className="relative rounded-2xl bg-background border border-border/60 shadow-xl shadow-secondary/10 overflow-hidden">
+        <div ref={passRef} className="overflow-hidden rounded-xl border border-border bg-white">
           {/* Header */}
-          <div className="px-5 pt-4 pb-4">
+          <div className="border-b border-border px-6 pb-5 pt-6">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-primary">BMAC · Entry Pass</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-primary">BMAC · Entry Pass</p>
               <StatusPill ticket={ticket} />
             </div>
-            <h1 className="mt-2.5 font-display text-lg font-bold tracking-tight text-secondary leading-snug">{ticket.event_title}</h1>
+            <h1
+              className="mt-2.5 text-[22px] leading-snug tracking-tight text-secondary"
+              style={{ fontFamily: "var(--font-editorial), Georgia, serif", fontWeight: 400 }}
+            >
+              {ticket.event_title}
+            </h1>
           </div>
 
           {/* Details */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 pb-5">
-            <Meta label="Date" value={formatDate(ticket.event_date)} />
-            <Meta label="Venue" value={ticket.event_venue || "TBA"} />
-            <Meta label="Attendee" value={ticket.payer_name || ticket.payer_email || "Guest"} />
-            <Meta label="Admit" value={String(ticket.quantity)} />
+          <div className="grid grid-cols-2 gap-px bg-border">
+            <div className="bg-white px-6 py-4"><Meta label="Date" value={formatDate(ticket.event_date)} /></div>
+            <div className="bg-white px-6 py-4"><Meta label="Venue" value={ticket.event_venue || "TBA"} /></div>
+            <div className="col-span-2 bg-white px-6 py-4"><Meta label="Attendee" value={ticket.payer_name || ticket.payer_email || "Guest"} /></div>
+            <div className="col-span-2 bg-white px-6 py-4"><Meta label="Admit" value={`${ticket.quantity} ${ticket.quantity === 1 ? "person" : "people"}`} /></div>
           </div>
 
           {/* Perforation */}
           <div className="relative h-0">
-            <div className="absolute left-[-12px] -top-3 w-6 h-6 rounded-full bg-secondary/5 border-r border-t border-border/60" />
-            <div className="border-t border-dashed border-border/70 mx-5" />
-            <div className="absolute right-[-12px] -top-3 w-6 h-6 rounded-full bg-secondary/5 border-l border-t border-border/60" />
+            <div className="absolute left-[-12px] -top-3 h-6 w-6 rounded-full border border-r-0 border-l-0 border-t-0 border-border bg-[#F7F6F3]" />
+            <div className="mx-6 border-t border-dashed border-border" />
+            <div className="absolute right-[-12px] -top-3 h-6 w-6 rounded-full border border-r-0 border-l-0 border-t-0 border-border bg-[#F7F6F3]" />
           </div>
 
           {/* QR */}
-          <div className="flex flex-col items-center px-5 pt-4 pb-5">
-            <div className="p-2.5 bg-white rounded-xl border border-border/50 shadow-sm">
-              {inactive ? (
-                <div className="flex flex-col items-center justify-center gap-2 w-[132px] h-[132px] text-center">
-                  <AlertTriangle className="w-7 h-7 text-amber-500" />
-                  <p className="text-xs font-bold text-secondary">Pass not active.</p>
-                </div>
-              ) : qrDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={qrDataUrl} alt="Entry QR code" width={132} height={132} className="rounded-lg" />
-              ) : (
-                <div className="w-[132px] h-[132px] flex items-center justify-center">
-                  <div className="w-7 h-7 border-2 border-border border-t-primary rounded-full animate-spin" />
-                </div>
-              )}
-            </div>
-            <p className="mt-3 font-mono text-[11px] font-semibold tracking-widest text-secondary/70">{ticket.reference}</p>
+          <div className="flex flex-col items-center px-6 pb-6 pt-6">
+            {inactive ? (
+              <div className="flex h-[148px] w-[148px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border text-center">
+                <AlertTriangle className="h-6 w-6 text-muted-foreground" />
+                <p className="text-xs font-semibold text-secondary">Pass not active.</p>
+              </div>
+            ) : qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qrDataUrl} alt="Entry QR code" width={148} height={148} className="rounded-lg border border-border p-2.5" />
+            ) : (
+              <Skeleton className="h-[148px] w-[148px] rounded-lg" aria-label="Generating QR code" />
+            )}
+            <p className="mt-4 font-mono text-[11px] font-medium tracking-[0.2em] text-muted-foreground">{ticket.reference}</p>
           </div>
         </div>
 
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-secondary text-background px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest transition-transform active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-secondary/20"
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-secondary px-5 py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition-opacity hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
         >
           <Download size={14} /> {downloading ? "Preparing…" : "Save Pass"}
         </button>
-        {downloadError && <p className="mt-2 text-center text-red-500 text-xs font-bold">{downloadError}</p>}
+        {downloadError && <p className="mt-2 text-center text-red-500 text-xs font-semibold">{downloadError}</p>}
 
         {ticket.checked_in && ticket.checked_in_at && (
-          <div className="mt-4 flex items-center gap-2 text-green-600 text-sm font-bold justify-center">
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-green-700">
             <CheckCircle2 size={16} /> Checked in on {new Date(ticket.checked_in_at).toLocaleString()}
           </div>
         )}
 
-        <p className="text-center text-secondary/40 text-xs mt-6">Present this QR code at the venue entrance.</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Present this QR code at the venue entrance.</p>
       </div>
     </main>
   );

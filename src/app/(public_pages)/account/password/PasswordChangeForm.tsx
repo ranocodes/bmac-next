@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 import { changePassword } from "@/actions/public-auth";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function PasswordChangeForm() {
   const router = useRouter();
@@ -72,11 +73,9 @@ export default function PasswordChangeForm() {
           <span>{error}</span>
         </div>
       )}
-      <button type="submit" disabled={loading}
-        className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
-        {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          : <><CheckCircle size={16} /> Update Password</>}
-      </button>
+      <SubmitButton pending={loading}>
+        <CheckCircle size={16} /> Update Password
+      </SubmitButton>
     </form>
   );
 }

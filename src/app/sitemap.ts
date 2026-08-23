@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/site";
 
 const SITE = SITE_URL;
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const staticRoutes = [
   { path: "/", priority: 1.0, changeFrequency: "weekly" as const },
@@ -24,13 +24,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [events, programs, news] = await Promise.all([
     db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
       'SELECT id, slug, updated_at, created_at, status FROM public.events'
-    ),
+    ).catch(() => []),
     db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
       "SELECT id, updated_at, created_at, status FROM public.programs WHERE status = 'published'"
-    ),
+    ).catch(() => []),
     db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
       'SELECT id, slug, updated_at, created_at, status FROM public.news_articles'
-    ),
+    ).catch(() => []),
   ]);
 
   const publishedEvents = events.filter((e) => e.status === "published");

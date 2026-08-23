@@ -1,7 +1,17 @@
+import { Skeleton } from "@/components/ui/Skeleton";
+
 export default function ProgramsLoading() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    <div className="min-h-[60vh] p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-10 w-32 rounded-md" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-56 rounded-lg" />
+        ))}
+      </div>
     </div>
   );
 }

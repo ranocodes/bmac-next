@@ -1,10 +1,11 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import ReactMarkdown from "react-markdown";
 import NewsDetailClient from "./NewsDetailClient";
 import { SITE_URL } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const baseUrl = SITE_URL;
 
@@ -66,6 +67,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         id={slug}
         initialNews={publishedNews}
         initialEvents={(events || []).filter((e: any) => e.status === "published")}
+        articleContent={<ReactMarkdown>{publishedNews.find((a: any) => a.slug === slug || a.id === slug)?.content || ""}</ReactMarkdown>}
       />
     </>
   );
