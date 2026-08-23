@@ -9,7 +9,7 @@ import {
   EMAIL_TEMPLATE_KEYS,
   type EmailTemplate,
 } from "@/lib/email-templates";
-import { logActivity } from "@/actions/activity-logs";
+import { logActivity } from "@/lib/activity-log";
 
 export interface SiteSettingsRow extends SiteSettings {
   email_templates?: Record<string, Partial<EmailTemplate>>;

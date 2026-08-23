@@ -93,6 +93,7 @@ export default function Contact({ contactInfo }: { contactInfo?: { email?: strin
                  )}
 
                  <form action={formAction} className="space-y-5 md:space-y-7">
+                   <input type="text" name="company_website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-7">
                       <div className="space-y-2 group">
                          <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground ml-2 group-focus-within:text-primary transition-colors">Full Name</label>

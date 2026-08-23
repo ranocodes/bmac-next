@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/server";
 import { slugify } from "@/lib/slug";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 
 async function uniqueSlug(table: string, title: string, excludeId: string | null): Promise<string> {
   const base = slugify(title);

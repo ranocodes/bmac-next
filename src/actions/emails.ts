@@ -10,6 +10,7 @@ import {
   sendPublicCredentialsEmail as libSendPublicCredentialsEmail,
   sendPaymentRequiredEmail as libSendPaymentRequiredEmail,
 } from "@/lib/email";
+import { requireAdmin } from "@/lib/auth/server";
 
 export type WorkflowKind =
   | "contact"
@@ -42,6 +43,7 @@ export async function sendWorkflowEmail(
     donorEmail?: string;
   } = {}
 ): Promise<{ sent: boolean; error?: string }> {
+  await requireAdmin();
   if (!email) return { sent: false, error: "No email provided" };
 
   try {
@@ -141,6 +143,7 @@ export async function sendApplicationStatusEmail(input: {
   cohortTitle?: string;
   note?: string;
 }): Promise<{ sent: boolean; error?: string }> {
+  await requireAdmin();
   if (!input.email) return { sent: false, error: "No email provided" };
 
   try {
@@ -165,6 +168,7 @@ export async function sendPublicCredentialsEmail(input: {
   loginUrl: string;
   driveLink?: string;
 }): Promise<{ sent: boolean; error?: string }> {
+  await requireAdmin();
   if (!input.email) return { sent: false, error: "No email provided" };
 
   try {
@@ -190,6 +194,7 @@ export async function sendPaymentRequiredEmail(input: {
   reference: string;
   paymentUrl: string;
 }): Promise<{ sent: boolean; error?: string }> {
+  await requireAdmin();
   if (!input.email) return { sent: false, error: "No email provided" };
 
   try {

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { logActivity } from "@/actions/activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import type { Person, PersonRecord, PersonRecordKind, PersonRole } from "@/types/cms";
 
 export interface PersonDbRow {

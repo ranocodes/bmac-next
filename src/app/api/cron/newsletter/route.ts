@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { flushScheduledBroadcasts } from "@/actions/newsletter-admin";
+import { flushScheduledBroadcasts } from "@/lib/newsletter-broadcast";
 
 export const dynamic = "force-dynamic";
 

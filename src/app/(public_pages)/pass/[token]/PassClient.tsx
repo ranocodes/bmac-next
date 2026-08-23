@@ -61,7 +61,7 @@ function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-secondary truncate" title={value}>{value}</p>
+      <p className="mt-0.5 text-sm font-semibold text-secondary break-words leading-snug" title={value}>{value}</p>
     </div>
   );
 }

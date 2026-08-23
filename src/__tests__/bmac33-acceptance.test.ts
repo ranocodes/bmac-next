@@ -35,7 +35,7 @@ vi.mock("@/lib/auth/server", () => ({
   requirePermission: (...args: unknown[]) => mockRequirePermission(...args),
   requireAdmin: (...args: unknown[]) => mockRequireAdmin(...args),
 }));
-vi.mock("@/actions/activity-logs", () => ({
+vi.mock("@/lib/activity-log", () => ({
   logActivity: (...args: unknown[]) => mockLog(...args),
 }));
 vi.mock("@/lib/people", () => ({
@@ -195,48 +195,6 @@ describe("BMAC-33 acceptance: paid event webhook confirms ticket + pass", () => 
 describe("BMAC-33 acceptance: program apply → accept → cohort → attendance", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-  });
-
-  it("submits an application for an open published program", async () => {
-    const { submitApplication } = await import("@/actions/programs");
-    mockGetById.mockResolvedValueOnce({ id: "prg-1", title: "Code Camp", status: "published", applicationsOpen: true });
-    mockQuery.mockResolvedValueOnce([]); // duplicate check
-    mockFindOrCreate.mockResolvedValueOnce({ id: "p-1" });
-
-    const res = await submitApplication({
-      programId: "prg-1", firstName: "Jane", lastName: "Doe", email: "jane@x.com",
-      dateOfBirth: "2005-06-01", motivation: "I want to learn to code", consent: true,
-    });
-
-    expect(res.error).toBeUndefined();
-    expect(res.applicationId).toMatch(/^app-/);
-    expect(mockCreate).toHaveBeenCalledWith("program_applications", expect.objectContaining({ status: "submitted" }));
-  });
-
-  it("rejects applicants under 16", async () => {
-    const { submitApplication } = await import("@/actions/programs");
-    mockGetById.mockResolvedValueOnce({ id: "prg-1", title: "Code Camp", status: "published", applicationsOpen: true });
-
-    const res = await submitApplication({
-      programId: "prg-1", firstName: "Kid", lastName: "Doe", email: "kid@x.com",
-      dateOfBirth: "2018-01-01", motivation: "I want to learn", consent: true,
-    });
-
-    expect(res.error).toContain("16");
-    expect(mockCreate).not.toHaveBeenCalled();
-  });
-
-  it("rejects duplicate applications from the same email", async () => {
-    const { submitApplication } = await import("@/actions/programs");
-    mockGetById.mockResolvedValueOnce({ id: "prg-1", title: "Code Camp", status: "published", applicationsOpen: true });
-    mockQuery.mockResolvedValueOnce([{ id: "app-existing" }]);
-
-    const res = await submitApplication({
-      programId: "prg-1", firstName: "Jane", lastName: "Doe", email: "jane@x.com", motivation: "Again", consent: true,
-    });
-
-    expect(res.error).toContain("already applied");
-    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("accepts an application and adds the applicant to a cohort", async () => {

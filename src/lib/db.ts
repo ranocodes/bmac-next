@@ -20,6 +20,22 @@ const ALLOWED_COLUMNS = new Set([
 
 const ALLOWED_DIRECTIONS = new Set(["ASC", "DESC"]);
 
+const ALLOWED_TABLES = new Set([
+  "activity_logs", "admin_notifications", "admin_users", "attendance_records",
+  "broadcast_log", "categories", "cohorts", "donations", "email_templates",
+  "event_tickets", "event_waitlist", "events", "form_submissions",
+  "gallery_items", "impact_stats", "involvement_pages", "login_attempts",
+  "news_articles", "newsletter_subscribers", "page_views", "partners",
+  "participants", "paystack_payments", "people", "person_records", "program_applications",
+  "programs", "public_users", "site_settings", "team_members", "testimonials",
+]);
+
+function assertTable(table: string) {
+  if (!ALLOWED_TABLES.has(table)) {
+    throw new Error(`Unknown table: ${table}`);
+  }
+}
+
 function buildSelect(table: string, opts?: QueryOptions) {
   let q = `SELECT * FROM public.${table}`;
   const params: any[] = [];
@@ -42,6 +58,7 @@ function buildSelect(table: string, opts?: QueryOptions) {
 
 export const db = {
   async getAll<T>(table: string, opts?: QueryOptions): Promise<T[]> {
+    assertTable(table);
     const sql = getSql();
     const { query, params } = buildSelect(table, opts);
     const rows: any[] = await sql.query(query, params) as any;
@@ -49,12 +66,14 @@ export const db = {
   },
 
   async getById<T extends { id: string }>(table: string, id: string): Promise<T | null> {
+    assertTable(table);
     const sql = getSql();
     const rows: any[] = await sql.query(`SELECT * FROM public.${table} WHERE id = $1`, [id]) as any;
     return rows.length > 0 ? (rows[0] as unknown as T) : null;
   },
 
   async create<T extends Record<string, any>>(table: string, data: T): Promise<T> {
+    assertTable(table);
     const sql = getSql();
     const keys = Object.keys(data);
     const values = Object.values(data).map(v => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
@@ -68,6 +87,7 @@ export const db = {
   },
 
   async update<T extends Record<string, any>>(table: string, id: string, updates: Partial<T>): Promise<T | null> {
+    assertTable(table);
     const sql = getSql();
     const filtered: [string, unknown][] = Object.entries(updates).filter(
       ([, v]) => v !== undefined
@@ -90,18 +110,21 @@ export const db = {
   },
 
   async remove(table: string, id: string): Promise<boolean> {
+    assertTable(table);
     const sql = getSql();
     const rows: any[] = await sql.query(`DELETE FROM public.${table} WHERE id = $1 RETURNING id`, [id]) as any;
     return rows.length > 0;
   },
 
   async exists(table: string): Promise<boolean> {
+    assertTable(table);
     const sql = getSql();
     const rows: any[] = await sql.query(`SELECT EXISTS (SELECT 1 FROM public.${table}) AS exists`) as any;
     return rows[0]?.exists ?? false;
   },
 
   async count(table: string): Promise<number> {
+    assertTable(table);
     const sql = getSql();
     const rows: any[] = await sql.query(`SELECT COUNT(*) AS count FROM public.${table}`) as any;
     return Number(rows[0]?.count ?? 0);

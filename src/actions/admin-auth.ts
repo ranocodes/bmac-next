@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { setSuperAdminSession, clearSuperAdminSession, getSuperAdminSession } from "@/lib/auth/super-admin";
 import * as authClient from "@/lib/auth/client";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { isLoginLocked, recordLoginAttempt } from "@/lib/rate-limit";
 import type { AdminRole, Permission } from "@/types/cms";
 

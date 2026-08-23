@@ -12,7 +12,7 @@ vi.mock("@/lib/auth/super-admin", () => ({
   getSuperAdminSession: vi.fn(),
   clearSuperAdminSession: vi.fn(),
 }));
-vi.mock("@/actions/activity-logs", () => ({
+vi.mock("@/lib/activity-log", () => ({
   logActivity: (...args: unknown[]) => mockLog(...args),
 }));
 

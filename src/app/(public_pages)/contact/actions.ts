@@ -1,8 +1,9 @@
 "use server";
 
-import { logActivity } from "@/actions/activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { getSuperAdminEmails } from "@/lib/notifications";
 import { sendContactAdminAlertEmail, sendContactAutoreplyEmail } from "@/lib/email";
+import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
 
 export async function sendContactMessage(
   prev: { success?: boolean; error?: string } | null,
@@ -14,6 +15,11 @@ export async function sendContactMessage(
   const message = formData.get("message") as string;
   const privacy = formData.get("privacy") as string;
   const marketing = formData.get("marketing") as string;
+  const honeypot = formData.get(HONEYPOT_FIELD);
+
+  if (typeof honeypot === "string" && honeypot.trim().length > 0) {
+    return { success: true };
+  }
 
   if (!name || !email || !message) {
     return { error: "Name, email, and message are required." };
@@ -21,6 +27,10 @@ export async function sendContactMessage(
   if (privacy !== "on" && privacy !== "true" && privacy !== "1") {
     return { error: "Please accept the privacy policy to continue" };
   }
+
+  const ip = await getClientIp();
+  const guard = await assertSafe("contact", email || "", ip);
+  if (guard.error) return { error: guard.error };
 
   try {
     const autoReply = await sendContactAutoreplyEmail({ email, firstName: name });
@@ -40,6 +50,8 @@ export async function sendContactMessage(
     );
 
     logActivity(email, "contact_submit", "contact", { details: `Message from ${name}: ${message.slice(0, 100)}` });
+
+    await recordSubmission("contact", email || "", ip);
 
     return { success: true };
   } catch (err) {

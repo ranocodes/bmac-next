@@ -6,6 +6,10 @@ import { createTicket, reserveCapacity, releaseCapacity, getTicketById } from "@
 import type { EventTicketRow } from "@/lib/tickets";
 import { promoteFromWaitlist } from "@/actions/waitlist";
 import { verifyPaystackTransaction } from "@/lib/paystack-confirm";
+import { assertSafe, getClientIp } from "@/lib/spam-guard";
+import { getPublicSession } from "@/lib/auth/public-auth";
+
+const TICKET_REFERENCE_RE = /^[A-Za-z0-9-]{1,64}$/;
 
 interface EventOrderRow {
   id: string;
@@ -67,13 +71,13 @@ export async function createTicketOrder(opts: {
       return { error: "Something went wrong. Try again." };
     }
     await ensurePersonRoles(person.id, ["attendee"]);
+    const amountKobo = Number(event.price || 0) * quantity * 100;
     await upsertPersonRecord(person.id, "event_registration", {
       refId: opts.eventId,
       refTitle: event.title,
       status: "pending",
-      meta: { quantity },
+      meta: { quantity, totalAmountKobo: amountKobo },
     });
-    const amountKobo = Number(event.price || 0) * quantity * 100;
     const ticket = await createTicket({
       eventId: opts.eventId,
       personId: person.id,
@@ -102,7 +106,11 @@ export async function createTicketOrder(opts: {
 export async function getTicketStatus(reference: string): Promise<{
   status: string;
   passUrl?: string;
+  error?: string;
 }> {
+  if (!TICKET_REFERENCE_RE.test(reference)) return { status: "not_found" };
+  const guard = await assertSafe("ticket-status", reference, await getClientIp());
+  if (guard.error) return { status: "not_found", error: guard.error };
   const rows = await db.query<EventTicketRow>(
     "SELECT * FROM public.event_tickets WHERE reference = $1",
     [reference]
@@ -117,15 +125,22 @@ export async function verifyTicketPayment(reference: string): Promise<{
   passUrl?: string;
   error?: string;
 }> {
-  if (!reference) return { status: "not_found" };
+  if (!TICKET_REFERENCE_RE.test(reference)) return { status: "not_found" };
+  const guard = await assertSafe("ticket-verify", reference, await getClientIp());
+  if (guard.error) return { status: "not_found", error: guard.error };
   const result = await verifyPaystackTransaction(reference);
   if (result.status !== "completed") return { status: result.status, error: result.error };
   return getTicketStatus(reference);
 }
 
 export async function cancelTicket(ticketId: string): Promise<{ error?: string }> {
+  const session = await getPublicSession().catch(() => null);
+  if (!session) return { error: "Not authorized" };
   const ticket = await getTicketById(ticketId);
   if (!ticket) return { error: "Ticket not found" };
+  if (session.email.toLowerCase() !== (ticket.payer_email || "").toLowerCase()) {
+    return { error: "Not authorized" };
+  }
   if (ticket.status !== "pending") return { error: "Only pending tickets can be cancelled" };
   await db.query(
     "UPDATE public.event_tickets SET status = 'cancelled', updated_at = now() WHERE id = $1",

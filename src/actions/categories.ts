@@ -39,7 +39,7 @@ export async function createCategory(name: string): Promise<{ success: boolean; 
     const existing = await db.query("SELECT id FROM public.categories WHERE LOWER(name) = LOWER($1)", [trimmed]);
     if (existing.length > 0) return { success: false, error: "A category with that name already exists." };
     await db.create("categories", { id: `cat-${Date.now()}`, name: trimmed });
-    void import("./activity-logs").then(m =>
+    void import("@/lib/activity-log").then(m =>
       m.logActivity(admin.email, "category_create", "categories", { details: `Created category "${trimmed}"` })
     ).catch(() => {});
     revalidatePath("/admin/settings");
@@ -64,7 +64,7 @@ export async function renameCategory(id: string, newName: string): Promise<{ suc
     for (const table of ["events", "news", "gallery"]) {
       await db.query(`UPDATE public.${table} SET category = $1 WHERE LOWER(category) = LOWER($2)`, [trimmed, current.name]);
     }
-    void import("./activity-logs").then(m =>
+    void import("@/lib/activity-log").then(m =>
       m.logActivity(admin.email, "category_rename", "categories", {
         resourceId: id,
         details: `Renamed category "${current.name}" to "${trimmed}"`,
@@ -97,7 +97,7 @@ export async function deleteCategory(
     }
 
     await db.remove("categories", id);
-    void import("./activity-logs").then(m =>
+    void import("@/lib/activity-log").then(m =>
       m.logActivity(admin.email, "category_delete", "categories", {
         resourceId: id,
         details: `Deleted category "${current.name}"${reassignTo?.trim() ? ` (reassigned to "${reassignTo.trim()}")` : ""}`,

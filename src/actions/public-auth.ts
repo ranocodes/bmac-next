@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { isLoginLocked, recordLoginAttempt } from "@/lib/rate-limit";
 import {
   createPublicSession,

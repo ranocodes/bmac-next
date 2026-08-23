@@ -12,7 +12,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/auth/server", () => ({
   requirePermission: vi.fn(),
 }));
-vi.mock("@/actions/activity-logs", () => ({
+vi.mock("@/lib/activity-log", () => ({
   logActivity: vi.fn(),
 }));
 vi.mock("@/lib/people", () => ({
