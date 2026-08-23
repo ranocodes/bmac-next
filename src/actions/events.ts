@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth/server";
-import { logActivity } from "./activity-logs";
+import { logActivity } from "@/lib/activity-log";
 import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
 import { sendRegistrationConfirmedEmail, sendEventReminderEmail, sendRegistrationAlertEmail, sendCheckInAlertEmail, sendPaymentVerifiedEmail } from "@/lib/email";
@@ -15,6 +15,7 @@ import {
   checkInTicket,
 } from "@/lib/tickets";
 import type { EventTicketRow } from "@/lib/tickets";
+import { assertSafe, getClientIp, recordSubmission } from "@/lib/spam-guard";
 
 interface EventRow {
   id: string;
@@ -305,6 +306,11 @@ export async function registerForEvent(opts: {
   if (existing.length) {
     return { error: "You've already registered for this event." };
   }
+
+  const ip = await getClientIp();
+  const guard = await assertSafe(`event-reg:${opts.eventId}`, opts.email, ip);
+  if (guard.error) return { error: guard.error };
+  await recordSubmission(`event-reg:${opts.eventId}`, opts.email, ip);
 
   const used = await reserveCapacity(opts.eventId, 1);
   if (used === null) return { error: "This event is sold out" };

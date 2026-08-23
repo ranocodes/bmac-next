@@ -159,6 +159,11 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
         setIsPending(false);
         return;
       }
+      if (!order.amountKobo) {
+        setFormError("Payment could not be initialized. Contact support.");
+        setIsPending(false);
+        return;
+      }
       const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
       if (!paystackKey) {
         setFormError("Payments are not configured yet. Please try again later.");
@@ -169,7 +174,7 @@ export default function EventDetailClient({ id, initialEvents, initialTestimonia
       const handler = PaystackPop.setup({
         key: paystackKey,
         email: formData.email,
-        amount: order.amountKobo || (event.price || 0) * 100,
+        amount: order.amountKobo,
         currency: "NGN",
         ref: order.reference,
         metadata: {
