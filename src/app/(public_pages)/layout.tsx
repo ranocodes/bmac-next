@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import PublicLayout from "@/components/layouts/PublicLayout";
+import CookieNotice from "@/components/CookieNotice";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       contactInfo={s?.contact_info || undefined}
     >
       {children}
+      <CookieNotice />
     </PublicLayout>
   );
 }

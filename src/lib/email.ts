@@ -30,10 +30,6 @@ export async function sendRequest(body: Record<string, unknown>): Promise<{ erro
   }
 }
 
-export async function sendPasswordResetEmail(email: string, resetLink: string): Promise<{ error?: string }> {
-  return sendRequest({ type: "password-reset", email, resetLink });
-}
-
 export async function sendAdminDeletedNotification(email: string, deletedAdmin: string, deletedBy: string, reason?: string): Promise<{ error?: string }> {
   return sendRequest({ type: "admin-deleted", email, deletedAdmin, deletedBy, reason: reason || "" });
 }
@@ -403,20 +399,5 @@ export async function sendPaymentRequiredEmail(opts: {
     amountLabel: opts.amountLabel,
     reference: opts.reference,
     paymentLink: absolutizeUrl(opts.paymentUrl),
-  });
-}
-
-export async function sendWhatsAppInviteEmail(opts: {
-  email: string;
-  firstName?: string;
-  programTitle: string;
-  whatsappLink: string;
-}): Promise<{ error?: string }> {
-  return sendRequest({
-    type: "whatsapp-invite",
-    email: opts.email,
-    firstName: opts.firstName || "",
-    programTitle: opts.programTitle,
-    whatsappLink: opts.whatsappLink,
   });
 }

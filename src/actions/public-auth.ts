@@ -14,6 +14,7 @@ import {
   getPublicSession,
 } from "@/lib/auth/public-auth";
 import { sendPublicPasswordResetEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/site";
 
 interface PublicUserRow {
   id: string;
@@ -181,7 +182,7 @@ export async function requestPublicPasswordReset(
       [rows[0].email, tokenHash, expiresAt]
     );
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = SITE_URL;
     const resetLink = `${appUrl}/reset-password/${token}`;
 
     await sendPublicPasswordResetEmail({

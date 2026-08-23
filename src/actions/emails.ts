@@ -4,13 +4,10 @@ import {
   sendContactAutoreplyEmail,
   sendFormSubmitAlertEmail,
   sendDonationThanksEmail,
-  sendDonationAlertEmail,
   sendTicketReceiptEmail,
   sendRegistrationConfirmedEmail,
   sendApplicationStatusEmail as libSendApplicationStatusEmail,
-  sendEventReminderEmail as libSendEventReminderEmail,
   sendPublicCredentialsEmail as libSendPublicCredentialsEmail,
-  sendPublicWelcomeEmail as libSendPublicWelcomeEmail,
   sendPaymentRequiredEmail as libSendPaymentRequiredEmail,
 } from "@/lib/email";
 
@@ -161,30 +158,6 @@ export async function sendApplicationStatusEmail(input: {
   }
 }
 
-export async function sendEventReminderEmail(input: {
-  email: string;
-  firstName: string;
-  eventTitle: string;
-  eventDate: string;
-  eventVenue: string;
-}): Promise<{ sent: boolean; error?: string }> {
-  if (!input.email) return { sent: false, error: "No email provided" };
-
-  try {
-    const sent = await libSendEventReminderEmail({
-      email: input.email,
-      firstName: input.firstName,
-      eventName: input.eventTitle,
-      eventDate: input.eventDate,
-      eventLocation: input.eventVenue,
-    });
-    return { sent: !sent.error, error: sent.error };
-  } catch (err) {
-    console.error("sendEventReminderEmail error:", err);
-    return { sent: false, error: "Email dispatch failed" };
-  }
-}
-
 export async function sendPublicCredentialsEmail(input: {
   email: string;
   firstName?: string;
@@ -205,28 +178,6 @@ export async function sendPublicCredentialsEmail(input: {
     return { sent: !sent.error, error: sent.error };
   } catch (err) {
     console.error("sendPublicCredentialsEmail error:", err);
-    return { sent: false, error: "Email dispatch failed" };
-  }
-}
-
-export async function sendPublicWelcomeEmail(input: {
-  email: string;
-  firstName?: string;
-  programTitle: string;
-  loginUrl: string;
-}): Promise<{ sent: boolean; error?: string }> {
-  if (!input.email) return { sent: false, error: "No email provided" };
-
-  try {
-    const sent = await libSendPublicWelcomeEmail({
-      email: input.email,
-      firstName: input.firstName || "",
-      programTitle: input.programTitle,
-      loginUrl: input.loginUrl,
-    });
-    return { sent: !sent.error, error: sent.error };
-  } catch (err) {
-    console.error("sendPublicWelcomeEmail error:", err);
     return { sent: false, error: "Email dispatch failed" };
   }
 }

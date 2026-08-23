@@ -1,9 +1,8 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site";
 
-const baseUrl = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://bmac-next.vercel.app"
-).replace(/\/+$/, "");
+const SITE = SITE_URL;
 
 export const dynamic = "force-dynamic";
 
@@ -17,47 +16,48 @@ const staticRoutes = [
   { path: "/contact", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/get-involved", priority: 0.8, changeFrequency: "monthly" as const },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" as const },
+  { path: "/terms", priority: 0.3, changeFrequency: "yearly" as const },
   { path: "/donor-lookup", priority: 0.5, changeFrequency: "monthly" as const },
-  { path: "/application-status", priority: 0.5, changeFrequency: "monthly" as const },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [events, programs, news] = await Promise.all([
-    db.query<{ id: string; updated_at: string | null; created_at: string; status: string }>(
-      'SELECT id, updated_at, created_at, status FROM public.events'
+    db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
+      'SELECT id, slug, updated_at, created_at, status FROM public.events'
     ),
-    db.query<{ id: string; updated_at: string | null; created_at: string }>(
-      'SELECT id, updated_at, created_at FROM public.programs'
+    db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
+      "SELECT id, updated_at, created_at, status FROM public.programs WHERE status = 'published'"
     ),
-    db.query<{ id: string; updated_at: string | null; created_at: string; status: string }>(
-      'SELECT id, updated_at, created_at, status FROM public.news_articles'
+    db.query<{ id: string; slug: string | null; updated_at: string | null; created_at: string; status: string }>(
+      'SELECT id, slug, updated_at, created_at, status FROM public.news_articles'
     ),
   ]);
 
   const publishedEvents = events.filter((e) => e.status === "published");
   const publishedNews = news.filter((n) => n.status === "published");
+  const publishedPrograms = programs.filter((p) => p.status === "published");
 
   return [
     ...staticRoutes.map((r) => ({
-      url: `${baseUrl}${r.path}`,
+      url: `${SITE}${r.path}`,
       lastModified: new Date(),
       changeFrequency: r.changeFrequency,
       priority: r.priority,
     })),
     ...publishedEvents.map((e) => ({
-      url: `${baseUrl}/events/${e.id}`,
+      url: `${SITE}/events/${e.slug || e.id}`,
       lastModified: new Date(e.updated_at || e.created_at),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
-    ...programs.map((p) => ({
-      url: `${baseUrl}/programs/${p.id}`,
+    ...publishedPrograms.map((p) => ({
+      url: `${SITE}/programs/${p.id}`,
       lastModified: new Date(p.updated_at || p.created_at),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
     ...publishedNews.map((n) => ({
-      url: `${baseUrl}/news/${n.id}`,
+      url: `${SITE}/news/${n.slug || n.id}`,
       lastModified: new Date(n.updated_at || n.created_at),
       changeFrequency: "monthly" as const,
       priority: 0.6,

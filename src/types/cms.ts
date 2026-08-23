@@ -87,6 +87,7 @@ export interface Donation {
 
 export interface EventPass {
   id: string;
+  slug?: string;
   date: string;
   title: string;
   venue: string;
@@ -110,40 +111,6 @@ export interface EventPass {
   audienceNotFor?: string[];
   faqs?: { q: string; a: string }[];
   policies?: string;
-}
-
-export type WorkflowStatus = "open" | "in_progress" | "resolved" | "closed";
-export type WorkflowKind =
-  | "contact"
-  | "member"
-  | "volunteer"
-  | "partner"
-  | "program"
-  | "event_registration"
-  | "donation"
-  | "ticket"
-  | "application-status";
-export type WorkflowPriority = "low" | "normal" | "high" | "urgent";
-
-export interface WorkflowRecord {
-  id: string;
-  kind: WorkflowKind;
-  refId: string;
-  title: string;
-  summary: string;
-  status: WorkflowStatus;
-  priority: WorkflowPriority;
-  assigneeEmail: string;
-  submitterName: string;
-  submitterEmail: string;
-  source: string;
-  details: Record<string, unknown>;
-  outcome: string;
-  lastContactedAt?: string;
-  dueAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  resolvedAt?: string;
 }
 
 export type TicketStatus = "pending" | "confirmed" | "cancelled" | "refunded";
@@ -177,6 +144,7 @@ export interface ConsentRecord {
 
 export interface NewsArticle {
   id: string;
+  slug?: string;
   date: string;
   title: string;
   desc: string;
@@ -269,7 +237,6 @@ export type Permission =
   | "access_settings"
   | "export_data"
   | "view_analytics"
-  | "manage_workflows"
   | "check_in_attendees"
   | "manage_newsletter";
 

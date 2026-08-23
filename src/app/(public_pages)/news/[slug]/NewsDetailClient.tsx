@@ -54,11 +54,11 @@ function normalizeEvents(raw: any[]): EventPass[] {
 
 export default function NewsDetailClient({ id, initialNews, initialEvents }: NewsDetailClientProps) {
   const allNews = normalizeNews(initialNews);
-  const found = allNews.find(a => a.id === id) || null;
+  const found = allNews.find(a => a.slug === id || a.id === id) || null;
   const [article] = useState<NewsArticle | null>(found);
   const [relatedStories] = useState<NewsArticle[]>(
     found
-      ? allNews.filter(a => a.id !== id && a.category === found.category).slice(0, 3)
+      ? allNews.filter(a => a.id !== found.id && a.category === found.category).slice(0, 3)
       : []
   );
   const [events] = useState<EventPass[]>(normalizeEvents(initialEvents).slice(0, 3));
@@ -185,7 +185,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
             {events.length > 0 ? (
               <div className="space-y-5">
                 {events.map((event, i) => (
-                  <Link href={`/events/${event.id}`} key={i} className="group flex gap-4 items-start">
+                  <Link href={`/events/${event.slug || event.id}`} key={i} className="group flex gap-4 items-start">
                     <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-background border border-border flex flex-col items-center justify-center group-hover:border-primary transition-colors">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{formatEventDate(event.date).month}</span>
                       <span className="text-sm font-extrabold text-secondary">{formatEventDate(event.date).day}</span>
@@ -253,7 +253,7 @@ export default function NewsDetailClient({ id, initialNews, initialEvents }: New
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
               {relatedStories.map((item, i) => (
                 <FadeIn key={i} delay={i * 0.1}>
-                  <Link href={`/news/${item.id}`} className="group block">
+                  <Link href={`/news/${item.slug || item.id}`} className="group block">
                     <div className="relative aspect-video rounded-xl border border-border overflow-hidden mb-5">
                       <Image src={item.img} alt={item.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                     </div>

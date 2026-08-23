@@ -9,7 +9,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "manage_team", "manage_testimonials", "manage_categories", "manage_partners",
   "manage_stats", "manage_payments", "manage_people", "manage_logs",
   "manage_users", "access_settings", "export_data", "view_analytics",
-  "manage_workflows", "check_in_attendees", "manage_newsletter",
+  "check_in_attendees", "manage_newsletter",
 ];
 
 export interface SuperAdminSession {

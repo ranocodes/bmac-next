@@ -15,7 +15,7 @@ vi.mock("@/lib/auth/server", () => ({
 vi.mock("@/actions/activity-logs", () => ({
   logActivity: vi.fn(),
 }));
-vi.mock("@/actions/people", () => ({
+vi.mock("@/lib/people", () => ({
   findOrCreatePerson: (...args: unknown[]) => mockFindOrCreatePerson(...args),
   ensurePersonRoles: vi.fn(),
   upsertPersonRecord: vi.fn(),
@@ -26,9 +26,6 @@ vi.mock("@/lib/tickets", () => ({
   releaseCapacity: vi.fn(),
   passUrlFor: (...args: unknown[]) => mockPassUrlFor(...args),
   checkInTicket: vi.fn(),
-}));
-vi.mock("@/lib/workflows", () => ({
-  createWorkflowRecord: vi.fn(),
 }));
 vi.mock("@/lib/notifications", () => ({
   createAdminNotification: vi.fn(),

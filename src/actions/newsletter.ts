@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { logActivity } from "./activity-logs";
-import { findOrCreatePerson } from "./people";
+import { findOrCreatePerson } from "@/lib/people";
 import { sendNewsletterWelcomeEmail } from "@/lib/email";
 import { assertSafe, getClientIp, recordSubmission, HONEYPOT_FIELD } from "@/lib/spam-guard";
 

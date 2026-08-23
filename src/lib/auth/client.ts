@@ -1,4 +1,5 @@
 import type { AdminRole, Permission } from "@/types/cms";
+import { SITE_URL } from "@/lib/site";
 
 const SERVICE_URL = (process.env.EMAIL_SERVICE_URL || "http://localhost:3001").replace(/\/+$/, "");
 const API_KEY = process.env.EMAIL_SERVICE_API_KEY || "";
@@ -94,7 +95,7 @@ export async function createAdmin(
     baseUrl:
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        : SITE_URL,
   });
 }
 
@@ -108,7 +109,7 @@ export async function sendCredentials(opts: { email: string; firstName: string; 
     baseUrl:
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        : SITE_URL,
   });
 }
 
@@ -118,7 +119,7 @@ export async function requestPasswordReset(email: string): Promise<{ success?: b
     baseUrl:
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        : SITE_URL,
   });
 }
 
@@ -145,6 +146,6 @@ export async function resendCredentials(adminId: string): Promise<ResendCredenti
     baseUrl:
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+        : SITE_URL,
   });
 }

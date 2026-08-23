@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import AboutClient from "./AboutClient";
 import LiveImpactStats from "@/components/LiveImpactStats";
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn about Brilliant Minds Academic & Career Foundation — our mission, story, team and impact in Jos, Nigeria.',
+  alternates: { canonical: "about" },
+};
+
 
 export const dynamic = "force-dynamic";
 

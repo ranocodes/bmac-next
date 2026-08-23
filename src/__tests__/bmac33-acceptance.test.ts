@@ -11,7 +11,6 @@ const mockLog = vi.fn();
 const mockFindOrCreate = vi.fn();
 const mockEnsureRoles = vi.fn();
 const mockUpsertRecord = vi.fn();
-const mockCreateWorkflow = vi.fn();
 const mockCreateNotification = vi.fn();
 const mockSendWorkflowEmail = vi.fn();
 const mockCreateTicket = vi.fn();
@@ -39,14 +38,10 @@ vi.mock("@/lib/auth/server", () => ({
 vi.mock("@/actions/activity-logs", () => ({
   logActivity: (...args: unknown[]) => mockLog(...args),
 }));
-vi.mock("@/actions/people", () => ({
+vi.mock("@/lib/people", () => ({
   findOrCreatePerson: (...args: unknown[]) => mockFindOrCreate(...args),
   ensurePersonRoles: (...args: unknown[]) => mockEnsureRoles(...args),
   upsertPersonRecord: (...args: unknown[]) => mockUpsertRecord(...args),
-}));
-vi.mock("@/lib/workflows", () => ({
-  createWorkflowRecord: (...args: unknown[]) => mockCreateWorkflow(...args),
-  countOpenWorkflows: vi.fn(),
 }));
 vi.mock("@/lib/notifications", () => ({
   createAdminNotification: (...args: unknown[]) => mockCreateNotification(...args),
@@ -216,7 +211,6 @@ describe("BMAC-33 acceptance: program apply → accept → cohort → attendance
     expect(res.error).toBeUndefined();
     expect(res.applicationId).toMatch(/^app-/);
     expect(mockCreate).toHaveBeenCalledWith("program_applications", expect.objectContaining({ status: "submitted" }));
-    expect(mockCreateWorkflow).toHaveBeenCalledWith(expect.objectContaining({ kind: "program" }));
   });
 
   it("rejects applicants under 16", async () => {
@@ -384,7 +378,6 @@ describe("BMAC-33 acceptance: analytics + donation exports are permission-gated"
       .mockResolvedValueOnce([{ total: "0", count: "0" }]) // donation totals
       .mockResolvedValueOnce([]) // donation byStatus
       .mockResolvedValueOnce([{ count: "0" }]) // applications
-      .mockResolvedValueOnce([]) // workflows
       .mockResolvedValueOnce([{ count: "0" }]) // checked in
       .mockResolvedValueOnce([{ count: "0" }]) // participants
       .mockResolvedValueOnce([]) // applications by status

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/actions/people";
+import { findOrCreatePerson, ensurePersonRoles, upsertPersonRecord } from "@/lib/people";
 import { sendDonationAlertEmail, sendDonationThanksEmail, sendTicketReceiptEmail, sendTicketAlertEmail } from "@/lib/email";
 import { sendWorkflowEmail } from "@/actions/emails";
 import { createAdminNotification, getSuperAdminEmails, emailSuperAdmins } from "@/lib/notifications";
@@ -253,7 +253,7 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
           title: "Donation amount mismatch",
           message: `Webhook ${reference} reports ${currency}${amount}, expected ~${expectedMeta.currency || "NGN"}${expectedAmount}. Manual review needed.`,
           type: "donation",
-          link: "/admin/payments",
+          link: "/admin/donations",
         });
         console.error(`donation amount mismatch for ${reference}: webhook ${amount} vs expected ${expectedAmount}`);
         return "success";
@@ -325,7 +325,7 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
           title: "Donation thank-you email failed",
           message: `Receipt email to ${payerEmail} for ${reference} failed: ${sent.error}`,
           type: "donation",
-          link: "/admin/payments",
+          link: "/admin/donations",
         });
       }
     }
@@ -348,7 +348,7 @@ export async function confirmChargeSuccess(data: ChargeSuccessData): Promise<str
       title: "New donation received",
       message: `${payerName} donated ${amountLabel}${reference ? ` (${reference})` : ""}.`,
       type: "donation",
-      link: "/admin/payments",
+      link: "/admin/donations",
     });
   }
 

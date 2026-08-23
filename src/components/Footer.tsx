@@ -40,6 +40,7 @@ const defaultLinks = [
   { name: "News", href: "/news" },
   { name: "Contact", href: "/contact" },
   { name: "Privacy", href: "/privacy" },
+  { name: "Terms", href: "/terms" },
 ];
 
 const defaultContact = {

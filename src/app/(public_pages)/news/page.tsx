@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import NewsClient from "./NewsClient";
+
+export const metadata: Metadata = {
+  title: 'News',
+  description: 'Updates, stories and announcements from Brilliant Minds Ambassadors Club.',
+  alternates: { canonical: "news" },
+};
+
 
 export const dynamic = "force-dynamic";
 

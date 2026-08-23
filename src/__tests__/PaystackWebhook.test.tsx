@@ -13,7 +13,7 @@ vi.mock("@/lib/db", () => ({
     create: (...args: unknown[]) => mockCreate(...args),
   },
 }));
-vi.mock("@/actions/people", () => ({
+vi.mock("@/lib/people", () => ({
   findOrCreatePerson: (...args: unknown[]) => mockFindOrCreate(...args),
   ensurePersonRoles: (...args: unknown[]) => mockEnsureRoles(...args),
   upsertPersonRecord: (...args: unknown[]) => mockUpsertRecord(...args),

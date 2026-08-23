@@ -7,7 +7,6 @@ import {
   Wallet,
   Heart,
   BookOpen,
-  ClipboardList,
   RefreshCw,
   Users,
   Eye,
@@ -35,7 +34,6 @@ interface AnalyticsData {
       participants: number;
       applicationsByStatus: Record<string, number>;
     };
-    workflows: Record<string, number>;
   };
   traffic: {
     overview: { totalViews: number; uniqueVisitors: number; todayViews: number; avgDailyViews: number };
@@ -90,16 +88,6 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
     withdrawn: "Withdrawn",
   };
 
-  const workflowKindLabels: Record<string, string> = {
-    contact: "Contact",
-    member: "Member",
-    volunteer: "Volunteer",
-    partner: "Partnership",
-    program: "Program",
-    ticket: "Ticket",
-    donation: "Donation",
-    event_registration: "Event reg",
-  };
 
   const o = data.operational;
   const t = data.traffic;
@@ -113,7 +101,6 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
     { label: "Program applications", value: String(o.programs.applications), icon: BookOpen },
     { label: "Program participants", value: String(o.programs.participants), icon: Users },
     { label: "Event revenue", value: ngn(o.revenue.events), icon: Wallet },
-    { label: "Workflow items", value: String(Object.values(o.workflows).reduce((a, b) => a + b, 0)), icon: ClipboardList },
   ];
 
   const trafficCards = [
@@ -229,19 +216,6 @@ export default function AnalyticsClient({ initialData }: { initialData: Analytic
               ) : (
                 Object.entries(o.programs.applicationsByStatus).map(([status, count]) => (
                   <BarRow key={status} label={applicationStatusLabels[status] || status} value={count} total={o.programs.applications || count} />
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="bg-card rounded-xl border border-border p-5">
-            <h2 className="text-sm font-semibold text-secondary mb-4">Workflows by type</h2>
-            <div className="space-y-3.5">
-              {Object.entries(o.workflows).length === 0 ? (
-                <p className="text-sm text-muted-foreground">No workflow records yet</p>
-              ) : (
-                Object.entries(o.workflows).map(([kind, count]) => (
-                  <BarRow key={kind} label={workflowKindLabels[kind] || kind} value={count} total={Object.values(o.workflows).reduce((a, b) => a + b, 0)} />
                 ))
               )}
             </div>
