@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Markdown from "@/components/ui/Markdown";
 import ProgramDetailClient from "./ProgramDetailClient";
 import { SITE_URL } from "@/lib/site";
 
@@ -63,7 +64,11 @@ export default async function ProgramDetail({ params }: { params: Promise<{ id: 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ProgramDetailClient id={id} initialPrograms={programs || []} />
+      <ProgramDetailClient
+        id={id}
+        initialPrograms={programs || []}
+        programContent={<Markdown>{(program as any).long_desc || (program as any).longDesc || ""}</Markdown>}
+      />
     </>
   );
 }

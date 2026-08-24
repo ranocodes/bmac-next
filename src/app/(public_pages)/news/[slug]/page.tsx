@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import ReactMarkdown from "react-markdown";
+import Markdown from "@/components/ui/Markdown";
 import NewsDetailClient from "./NewsDetailClient";
 import { SITE_URL } from "@/lib/site";
 
@@ -67,7 +67,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         id={slug}
         initialNews={publishedNews}
         initialEvents={(events || []).filter((e: any) => e.status === "published")}
-        articleContent={<ReactMarkdown>{publishedNews.find((a: any) => a.slug === slug || a.id === slug)?.content || ""}</ReactMarkdown>}
+        articleContent={<Markdown>{publishedNews.find((a: any) => a.slug === slug || a.id === slug)?.content || ""}</Markdown>}
       />
     </>
   );

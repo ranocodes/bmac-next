@@ -69,13 +69,13 @@ describe("permissions module", () => {
     expect(ROLE_DEFAULT_PERMISSIONS.super_admin).toEqual(ALL_PERMISSION_KEYS);
   });
 
-  it("moderator defaults exclude admin/export/analytics/system perms", () => {
+  it("moderator defaults exclude admin/export/system perms", () => {
     const mod = ROLE_DEFAULT_PERMISSIONS.moderator;
     expect(mod).not.toContain("manage_users");
     expect(mod).not.toContain("manage_payments");
     expect(mod).not.toContain("access_settings");
     expect(mod).not.toContain("export_data");
-    expect(mod).not.toContain("view_analytics");
+    expect(mod).toContain("view_analytics");
   });
 
   it("export_data is a distinct permission", () => {

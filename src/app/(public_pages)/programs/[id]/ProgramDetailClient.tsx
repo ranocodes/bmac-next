@@ -73,9 +73,10 @@ function InstructorCard({ instructor, color, index }: { instructor: ProgramInstr
 interface ProgramDetailClientProps {
   id: string;
   initialPrograms: any[];
+  programContent?: React.ReactNode;
 }
 
-export default function ProgramDetailClient({ id, initialPrograms }: ProgramDetailClientProps) {
+export default function ProgramDetailClient({ id, initialPrograms, programContent = null }: ProgramDetailClientProps) {
   const all = initialPrograms.map(p => ({
     ...p,
     desc: (p as any).desc || (p as any).description || "",
@@ -236,9 +237,11 @@ export default function ProgramDetailClient({ id, initialPrograms }: ProgramDeta
             {/* Overview */}
             <div>
               <h3 className="font-display text-2xl md:text-3xl font-bold text-secondary mb-6 md:mb-8 tracking-tight">Overview</h3>
-              <p className="text-secondary/90 text-base md:text-lg leading-[1.7] md:leading-[1.8]">
-                {program.longDesc}
-              </p>
+              {programContent ?? (
+                <p className="text-secondary/90 text-base md:text-lg leading-[1.7] md:leading-[1.8]">
+                  {program.longDesc}
+                </p>
+              )}
             </div>
 
             {/* Curriculum as progression */}

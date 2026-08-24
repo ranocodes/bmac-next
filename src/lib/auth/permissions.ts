@@ -33,5 +33,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<AdminRole, Permission[]> = {
   moderator: [
     "manage_news", "manage_events", "manage_programs", "manage_gallery",
     "manage_team", "manage_testimonials", "manage_categories", "manage_stats",
+    "view_analytics",
   ],
 };
