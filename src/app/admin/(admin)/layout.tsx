@@ -1,7 +1,16 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { getSuperAdminSession, ALL_PERMISSIONS } from "@/lib/auth/super-admin";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   let session = null;
