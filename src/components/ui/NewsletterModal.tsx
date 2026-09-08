@@ -94,7 +94,7 @@ export default function NewsletterModal({ isOpen, onClose, title = "Stay Updated
                 <h3 className="font-display text-2xl font-bold text-secondary mb-3">You're on the list!</h3>
                 <p className="text-muted-foreground text-sm mb-8">Thanks for joining our community of young ambassadors. Every contribution helps us empower more lives in Jos.</p>
                 <div className="space-y-3">
-                   <Link href="/get-involved" onClick={onClose} className="w-full block py-4 bg-accent text-accent-foreground rounded-xl text-sm font-bold hover:bg-card border border-accent transition-all text-center">
+                   <Link href="/get-involved/donate" onClick={onClose} className="w-full block py-4 bg-accent text-accent-foreground rounded-xl text-sm font-bold hover:bg-card border border-accent transition-all text-center">
                       Support Our Work
                    </Link>
                    <button onClick={onClose} className="w-full py-4 text-muted-foreground text-xs font-bold uppercase tracking-widest hover:text-secondary transition-colors">
