@@ -75,9 +75,10 @@ export const db = {
   async create<T extends Record<string, any>>(table: string, data: T): Promise<T> {
     assertTable(table);
     const sql = getSql();
-    const keys = Object.keys(data);
-    const values = Object.values(data).map(v => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
-    const cols = keys.join(", ");
+    const row = { id: data.id ?? crypto.randomUUID(), ...data };
+    const keys = Object.keys(row);
+    const values = Object.values(row).map(v => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
+    const cols = keys.map(k => `"${k}"`).join(", ");
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(", ");
     const rows: any[] = await sql.query(
       `INSERT INTO public.${table} (${cols}) VALUES (${placeholders}) RETURNING *`,
@@ -101,7 +102,7 @@ export const db = {
     }
     const keys = filtered.map(([k]) => k);
     const values = filtered.map(([, v]) => v !== null && typeof v === "object" ? JSON.stringify(v) : v);
-    const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(", ");
+    const setClause = keys.map((k, i) => `"${k}" = $${i + 1}`).join(", ");
     const rows: any[] = await sql.query(
       `UPDATE public.${table} SET ${setClause}, updated_at = now() WHERE id = $${keys.length + 1} RETURNING *`,
       [...values, id]

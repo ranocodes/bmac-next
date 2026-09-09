@@ -25,6 +25,10 @@ export const metadata: Metadata = {
   description: SITE_TAGLINE,
   applicationName: "BMAC Jos",
   authors: [{ name: "Brilliant Minds Academic & Career Foundation" }],
+  icons: {
+    icon: "/bmac.jpeg",
+    apple: "/bmac.jpeg",
+  },
   openGraph: {
     siteName: "BMAC Jos",
     type: "website",
