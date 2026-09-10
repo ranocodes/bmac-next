@@ -1,29 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, X, Save, RotateCcw, User, Globe, FileText, Settings, BookOpen, Phone, ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { Plus, X, Save, User, Globe, FileText, Settings, BookOpen, Phone, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import CategoriesManager from "@/components/admin/CategoriesManager";
 import {
   saveSiteSettings,
   updateAdminProfile,
-  getEmailTemplates,
-  saveEmailTemplates,
-  resetEmailTemplate,
 } from "@/actions/settings";
 import { useAdmin } from "@/lib/auth/admin-context";
 import SocialLinkSelector from "@/components/ui/SocialLinkSelector";
 import { useToast } from "@/components/ui/Toast";
 import type { SiteSettings } from "@/types/cms";
-import {
-  DEFAULT_EMAIL_TEMPLATES,
-  EMAIL_TEMPLATE_KEYS,
-  EMAIL_TEMPLATE_LABELS,
-  type EmailTemplate,
-} from "@/lib/email-templates";
-import dynamic from "next/dynamic";
-
-const EmailTemplateEditor = dynamic(() => import("@/components/ui/EmailTemplateEditor"), { ssr: false });
 
 const DEFAULT = {
   logo_text: "BMAC",
@@ -87,17 +75,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
   );
   const { toast } = useToast();
 
-  const [templates, setTemplates] = useState<Record<string, EmailTemplate>>(DEFAULT_EMAIL_TEMPLATES);
-  const [activeTemplate, setActiveTemplate] = useState(EMAIL_TEMPLATE_KEYS[0]);
-  const [loadingTemplates, setLoadingTemplates] = useState(true);
-
-  useEffect(() => {
-    getEmailTemplates()
-      .then(setTemplates)
-      .catch(() => {})
-      .finally(() => setLoadingTemplates(false));
-  }, []);
-
   async function handleSaveProfile() {
     if (!user?.permissions.includes("access_settings")) {
       toast("You don't have permission to change settings", "error");
@@ -124,7 +101,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
         contact_info: contactInfo,
         google_forms: googleForms,
       });
-      await saveEmailTemplates(templates);
       setIsDirty(false);
       toast("All settings saved", "success");
     } catch {
@@ -132,22 +108,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
     } finally {
       setSavingAll(false);
     }
-  }
-
-  async function handleResetTemplate() {
-    if (!user?.permissions.includes("access_settings")) { toast("Permission denied", "error"); return; }
-    const res = await resetEmailTemplate(activeTemplate);
-    if (res?.error) { toast(res.error, "error"); return; }
-    const defaults = await getEmailTemplates();
-    setTemplates(defaults);
-    toast("Template reset to default", "success");
-  }
-
-  const active = templates[activeTemplate] || DEFAULT_EMAIL_TEMPLATES[activeTemplate];
-
-  function patchActive(patch: Partial<EmailTemplate>) {
-    setTemplates(prev => ({ ...prev, [activeTemplate]: { ...prev[activeTemplate], ...patch } }));
-    setIsDirty(true);
   }
 
   return (
@@ -338,64 +298,6 @@ export default function SettingsForm({ initialData }: { initialData?: SiteSettin
       </div>
 
       <CategoriesManager />
-
-      <div className="bg-card border border-border rounded-xl p-3 sm:p-4 space-y-4">
-        <div className="flex items-center gap-2.5 pb-2 border-b border-border/20">
-          <FileText size={16} className="text-primary" />
-          <h2 className="font-display text-base font-bold text-secondary">Email Templates</h2>
-        </div>
-        <p className="text-xs text-muted-foreground -mt-1">
-          Edit subjects and bodies for automated emails. Placeholders like <code className="text-primary">{"{{formLink}}"}</code>,{" "}
-          <code className="text-primary">{"{{firstName}}"}</code>, <code className="text-primary">{"{{amountLabel}}"}</code> are filled automatically.
-        </p>
-        <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Template</label>
-          <select
-            value={activeTemplate}
-            onChange={e => setActiveTemplate(e.target.value as (typeof EMAIL_TEMPLATE_KEYS)[number])}
-            disabled={loadingTemplates}
-            className={inputCls()}
-          >
-            {EMAIL_TEMPLATE_KEYS.map(key => (
-              <option key={key} value={key}>{EMAIL_TEMPLATE_LABELS[key]}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Subject</label>
-          <input
-            type="text"
-            value={active?.subject || ""}
-            onChange={e => patchActive({ subject: e.target.value })}
-            className={inputCls()}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Email Body</label>
-          <EmailTemplateEditor
-            value={active?.html || ""}
-            onChange={html => patchActive({ html })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-secondary/80 mb-1.5">Plain Text Version</label>
-          <p className="text-xs text-muted-foreground mb-1.5">Fallback for email clients that don't support HTML.</p>
-          <textarea
-            value={active?.text || ""}
-            onChange={e => patchActive({ text: e.target.value })}
-            rows={5}
-            className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-xs text-secondary font-mono focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary/50 transition-colors"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button onClick={handleResetTemplate}
-            title={`Reset ${EMAIL_TEMPLATE_LABELS[activeTemplate]} to default`}
-            className="flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 text-sm font-semibold rounded-lg border border-border bg-background text-secondary hover:bg-accent transition-colors disabled:opacity-50">
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reset
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

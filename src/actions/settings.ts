@@ -5,16 +5,9 @@ import { db } from "@/lib/db";
 import { requireAdmin, requirePermission } from "@/lib/auth/server";
 import { getSuperAdminSession, setSuperAdminSession } from "@/lib/auth/super-admin";
 import type { SiteSettings } from "@/types/cms";
-import {
-  DEFAULT_EMAIL_TEMPLATES,
-  EMAIL_TEMPLATE_KEYS,
-  type EmailTemplate,
-} from "@/lib/email-templates";
 import { logActivity } from "@/lib/activity-log";
 
-export interface SiteSettingsRow extends SiteSettings {
-  email_templates?: Record<string, Partial<EmailTemplate>>;
-}
+export interface SiteSettingsRow extends SiteSettings {}
 
 export async function getSiteSettings() {
   await requireAdmin();
@@ -33,65 +26,6 @@ export async function saveSiteSettings(data: Record<string, unknown>) {
   }
   revalidateTag("site-settings", "max");
   return result;
-}
-
-export async function getEmailTemplates(): Promise<Record<string, EmailTemplate>> {
-  await requireAdmin();
-  const settings = await getSiteSettings();
-  const stored = (settings?.email_templates as Record<string, Partial<EmailTemplate>> | undefined) || {};
-  const out: Record<string, EmailTemplate> = {};
-  for (const key of EMAIL_TEMPLATE_KEYS) {
-    const fallback = DEFAULT_EMAIL_TEMPLATES[key];
-    const saved = stored[key];
-    out[key] = {
-      subject: saved?.subject || fallback.subject,
-      html: saved?.html || fallback.html,
-      text: saved?.text || fallback.text,
-    };
-  }
-  return out;
-}
-
-export async function saveEmailTemplates(
-  templates: Record<string, EmailTemplate>
-): Promise<{ error?: string }> {
-  await requirePermission("access_settings");
-  const clean: Record<string, EmailTemplate> = {};
-  for (const key of EMAIL_TEMPLATE_KEYS) {
-    const tpl = templates[key];
-    if (!tpl) continue;
-    clean[key] = {
-      subject: (tpl.subject || "").trim(),
-      html: tpl.html || "",
-      text: tpl.text || "",
-    };
-  }
-  const settings = await getSiteSettings();
-  if (settings) {
-    await db.update("site_settings", settings.id, { email_templates: clean });
-  } else {
-    await db.create("site_settings", { id: `settings-${Date.now()}`, email_templates: clean });
-  }
-  try { await logActivity("admin", "settings_email_templates_update", "settings"); } catch {}
-  return {};
-}
-
-export async function resetEmailTemplate(key: string): Promise<{ error?: string }> {
-  await requirePermission("access_settings");
-  if (!(EMAIL_TEMPLATE_KEYS as string[]).includes(key)) {
-    return { error: "Unknown template" };
-  }
-  const settings = await getSiteSettings();
-  const stored = (settings?.email_templates as Record<string, Partial<EmailTemplate>> | undefined) || {};
-  const next: Record<string, Partial<EmailTemplate>> = { ...stored };
-  delete next[key];
-  if (settings) {
-    await db.update("site_settings", settings.id, { email_templates: next });
-  } else {
-    await db.create("site_settings", { id: `settings-${Date.now()}`, email_templates: next });
-  }
-  try { await logActivity("admin", "settings_email_template_reset", "settings", { details: key }); } catch {}
-  return {};
 }
 
 export async function getGoogleForms(): Promise<Record<string, string>> {
