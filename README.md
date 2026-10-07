@@ -6,7 +6,7 @@ Hey! This is a website I built for Brilliant Minds Ambassadors Club (BMAC) Jos, 
 
 ## What it does
 
-On the public side, people can browse BMAC's programs, read news, register for events (free or paid, Paystack handles the payment part), scroll the photo gallery, and sign up as a member, volunteer, donor, or partner.
+On the public side, people can browse BMAC's programs, read news, register for events (free or paid), scroll the photo gallery, and sign up as a member, volunteer, donor, or partner.
 
 On the admin side, the team gets a dashboard where they can manage all of that themselves: news, events, programs, gallery, whatever. There's also traffic stats and an activity log so you can see who changed what.
 
@@ -22,12 +22,11 @@ On the admin side, the team gets a dashboard where they can manage all of that t
 
 ## Tech stack
 
-- Next.js 16 (App Router), React 19
-- Tailwind CSS v4
-- Neon Postgres, no ORM, just raw SQL through a small `db` helper I wrote
-- Custom HMAC-signed cookie sessions for auth, backed by an Express auth service (`bmac-express-server`)
-- Paystack for payments; Nodemailer SMTP via the Express backend for admin email, Resend for the public contact form
-- TipTap for the CMS editor, Chart.js for the admin analytics
+- Next.js 16
+- Tailwind CSS
+- Neon Postgres
+- Nodemailer 
+- Paystack for payments
 - Deployed on Vercel
 
 ## Why I built it
